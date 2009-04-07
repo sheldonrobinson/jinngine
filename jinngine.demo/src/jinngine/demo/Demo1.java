@@ -47,8 +47,7 @@ public class Demo1 {
 
 		
 		//create some cubes and a gear
-		new Cube(g, new Vector3(10,10,10), 1, 25);
-		new Cube(g, new Vector3(20,10,10), 1, 20);
+		new Cube(g, new Vector3(10,10,10), 1, 20);
 		new Cube(g, new Vector3(30,10,10), 1, 15);
 		new Cube(g, new Vector3(40,10,10), 1, 10);
 		//new Gear(g, new Vector3(0,50,0), 1, 20);
