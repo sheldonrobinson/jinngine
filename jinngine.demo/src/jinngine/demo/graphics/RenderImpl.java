@@ -89,6 +89,9 @@ public class RenderImpl extends Frame implements GLEventListener, Render  {
 		gl.glBlendFunc(GL.GL_SRC_ALPHA, GL.GL_ONE_MINUS_SRC_ALPHA);
 
 
+		//enable vsync
+		gl.setSwapInterval(1);
+		
 		//run inits for all renders
 		for (DrawTask dt: tasks) {
 			dt.render.init(this, gl);
