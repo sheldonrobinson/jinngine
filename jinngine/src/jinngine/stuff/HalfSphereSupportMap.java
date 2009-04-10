@@ -1,5 +1,7 @@
 package jinngine.stuff;
 
+import java.util.List;
+
 import jinngine.geometry.Geometry;
 import jinngine.geometry.SupportMap3;
 import jinngine.math.InertiaMatrix;
@@ -109,5 +111,10 @@ public class HalfSphereSupportMap implements SupportMap3, Geometry {
 	public void setEnvelope(double envelope) {
 		// TODO Auto-generated method stub
 		
+	}
+	@Override
+	public List<Vector3> supportFeature(Vector3 d) {
+		// TODO Auto-generated method stub
+		return null;
 	}
 }

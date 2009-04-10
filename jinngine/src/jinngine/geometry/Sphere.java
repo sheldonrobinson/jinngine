@@ -1,5 +1,7 @@
 package jinngine.geometry;
 
+import java.util.List;
+
 import jinngine.math.InertiaMatrix;
 import jinngine.math.Matrix3;
 import jinngine.math.Matrix4;
@@ -128,6 +130,12 @@ public class Sphere implements SupportMap3, Geometry {
 	@Override
 	public void setEnvelope(double envelope) {
 		this.envelope = envelope;
+	}
+
+	@Override
+	public List<Vector3> supportFeature(Vector3 d) {
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 }

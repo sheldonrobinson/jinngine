@@ -22,7 +22,7 @@ import jinngine.physics.*;
 public class SupportMapContactGenerator2 implements ContactGenerator {
 
 	//final double envelopeMin = 2.75;
-    double envelope = 0.75;
+    double envelope = 1.0;
     double shell = envelope*0.25;
 	private final SupportMap3 Sa;
 	private final SupportMap3 Sb;

@@ -41,7 +41,7 @@ public class ContinuousConvex implements ClosestPointsAlgorithm {
 		bA1.setSupportMap(A.getSupportMap());
 		bB1.setSupportMap(B.getSupportMap());
 		
-		//copy states to bA1 and bB1
+		//copy jinngine.demos.states to bA1 and bB1
 		bA1.state.assign(A.state);
 		bB1.state.assign(B.state);
 		bA1.advancePositions(dt);

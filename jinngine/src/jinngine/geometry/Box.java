@@ -1,5 +1,7 @@
 package jinngine.geometry;
 
+import java.util.List;
+
 import jinngine.math.*;
 import jinngine.physics.Body;
 
@@ -31,6 +33,13 @@ public class Box implements SupportMap3, Geometry {
 	private double envelope = 0;
 	private Object auxiliary;
 	
+	
+	public Box(Body body) {
+		super();
+		this.body = body;
+		setLocalTransform(Matrix3.identity(new Matrix3()), new Vector3() );		
+	}
+	
 	public Box(Body body, Vector3 displacement, Matrix3 localtransform) {
 		super();
 		this.body = body;
@@ -47,10 +56,6 @@ public class Box implements SupportMap3, Geometry {
 		return body.state.rotation.multiply(localtransform.multiply(new Vector3(sv1, sv2, sv3)).add(localdisplacement)).add(body.state.rCm);
 
 	}
-	
-
-	
-	
 
 	@Override
 	public Body getBody() {
@@ -128,6 +133,85 @@ public class Box implements SupportMap3, Geometry {
 	@Override
 	public Matrix4 getTransform() {
 		return Matrix4.multiply(body.getTransform(), localtransform4, new Matrix4());
+	}
+
+	@Override
+	public List<Vector3> supportFeature(Vector3 d) {
+		final double epsilon = 1e-7;  //123+132  213 231 312+321   
+		//get d into the canonical box space
+		Vector3 v = body.state.rotation.multiply(localtransform).transpose().multiply(d);
+		
+		Vector3[] feature;
+
+		//hard coded cases
+		if ( Math.abs(v.a1) < epsilon) {
+			if (Math.abs(v.a2)< epsilon) { 	        //xy plane
+				double sv3 = v.a3<0?-0.5:0.5;
+				if (v.a3<0) {
+					feature = new Vector3[] {new Vector3()};
+				}
+//				(-0.5,-0.5, sv3)
+//				( 0.5,-0.5, sv3)
+//				(-0.5, 0.5, sv3)
+//				( 0.5, 0.5, sv3)
+			} else if ( Math.abs(v.a3) < epsilon) {// xz plane
+				double sv2 = v.a2<0?-0.5:0.5;
+//				(-0.5, sv2, -0.5)
+//				( 0.5, sv2, -0.5)
+//				(-0.5, sv2,  0.5)
+//				( 0.5, sv2,  0.5)								
+			} else {                               //line along x
+				double sv2 = v.a2<0?-0.5:0.5;
+				double sv3 = v.a3<0?-0.5:0.5;				
+				// (-0.5, sv2, sv3)
+				// / 0.5, sv2,sv3)
+			}
+		} else if ( Math.abs(v.a2) < epsilon) {
+			if (Math.abs(v.a1)< epsilon) { 	        //xy plane
+				double sv1 = v.a3<0?-0.5:0.5;
+				//					(-0.5,-0.5, sv3)
+				//					( 0.5,-0.5, sv3)
+				//					(-0.5, 0.5, sv3)
+				//					( 0.5, 0.5, sv3)
+			} else if ( Math.abs(v.a3) < epsilon) {// yz plane
+				double sv1 = v.a1<0?-0.5:0.5;
+
+			} else {                               //line along y
+				double sv2 = v.a2<0?-0.5:0.5;
+				double sv3 = v.a3<0?-0.5:0.5;				
+				// (-0.5, sv2, sv3)
+				// / 0.5, sv2,sv3)
+			}
+		} else if ( Math.abs(v.a3) < epsilon) {
+			if (Math.abs(v.a1)< epsilon) { 	        //xz plane
+				double sv3 = v.a2<0?-0.5:0.5;
+				//					(-0.5,-0.5, sv3)
+				//					( 0.5,-0.5, sv3)
+				//					(-0.5, 0.5, sv3)
+				//					( 0.5, 0.5, sv3)
+			} else if ( Math.abs(v.a2) < epsilon) {// zy plane
+				double sv2 = v.a1<0?-0.5:0.5;
+				//					(-0.5, sv2, -0.5)
+				//					( 0.5, sv2, -0.5)
+				//					(-0.5, sv2,  0.5)
+				//					( 0.5, sv2,  0.5)								
+			} else {                               //line along z
+				double sv2 = v.a1<0?-0.5:0.5;
+				double sv3 = v.a2<0?-0.5:0.5;				
+				// (-0.5, sv2, sv3)
+				// / 0.5, sv2,sv3)
+			}
+		} else { // point
+			
+		}
+
+		
+		double sv1 = v.a1<0?-0.5:0.5;
+		double sv2 = v.a2<0?-0.5:0.5;
+		double sv3 = v.a3<0?-0.5:0.5;
+		//return Matrix4.multiply(transform4, new Vector3(sv1, sv2, sv3), new Vector3());
+		//return body.state.rotation.multiply(localtransform.multiply(new Vector3(sv1, sv2, sv3)).add(localdisplacement)).add(body.state.rCm);
+		return null;
 	}
 	
 	

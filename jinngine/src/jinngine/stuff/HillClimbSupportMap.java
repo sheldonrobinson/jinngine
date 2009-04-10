@@ -132,4 +132,10 @@ implements SupportMap3, Geometry {
 		// TODO Auto-generated method stub
 		
 	}
+
+	@Override
+	public List<Vector3> supportFeature(Vector3 d) {
+		// TODO Auto-generated method stub
+		return null;
+	}
 }

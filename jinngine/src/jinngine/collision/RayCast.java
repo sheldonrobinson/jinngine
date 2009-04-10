@@ -1,5 +1,7 @@
 package jinngine.collision;
 
+import java.util.List;
+
 import jinngine.geometry.SupportMap3;
 import jinngine.math.Vector3;
 
@@ -23,6 +25,12 @@ public class RayCast {
 			@Override
 			public Vector3 supportPoint(Vector3 direction) {
 				return x.copy();
+			}
+
+			@Override
+			public List<Vector3> supportFeature(Vector3 d) {
+				// TODO Auto-generated method stub
+				return null;
 			}
 		};
 

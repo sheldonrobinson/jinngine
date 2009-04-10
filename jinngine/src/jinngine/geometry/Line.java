@@ -1,5 +1,7 @@
 package jinngine.geometry;
 
+import java.util.List;
+
 import jinngine.math.InertiaMatrix;
 import jinngine.math.Matrix3;
 import jinngine.math.Matrix4;
@@ -85,6 +87,12 @@ public class Line implements SupportMap3, Geometry {
 		return new Vector3( p1.a1 < p2.a1? p1.a1 : p2.a1, 
 	                        p1.a2 < p2.a2? p1.a2 : p2.a2,
 	         	            p1.a3 < p2.a3? p1.a3 : p2.a3);
+	}
+
+	@Override
+	public List<Vector3> supportFeature(Vector3 d) {
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 }

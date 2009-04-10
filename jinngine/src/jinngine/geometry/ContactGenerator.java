@@ -6,7 +6,7 @@ import jinngine.math.Vector3;
 
 /**
  * A contact generator is used by the {@link ContactConstraint} to generate its contact information. 
- * As of present day, the only ContactGenerator available in jinngine is DefaultContactGenerator,
+ * As of present day, the only ContactGenerator available in jinngine is SupportMapContactGenerator,
  * which handles only convex-convex geometries given by support maps. (SupportMap3) 
  * 
  * ContactGenerator encapsulates all geometry and algorithm specific details. Therefore, it is the responsibility 
