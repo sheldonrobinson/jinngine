@@ -270,5 +270,11 @@ public class Hull implements Shape, SupportMap3, Geometry {
 		return minBoundsTransformed.add(displacement).add(body.state.rCm);
 	}
 
+	@Override
+	public List<Vector3> supportFeature(Vector3 d) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
 
 }

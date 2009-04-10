@@ -11,6 +11,7 @@ import java.awt.event.*;
 import javax.media.opengl.*;
 import javax.media.opengl.glu.*;
 import com.sun.opengl.util.Animator;
+import com.sun.opengl.util.FPSAnimator;
 
 
 public class RenderImpl extends Frame implements GLEventListener, Render  {
@@ -235,8 +236,8 @@ public class RenderImpl extends Frame implements GLEventListener, Render  {
 
 	public void start() {
 		// Ask an animator class to run simulation at 60 fps
-		//Animator animator = new FPSAnimator(this.canvas,60 );
-		Animator animator = new Animator(this.canvas);
+		Animator animator = new FPSAnimator(this.canvas,60,true);
+		//Animator animator = new Animator(this.canvas);
 		animator.start();
 	}
 
