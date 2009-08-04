@@ -168,6 +168,7 @@ public class BoxVisualisor extends Frame implements GLEventListener  {
 	static double spend = 0;
 
 	public void display(GLAutoDrawable drawable) {
+		double total = 0.12;//model.getDt();
 		// int ticks = (int)(1/model.getDt() *0.12);
  		// Perform ratio time-steps on the model
 		do {
@@ -175,9 +176,9 @@ public class BoxVisualisor extends Frame implements GLEventListener  {
 			model.tick();
 //			model.tick();
 //			model.tick();			
-		} while ( spend < 0.12);
+		} while ( spend < total);
 
-		spend = spend % 0.12;
+		spend = spend % total;
 		
 		// Clear buffer, etc.
 		GL gl = drawable.getGL();

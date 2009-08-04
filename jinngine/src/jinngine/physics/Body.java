@@ -16,8 +16,14 @@ import jinngine.math.Vector3;
  */
 public abstract class Body {
 	//auxiliary
-	public final Vector3             deltaVCm = new Vector3(0,0,0);
-	public final Vector3             deltaOmegaCm = new Vector3(0,0,0);
+	public final Vector3               deltaVCm = new Vector3(0,0,0);
+	public final Vector3               deltaOmegaCm = new Vector3(0,0,0);
+	public final List<ConstraintEntry> constraints = new ArrayList<ConstraintEntry>();
+	public final Vector3               auxDeltav = new Vector3();
+	public final Vector3               auxDeltaOmega = new Vector3();
+	public final Vector3               auxDeltav2 = new Vector3();
+	public final Vector3               auxDeltaOmega2 = new Vector3();
+
 	public final State state = new State();
 	public final State storedState = new State();
 	public double  sleepKinetic = 1e-4;
@@ -245,8 +251,10 @@ public abstract class Body {
 		//Quaternion change  = dq_dt.Multiply(dt);
 
 		//state.q = state.q.add(change);
-		Quaternion.add( state.q, (state.Dq.multiply(dt).add(state.D2q.multiply((dt*dt)/2.0f))));
-		
+		//Quaternion.add( state.q, (state.Dq.multiply(dt).add(state.D2q.multiply((dt*dt)/2.0f))));
+
+		Quaternion.add( state.q, (state.Dq.multiply(dt) ));
+
 		//apply to body
 		state.q.normalize();    
 		// q.toRotationMatrix(R);  

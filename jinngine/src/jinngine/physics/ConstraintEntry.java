@@ -32,7 +32,9 @@ public class ConstraintEntry  {
 	public double b = 0;
 	public boolean enabled = true;
 	public ConstraintEntry coupledMax;
-	public ContactGenerator.ContactPoint aux; 
+	public ContactGenerator.ContactPoint aux;
+	public int index;
+	public double phixk;
 	
 	public ConstraintEntry() {}
 	

@@ -28,9 +28,9 @@ public class RayCast {
 			}
 
 			@Override
-			public List<Vector3> supportFeature(Vector3 d) {
+			public void supportFeature(Vector3 d, List<Vector3> returnList) {
 				// TODO Auto-generated method stub
-				return null;
+				return;
 			}
 		};
 

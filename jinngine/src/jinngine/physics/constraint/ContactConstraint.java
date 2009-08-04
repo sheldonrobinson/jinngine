@@ -19,7 +19,7 @@ import jinngine.physics.ConstraintEntry;
  * <p>
  * This ContactConstraint uses a simplified friction model, where there is no coupling between the 
  * normal force and the tangential frictional forces. This model reduces the number of needed constriants, and 
- * thus improoves performance. On the other hand, it is know to induce an energy gain, which hurts stability in various 
+ * thus improoves performance. On the other hand, it is know to induce an energy gain,cr which hurts stability in various 
  * configurations, such as stacked objects. 
  * 
  * 
@@ -143,28 +143,30 @@ public final class ContactConstraint implements Constraint {
 			Iterator<ConstraintEntry> outConstraints 
 	) {
 
+		
 		//Use a gram-schmidt process to create a orthonormal basis for the impact space
 		Vector3 v1 = n.normalize(); Vector3 v2 = Vector3.i; Vector3 v3 = Vector3.k;    
 		Vector3 t1 = v1.normalize(); 
 		Vector3 t2 = v2.minus( t1.multiply(t1.dot(v2)) );
 
 		//in case v1 and v2 are parallel
-		if ( t2.abs().lessThan( Vector3.epsilon ) ) {
+		if ( t2.norm()<1e-7 ) {
 			v2 = Vector3.j; v3 = Vector3.k;
 			t2 = v2.minus( t1.multiply(t1.dot(v2)) ).normalize();    
 		} else {
 			t2 = t2.normalize();
 		}
 		//v1 paralell with v3
-		if( v1.cross(v3).abs().lessThan( Vector3.epsilon ) ) {
+		if( v1.cross(v3).norm()< 1e-7 ) {
 			v3 = Vector3.j;
 		}
 		//finaly calculate t3
 		Vector3 t3 = v3.minus( t1.multiply(t1.dot(v3)).minus( t2.multiply(t2.dot(v3)) )).normalize();
 
+		//System.out.println("det==="+Matrix3.determinant(new Matrix3(v1,t2,t3)) );
 		
 		//First off, create the constraint in the normal direction
-		double e = 0.65; //coeficient of restitution
+		double e = 0.650; //coeficient of restitution
 		double uni = relativeVelocity(b1,b2,p,n);
 		double unf = uni<0 ? -e*uni: 0;
 		
@@ -199,9 +201,17 @@ public final class ContactConstraint implements Constraint {
 		if (b1.isFixed() ) { B1.assign( B2.assign(Vector3.zero)); }
 		if (b2.isFixed() ) { B3.assign( B4.assign(Vector3.zero)); }
 
-		//external forces acting at contact
+		//external forces acing at contact
 		double Fext = B1.dot(b1.state.FCm) + B2.dot(b1.state.tauCm) + B3.dot(b2.state.FCm) + B4.dot(b2.state.tauCm);
-		double correction = depth*(1/dt) > 1.5? 1.5 : depth*(1/dt);
+		double cv = cp.penetrating?0.5:0.0050; //max. correction velocity
+		//depth = depth > 0? 0:depth;
+		double correction = depth*(1/dt);
+		correction = correction > cv? cv:correction;
+		//correction = 0;
+		//double correction = -depth*(1/dt)*1;
+		
+		//correction = 0;
+		//correction = correction*correction;
 		//correction = 0;
 			//System.out.println("mhhh"+ correction);
 		//correction = 0;
@@ -211,10 +221,15 @@ public final class ContactConstraint implements Constraint {
 		c.assign(this,b1,
 				b2,B1,B2,B3,
 				B4,J1,J2,J3,
-				J4,0,Double.POSITIVE_INFINITY,null, unf-uni + Fext*dt + correction  );
+				J4,0,Double.POSITIVE_INFINITY,null, unf-uni + Fext*dt + correction );
 		
 		//use contact caching
 		c.aux = cp;
+		
+		//book-keep constraints in each body
+		//b1.constraints.add(c);
+		//b2.constraints.add(c);
+
 		
 //		if ( uni >=0 && uni < 1e-1)
 //			c.lambda = cp.cachedNormalForce;
@@ -250,6 +265,10 @@ public final class ContactConstraint implements Constraint {
 				c, ut1f-ut1i + t2Fext*dt 
 
 		);
+		
+		//book-keep constraints in each body
+		//b1.constraints.add(c2);
+		//b2.constraints.add(c2);
 
 
 		//second tangent
@@ -273,6 +292,10 @@ public final class ContactConstraint implements Constraint {
 				35,
 				c, ut2f-ut2i + t3Fext*dt
 		);
+
+		//book-keep constraints in each body
+		//b1.constraints.add(c3);
+		//b2.constraints.add(c3);
 
 	}
 }

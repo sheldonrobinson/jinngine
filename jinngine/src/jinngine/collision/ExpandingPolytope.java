@@ -88,10 +88,10 @@ public class ExpandingPolytope {
 		Vector3 a3 = tetrahedron.simplices[2][1].copy();
 		Vector3 a4 = tetrahedron.simplices[3][1].copy();
 
-		Vector3 b1 = tetrahedron.simplices[0][1].copy();
-		Vector3 b2 = tetrahedron.simplices[1][1].copy();
-		Vector3 b3 = tetrahedron.simplices[2][1].copy();
-		Vector3 b4 = tetrahedron.simplices[3][1].copy();
+		Vector3 b1 = tetrahedron.simplices[0][2].copy();
+		Vector3 b2 = tetrahedron.simplices[1][2].copy();
+		Vector3 b3 = tetrahedron.simplices[2][2].copy();
+		Vector3 b4 = tetrahedron.simplices[3][2].copy();
 
 		heap.clear();
 		
@@ -116,7 +116,7 @@ public class ExpandingPolytope {
 			}
 			
 			//stop if no improvement
-			if (Math.abs(t.d-d) < 1e-5) {
+			if (Math.abs(t.d-d) < 1e-7) {
 				pa.assign(t.a);
 				pb.assign(t.b);
 				break;

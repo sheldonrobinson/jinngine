@@ -28,6 +28,7 @@ public interface ContactGenerator {
 		public final Vector3 pa = new Vector3(), pb = new Vector3(), 
 		midpoint = new Vector3(), normal = new Vector3();
 		public double depth;
+		public boolean penetrating = false;
 	}
 	/**
 	 * Run/update contact generation. This method will be invoked by the ContactConstraint,

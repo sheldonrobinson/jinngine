@@ -1,6 +1,7 @@
 package jinngine.physics;
 import java.util.*;
 
+import jinngine.physics.FisherNewtonCG;
 import jinngine.collision.AllPairsTest;
 import jinngine.collision.BroadfaseCollisionDetection;
 import jinngine.collision.SweepAndPrune;
@@ -31,9 +32,19 @@ public final class Engine implements Model {
 	private final List<ConstraintEntry> constraintList = new LinkedList<ConstraintEntry>();  
 	private final List<Force> forces = new LinkedList<Force>(); 
 
+	
+	private final List<ConstraintEntry> normals = new ArrayList<ConstraintEntry>();
+	private final List<ConstraintEntry> frictions = new ArrayList<ConstraintEntry>();
+
+
 	// Pairs not to be considered by contact constraints
 	private final Map<Pair<Body>,Boolean> mutedBodyPairs = new HashMap<Pair<Body>,Boolean>();
 
+	public int method = 1;
+	int tick = 0;
+	double accumen;
+	double accumef;
+	int totalinner = 0;
 	
 	// Create a contact graph classifier, used by the contact graph for determining
 	// fixed bodies, i.e. bodies considered to have infinite mass. 
@@ -119,8 +130,8 @@ public final class Engine implements Model {
 	};
 	
 	// Broad phase collision detection implementation 
-	private BroadfaseCollisionDetection broadfase = new SweepAndPrune(handler);
-	//private BroadfaseCollisionDetection broadfase = new AllPairsTest(handler);
+	//private BroadfaseCollisionDetection broadfase = new SweepAndPrune(handler);
+	private BroadfaseCollisionDetection broadfase = new AllPairsTest(handler);
 
 	//Create a linear complementarity problem solver
 	private Solver solver = new ProjectedGaussSeidel();
@@ -147,6 +158,24 @@ public final class Engine implements Model {
 				return null;	
 			}
 		});
+
+		
+		//Box-Box support maps
+		geometryClassifiers.add(new ContactGeneratorClassifier() {
+			@Override
+			public ContactGenerator createGeneratorFromGeometries(Geometry a,
+					Geometry b) {
+				if ( a instanceof jinngine.geometry.Box && b instanceof jinngine.geometry.Box) {
+					//return new SupportMapContactGenerator2((SupportMap3)a, a,  (SupportMap3)b, b);
+					return new FeatureSupportMapContactGenerator((SupportMap3)a, a,  (SupportMap3)b, b);
+					//return new BoxBoxContactGenerator((jinngine.geometry.Box)a,(jinngine.geometry.Box)b);					
+				}
+				
+				//not recognised
+				return null;	
+			}
+		});
+
 		
 		//General convex support maps
 		geometryClassifiers.add(new ContactGeneratorClassifier() {
@@ -154,7 +183,11 @@ public final class Engine implements Model {
 			public ContactGenerator createGeneratorFromGeometries(Geometry a,
 					Geometry b) {
 				if ( a instanceof SupportMap3 && b instanceof SupportMap3) {
-					return new SupportMapContactGenerator2((SupportMap3)a, a,  (SupportMap3)b, b);
+					//return new SupportMapContactGenerator2((SupportMap3)a, a,  (SupportMap3)b, b);
+					//return new SupportMapContactGenerator2((SupportMap3)a, a,  (SupportMap3)b, b);
+					return new FeatureSupportMapContactGenerator((SupportMap3)a, a,  (SupportMap3)b, b);
+
+					
 				}
 				
 				//not recognised
@@ -189,9 +222,10 @@ public final class Engine implements Model {
 			// force
 			c.clearForces();
 
-			// clear out auxillary delta velocity fields
+			// clear out auxillary delta velocity fields and constraint lists
 			c.deltaVCm.assign(Vector3.zero);
 			c.deltaOmegaCm.assign(Vector3.zero);
+			c.constraints.clear();
 		}
 
 		
@@ -214,6 +248,8 @@ public final class Engine implements Model {
 		// Iterate through groups/components in the contact graph
 		Iterator<ComponentGraph<Body,Constraint>.Group> groups = contactGraph.groupPairs.keySet().iterator();		
 		while (groups.hasNext()) {
+			//constraintList.clear();			
+			
 			//The group 
 			ComponentGraph<Body,Constraint>.Group g = groups.next();
 
@@ -249,6 +285,9 @@ public final class Engine implements Model {
 				} //while overlapping
 
 			}
+
+
+			
 		} //while groups
 
 		
@@ -256,9 +295,154 @@ public final class Engine implements Model {
 		constraintIterator.removeRemaining();
 
 		
+//		Comparator<ConstraintEntry> comp = new Comparator<ConstraintEntry>() {
+//			@Override
+//			public int compare(ConstraintEntry o1, ConstraintEntry o2) {
+//				if ( o1.coupledMax != null && o2.coupledMax != null ) 
+//					return 0;
+//				if ( o1.coupledMax == null && o2.coupledMax != null ) 
+//					return -1;
+//				if ( o1.coupledMax != null && o2.coupledMax == null ) 
+//					return 1;
+//				
+//				return 0;
+//			}
+//		};
+//		Collections.sort(constraintList, comp);
+		
+		if (constraintList.size()>0) 
+			//reset lambda values
+			for (ConstraintEntry e: constraintList) {
+				e.lambda = 0;
+			}
+
+
+		normals.clear();
+		frictions.clear();
+		
+		for (ConstraintEntry e: constraintList) {
+			if (e.coupledMax == null)
+				normals.add(e);
+			else
+				frictions.add(e);
+		}
+
+		FisherNewtonCG newton = new FisherNewtonCG();
+
+
+		if (method == 2) {
+
+			//System.out.println("N="+constraintList.size());
+
+			long t = System.currentTimeMillis();
+
+			newton.setLinesearchIterations(0);
+			newton.setMaximumCGIterations(8);
+			newton.setMaximumIterations(15);
+			newton.setErrorTolerance(1e-7);
+			newton.setDamping(0.00000);
+			newton.setFrictionDamping(0.00);
+			double errNormals = newton.solve(normals, bodies);
+			//System.out.println("error normals="+errNormals);
+
+			//recompute limits
+			double mu=0.7;
+			for (ConstraintEntry ci: constraintList) {
+				if (ci.coupledMax != null) {
+					double limit = Math.abs(ci.coupledMax.lambda)*mu; ci.lambdaMin = -limit; ci.lambdaMax = limit;
+					//ci.lambdaMin=-100; ci.lambdaMax = 100;
+				}
+			}
+
+			newton.setLinesearchIterations(5);
+			newton.setMaximumCGIterations(15);
+			newton.setMaximumIterations(5);
+			newton.setErrorTolerance(1e-7);
+			newton.setDamping(0.000000);
+			newton.setFrictionDamping(0.0000000);
+
+			double errAll4 = newton.solve(constraintList, bodies);
+
+			long delta = System.currentTimeMillis() -t;
+			//System.out.println("delta="+delta);
+			// System.out.println("error final="+errAll4);
+
+			
+			if (errAll4>0.1) {
+
+
+				
+		 System.out.println("error final="+errAll4);
+
+				//newton.printA(constraintList);
+			}
+
+
+		} else {
+			//				solver.setMaximumIterations(30);			
+			//				solver.solve( normals );
+			//				totalinner += 30/3;
+
+
+			//long t = System.currentTimeMillis();
+
+			solver.setMaximumIterations(15);			
+			solver.solve( constraintList, bodies );				
+			totalinner +=15;
+
+			//long delta = System.currentTimeMillis() -t;
+			//System.out.println("delta="+delta);
+
+		}
+
+
+		
+		//double en = NewtonConjugateGradientSolverFriction.fisherError(normals, frictions);
+		//double ef = NewtonConjugateGradientSolverFriction.fisherError(frictions, normals);
+		
+		tick ++;
+		//accumen += en;
+		//accumef += ef;
+		
+		
+		if (tick % 200 == 0) {
+			
+			//newton.printA(constraintList);
+			
+			//for (ConstraintEntry entry: constraintList)
+			//	System.out.println(" " + entry.diagonal);
+			
+			//System.out.println("N="+constraintList.size()+"  Last "+en + " -- " + ef );
+
+			//System.out.println(""+accumen + " -- " + accumef + " = " +totalinner);
+		    accumen =0; accumef = 0;
+		    totalinner = 0;
+		    
+		    double energy = 0;
+		    for (Body b: bodies) {
+		    	energy += b.totalKinetic();
+		    }
+		    System.out.println("energy="+energy);
+		}
+		
+
+
+	
+
 		// Solve the velocity based LCP problem for all constraints
 		// TODO (experimenting could reveal a speed up if constraints were solved per group)
-		solver.solve( constraintList );
+		//solver.solve( constraintList );
+
+		//hack, clear delta velocities 
+//		for (Body b: bodies) {
+//			b.deltaOmegaCm.assignZero();
+//			b.deltaVCm.assignZero();
+//		}
+		
+		
+
+		
+
 
 		
 		// Apply delta velocities and integrate positions forward
@@ -273,7 +457,7 @@ public final class Engine implements Model {
 			//apply external forces
 			c.advanceVelocities(dt);
 			
-			// Apply computed foces to bodies
+			// Apply computed forces to bodies
 			if ( !c.isFixed() ) {
 				c.state.vCm.assign( c.state.vCm.minus( c.deltaVCm));
 				c.state.omegaCm.assign( c.state.omegaCm.minus( c.deltaOmegaCm));	

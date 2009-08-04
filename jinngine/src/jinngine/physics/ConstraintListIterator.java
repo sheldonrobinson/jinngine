@@ -5,6 +5,7 @@ import java.util.ListIterator;
 public class ConstraintListIterator implements ListIterator<ConstraintEntry> {
 
 	private final ListIterator<ConstraintEntry> iterator;
+	private int lastIndex=0;
 	
 	public ConstraintListIterator( ListIterator<ConstraintEntry> iterator) {
 		this.iterator = iterator;
@@ -12,13 +13,13 @@ public class ConstraintListIterator implements ListIterator<ConstraintEntry> {
 	
 	@Override
 	public void add(ConstraintEntry e) {
-//		if (iterator.hasNext())
-//			iterator.next().assign(e);
-//		else {
-//			//System.out.println("created new");
-//			iterator.add(e);
-//		}
-		iterator.add(e);
+		if (iterator.hasNext())
+			iterator.next().assign(e);
+		else {
+			//System.out.println("created new");
+			iterator.add(e);
+		}
+		//iterator.add(e);
 	}
 
 	@Override
@@ -34,7 +35,10 @@ public class ConstraintListIterator implements ListIterator<ConstraintEntry> {
 	@Override
 	public ConstraintEntry next() {		
 		if (!iterator.hasNext()) {
+			
 			ConstraintEntry c = new ConstraintEntry();
+			c.index = lastIndex;
+			lastIndex = lastIndex + 1;
 			iterator.add(c);
 			return c;
 		}
@@ -65,6 +69,7 @@ public class ConstraintListIterator implements ListIterator<ConstraintEntry> {
 		while (iterator.hasNext()) {
 			iterator.next();
 			iterator.remove();
+			lastIndex = lastIndex - 1;
 		}
 	}
 

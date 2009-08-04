@@ -22,8 +22,8 @@ import jinngine.physics.*;
 public class SupportMapContactGenerator2 implements ContactGenerator {
 
 	//final double envelopeMin = 2.75;
-    double envelope = 1.0;
-    double shell = envelope*0.25;
+    double envelope = 0.3;
+    double shell = envelope*0.33333;
 	private final SupportMap3 Sa;
 	private final SupportMap3 Sb;
 	private final GJK3 closest = new GJK3();
@@ -64,12 +64,15 @@ public class SupportMapContactGenerator2 implements ContactGenerator {
 		if ( d > 1e-6  && d < envelope ) {
 			//principalPenetration = false;
 			
-			double depth = envelope-d;
-			depth = depth-shell > 0 ? depth-shell:0;
-
+			double depth = 0;;
+			//depth = depth-shell > 0 ? depth-shell:0;
+			depth = d-shell;
+			depth = depth > 0 ? 0:depth;
 			//depth=0;
 			add(a,b,v.normalize(), depth);
 
+			
+			//System.out.println("depth="+depth);
 			return true;
 
 //		} else { //distance is non-positive or far away
@@ -142,7 +145,7 @@ public class SupportMapContactGenerator2 implements ContactGenerator {
 			
 			//when a point's normal is tilting away from the true normal,
 			//remove the point regardless of a penetrating or non-penetrating point 
-			if ( wn.dot(principalNormal) < 0.95) {
+			if ( wn.dot(principalNormal) < 0.91) {
 				i.remove();
 				continue;
 			} 
@@ -174,7 +177,7 @@ public class SupportMapContactGenerator2 implements ContactGenerator {
 		principalPoint.assign(cp.midpoint);
 
 		
-
+		double tol = 1e-1;
 		switch ( manifold.size()) {
 		case 0:
 			//add aways
@@ -182,7 +185,7 @@ public class SupportMapContactGenerator2 implements ContactGenerator {
 			break;
 		case 1:
 			//			add if point it's far away
-			if (manifold.get(0).midpoint.minus(cp.midpoint).infnorm() < 1e-2 ) {
+			if (manifold.get(0).midpoint.minus(cp.midpoint).infnorm() < tol ) {
 				break;
 			} else {
 				manifold.add( cp );
@@ -193,7 +196,7 @@ public class SupportMapContactGenerator2 implements ContactGenerator {
 			Matrix3 M = new Matrix3(manifold.get(0).midpoint, manifold.get(1).midpoint, cp.midpoint);
 			double d = Matrix3.determinant(M);
 
-			if ( Math.abs(d) < 1e-3) {
+			if ( Math.abs(d) < tol) {
 				double l0 = manifold.get(0).midpoint.minus(manifold.get(1).midpoint).norm();
 				double l1 = manifold.get(0).midpoint.minus( cp.midpoint).norm();
 				double l2 = manifold.get(1).midpoint.minus( cp.midpoint).norm();

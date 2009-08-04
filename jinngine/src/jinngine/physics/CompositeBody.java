@@ -47,6 +47,7 @@ public class CompositeBody extends Body {
 
 		//set local transform in geometry and add to list
 		g.setBody(this);
+		//g.setLocalTransform(R, r);
 		masses.add(mass);		
 		transforms.add(Transforms.transformAndTranslate4(R, r));
 		geometries.add(g);
@@ -81,7 +82,7 @@ public class CompositeBody extends Body {
 			//fill out the invers tensor
 			Matrix3.inverse(this.state.I, this.state.Iinverse);
 
-			Matrix3.print(state.Iinverse);
+			Matrix3.print(state.Iinverse.multiply(state.I));
 			System.out.println("mass="+state.M);
 		} else {
 			this.state.M = 1;

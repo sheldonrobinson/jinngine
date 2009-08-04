@@ -26,7 +26,7 @@ public interface SupportMap3  {
    * @param direction
    * @return list of points that constitute either a point, line or a face
    */
-  public List<Vector3> supportFeature( Vector3 d);
+  public void supportFeature( Vector3 d, List<Vector3> returnlist );
   
 }
 

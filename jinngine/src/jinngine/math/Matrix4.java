@@ -28,6 +28,10 @@ public class Matrix4 {
 		  M.a41=a41; M.a42=a42; M.a43=a43; M.a44=a44;
 	  }
 	  
+	  public Matrix4( Matrix4 M) {
+		  Matrix4.set(M, this);
+	  }
+	  
 	  //C = AxB 
 	  public final static Matrix4 multiply( final Matrix4 A, final Matrix4 B, final Matrix4 C ) {
 	    //                   B | b11 b12 b13 b14
@@ -240,7 +244,7 @@ public class Matrix4 {
 	    B.a41 = A.a41; B.a42 = A.a42; B.a43 = A.a43; B.a44 = A.a44;
 	  }
 	  
-	  public static final void invert( Matrix4 S) {
+	  public static final Matrix4 invert( Matrix4 S) {
 
 		  double[][] M = new double[4][4];
 		  M = Matrix4.pack2(S);
@@ -285,6 +289,8 @@ public class Matrix4 {
 
 		  //copy new values
 		  Matrix4.set(S, M);
+		  
+		  return S;
 
 	  }
 		

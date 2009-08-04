@@ -26,8 +26,9 @@ public interface Solver {
 	/**
 	 * Given a list of constraints, solve the corresponding VBLCP 
 	 * @param constraints List of constraints
+	 * @return error
 	 */
-	public void solve(List<ConstraintEntry> constraints);
+	public double solve(List<ConstraintEntry> constraints, List<Body> bodies );
 
 	/**
 	 * In each iteration of the solver, the lambda solution entries are changed. Any such a change corresponds to

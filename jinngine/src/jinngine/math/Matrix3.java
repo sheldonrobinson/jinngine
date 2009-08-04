@@ -387,6 +387,12 @@ public class Matrix3 {
     return C;
   }
   
+  public final Matrix3 inverse() {
+	  Matrix3 I = new Matrix3();
+	  Matrix3.inverse(this, I);
+	  return I;
+  }
+  
   //set the Matrix from a double[][] array
   /**
    * Set the entries of the matrix A, using the double array matrixArray

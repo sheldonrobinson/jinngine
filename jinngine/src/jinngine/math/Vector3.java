@@ -46,6 +46,18 @@ public final class  Vector3 {
     return i>0?(i>1?a3:a2):a1; 
   }
 
+  public void set( int i, double v ) {
+	    if (i == 0) {
+	    	a1 = v;
+	    } else {
+	    	if ( i==1) {
+	    		a2=v;
+	    	}else {
+	    		a3=v;
+	    	}
+	    }
+  }
+
   //set
   public static final void assign( Vector3 v1, Vector3 v2) {
 	  v1.a1 = v2.a1;
@@ -107,6 +119,7 @@ public final class  Vector3 {
     return v1.a1*v2.a1+v1.a2*v2.a2+v1.a3*v2.a3;
   }
   
+  //Vector3    operator% ( Vector3 const & v ) const {  return Vector3(y*v(2)-v(1)*z, v(0)*z-x*v(2), x*v(1)-v(0)*y);  }
   public final Vector3 cross( Vector3 v ) {
     return new Vector3( a2*v.a3-a3*v.a2, a3*v.a1-a1*v.a3, a1*v.a2-a2*v.a1 ); 
   }
@@ -212,6 +225,11 @@ public final class  Vector3 {
   public boolean lessThan(Vector3 v) {
     return (a1<v.a1)&&(a2<v.a2)&&(a3<v.a3);
   }
+
+  public boolean weaklyLessThan(Vector3 v) {
+	    return (a1<=v.a1)&&(a2<=v.a2)&&(a3<=v.a3);
+	  }
+
   
   public boolean isZero() {
 	  return a1==0&&a2==0&&a3==0;
