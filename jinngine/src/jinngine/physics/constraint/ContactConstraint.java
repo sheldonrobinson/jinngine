@@ -169,7 +169,7 @@ public final class ContactConstraint implements Constraint {
 		double unf = uni<0 ? -e*uni: 0;
 		
 		//truncate small collision
-		unf = unf < 0.5? 0: unf;
+		unf = unf < 0.1? 0: unf;
 		
 //		depth = depth*0.33333;
 //		if (unf < (0.5 * depth)) unf = depth*0.5;
@@ -210,7 +210,7 @@ public final class ContactConstraint implements Constraint {
 		double lowerNormalLimit = 0;
 
 		correction = depth*(1/dt);
-		double limit = 2.15;
+		double limit = 3.5;
 		correction = correction< -limit? -limit:correction;
 		correction = correction>  limit?  limit:correction;
 		//correction = 0;
@@ -224,7 +224,7 @@ public final class ContactConstraint implements Constraint {
 		}
 		
 //		//if (Math.abs(correction)>0.1)
-       // System.out.println("correction="+correction);
+       //System.out.println("correction="+correction);
 		
 //		double restLimit = 1e-1;
 //		//if this is a resting contact

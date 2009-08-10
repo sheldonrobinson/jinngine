@@ -536,7 +536,7 @@ public class GJK3 implements ClosestPointsAlgorithm<SupportMap3,SupportMap3> {
 				//GJK penetrating state
 
 				//check for the accuracy, v should be the zero vector
-				if( y1.multiply(d1234_1/d1234).add(y2.multiply(d1234_2/d1234)).add(y3.multiply(d1234_3/d1234)).add(y4.multiply(d1234_4/d1234)).norm() > 1e-6 ) {
+				if( y1.multiply(d1234_1/d1234).add(y2.multiply(d1234_2/d1234)).add(y3.multiply(d1234_3/d1234)).add(y4.multiply(d1234_4/d1234)).norm() > 1 ) {
 					//System.out.println("wrong penetration");
 					//result is bad, terminate with last good subset {y1,y2,y3}
 					state.simplexSize = 3;

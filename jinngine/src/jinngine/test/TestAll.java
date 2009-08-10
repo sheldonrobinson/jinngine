@@ -49,11 +49,11 @@ public class TestAll implements KeyListener {
 		//add all testcases
 		
 		//seesaw test
-//		tests.add(new Seesaw(0.01));
-//		tests.add(new Seesaw(0.02));
-//		tests.add(new Seesaw(0.04));
-//		tests.add(new Seesaw(0.08));
-//		tests.add(new Seesaw(0.12));
+		tests.add(new Seesaw(0.01));
+		tests.add(new Seesaw(0.02));
+		tests.add(new Seesaw(0.04));
+		tests.add(new Seesaw(0.08));
+		tests.add(new Seesaw(0.12));
 		
 		//round
 		tests.add(new Oblong( 0.01));

@@ -388,7 +388,7 @@ public final class Engine implements Model {
 
 			//long t = System.currentTimeMillis();
 
-			solver.setMaximumIterations(50);			
+			solver.setMaximumIterations(15);			
 			solver.solve( constraintList, bodies );				
 			//totalinner +=15;
 
