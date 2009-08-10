@@ -82,7 +82,8 @@ public class FisherNewtonCG implements Solver {
 				//apply friction damping
 				w += frictiondamp*ci.lambda;
 				
-				//double limit = Math.abs(ci.coupledMax.lambda)*mu; ci.lambdaMin = -limit; ci.lambdaMax = limit;
+				//recompute friction limits
+				double limit = Math.abs(ci.coupledMax.lambda)*mu; ci.lambdaMin = -limit; ci.lambdaMax = limit;
 				if (Math.abs(w)<truncatevelocity ) {w=0;}
 				
 				ci.phixk =  fisher( ci.lambda-ci.lambdaMin, fisher(ci.lambdaMax-ci.lambda, -w));
@@ -273,8 +274,8 @@ public class FisherNewtonCG implements Solver {
 						w += frictiondamp*ci.lambda;
 
 						
-						//dont compute limits
-						//double limit = Math.abs(ci.coupledMax.lambda)*mu; ci.lambdaMin = -limit; ci.lambdaMax = limit;
+						//compute limits
+						double limit = Math.abs(ci.coupledMax.lambda)*mu; ci.lambdaMin = -limit; ci.lambdaMax = limit;
 						if (Math.abs(w)<truncatevelocity ) {
 							w=0;
 						}
@@ -325,7 +326,7 @@ public class FisherNewtonCG implements Solver {
 
 	
 	
-	public void computeVelocity2(List<ConstraintEntry> constraints, List<ConstraintEntry> off,  double[] lambda, double[] w, double damper) {	
+	private void computeVelocity2(List<ConstraintEntry> constraints, List<ConstraintEntry> off,  double[] lambda, double[] w, double damper) {	
 		//clear auxiliary fields
 		for (ConstraintEntry ci: constraints) {
 			ci.body1.auxDeltav.assignZero();
@@ -365,7 +366,7 @@ public class FisherNewtonCG implements Solver {
 	
 	
 	
-	public void computeFisher( List<ConstraintEntry> constraints, double[] lambda, double w[], double[] b) {
+	private void computeFisher( List<ConstraintEntry> constraints, double[] lambda, double w[], double[] b) {
 		//evaluate b vector using fisher
 		int i=0;
 		for (ConstraintEntry c: constraints) {
@@ -387,7 +388,7 @@ public class FisherNewtonCG implements Solver {
 	}
 	
 	
-	public void printA(List<ConstraintEntry> constraints) {
+	private void printA(List<ConstraintEntry> constraints) {
 		System.out.println("A = [ ");
 
 		int i = 0; int k =0;

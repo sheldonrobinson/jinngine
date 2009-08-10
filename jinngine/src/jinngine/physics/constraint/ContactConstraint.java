@@ -73,7 +73,6 @@ public final class ContactConstraint implements Constraint {
 	public final void applyConstraints(Iterator<ConstraintEntry> constraintIterator, double dt) {
 		//use ContactGenerators to create new contactpoints
 		for ( ContactGenerator cg: generators) {
-			
 			//run contact generator
 			cg.run(dt);
 
@@ -143,7 +142,6 @@ public final class ContactConstraint implements Constraint {
 			Iterator<ConstraintEntry> outConstraints 
 	) {
 
-		
 		//Use a gram-schmidt process to create a orthonormal basis for the impact space
 		Vector3 v1 = n.normalize(); Vector3 v2 = Vector3.i; Vector3 v3 = Vector3.k;    
 		Vector3 t1 = v1.normalize(); 
@@ -166,9 +164,12 @@ public final class ContactConstraint implements Constraint {
 		//System.out.println("det==="+Matrix3.determinant(new Matrix3(v1,t2,t3)) );
 		
 		//First off, create the constraint in the normal direction
-		double e = 0.650; //coeficient of restitution
+		double e = 0.7; //coeficient of restitution
 		double uni = relativeVelocity(b1,b2,p,n);
 		double unf = uni<0 ? -e*uni: 0;
+		
+		//truncate small collision
+		unf = unf < 0.5? 0: unf;
 		
 //		depth = depth*0.33333;
 //		if (unf < (0.5 * depth)) unf = depth*0.5;
@@ -203,10 +204,40 @@ public final class ContactConstraint implements Constraint {
 
 		//external forces acing at contact
 		double Fext = B1.dot(b1.state.FCm) + B2.dot(b1.state.tauCm) + B3.dot(b2.state.FCm) + B4.dot(b2.state.tauCm);
-		double cv = cp.penetrating?0.5:0.0050; //max. correction velocity
+		//double cv = cp.penetrating?0.5:0.50; //max. correction velocity
 		//depth = depth > 0? 0:depth;
-		double correction = depth*(1/dt);
-		correction = correction > cv? cv:correction;
+		double correction = 0;
+		double lowerNormalLimit = 0;
+
+		correction = depth*(1/dt);
+		double limit = 2.15;
+		correction = correction< -limit? -limit:correction;
+		correction = correction>  limit?  limit:correction;
+		//correction = 0;
+		
+		if (correction > 0) {
+			if (unf > correction ) {
+				correction = 0;
+			} else {
+				correction = correction - unf;
+			}
+		}
+		
+//		//if (Math.abs(correction)>0.1)
+       // System.out.println("correction="+correction);
+		
+//		double restLimit = 1e-1;
+//		//if this is a resting contact
+//		if (Math.abs(uni) < restLimit) {
+//		 correction = depth*(1/dt);
+//			 //clamp correction velocity, so that it bring the contact into a colliding state
+//			 correction = correction > restLimit? restLimit: correction;
+//			 correction = correction < -restLimit? -restLimit: correction;
+//			 
+//			 //enable a small magnitude of attracting force at the contact
+//			 lowerNormalLimit = -1.0;
+//		}
+		//correction = correction > cv? cv:correction;
 		//correction = 0;
 		//double correction = -depth*(1/dt)*1;
 		
@@ -218,10 +249,12 @@ public final class ContactConstraint implements Constraint {
 		//constraint in normal direction
 		//		Constraint c = new Constraint(b1,b2,B1,B2,B3,B4,J1,J2,J3,J4,0,Double.POSITIVE_INFINITY,unf-uni + 1 * depth);
 		ConstraintEntry c = outConstraints.next();
-		c.assign(this,b1,
-				b2,B1,B2,B3,
-				B4,J1,J2,J3,
-				J4,0,Double.POSITIVE_INFINITY,null, unf-uni + Fext*dt + correction );
+		c.assign(this,b1,b2,
+				B1,B2,B3,B4,
+				J1,J2,J3,J4,
+				lowerNormalLimit,Double.POSITIVE_INFINITY,
+				null, 
+				unf-uni + Fext*dt + correction );
 		
 		//use contact caching
 		c.aux = cp;

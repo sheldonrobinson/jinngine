@@ -52,6 +52,9 @@ public class GJK3 implements ClosestPointsAlgorithm<SupportMap3,SupportMap3> {
 	
 		//initial separating axis test (distance is at least more than the envelope)
 		if ( v.normalize().dot(w) > envelope ) {
+			//return support points as approximations of closest points
+			va.assign(sa);
+			vb.assign(sb);
 			return;
 		} 
 		
@@ -63,7 +66,7 @@ public class GJK3 implements ClosestPointsAlgorithm<SupportMap3,SupportMap3> {
 		while ( true  ) {
 			iterations++;
 		
-//			System.out.println("gjk iteration");
+//		    System.out.println("gjk iteration" + " " + v.norm()+ "  : " + state.simplexSize);
 //			v.print();
 			
 			//store points of convex objects a and b, and A-B (in A space)
@@ -228,9 +231,9 @@ public class GJK3 implements ClosestPointsAlgorithm<SupportMap3,SupportMap3> {
 			if ( d12_1 <= 0 ) { swap(1,0, perm); lambda[perm[0]] = 1;  state.simplexSize = 1; return true; }
 
 			double d12 = d12_1 + d12_2;
-			//terminate on affinely dependent points in the set
-			if ( d12 <= epsilon ) {
-				//System.out.println("Affinely dependent set in case d12");
+			//terminate on affinely dependent points in the set (if d12 is zero, we can never use point y2)
+			if ( Math.abs(d12) <= epsilon ) {
+				System.out.println("Affinely dependent set in case d12");
 				state.simplexSize = 1;
 				return false;
 			}
@@ -240,7 +243,7 @@ public class GJK3 implements ClosestPointsAlgorithm<SupportMap3,SupportMap3> {
 				lambda[perm[0]] = d12_1/d12; lambda[perm[1]] = d12_2/d12;
 				return true;
 			} else {
-				//System.out.println("Unable to determine smallest set, use y1");
+				System.out.println("Unable to determine smallest set, use y1");
 				state.simplexSize = 1;
 				return false;
 			}
@@ -279,13 +282,19 @@ public class GJK3 implements ClosestPointsAlgorithm<SupportMap3,SupportMap3> {
 			double d13 = d13_1 + d13_3;
 			double d12 = d12_1 + d12_2;
 
-			//terminate on affinely independent points in the set
-			if ( (d13)<=epsilon ||
-					(d23)<=epsilon ) {
-				//System.out.println("Affinely independent set on d13 or d23  ");
-				state.simplexSize = 2;
-				return false;
-			}
+			//terminate on affinely dependent points in the set
+//			if ( Math.abs(d13)<=epsilon ||
+//					Math.abs(d23)<=epsilon ) {
+//				
+//				//System.out.println("Affinely independent set on d13 or d23 ,  d13="+d13+"  d23="+d23+"  d12="+d12);
+//				state.simplexSize = 2;
+//				return false;
+//			}
+			//TODO 2009-08-09,  I've discovered that the above is wrong. Just because d13 is zero, it does not mean that y2 and y3 cannot be 
+			//used, and vice versa. The idea of the check, is to prevent GJK from performing useless iterations, using 
+			//points that are affinely dependent. It now remains to fix the condition such that it works in the intended way.
+			
+			
 
 			//y2,y3 (2,1) (3,2)
 			double d123_1 = d23_2 * y2.minus(y1).dot(y2) + d23_3 * y2.minus(y1).dot(y3); //d123_1 = Math.abs(d123_1)<epsilon?0:d123_1;
@@ -370,12 +379,12 @@ public class GJK3 implements ClosestPointsAlgorithm<SupportMap3,SupportMap3> {
 			double d34 = d34_3 + d34_4;
 			
 			//terminate on affinely dependent points in the set
-			if ( (d12)<=epsilon || (d13)<=epsilon || (d14)<=epsilon ||
-					(d23)<=epsilon || (d24)<=epsilon || (d34)<=epsilon ) {
-				//System.out.println("Affinely independent set");
-				state.simplexSize = 3;
-				return false;
-			}
+//			if ( (d12)<=epsilon || (d13)<=epsilon || (d14)<=epsilon ||
+//					(d23)<=epsilon || (d24)<=epsilon || (d34)<=epsilon ) {
+//				//System.out.println("Affinely independent set");
+//				state.simplexSize = 3;
+//				return false;
+//			}
 
 			//y1,y2 (no permutation)
 			double d123_3 = d12_1 * y1.minus(y3).dot(y1) + d12_2 * y1.minus(y3).dot(y2); //d123_3= Math.abs(d123_3)<epsilon?0:d123_3;

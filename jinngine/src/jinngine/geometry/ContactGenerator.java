@@ -20,6 +20,7 @@ import jinngine.math.Vector3;
  *
  */
 public interface ContactGenerator {
+
 	/**
 	 * A simple structure class representing a contact point with a normal and a penetration depth
 	 * @author Moo
@@ -28,8 +29,10 @@ public interface ContactGenerator {
 		public final Vector3 pa = new Vector3(), pb = new Vector3(), 
 		midpoint = new Vector3(), normal = new Vector3();
 		public double depth;
+		public double distance;
 		public boolean penetrating = false;
 	}
+	
 	/**
 	 * Run/update contact generation. This method will be invoked by the ContactConstraint,
 	 * to update the contact information, to reflect the present configuration. An implementation

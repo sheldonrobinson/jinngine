@@ -22,8 +22,8 @@ import jinngine.physics.*;
 public class SupportMapContactGenerator2 implements ContactGenerator {
 
 	//final double envelopeMin = 2.75;
-    double envelope = 0.3;
-    double shell = envelope*0.33333;
+    double envelope = 0.6;
+    double shell = envelope*0.5;
 	private final SupportMap3 Sa;
 	private final SupportMap3 Sb;
 	private final GJK3 closest = new GJK3();

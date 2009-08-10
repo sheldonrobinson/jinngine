@@ -143,8 +143,8 @@ public class Box implements SupportMap3, Geometry {
 	}
 
 	@Override
-	public void supportFeature(Vector3 d, List<Vector3> featureList) {
-		final double epsilon = 0.03;  //123+132  213 231 312+321   
+	public void supportFeature(Vector3 d, double epsilon, List<Vector3> featureList) {
+		//final double epsilon = 0.03;  //123+132  213 231 312+321   
 		//get d into the canonical box space
 		//Vector3 v = body.state.rotation.multiply(localtransform).transpose().multiply(d);
 		Vector3 v = body.state.rotation.transpose().multiply(d);
@@ -153,7 +153,6 @@ public class Box implements SupportMap3, Geometry {
 
 		int numberOfZeroAxis = 0;
 		int[] zeroAxisIndices = new int[3];
-
 		int numberOfNonZeroAxis = 0;
 		int[] nonZeroAxisIndices = new int[3];
 		
@@ -175,7 +174,6 @@ public class Box implements SupportMap3, Geometry {
 			double sv3 = v.a3<0?-0.5:0.5;
 			//return Matrix4.multiply(transform4, new Vector3(sv1, sv2, sv3), new Vector3());
 			featureList.add( body.state.rotation.multiply(localtransform.multiply(new Vector3(sv1, sv2, sv3)).add(localdisplacement)).add(body.state.rCm) );
-		
 		}
 
 		else if (numberOfZeroAxis == 1) {
@@ -202,7 +200,7 @@ public class Box implements SupportMap3, Geometry {
 
 
 			
-			//make face turn clock wise
+			//make face turn counter-clock wise
 			if ( v.get(nonZeroAxisIndices[0]) > 0 ) { 
 				p1.set( zeroAxisIndices[0], 0.5);
 				p1.set( zeroAxisIndices[1], 0.5);
@@ -226,12 +224,11 @@ public class Box implements SupportMap3, Geometry {
 				p3.set( zeroAxisIndices[1], -0.5);
 
 				p4.set( zeroAxisIndices[0],  -0.5);
-				p4.set( zeroAxisIndices[1],   0.5);
-				
+				p4.set( zeroAxisIndices[1],   0.5);				
 			}
+				
 			
-			
-			
+			//return transformed vertices
 			featureList.add( body.state.rotation.multiply(localtransform.multiply(p1).add(localdisplacement)).add(body.state.rCm) );
 			featureList.add( body.state.rotation.multiply(localtransform.multiply(p2).add(localdisplacement)).add(body.state.rCm) );
 			featureList.add( body.state.rotation.multiply(localtransform.multiply(p3).add(localdisplacement)).add(body.state.rCm) );
