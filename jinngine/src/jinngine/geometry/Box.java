@@ -146,8 +146,8 @@ public class Box implements SupportMap3, Geometry {
 	public void supportFeature(Vector3 d, double epsilon, List<Vector3> featureList) {
 		//final double epsilon = 0.03;  //123+132  213 231 312+321   
 		//get d into the canonical box space
-		//Vector3 v = body.state.rotation.multiply(localtransform).transpose().multiply(d);
-		Vector3 v = body.state.rotation.transpose().multiply(d);
+		Vector3 v = body.state.rotation.multiply(localtransform).transpose().multiply(d);
+		//Vector3 v = body.state.rotation.transpose().multiply(d);
 		//Vector3 v = d.copy();
 		//List<Vector3> featureList = new ArrayList<Vector3>();
 

@@ -84,6 +84,13 @@ public interface Model {
 	 */
 	public BroadfaseCollisionDetection getBroadfase();
 	
+	
+	/**
+	 * Return the NCP solver
+	 * @return
+	 */
+	public Solver getSolver();
+	
 	/**
 	 * Set the time step size
 	 * @param dt

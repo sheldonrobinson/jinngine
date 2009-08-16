@@ -63,7 +63,7 @@ public class FisherNewtonCG implements Solver {
 		double squarederror = 0; 
 		//double epsilon = 1e-7;
 		int i = 0;
-		double mu = 0.25;
+		double mu = 1;
 		//double damper = 0.000001;
 		
 		//friction velocity trucation
@@ -184,6 +184,9 @@ public class FisherNewtonCG implements Solver {
 					else {
 						//friction damping
 						w += frictiondamp*ci.lambda;
+
+						//recompute friction limits *)
+						double limit = Math.abs(ci.coupledMax.lambda)*mu; ci.lambdaMin = -limit; ci.lambdaMax = limit;
 
 						if (Math.abs(w)<truncatevelocity ) {w=0;}
 

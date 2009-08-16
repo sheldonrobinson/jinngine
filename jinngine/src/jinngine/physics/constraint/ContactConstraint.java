@@ -37,6 +37,27 @@ public final class ContactConstraint implements Constraint {
 
 	private final Body b1, b2;                  //bodies in constraint
 	private final List<ContactGenerator> generators = new ArrayList<ContactGenerator>();
+	
+	private static double restitution = 0.7;
+	public static double getRestitution() {
+		return restitution;
+	}
+
+	public static void setRestitution(double restitution) {
+		ContactConstraint.restitution = restitution;
+	}
+
+	public static double getMu() {
+		return mu;
+	}
+
+	public static void setMu(double mu) {
+		ContactConstraint.mu = mu;
+	}
+
+
+	private static double mu = 0.7;
+	private static double K = 0.8;
 
 	/**
 	 * Create a new ContactConstraint, using one initial ContactGenerator
@@ -164,12 +185,12 @@ public final class ContactConstraint implements Constraint {
 		//System.out.println("det==="+Matrix3.determinant(new Matrix3(v1,t2,t3)) );
 		
 		//First off, create the constraint in the normal direction
-		double e = 0.7; //coeficient of restitution
+		double e = restitution; //coeficient of restitution
 		double uni = relativeVelocity(b1,b2,p,n);
 		double unf = uni<0 ? -e*uni: 0;
 		
 		//truncate small collision
-		unf = unf < 0.1? 0: unf;
+		//unf = unf < 0.1? 0: unf;
 		
 //		depth = depth*0.33333;
 //		if (unf < (0.5 * depth)) unf = depth*0.5;
@@ -209,12 +230,14 @@ public final class ContactConstraint implements Constraint {
 		double correction = 0;
 		double lowerNormalLimit = 0;
 
-		correction = depth*(1/dt);
-		double limit = 3.5;
-		correction = correction< -limit? -limit:correction;
-		correction = correction>  limit?  limit:correction;
+		correction = depth*(1/dt)*K;
+		
+//		double limit = 0.5;
+//		correction = correction< -limit? -limit:correction;
+//		correction = correction>  limit?  limit:correction;
 		//correction = 0;
 		
+		//truncate correction if already covered by repulsive velocity
 		if (correction > 0) {
 			if (unf > correction ) {
 				correction = 0;
@@ -270,8 +293,8 @@ public final class ContactConstraint implements Constraint {
 		//then the tantential friction constraints (totaly sticking in all cases, since lambda is unbounded)
 		double ut1i = relativeVelocity(b1,b2,p,t2);
 		double ut2i = relativeVelocity(b1,b2,p,t3);
-		double ut1f = -ut1i; 
-		double ut2f = -ut2i;
+		double ut1f = 0; 
+		double ut2f = 0;
 
 		
 		
@@ -330,5 +353,13 @@ public final class ContactConstraint implements Constraint {
 		//b1.constraints.add(c3);
 		//b2.constraints.add(c3);
 
+	}
+
+	public static double getCorrectionConstant() {
+		return K;
+	}
+
+	public static void setCorrectionConstant(double k) {
+		K = k;
 	}
 }

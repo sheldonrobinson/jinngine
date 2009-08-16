@@ -338,46 +338,51 @@ public final class Engine implements Model {
 
 			long t = System.currentTimeMillis();
 
-//			newton.setLinesearchIterations(0);
-//			newton.setMaximumCGIterations(8);
-//			newton.setMaximumIterations(15);
-//			newton.setErrorTolerance(1e-7);
-//			newton.setDamping(0.00000);
-//			newton.setFrictionDamping(0.00);
-//			double errNormals = newton.solve(normals, bodies);
-//			//System.out.println("error normals="+errNormals);
-//
-//			//recompute limits
-//			double mu=0.7;
-//			for (ConstraintEntry ci: constraintList) {
-//				if (ci.coupledMax != null) {
-//					double limit = Math.abs(ci.coupledMax.lambda)*mu; ci.lambdaMin = -limit; ci.lambdaMax = limit;
-//					//ci.lambdaMin=-100; ci.lambdaMax = 100;
-//				}
-//			}
+			newton.setLinesearchIterations(0);
+			newton.setMaximumCGIterations(8);
+			newton.setMaximumIterations(10);
+			newton.setErrorTolerance(0);
+			newton.setDamping(0);
+			newton.setFrictionDamping(0);
+			double errNormals = newton.solve(normals, bodies);
+//			double errAll4 = newton.solve(constraintList, bodies);
+		   //System.out.println("error ="+errAll4);
+
+//			solver.setMaximumIterations(35);			
+//			solver.solve( constraintList, bodies );				
+
+			
+			//recompute limits
+			double mu=0.7;
+			for (ConstraintEntry ci: constraintList) {
+				if (ci.coupledMax != null) {
+					double limit = Math.abs(ci.coupledMax.lambda)*mu; ci.lambdaMin = -limit; ci.lambdaMax = limit;
+					//ci.lambdaMin=-100; ci.lambdaMax = 100;
+				}
+			}
 
 			newton.setLinesearchIterations(5);
 			newton.setMaximumCGIterations(15);
 			newton.setMaximumIterations(10);
-			newton.setErrorTolerance(1e-4);
+			newton.setErrorTolerance(0);
 			newton.setDamping(0.000000);
 			newton.setFrictionDamping(0.0000000);
 
 			double errAll4 = newton.solve(constraintList, bodies);
-
-			long delta = System.currentTimeMillis() -t;
-			//System.out.println("delta="+delta);
-			// System.out.println("error final="+errAll4);
-
-			
-			if (errAll4>0.1) {
-
-
-				
-		 System.out.println("error final="+errAll4);
+//
+//			long delta = System.currentTimeMillis() -t;
+//			//System.out.println("delta="+delta);
+			 System.out.println("error final="+errAll4);
+//
+//			
+//			if (errAll4>0.1) {
+//
+//
+//				
+//		 System.out.println("error final="+errAll4);
 
 				//newton.printA(constraintList);
-			}
+			//}
 
 
 		} else {
@@ -388,7 +393,7 @@ public final class Engine implements Model {
 
 			//long t = System.currentTimeMillis();
 
-			solver.setMaximumIterations(15);			
+			//solver.setMaximumIterations(64);			
 			solver.solve( constraintList, bodies );				
 			//totalinner +=15;
 
@@ -620,6 +625,11 @@ public final class Engine implements Model {
 	public void removeGeometry(Geometry g) {
 		broadfase.remove(g);
 		
+	}
+
+	@Override
+	public Solver getSolver() {
+		return solver;
 	}
 	
 

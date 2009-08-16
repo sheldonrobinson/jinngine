@@ -14,8 +14,8 @@ import jinngine.physics.*;
 public class FeatureSupportMapContactGenerator implements ContactGenerator {
 
 	//final double envelopeMin = 2.75;
-    double envelope = 0.25;
-    double shell = envelope*0.5;
+    private static double envelope = 0.125;
+	private static double shell = envelope*0.75;
 	private final SupportMap3 Sa;
 	private final SupportMap3 Sb;
 	private final GJK3 closest = new GJK3();
@@ -366,5 +366,18 @@ public class FeatureSupportMapContactGenerator implements ContactGenerator {
 		//direction.print();
 		
 	}//generate()
-		
+
+    
+    public static double getEnvelope() {
+		return envelope;
+	}
+
+	public static void setEnvelope(double envelope) {
+		if (envelope>0) {
+			FeatureSupportMapContactGenerator.envelope = envelope;
+			FeatureSupportMapContactGenerator.shell = envelope*0.75;
+		}
+	}
+
+	
 }
