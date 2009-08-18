@@ -1,4 +1,4 @@
-package jinngine.geometry;
+package jinngine.geometry.contact;
 import java.util.Iterator;
 import jinngine.geometry.Sphere;
 import jinngine.math.*;

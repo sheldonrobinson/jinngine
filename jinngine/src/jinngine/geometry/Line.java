@@ -89,10 +89,11 @@ public class Line implements SupportMap3, Geometry {
 	         	            p1.a3 < p2.a3? p1.a3 : p2.a3);
 	}
 
+
 	@Override
-	public List<Vector3> supportFeature(Vector3 d) {
+	public void supportFeature(Vector3 d, double epsilon, List<Vector3> face) {
 		// TODO Auto-generated method stub
-		return null;
+		
 	}
 
 }

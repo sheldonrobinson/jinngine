@@ -1,4 +1,4 @@
-package jinngine.geometry;
+package jinngine.geometry.contact;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -9,7 +9,7 @@ import jinngine.collision.ExpandingPolytope;
 import jinngine.collision.GJK3;
 import jinngine.math.*;
 import jinngine.physics.*;
-
+import jinngine.geometry.*;
 
 public class FeatureSupportMapContactGenerator implements ContactGenerator {
 
@@ -183,7 +183,7 @@ public class FeatureSupportMapContactGenerator implements ContactGenerator {
 
 					
 					if (d<0) {
-						System.out.println("d is =" + d);
+						//System.out.println("d is =" + d);
 
 						cp.depth = (shell-d);
 						cp.midpoint.assign(S.multiply(p1tp).add(midpoint));
