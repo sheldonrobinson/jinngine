@@ -1,6 +1,8 @@
 package jinngine.physics;
 
 import java.util.ListIterator;
+import jinngine.physics.solver.*;
+
 
 public class ConstraintListIterator implements ListIterator<ConstraintEntry> {
 

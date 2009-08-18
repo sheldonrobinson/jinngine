@@ -85,6 +85,7 @@ public class CompositeBody extends Body {
 			Matrix3.print(state.Iinverse.multiply(state.I));
 			System.out.println("mass="+state.M);
 		} else {
+			//fall-back on something, in case no geometries were given
 			this.state.M = 1;
 			this.state.I.identity();
 			this.state.Iinverse.identity();

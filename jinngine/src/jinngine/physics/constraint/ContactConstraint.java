@@ -1,12 +1,12 @@
 package jinngine.physics.constraint;
 
 import java.util.*;
-import jinngine.geometry.*;
+import jinngine.geometry.contact.*;
 import jinngine.math.Matrix3;
 import jinngine.math.Vector3;
 import jinngine.physics.Body;
-import jinngine.physics.Constraint;
-import jinngine.physics.ConstraintEntry;
+import jinngine.physics.solver.*;
+
 
 /**
  * A constraint the models a contact point between two bodies. A ContactConstraint acts 

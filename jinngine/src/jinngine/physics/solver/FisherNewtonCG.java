@@ -1,11 +1,9 @@
-package jinngine.physics;
+package jinngine.physics.solver;
 
 import java.util.List;
 
 import jinngine.math.Vector3;
 import jinngine.physics.Body;
-import jinngine.physics.ConstraintEntry;
-import jinngine.physics.Solver;
 
 public class FisherNewtonCG implements Solver {
 

@@ -1,8 +1,11 @@
-package jinngine.physics;
+package jinngine.physics.constraint;
 import java.util.Iterator;
 
 import jinngine.math.Matrix3;
 import jinngine.math.Vector3;
+import jinngine.physics.Body;
+import jinngine.physics.solver.*;
+
 
 /**
  * Interface to joint types in jinngine. 

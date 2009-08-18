@@ -1,6 +1,7 @@
-package jinngine.physics;
+package jinngine.physics.solver;
 import java.util.*;
 import jinngine.math.Vector3;
+import jinngine.physics.Body;
 
 /**
  * Implementation of the PGS solver. The PGS solver is derived from an iterative scheme.
@@ -9,13 +10,12 @@ import jinngine.math.Vector3;
  */
 public class ProjectedGaussSeidel implements Solver {
 
-	private double epsilon = 0.00000001;
 	private int maximumIterations = 5;
 	
 	
 	@Override
 	public void setErrorTolerance(double epsilon) {
-		this.epsilon = epsilon;
+		//this.epsilon = epsilon;
 	}
 
 	@Override

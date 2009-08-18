@@ -1,9 +1,12 @@
 package jinngine.physics;
 
 import jinngine.collision.BroadfaseCollisionDetection;
-import jinngine.geometry.ContactGenerator;
-import jinngine.geometry.Geometry;
-import jinngine.util.Pair;
+import jinngine.geometry.*;
+import jinngine.geometry.contact.*;
+import jinngine.util.*;
+import jinngine.physics.force.*;
+import jinngine.physics.constraint.*;
+import jinngine.physics.solver.*;
 
 /**
  * An interface to a physical simulation. Use methods to insert bodies, forces and constraints. The method tick() should be 

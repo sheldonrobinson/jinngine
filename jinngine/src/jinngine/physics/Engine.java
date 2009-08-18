@@ -1,17 +1,14 @@
 package jinngine.physics;
 import java.util.*;
 
-import jinngine.physics.FisherNewtonCG;
-import jinngine.collision.AllPairsTest;
-import jinngine.collision.BroadfaseCollisionDetection;
-import jinngine.collision.SweepAndPrune;
+import jinngine.physics.solver.*;
+import jinngine.geometry.contact.*;
+import jinngine.collision.*;
 import jinngine.geometry.*;
-import jinngine.math.Matrix3;
-import jinngine.math.Vector3;
-import jinngine.physics.constraint.ContactConstraint;
-import jinngine.util.ComponentGraph;
-import jinngine.util.Pair;
-import jinngine.util.ComponentGraph.Node;
+import jinngine.math.*;
+import jinngine.physics.force.*;
+import jinngine.physics.constraint.*;
+import jinngine.util.*;
 
 /**
  * A fixed time stepping rigid body simulator. It uses a contact graph to organise constraints, and generates
@@ -45,6 +42,7 @@ public final class Engine implements Model {
 	double accumen;
 	double accumef;
 	int totalinner = 0;
+	public static double energy;
 	
 	// Create a contact graph classifier, used by the contact graph for determining
 	// fixed bodies, i.e. bodies considered to have infinite mass. 
@@ -393,7 +391,7 @@ public final class Engine implements Model {
 
 			//long t = System.currentTimeMillis();
 
-			//solver.setMaximumIterations(64);			
+			//solver.setMaximumIterations(17);			
 			solver.solve( constraintList, bodies );				
 			//totalinner +=15;
 
@@ -425,11 +423,11 @@ public final class Engine implements Model {
 		    accumen =0; accumef = 0;
 		    totalinner = 0;
 		    
-		    double energy = 0;
+		    energy = 0;
 		    for (Body b: bodies) {
 		    	energy += b.totalKinetic();
 		    }
-		    System.out.println("energy="+energy);
+		    //System.out.println("energy="+energy);
 		}
 		
 

@@ -1,5 +1,6 @@
-package jinngine.physics;
+package jinngine.physics.constraint;
 import java.util.Iterator;
+import jinngine.physics.solver.*;
 
 
 public interface Constraint {

@@ -3,8 +3,7 @@ import java.util.Iterator;
 
 import jinngine.math.Vector3;
 import jinngine.physics.Body;
-import jinngine.physics.Constraint;
-import jinngine.physics.ConstraintEntry;
+import jinngine.physics.solver.*;
 
 public class AngularJointMotor implements Constraint {
 
@@ -22,6 +21,7 @@ public class AngularJointMotor implements Constraint {
 	public void setLambda(double lambda) {
 		this.lambda = lambda;
 	}
+
 
 	public void applyConstraints(Iterator<ConstraintEntry> iterator, double dt) {
 		// TODO Auto-generated method stub

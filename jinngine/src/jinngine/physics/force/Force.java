@@ -1,4 +1,4 @@
-package jinngine.physics;
+package jinngine.physics.force;
 
 
 /**

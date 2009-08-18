@@ -1,8 +1,9 @@
-package jinngine.physics;
+package jinngine.physics.solver;
 
-import jinngine.geometry.ContactGenerator;
+import jinngine.physics.*;
+import jinngine.physics.constraint.*;
+import jinngine.geometry.contact.ContactGenerator;
 import jinngine.math.Vector3;
-import jinngine.physics.constraint.ContactConstraint;
 
 /**
  * A linear constraint definition involving two bodies. 

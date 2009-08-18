@@ -1,15 +1,28 @@
-package jinngine.physics;
+package jinngine.physics.solver;
 import java.util.*;
+import jinngine.physics.*;
 
 /**
- * Solver for a velocity-based, linear complimentarity problem (VBLCP).
+ * Solver for a non-linear complimentarity problem (NCP).
  * 
  * Given a list of constraint definitions, approximately solve the resulting velocity based linear complimentary problem (VBLCP).
- * See [Erleben 2004] or [Cato 2005]. The VBLCP is on the form<p>
+ * See [Erleben 2004] or [Cato 2005]. The NCP is on the form<p>
  * <p>
  *    Find lambda such that
  *   <p>
- *    (J M^-1 J^T) lambda >= b  complementary to  l >= lambda >= h 
+ *   for normal force constraints:<br>
+ *    w = (J M^-1 J^T) lambda + b >= 0,
+ *    lambda >= 0, 
+ *    w^T lambda = 0
+ *    <p>
+ *    and for friction force constraints:<br>
+ *    w = (J M^-1 J^T) lambda + b, and one of<p>
+ *     
+ *            lambda_i  = h_i:   w_i > 0
+ *     l_i >= lambda_i >= h_i:   w_i = 0      for all i
+ *            lambda_i  = l_i:   w_i < 0
+ *            <p>
+ *            where limit = mu * N(i) and l=-limit and u=limit
  *    <p>
  *    where J is the jacobian, M is the mass matrix, lambda is the solution vector
  *    l and h are vectors, containing lower and upper limits on the lambda solution entries.

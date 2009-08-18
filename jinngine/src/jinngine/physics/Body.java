@@ -7,6 +7,7 @@ import jinngine.math.Matrix4;
 import jinngine.math.Quaternion;
 import jinngine.math.Transforms;
 import jinngine.math.Vector3;
+import jinngine.physics.solver.*;
 
 /**
  * Abstract class representing a rigid body. This class implements most functionality needed to handle bodies 

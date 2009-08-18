@@ -1,4 +1,4 @@
-package jinngine.physics;
+package jinngine.physics.constraint;
 
 public interface JointAxisController {
 	//	public void setLinearLimits( double dMin, double dMax);

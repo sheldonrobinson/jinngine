@@ -5,8 +5,7 @@ import jinngine.math.Matrix3;
 import jinngine.math.Quaternion;
 import jinngine.math.Vector3;
 import jinngine.physics.Body;
-import jinngine.physics.Constraint;
-import jinngine.physics.ConstraintEntry;
+import jinngine.physics.solver.*;
 
 public class FrictionJoint implements Constraint {
 	private final Body b1,b2;

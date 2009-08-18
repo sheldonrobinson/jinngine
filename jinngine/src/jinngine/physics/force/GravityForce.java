@@ -2,7 +2,6 @@ package jinngine.physics.force;
 
 import jinngine.math.Vector3;
 import jinngine.physics.Body;
-import jinngine.physics.Force;
 
 public class GravityForce implements Force {
 	private final Body a;
