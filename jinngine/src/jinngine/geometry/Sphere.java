@@ -16,7 +16,7 @@ import jinngine.physics.Body;
  * @author mo
  *
  */
-public class Sphere implements SupportMap3, Geometry {
+public class Sphere implements SupportMap3, Geometry, Material {
 
 
 	public Object getAuxiliary() {
@@ -35,6 +35,9 @@ public class Sphere implements SupportMap3, Geometry {
 	private final Matrix4 localtransform4 = new Matrix4();
 	private double envelope = 0;
 	private Object auxiliary;
+	private double restitution = 0.7;
+	private double friction = 0.5;
+
 
 	
 
@@ -137,6 +140,28 @@ public class Sphere implements SupportMap3, Geometry {
 	public void supportFeature(Vector3 d, double epsilon, List<Vector3> ret) {
 		//sphere is invariant under rotation
 		ret.add(d.normalize().multiply(radius).add(body.state.rCm).add(Matrix3.multiply(body.state.rotation, displacement, new Vector3()) ));
+	}
+
+	//Material getters and setters
+	@Override
+	public double getFrictionCoefficient() {
+		return friction;
+	}
+
+	@Override
+	public double getRestitution() {
+		return restitution;
+	}
+
+	@Override
+	public void setFrictionCoefficient(double f) {
+		this.friction = f;
+	}
+
+	@Override
+	public void setRestitution(double e) {
+		this.restitution = e;
+		
 	}
 
 }

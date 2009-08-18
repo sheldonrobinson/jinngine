@@ -1,5 +1,7 @@
 package jinngine.geometry.contact;
 import java.util.Iterator;
+
+import jinngine.geometry.Material;
 import jinngine.geometry.Sphere;
 import jinngine.math.*;
 import jinngine.physics.Body;
@@ -17,16 +19,44 @@ public class SphereContactGenerator implements ContactGenerator {
 	private final Sphere s2;
 	private final Body b1;
 	private final Body b2;
-
 	private boolean incontact = false;
 	private final double envelope = 3.0;
+	private final double restitution;
+	private final double friction;
+
 	
-	public SphereContactGenerator(Sphere s1, Sphere s2) {
-		this.s1 = s1; 
-		this.s2 = s2;
-		this.b1 = s1.getBody(); 
-		this.b2 = s2.getBody();
+	public SphereContactGenerator(Sphere a, Sphere b) {
+		this.s1 = a; 
+		this.s2 = b;
+		this.b1 = a.getBody(); 
+		this.b2 = b.getBody();
 		//System.out.println("created");
+		
+		//select the smallest restitution and friction coefficients 
+		if ( a instanceof Material && b instanceof Material) {
+			double ea = ((Material)a).getRestitution();
+			double fa = ((Material)a).getFrictionCoefficient();
+			double eb = ((Material)b).getRestitution();
+			double fb = ((Material)b).getFrictionCoefficient();
+
+			//pick smallest values
+			restitution = ea > eb ? eb : ea;
+			friction    = fa > fb ? fb : fa;
+
+		} else if ( a instanceof Material ) {
+			restitution = ((Material)a).getRestitution();
+			friction    = ((Material)a).getFrictionCoefficient();
+		} else if ( b instanceof Material ) {
+			restitution = ((Material)b).getRestitution();
+			friction    = ((Material)b).getFrictionCoefficient();
+		} else { //default values
+			restitution = 0.7;
+			friction = 0.5;
+		}
+		
+		//copy material properties to the contactpoint
+		cp.restitution = restitution;
+		cp.friction = friction;
 	}
 	
 	@Override

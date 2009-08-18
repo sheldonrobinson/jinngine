@@ -31,9 +31,9 @@ public class ConstraintEntry  {
 	public double lambdaMax = 0;
 	public double diagonal = 0;
 	public double b = 0;
+	public double mu = 0;
 	public boolean enabled = true;
 	public ConstraintEntry coupledMax;
-	public ContactGenerator.ContactPoint aux;
 	public int index;
 	public double phixk;
 	

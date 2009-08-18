@@ -16,11 +16,21 @@ public interface Material {
 	 * @return
 	 */
 	public double getRestitution();
+	
+	/**
+	 * Set the restitution coefficient 
+	 */
+	public void setRestitution(double e);
 
 	/**
 	 * Friction coefficient, non-negative
 	 * @return
 	 */
 	public double getFrictionCoefficient();
+	
+	/**
+	 * Set the friction coefficient
+	 */
+	public void setFrictionCoefficient(double f);
 
 }

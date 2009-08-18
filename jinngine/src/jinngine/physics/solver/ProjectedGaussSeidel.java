@@ -44,11 +44,11 @@ public class ProjectedGaussSeidel implements Solver {
 
 				//clamb the lambda[i] value to the constraints
 				if (constraint.coupledMax != null) {
-					double mu = Math.sqrt(2)/2.0;
+					//double mu = Math.sqrt(2)/2.0;
 					constraint.lambdaMin = 
 					//if the constraint is coupled, allow only lambda <= coupled lambda
-					constraint.lambdaMin = -Math.abs(constraint.coupledMax.lambda)*mu;
-					constraint.lambdaMax =  Math.abs(constraint.coupledMax.lambda)*mu;
+					constraint.lambdaMin = -Math.abs(constraint.coupledMax.lambda)*constraint.coupledMax.mu;
+					constraint.lambdaMax =  Math.abs(constraint.coupledMax.lambda)*constraint.coupledMax.mu;
 				} 
 
 				//do projection

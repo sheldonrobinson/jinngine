@@ -182,10 +182,9 @@ public final class ContactConstraint implements Constraint {
 		//finaly calculate t3
 		Vector3 t3 = v3.minus( t1.multiply(t1.dot(v3)).minus( t2.multiply(t2.dot(v3)) )).normalize();
 
-		//System.out.println("det==="+Matrix3.determinant(new Matrix3(v1,t2,t3)) );
 		
 		//First off, create the constraint in the normal direction
-		double e = restitution; //coeficient of restitution
+		double e = cp.restitution; //coeficient of restitution
 		double uni = relativeVelocity(b1,b2,p,n);
 		double unf = uni<0 ? -e*uni: 0;
 		
@@ -279,8 +278,8 @@ public final class ContactConstraint implements Constraint {
 				null, 
 				unf-uni + Fext*dt + correction );
 		
-		//use contact caching
-		c.aux = cp;
+		//set the correct friction setting for this contact
+		c.mu = cp.friction;
 		
 		//book-keep constraints in each body
 		//b1.constraints.add(c);

@@ -12,7 +12,7 @@ import jinngine.physics.Body;
  * @author mo sdf
  *
  */
-public class Box implements SupportMap3, Geometry {
+public class Box implements SupportMap3, Geometry, Material {
 
 	public Object getAuxiliary() {
 		return auxiliary;
@@ -32,6 +32,8 @@ public class Box implements SupportMap3, Geometry {
 //	private final Matrix4 transform;	
 	private double envelope = 0;
 	private Object auxiliary;
+	private double restitution = 0.7;
+	private double friction = 0.5;
 	
 	
 	public Box(Body body) {
@@ -237,8 +239,30 @@ public class Box implements SupportMap3, Geometry {
 
 		else if (numberOfZeroAxis == 3) {
 			//should never happen, undefinded result
-		System.out.println("DOOOOOOOHHHHHHH");
+		//System.out.println("DOOOOOOOHHHHHHH");
 			//return null;
 		}
+	}
+
+	//Material getters and setters
+	@Override
+	public double getFrictionCoefficient() {
+		return friction;
+	}
+
+	@Override
+	public double getRestitution() {
+		return restitution;
+	}
+
+	@Override
+	public void setFrictionCoefficient(double f) {
+		this.friction = f;
+	}
+
+	@Override
+	public void setRestitution(double e) {
+		this.restitution = e;
+		
 	}
 }

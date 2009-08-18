@@ -24,7 +24,9 @@ public class FeatureSupportMapContactGenerator implements ContactGenerator {
 	private final List<Vector3> faceA = new ArrayList<Vector3>();
 	private final List<Vector3> faceB = new ArrayList<Vector3>();
 	private final Vector3 principalNormal = new Vector3();
-	private final Vector3 principalPoint = new Vector3();
+//	private final Vector3 principalPoint = new Vector3();
+	private final double restitution;
+	private final double friction;
 
 	public FeatureSupportMapContactGenerator(SupportMap3 sa, Geometry a, SupportMap3 sb, Geometry b) {
 		super();
@@ -32,6 +34,28 @@ public class FeatureSupportMapContactGenerator implements ContactGenerator {
 		Sb = sb;
 		bodyA = a.getBody();
 		bodyB = b.getBody();
+		
+		//select the smallest restitution and friction coefficients 
+		if ( a instanceof Material && b instanceof Material) {
+			double ea = ((Material)a).getRestitution();
+			double fa = ((Material)a).getFrictionCoefficient();
+			double eb = ((Material)b).getRestitution();
+			double fb = ((Material)b).getFrictionCoefficient();
+
+			//pick smallest values
+			restitution = ea > eb ? eb : ea;
+			friction    = fa > fb ? fb : fa;
+
+		} else if ( a instanceof Material ) {
+			restitution = ((Material)a).getRestitution();
+			friction    = ((Material)a).getFrictionCoefficient();
+		} else if ( b instanceof Material ) {
+			restitution = ((Material)b).getRestitution();
+			friction    = ((Material)b).getFrictionCoefficient();
+		} else { //default values
+			restitution = 0.7;
+			friction = 0.5;
+		}
 	}
 
 	@Override
@@ -94,7 +118,7 @@ public class FeatureSupportMapContactGenerator implements ContactGenerator {
 		}		
 	} 
 
-	private void generate(Vector3 a, Vector3 b, Vector3 v, double depth, boolean penetrating) {
+	private void generate(Vector3 a, Vector3 b, Vector3 v, double depth, boolean penetrating ) {
 		contacts.clear(); faceA.clear(); faceB.clear();
 		Sa.supportFeature(v.multiply(-1), 0.09, faceA);
 		Sb.supportFeature(v.multiply(1), 0.09, faceB);
@@ -166,6 +190,8 @@ public class FeatureSupportMapContactGenerator implements ContactGenerator {
 				if (inside) {
 					//generate point
 					ContactPoint cp = new ContactPoint();
+					cp.restitution = restitution;
+					cp.friction = friction;
 
 					//determine the true distance to the other face along the contact normal
 
@@ -252,6 +278,8 @@ public class FeatureSupportMapContactGenerator implements ContactGenerator {
 				if (inside) {
 					//generate point
 					ContactPoint cp = new ContactPoint();
+					cp.restitution = restitution;
+					cp.friction = friction;
 
 					//determine the true distance to the other face along the contact normal
 
@@ -327,6 +355,8 @@ public class FeatureSupportMapContactGenerator implements ContactGenerator {
 						if ( alpha>0 && alpha <1 && beta>0 && beta<1 ) {
 							//generate point
 							ContactPoint cp = new ContactPoint();
+							cp.restitution = restitution;
+							cp.friction = friction;
 
 							
 							cp.distance = p1p.add(d1.multiply(alpha)).minus( p2p.add(d2.multiply(beta))).dot(direction);

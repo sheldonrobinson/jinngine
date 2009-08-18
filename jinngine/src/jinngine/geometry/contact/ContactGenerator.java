@@ -30,6 +30,8 @@ public interface ContactGenerator {
 		midpoint = new Vector3(), normal = new Vector3();
 		public double depth;
 		public double distance;
+		public double restitution;
+		public double friction;
 		public boolean penetrating = false;
 	}
 	
