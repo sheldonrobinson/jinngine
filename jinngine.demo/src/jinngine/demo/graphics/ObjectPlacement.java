@@ -1,14 +1,9 @@
 package jinngine.demo.graphics;
 
 import jinngine.math.Matrix3;
-import jinngine.math.Matrix4;
 import jinngine.math.Vector3;
 import jinngine.physics.Body;
-import jinngine.physics.CompositeBody;
-import jinngine.physics.Force;
-import jinngine.physics.Model;
-import jinngine.physics.force.LinearDragForce;
-import jinngine.physics.force.SpringForce;
+import jinngine.physics.force.*;
 
 public class ObjectPlacement implements GameState {
 	private Entity entity;
@@ -26,15 +21,14 @@ public class ObjectPlacement implements GameState {
 	private Matrix3 inverse;
 	
 	//dummy body to connect movement forces
-	private final CompositeBody dummy;
+	private final Body dummy;
 	
 	public ObjectPlacement( Entity e, Vector3 pickpoint ) {
 		entity = e;
 		
 		//create a dummy body without geometric meaning
-		dummy = new CompositeBody();
+		dummy = new Body();
 		dummy.finalize();
-		dummy.setMass(9e9);
 		dummy.setFixed(true);
 		
 		initialPosition = entity.getPosition();

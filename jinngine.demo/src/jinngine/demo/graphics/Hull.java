@@ -1,6 +1,7 @@
 package jinngine.demo.graphics;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 
@@ -29,9 +30,11 @@ public class Hull implements Shape, SupportMap3, Geometry {
 	private final Point3d[] dummy  = new Point3d[1];
 	private final QuickHull3D hull = new QuickHull3D();
 	private final List<Vector3[]> faces = new ArrayList<Vector3[]>();
-
 	private final ArrayList<Vector3> vertices = new ArrayList<Vector3>();
+	
 	private final ArrayList<ArrayList<Integer>> adjecent = new ArrayList<ArrayList<Integer>>();
+	//private final ArrayList<ArrayList<Integer>> vertexToFace = new ArrayList<ArrayList<Integer>>();
+	private final List<List<Integer>> vertexToFace;
 	private Object auxiliary;
 	
 	public Hull( Iterator<Vector3> input ) {
@@ -75,6 +78,13 @@ public class Hull implements Shape, SupportMap3, Geometry {
 			System.out.println("v added");
 			vertices.add(new Vector3( p.x, p.y, p.z));
 		}	
+
+		//allocate vertex to face list
+		vertexToFace = new ArrayList<List<Integer>>();
+		for (Vector3 v: vertices) {
+			vertexToFace.add(new ArrayList<Integer>());
+		}
+		
 		
 		//go thru all faces
 		for (int i=0; i< faceIndices.length; i++) { 	
@@ -92,6 +102,7 @@ public class Hull implements Shape, SupportMap3, Geometry {
 			//fill in adjacency lists
 			int vertex = faceIndices[i][0];
 			int first = vertex;
+			//for each vertex in this case
 			for (int j=1; j<faceIndices[i].length; j++) {
 				//add both ways in adjacency list
 				int nextVertex = faceIndices[i][j];
@@ -103,6 +114,25 @@ public class Hull implements Shape, SupportMap3, Geometry {
 			//connect end vertices in face
 			adjecent.get(first).add(vertex);
 			adjecent.get(vertex).add(first);
+			
+
+			
+			int incident = 0;
+			//for each vertex in this face
+			for (int j=1;j<faceIndices[i].length; j++) {
+				
+				//fill in vertexToFace map
+				List<Integer> list = vertexToFace.get(faceIndices[i][j]);
+//				if (list == null) {
+//					list = new ArrayList<Integer>();
+//					vertexToFace[j] = list;
+//				}
+
+				//associate this vertex with the i'th face
+				list.add(i);
+			}
+
+
 			
 		}
 		
@@ -151,7 +181,7 @@ public class Hull implements Shape, SupportMap3, Geometry {
 
 	
 	//jbounce.SupportMap3 overrides
-	private int chachedIndex = 0;
+	//private int chachedIndex = 0;
 	private Body body;
 	private double envelope =0;
 	private Matrix3 localtransform = Matrix3.identity(new Matrix3());
@@ -169,7 +199,7 @@ public class Hull implements Shape, SupportMap3, Geometry {
 		//Matrix3.print(localtransform);
 		Vector3 v = body.state.rotation.multiply(localtransform).transpose().multiply(direction);
 		
-		chachedIndex = 0;
+		int chachedIndex = 0;
 		
 		//hill climb along v
 		double value = v.dot(vertices.get(chachedIndex));
@@ -193,6 +223,163 @@ public class Hull implements Shape, SupportMap3, Geometry {
 	}
 
 	@Override
+	public void supportFeature(Vector3 d, double epsilon, List<Vector3> returnList) {
+		ArrayList<Integer> featureIndices = new ArrayList<Integer>();
+		//List<Vector3> returnList = new ArrayList<Vector3>();
+		Vector3 v = body.state.rotation.multiply(localtransform).transpose().multiply(d).normalize();
+
+		//hill-climb to find optimal vertex
+		boolean updated = true;
+		double object = Double.NEGATIVE_INFINITY;
+		int selectedIndex = 0;
+		while (updated) {
+			updated = false;
+			for ( int i: adjecent.get(selectedIndex)) {
+				double u = v.dot(vertices.get(i));
+				if (u > object) {
+					object = u;
+					selectedIndex = i;
+					updated = true;
+					break;
+				}
+			}
+		}
+		
+		//crawl along face edge to collect face vertices
+//		featureIndices.add(selectedIndex);
+//		returnList.add( body.state.rotation.multiply(localtransform.multiply(vertices.get(selectedIndex)).add(localdisplacement)).add(body.state.rCm) );
+//		int startingIndex = selectedIndex;
+//		int currentIndex = selectedIndex;
+//		updated = true;
+//		while (updated) {
+//			updated = false;
+//			for ( int i: adjecent.get(currentIndex)) {
+//				double u = v.dot(vertices.get(i));
+//				//if within tolerance, not the starting vertex, and not the current vertex 
+//				if ( Math.abs(object - u) < 1e-3 && startingIndex !=i && currentIndex != i ) {
+//					currentIndex = i;
+//					//add transformed vertex to return list
+//					returnList.add( body.state.rotation.multiply(localtransform.multiply(vertices.get(currentIndex)).add(localdisplacement)).add(body.state.rCm) );
+//					updated = true;
+//					break;
+//				}
+//			}
+//			
+//		}
+
+		
+		//*) face case
+		//for each face that includes the vertex
+		for (Integer faceIndex: vertexToFace.get(selectedIndex) ) {
+			//compute face normal and pick if within tolerance of d
+			//int faceIndex = vertexToFace[selectedIndex][i];
+			
+			//get face vertices
+			Vector3 v1 = faces.get(faceIndex)[0];
+			Vector3 v2 = faces.get(faceIndex)[1];
+			Vector3 v3 = faces.get(faceIndex)[2];
+
+			//set normal
+			Vector3 faceNormal = v1.minus(v2).cross(v3.minus(v2)).normalize();
+			
+			//if normal is within tolerance
+			if ( Math.abs(faceNormal.dot(v)) > 0.98 ) {
+				//return face in WCS
+				for (Vector3 vertex: faces.get(faceIndex))
+					returnList.add( body.state.rotation.multiply(localtransform.multiply(vertex).add(localdisplacement)).add(body.state.rCm) );
+				
+				//return from face case
+				return;
+			}
+		}
+
+		//*) edge or point case
+		returnList.add( body.state.rotation.multiply(localtransform.multiply(vertices.get(selectedIndex)).add(localdisplacement)).add(body.state.rCm) );
+
+		//find a possible neighbour point which can constitute an edge
+		for ( int i: adjecent.get(selectedIndex)) {
+			double u = v.dot(vertices.get(i));
+			if ( Math.abs(object-u) < 1e-6 ) {
+				int neighbourIndex = i;
+				returnList.add( body.state.rotation.multiply(localtransform.multiply(vertices.get(neighbourIndex)).add(localdisplacement)).add(body.state.rCm) );			
+				//System.out.println("edge case taken");
+
+				break;
+			}
+		}
+			
+		// return from edge or point case
+		return;
+	}
+
+	
+	public List<Vector3> supportFeature2(Vector3 d) {
+		ArrayList<Integer> featureIndices = new ArrayList<Integer>();
+		List<Vector3> returnList = new ArrayList<Vector3>();
+
+		//Matrix3.print(localtransform);
+		Vector3 v = body.state.rotation.multiply(localtransform).transpose().multiply(d);
+		
+		int chachedIndex = 0;
+		
+		//hill climb along v
+		double value = v.dot(vertices.get(chachedIndex));
+		boolean better = true;
+		
+		while (better) {
+			better = false;
+			//go through adjacency list and pick first improver (greedy)
+			for ( int i: adjecent.get(chachedIndex)) {
+				
+				double newvalue = v.dot(vertices.get(i));
+				if ( Math.abs(newvalue-value) < 1e-2) {
+					
+					//elements on the list
+					if (featureIndices.size() > 1) {
+						//check if element is same as previous
+						if ( featureIndices.get(featureIndices.size()-2) != i && featureIndices.get(0) != i ) {
+							featureIndices.add(i);
+							chachedIndex = i;
+							better = true;
+							break;							
+						} else {
+							//don't pick this element
+							continue;
+						}
+					}
+					
+					//if no elements or the last element isn't the same as this one, add a new
+					featureIndices.add(i);
+					chachedIndex = i;
+					better = true;
+					break;
+
+				}
+				//better value found, dump what we have and use the new index
+				else if ( newvalue > value ) {
+					featureIndices.clear();
+					featureIndices.add(i);					
+					value = newvalue;
+					chachedIndex = i;
+					better = true;
+					break;
+				} 
+			}
+		}
+
+		//return Matrix4.multiply(transform4, new Vector3(sv1, sv2, sv3), new Vector3());
+		
+		for (Integer i : featureIndices) {
+			returnList.add( body.state.rotation.multiply(localtransform.multiply(vertices.get(i)).add(localdisplacement)).add(body.state.rCm) );
+		}
+		
+		//System.out.println("vertices= "+ returnList.size());
+
+		return returnList;
+	}
+
+	
+	@Override
 	public Body getBody() {
 		return body;
 	}
@@ -203,18 +390,19 @@ public class Hull implements Shape, SupportMap3, Geometry {
 	}
 
 	@Override
-	public InertiaMatrix getInertialMatrix(double mass) {
+	public InertiaMatrix getInertialMatrix() {
 		InertiaMatrix I = new InertiaMatrix();
 		//approximate the inertia matrix by the encapsulating box
 		double a,b,c;
-		a=Math.abs(maxBounds.a1-minBounds.a1);
-		b=Math.abs(maxBounds.a2-minBounds.a2);
-		c=Math.abs(maxBounds.a3-minBounds.a3);
+//		a=Math.abs(maxBounds.a1-minBounds.a1);
+//		b=Math.abs(maxBounds.a2-minBounds.a2);
+//		c=Math.abs(maxBounds.a3-minBounds.a3);
+		a=b=c=3;
 		//I
 		Matrix3.set( I,
-				(1.0f/12.0f)*mass*(b*b+c*c), 0.0f, 0.0f,
-				0.0f, (1.0f/12.0f)*mass*(a*a+c*c), 0.0f,
-				0.0f, 0.0f, (1.0f/12.0f)*mass*(b*b+a*a) );
+				(1.0f/12.0f)*1*(b*b+c*c), 0.0f, 0.0f,
+				0.0f, (1.0f/12.0f)*1*(a*a+c*c), 0.0f,
+				0.0f, 0.0f, (1.0f/12.0f)*1*(b*b+a*a) );
 
 		return I;
 	}
@@ -252,10 +440,6 @@ public class Hull implements Shape, SupportMap3, Geometry {
 
 	}
 	
-	@Override
-	public void setLocalTranslation(Vector3 b) {
-		setLocalTransform(localtransform,b);
-	}
 
 	@Override
 	public Vector3 getMaxBounds() {
@@ -270,11 +454,19 @@ public class Hull implements Shape, SupportMap3, Geometry {
 		return minBoundsTransformed.add(displacement).add(body.state.rCm);
 	}
 
+	
 	@Override
-	public List<Vector3> supportFeature(Vector3 d) {
-		// TODO Auto-generated method stub
-		return null;
+	public void getLocalTransform(Matrix3 R, Vector3 b) {
+		R.assign(this.localtransform);
+		b.assign(this.localdisplacement);		
+	}
+
+	@Override
+	public double getMass() {
+		return 1;
 	}
 
 
+
 }
+

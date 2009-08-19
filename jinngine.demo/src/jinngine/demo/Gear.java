@@ -9,8 +9,6 @@ import jinngine.demo.graphics.*;
 import jinngine.math.Matrix3;
 import jinngine.math.Vector3;
 import jinngine.physics.Body;
-import jinngine.physics.Box;
-import jinngine.physics.CompositeBody;
 import jinngine.physics.Model;
 import jinngine.physics.constraint.HingeJoint;
 import jinngine.physics.force.GravityForce;
@@ -18,7 +16,7 @@ import jinngine.util.Pair;
 
 public class Gear implements Entity {
 
-	private final CompositeBody b;
+	private final Body b;
 	private boolean alarmed = false;
 	private final Render render;
 	private final Model model;
@@ -34,7 +32,7 @@ public class Gear implements Entity {
 		double r3 = radius*(8.5/13.0);
 		double d = radius*(6/13.0);
 		
-		b = new CompositeBody();
+		b = new Body();
 			
 		double delta = 2*Math.PI*(1/n);
 		for ( double theta=0; theta<1.9*Math.PI; theta+=delta) {
@@ -69,7 +67,8 @@ public class Gear implements Entity {
 			
 			Hull shape = new Hull(points.iterator());
 			shape.setAuxiliary(this);
-			b.addGeometry(shape, new Matrix3().identity(),cm,mass/n);
+			shape.setLocalTransform(Matrix3.identity(), cm);		
+			b.addGeometry(shape);
 			
 			render.addShape( new FlatShade(), shape, b.state.transform, this);
 			

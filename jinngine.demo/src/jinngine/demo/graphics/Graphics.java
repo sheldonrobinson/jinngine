@@ -13,7 +13,6 @@ import java.util.List;
 import java.util.ListIterator;
 import jinngine.math.Vector3;
 import jinngine.physics.Body;
-import jinngine.physics.Box;
 import jinngine.physics.Engine;
 import jinngine.physics.Model;
 
@@ -40,7 +39,7 @@ public class Graphics implements MouseListener, MouseMotionListener, MouseWheelL
 	public Graphics() {}
 	
 	public void start() {
-		model.setDt(0.02);
+		model.setDt(0.18);
 		
 		//initial state
 		addState(new Selection());
@@ -55,11 +54,12 @@ public class Graphics implements MouseListener, MouseMotionListener, MouseWheelL
 	double spend = 0;
 	public void callback()  {
 		//do amount of ticks to meet 0.12 effective time-step per frame
+		double step = 0.18;
 		do {
 			spend += model.getDt();
 			model.tick();
-		} while ( spend < 0.12);
-		spend = spend % 0.12;
+		} while ( spend < step);
+		spend = spend % step;
 
 		//add incomming jinngine.demos.states
 		states.addAll(incommingStates);

@@ -236,8 +236,8 @@ public class RenderImpl extends Frame implements GLEventListener, Render  {
 
 	public void start() {
 		// Ask an animator class to run simulation at 60 fps
-		Animator animator = new FPSAnimator(this.canvas,60,true);
-		//Animator animator = new Animator(this.canvas);
+		//Animator animator = new FPSAnimator(this.canvas,60,true);
+		Animator animator = new Animator(this.canvas);
 		animator.start();
 	}
 

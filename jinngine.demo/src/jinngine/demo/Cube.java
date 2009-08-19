@@ -9,22 +9,21 @@ import jinngine.demo.graphics.FlatShade;
 import jinngine.demo.graphics.Graphics;
 import jinngine.demo.graphics.Hull;
 import jinngine.demo.graphics.Render;
+import jinngine.geometry.Box;
 import jinngine.math.Matrix3;
 import jinngine.math.Vector3;
 import jinngine.physics.Body;
-import jinngine.physics.Box;
-import jinngine.physics.CompositeBody;
 import jinngine.physics.Model;
 import jinngine.physics.force.GravityForce;
 
 public class Cube implements Entity {
-	private final CompositeBody body;
+	private final Body body;
 	private boolean alarmed = false;
 	
 	public Cube( Graphics m, Vector3 position, double mass, double radius ) {
 		Render render = m.getRender();
 		Model model = m.getModel();		
-		body = new CompositeBody();
+		body = new Body();
 			
 		List<Vector3> points = new LinkedList<Vector3>();
 
@@ -45,7 +44,10 @@ public class Cube implements Entity {
 		render.addShape( new FlatShade(), shape, body.state.transform, this);
 
 		//setup the physics
-		body.addGeometry(shape, new Matrix3().identity(),new Vector3(),mass);		
+		Box box = new Box(radius, radius, radius);
+		box.setAuxiliary(this);
+		
+		body.addGeometry(box);		
 		body.finalize();
 		body.setPosition(position);
 		model.addForce(new GravityForce(body,1));
