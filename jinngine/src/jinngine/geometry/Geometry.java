@@ -14,8 +14,7 @@ public interface Geometry extends AxisAlignedBoundingBox {
 	 * @return 
 	 */
 	public Body getBody();
-	
-	
+		
 	/**
 	 * Specify a body to be associated with this Geometry instance
 	 * @param b
@@ -23,31 +22,34 @@ public interface Geometry extends AxisAlignedBoundingBox {
 	public void setBody(Body b);
 	
 	/**
-	 * Set the local transform for this geometry. The local transform is a transform that is applied before the transform 
-	 * of the associated body is applied. Specifically, this is often used to rotate and translate geometries around in the
-	 * object space. More generally, it can also be used to do scaling, shearing and other transforms. This is useful, however beware 
-	 * that applying interesting transformation to geometries is not automatically reflected in the physical implementation of objects in jinngine. 
-	 * For instance, the box implementations is only able to handle scaling correctly, not shearing and other transforms. To correctly use such 
-	 * transforms, one must also implement the calculation of the inertia tensor reflecting the resulting geometry. 
+	 * Set the local rotation for this geometry and displacement. The local transform is applied before the transform 
+	 * of the associated body is applied. This is used to rotate and translate geometries around in the
+	 * object space. This transform must not include any scaling or other transformation types. That sort of 
+	 * transformations are to be handled internally by the geometry instance. 
 	 * 
-	 * @param B Transformation matrix
+	 * @param R An orthonormal rotation matrix
 	 * @param b Displacement vector
 	 */
-	public void setLocalTransform( Matrix3 B, Vector3 b);
+	public void setLocalTransform( Matrix3 R, Vector3 b);
 	
 	/**
-	 * Set the local translation
-	 * @param b
+	 * Get the local transform for this geometry. The rotation and displacement is assigned to 
+	 * the given matrix and vector. 
+	 * @param R Matrix to contain the rotation matrix of the local transform
+	 * @param b A vector to contain the local transform displacement
 	 */
-	public void setLocalTranslation( Vector3 b);
+	public void getLocalTransform( Matrix3 R, Vector3 b);
+	
+	/** 
+	 * Get the amount of mass for this geometry
+	 */
+	public double getMass();
 	
 	/**
-	 * Compute the inertial tensor of this geometry, as a function of mass
-	 * @param mass
-	 * @return
+	 * Compute the inertia tensor of this geometry. Note that this quantity is dependent on the mass of the geometry. 
+	 * The inertia tensor returned from this call must assume no local rotation or translation of the geometry instance.
 	 */
-	public InertiaMatrix getInertialMatrix(double mass);
-	
+	public InertiaMatrix getInertialMatrix();
 	
 	/**
 	 * Get the envelope size for this geometry. The envelope is related to narrow-phase contact determination
@@ -70,14 +72,13 @@ public interface Geometry extends AxisAlignedBoundingBox {
 	 */
 	public Matrix4 getTransform();
 	
-	
 	/**
-	 * Get the auxiliary reference 
+	 * Get the auxiliary reference. This reference is a way for the user to 
+	 * link geometry objects to some user space object 
 	 * @return
 	 */
 	public Object getAuxiliary();
-	
-	
+		
 	/**
 	 * Set the auxiliary reference. This reference is a way for the user to 
 	 * link geometry objects to some user space object

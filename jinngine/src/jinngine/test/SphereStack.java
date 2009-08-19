@@ -3,6 +3,8 @@ package jinngine.test;
 import java.util.ArrayList;
 import java.util.List;
 
+import jinngine.geometry.Box;
+import jinngine.geometry.Sphere;
 import jinngine.math.Vector3;
 import jinngine.physics.*;
 import jinngine.physics.force.*;
@@ -34,12 +36,10 @@ import jinngine.physics.force.*;
 			//parameters
 			model.setDt(dt);
 
-			Box table = new Box(220,1,120);
+			Body table = new Body( new Box(220,1,120));
 			table.setPosition( new Vector3(0,-13,0));
-			table.setMass(9e9);
 			table.setFixed(true);
 			table.advancePositions(1);
-			table.getBoxGeometry().setEnvelope(2);
 			model.addBody(table);
 			boxes.add(table);	
 
@@ -47,10 +47,10 @@ import jinngine.physics.force.*;
 			for (int i=0; i<dimention; i++) {
 				for (int j=0; j<dimention; j++) {
 					for ( int k=0; k<dimention; k++) {
-						Sphere b = new Sphere(4);
+						Body b = new Body( new Sphere(4) );
 						b.setPosition(new Vector3(-40+i*9,j*9 ,k*9));
-						b.setMass(5);	
-						b.getGeometries().next().setEnvelope(1);
+						//b.setMass(5);	
+						//b.getGeometries().next().setEnvelope(1);
 						model.addBody(b);
 						model.addForce( new GravityForce(b,1.0));
 						//model.addForce( new LinearDragForce(b,5.5));

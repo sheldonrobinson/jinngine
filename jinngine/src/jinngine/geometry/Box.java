@@ -1,101 +1,84 @@
 package jinngine.geometry;
 
-import java.util.ArrayList;
 import java.util.List;
-
 import jinngine.math.*;
 import jinngine.physics.Body;
 
 /**
  * A box geometry implementation. Represented using a simple support mapping. 
  * Uses a simple axis aligned bounding box implementation.
- * @author mo sdf
+ * @author mo 
  *
  */
 public class Box implements SupportMap3, Geometry, Material {
 
-	public Object getAuxiliary() {
-		return auxiliary;
-	}
-
-	public void setAuxiliary(Object auxiliary) {
-		this.auxiliary = auxiliary;
-	}
-
 	private  Body body;
-//	private final Matrix4 transform4 = new Matrix4();
-	private final Matrix3 transform = new Matrix3();
-	private final Matrix4 localtransform4 = new Matrix4();
 	private final Matrix3 localtransform = new Matrix3();
+	private final Matrix3 localrotation = new Matrix3();
 	private final Vector3 localdisplacement = new Vector3();
 	private final Vector3 bounds = new Vector3();
-//	private final Matrix4 transform;	
 	private double envelope = 0;
+	
+	//box properties
+	private double xl,yl,zl;
+	private double mass;
+	
+	// auxiliary user reference
 	private Object auxiliary;
+	
+	// material settings (defaults)
 	private double restitution = 0.7;
 	private double friction = 0.5;
 	
-	
-	public Box(Body body) {
-		super();
-		this.body = body;
-		setLocalTransform(Matrix3.identity(new Matrix3()), new Vector3() );		
+	/**
+	 * Create a box with the given side lengths
+	 * @param x
+	 * @param y
+	 * @param z
+	 */
+	public Box(double x, double y, double z) {
+		this.xl = x; this.yl = y; this.zl = z;
+		mass = xl*yl*zl;
+		
+		//set the local transform
+		localrotation.assign( Matrix3.identity() );
+		localtransform.assign(new Matrix3(new Vector3(x,0,0), new Vector3(0,y,0), new Vector3(0,0,z)) );
 	}
 	
-	public Box(Body body, Vector3 displacement, Matrix3 localtransform) {
-		super();
-		this.body = body;
-		setLocalTransform(localtransform, displacement);
-	}
+	// user auxiliary methods
+	public Object getAuxiliary() { return auxiliary; }
+	public void setAuxiliary(Object auxiliary) { this.auxiliary = auxiliary; }
 
 	@Override
 	public Vector3 supportPoint(Vector3 direction) {
-		Vector3 v = body.state.rotation.multiply(localtransform).transpose().multiply(direction);
+		Vector3 v = body.state.rotation.multiply(localrotation).transpose().multiply(direction);
 		double sv1 = v.a1<0?-0.5:0.5;
 		double sv2 = v.a2<0?-0.5:0.5;
 		double sv3 = v.a3<0?-0.5:0.5;
 		//return Matrix4.multiply(transform4, new Vector3(sv1, sv2, sv3), new Vector3());
 		return body.state.rotation.multiply(localtransform.multiply(new Vector3(sv1, sv2, sv3)).add(localdisplacement)).add(body.state.rCm);
-
 	}
 
 	@Override
-	public Body getBody() {
-		return body;
-	}
-	
-	public void setBody(Body b) {
-		this.body = b;
-	}
+	public Body getBody() { return body; }
+	@Override
+	public void setBody(Body b) { this.body = b; }
 
 	@Override
-	public InertiaMatrix getInertialMatrix(double mass) {
+	public InertiaMatrix getInertialMatrix() {
 		InertiaMatrix I = new InertiaMatrix();
-		double scale = 1;
-		//assume that transform is only scaling
-		double a = localtransform.a11*scale, b = localtransform.a22*scale, c = localtransform.a33*scale;
 		
 		Matrix3.set( I,
-				(1.0f/12.0f)*mass*(b*b+c*c), 0.0f, 0.0f,
-				0.0f, (1.0f/12.0f)*mass*(a*a+c*c), 0.0f,
-				0.0f, 0.0f, (1.0f/12.0f)*mass*(b*b+a*a) );
-
+				(1.0f/12.0f)*mass*(yl*yl+zl*zl), 0.0f, 0.0f,
+				0.0f, (1.0f/12.0f)*mass*(xl*xl+zl*zl), 0.0f,
+				0.0f, 0.0f, (1.0f/12.0f)*mass*(yl*yl+xl*xl) );
 
 		return I;
 	}
 	
 	@Override
 	public double getEnvelope(double dt) {
-		//if manually override
-		if (envelope > 0) {
-			return envelope;
-		}
-
-		//assume that transform is only scaling
-		double a = localtransform.a11, b = localtransform.a22, c = localtransform.a33;
-		
-		//TODO this is just a crazy guess :) a good heuristic is needed
-		return (a+b+c) / 60 + dt*15 ;
+		return envelope;
 	}
 
 	@Override
@@ -104,20 +87,23 @@ public class Box implements SupportMap3, Geometry, Material {
 	}
 
 	@Override
-	public void setLocalTransform(Matrix3 localtransform, Vector3 displacement) {
+	public void setLocalTransform(Matrix3 rotation, Vector3 displacement) {
 		this.localdisplacement.assign(displacement);
-		Matrix3.set(localtransform, this.localtransform); 
-		Matrix4.set(Transforms.transformAndTranslate4(localtransform, localdisplacement), localtransform4);
+		this.localrotation.assign(rotation);
+
+		//set the local transform (including scaling)
+		localtransform.assign( localrotation.multiply(new Matrix3(new Vector3(xl,0,0), new Vector3(0,yl,0), new Vector3(0,0,zl))));
 		
 		//extremal point on box
-		double max = Matrix3.multiply(localtransform, new Vector3(0.5,0.5,0.5), new Vector3()).norm() +412.0;
+		double max = Matrix3.multiply(localtransform, new Vector3(0.5,0.5,0.5), new Vector3()).norm();
 		bounds.assign(new Vector3(max,max,max));
-		//System.out.println("max="+max);
+		System.out.println("max="+max);
 	}
-	
+
 	@Override
-	public void setLocalTranslation(Vector3 b) {
-		setLocalTransform(localtransform, b);		
+	public void getLocalTransform(Matrix3 R, Vector3 b) {
+		R.assign(localrotation);
+		b.assign(localdisplacement);
 	}
 
 	@Override
@@ -129,26 +115,21 @@ public class Box implements SupportMap3, Geometry, Material {
 
 	@Override
 	public Vector3 getMinBounds() {
-		Vector3 displacement = new Vector3();	
+		Vector3 displacement = new Vector3();
 		displacement.assign(Matrix3.multiply(body.state.rotation, localdisplacement, new Vector3()));
 		return bounds.multiply(-1).add(displacement).add(body.state.rCm);
 	}
 
 	@Override
 	public Matrix4 getTransform() {
-		return Matrix4.multiply(body.getTransform(), localtransform4, new Matrix4());
-	}
-	
-	public Vector3 getExtends() {
-		return new Vector3( localtransform.a11*0.5, localtransform.a22*0.5, localtransform.a33*0.5);
-
-	}
+		return Matrix4.multiply(body.getTransform(), Transforms.transformAndTranslate4(localtransform, localdisplacement), new Matrix4());
+	}	
 
 	@Override
 	public void supportFeature(Vector3 d, double epsilon, List<Vector3> featureList) {
 		//final double epsilon = 0.03;  //123+132  213 231 312+321   
 		//get d into the canonical box space
-		Vector3 v = body.state.rotation.multiply(localtransform).transpose().multiply(d);
+		Vector3 v = body.state.rotation.multiply(localrotation).transpose().multiply(d);
 		//Vector3 v = body.state.rotation.transpose().multiply(d);
 		//Vector3 v = d.copy();
 		//List<Vector3> featureList = new ArrayList<Vector3>();
@@ -264,5 +245,10 @@ public class Box implements SupportMap3, Geometry, Material {
 	public void setRestitution(double e) {
 		this.restitution = e;
 		
+	}
+
+	@Override
+	public double getMass() {
+		return mass;
 	}
 }

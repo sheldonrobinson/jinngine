@@ -1,6 +1,8 @@
 package jinngine.test;
 
+import jinngine.geometry.Box;
 import jinngine.geometry.Geometry;
+import jinngine.geometry.Sphere;
 import jinngine.math.*;
 import jinngine.physics.*;
 
@@ -12,7 +14,7 @@ import java.awt.event.*;
 import javax.media.opengl.*;
 import javax.media.opengl.glu.*;
 import com.sun.opengl.util.Animator;
-import com.sun.opengl.util.FPSAnimator;
+//import com.sun.opengl.util.FPSAnimator;
 
 public class BoxVisualisor extends Frame implements GLEventListener  {
 	private final GLCanvas canvas;
@@ -202,9 +204,9 @@ public class BoxVisualisor extends Frame implements GLEventListener  {
         		Matrix4 T = g.getTransform();   		
         		gl.glMultMatrixd(Matrix4.pack(T), 0);
         		
-        		if (body instanceof Box)
+        		if (g instanceof Box)
         			gl.glCallList(box);
-        		if (body instanceof Sphere)
+        		if (g instanceof Sphere)
         			gl.glCallList(sphere);
         		
         		gl.glPopMatrix();
@@ -228,7 +230,7 @@ public class BoxVisualisor extends Frame implements GLEventListener  {
 
 	public void start() {
 		// Ask an animator class to run simulation at 60 fps
-		Animator animator = new FPSAnimator(this.canvas,60 );
+		Animator animator = new Animator(this.canvas );
 		animator.start();
 	}
 

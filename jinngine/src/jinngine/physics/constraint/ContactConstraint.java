@@ -231,9 +231,9 @@ public final class ContactConstraint implements Constraint {
 
 		correction = depth*(1/dt)*K;
 		
-//		double limit = 0.5;
-//		correction = correction< -limit? -limit:correction;
-//		correction = correction>  limit?  limit:correction;
+		double limit = 5.5;
+		correction = correction< -limit? -limit:correction;
+		correction = correction>  limit?  limit:correction;
 		//correction = 0;
 		
 		//truncate correction if already covered by repulsive velocity

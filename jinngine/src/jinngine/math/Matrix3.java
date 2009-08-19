@@ -78,6 +78,15 @@ public class Matrix3 {
 	  this.a31 = B.a31; this.a32 = B.a32; this.a33 = B.a33;
   }
 
+  /**
+   * assign the value of B to this Matrix3
+   * @param B 
+   */
+  public void assign(Matrix3 B) {
+	  this.a11 = B.a11; this.a12 = B.a12; this.a13 = B.a13;
+	  this.a21 = B.a21; this.a22 = B.a22; this.a23 = B.a23;
+	  this.a31 = B.a31; this.a32 = B.a32; this.a33 = B.a33;	  
+  }
   
   /**
    * Get the n'th column vector of this matrix
@@ -166,7 +175,7 @@ public class Matrix3 {
    * Return a new identity Matrix3 instance
    * @return
    */
-  public Matrix3 identity() {
+  public static Matrix3 identity() {
 	  Matrix3 A = new Matrix3();
 	  A.a11 = 1; A.a12 = 0; A.a13 = 0;
 	  A.a21 = 0; A.a22 = 1; A.a23 = 0;

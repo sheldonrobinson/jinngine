@@ -3,6 +3,7 @@ package jinngine.test;
 import java.util.ArrayList;
 import java.util.List;
 
+import jinngine.geometry.Box;
 import jinngine.math.Vector3;
 import jinngine.physics.*;
 import jinngine.physics.force.*;
@@ -34,22 +35,19 @@ import jinngine.physics.force.*;
 			//parameters
 			model.setDt(dt);
 
-			Box table = new Box(220,1,120);
+			Body table = new Body(new Box(220,1,120));
 			table.setPosition( new Vector3(0,-13,0));
-			table.setMass(9e9);
 			table.setFixed(true);
 			table.advancePositions(1);
-			table.getBoxGeometry().setEnvelope(2);
 			model.addBody(table);
 			boxes.add(table);	
 
 			//build a wall
 			for (int i=0; i<dimention; i++) {
 				for (int j=0; j<dimention; j++) {
-					Box b = new Box(8,4,4+(12-j)*0);
+					Body b = new Body( new Box(8,4,4+(12-j)*0) );
 					b.setPosition(new Vector3(-40+i*9 +(j%2)*4,-9+j*5 ,0));
-					b.setMass(5);	
-					b.getBoxGeometry().setEnvelope(1+7*dt);
+//					b.getBoxGeometry().setEnvelope(1+7*dt);
 					model.addBody(b);
 					model.addForce( new GravityForce(b,1.0));
 					model.addForce( new LinearDragForce(b,0.125));

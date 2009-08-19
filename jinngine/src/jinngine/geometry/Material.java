@@ -32,5 +32,6 @@ public interface Material {
 	 * Set the friction coefficient
 	 */
 	public void setFrictionCoefficient(double f);
+	
 
 }

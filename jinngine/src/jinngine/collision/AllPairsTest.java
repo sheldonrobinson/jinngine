@@ -95,7 +95,7 @@ public class AllPairsTest implements BroadfaseCollisionDetection {
 				(((jzMin < izMin) && (izMin <= jzMax)) || ((izMin <= jzMin) && (jzMin < izMax )))) {
 			return true;
 		} else {
-			return true;
+			return false;
 		}
 	}
 

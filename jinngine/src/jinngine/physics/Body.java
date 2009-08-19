@@ -1,7 +1,9 @@
 package jinngine.physics;
 
 import java.util.*;
+
 import jinngine.geometry.*;
+import jinngine.math.InertiaMatrix;
 import jinngine.math.Matrix3;
 import jinngine.math.Matrix4;
 import jinngine.math.Quaternion;
@@ -15,7 +17,7 @@ import jinngine.physics.solver.*;
  * @author mo
  *
  */
-public abstract class Body {
+public class Body {
 	//auxiliary
 	public final Vector3               deltaVCm = new Vector3(0,0,0);
 	public final Vector3               deltaOmegaCm = new Vector3(0,0,0);
@@ -26,13 +28,12 @@ public abstract class Body {
 	public final Vector3               auxDeltaOmega2 = new Vector3();
 
 	public final State state = new State();
-	public final State storedState = new State();
-	public double  sleepKinetic = 1e-4;
+	public double  sleepKinetic = 0;
 	public double  sleepyness = 0;
 	public boolean sleeping = false;
 	public boolean ignore = false;
 
-	protected final List<Geometry> geometries = new ArrayList<Geometry>();
+	private final List<Geometry> geometries = new ArrayList<Geometry>();
 	
 	//fixed setting
 	private boolean isFixed = false;
@@ -42,23 +43,132 @@ public abstract class Body {
 	private SupportMap3 supportMap = null;
 	
 	//abstract methods
-    public abstract void updateMomentOfInertia();
+    //public abstract void updateMomentOfInertia();
 	
 	//constructors
 	public Body() {
 		Matrix4.identity(state.transform);
 		Matrix3.identity(state.rotation);
 		updateTransformations();
+		
+		this.sleepKinetic = 0;
+		this.state.M=0;
+		Matrix3.set(new Matrix3(), state.I);
 	}
 	
-	public final void storeState() {
-		storedState.assign(state);
-	}
-	
-	public final void loadState() {
-		state.assign(storedState);
+	public Body( Geometry g  ) {
+		Matrix4.identity(state.transform);
+		Matrix3.identity(state.rotation);
 		updateTransformations();
+		
+		this.sleepKinetic = 0;
+		
+		//some default properties
+		this.state.M=1;
+		Matrix3.set(new Matrix3(), state.I);
+		Matrix3.set(new Matrix3(), state.Iinverse);
+				
+		addGeometry(g);
+		
+		//complete
+		finalize();
 	}
+	
+	public Body( Iterator<Geometry> i) {
+		Matrix4.identity(state.transform);
+		Matrix3.identity(state.rotation);
+		updateTransformations();
+		
+		this.sleepKinetic = 0;
+		
+		//some default properties
+		this.state.M=1;
+		Matrix3.set(new Matrix3(), state.I);
+		Matrix3.set(new Matrix3(), state.Iinverse);
+				
+		while (i.hasNext()) {
+			addGeometry(i.next());
+		}
+		
+		//complete
+		finalize();
+	}
+		
+	/**
+	 * Add a geometry to this body
+	 * @param g
+	 * @param R
+	 * @param r
+	 * @param mass
+	 */
+	public void addGeometry( Geometry g ) {
+		geometries.add(g);
+	}
+
+	public void finalize() {
+		final Vector3 cm = new Vector3();
+		
+		//reset body properties
+		this.state.M=0;
+		Matrix3.set(new Matrix3(), state.I);
+		Matrix3.set(new Matrix3(), state.Iinverse);
+
+		if ( geometries.size() > 0 ) {
+
+			//find center of mass
+			cm.assignZero();
+			double totalMass = 0;
+
+			for (Geometry g: geometries) {
+				g.setBody(this);
+				
+				totalMass += g.getMass();
+				
+				//get the transformation
+				Matrix3 R = new Matrix3();
+				Vector3 b = new Vector3();
+				g.getLocalTransform(R, b);
+				
+				// cm = cm + b*M
+				cm.assign( cm.add( b.multiply(g.getMass())));
+			}
+			
+			// cm = cm / total mass
+			cm.assign( cm.multiply(1/totalMass));
+			this.state.M = totalMass;
+
+			//translate all geometries so centre of mass will become the origin
+			for (Geometry g: geometries) {
+
+				//get the transformation
+				Matrix3 R = new Matrix3();
+				Vector3 b = new Vector3();
+				g.getLocalTransform(R, b);
+				
+				//align to centre of mass
+				b.assign( b.minus(cm));
+
+				//rotate the inertia matrix into this frame and add it to the inertia tensor of this body
+				Matrix3 Im = InertiaMatrix.rotate(g.getInertialMatrix(), R).translate(g.getMass(), b);
+				Matrix3.add(this.state.I, Im, this.state.I);
+
+				//set the final transform
+				g.setLocalTransform(R, b);
+
+			}
+
+			//fill out the invers tensor
+			Matrix3.inverse(this.state.I, this.state.Iinverse);
+
+		} else {
+			//fall-back on something, in case no geometries were given
+			this.state.M = 1;
+			//this.state.I.assign(InertiaMatrix.identity());
+			//this.state.Iinverse.identity();
+		}
+	}
+
+	
 
 	public Iterator<Geometry> getGeometries() {
 		return geometries.iterator();
@@ -140,12 +250,12 @@ public abstract class Body {
 		return new Vector3(state.omegaCm);
 	}
 
-	public final void setMass( double mass ) {
-		this.state.M = mass;
-
-		//Redefine I, as it is dependent on the mass
-		updateMomentOfInertia();
-	}
+//	public final void setMass( double mass ) {
+//		this.state.M = mass;
+//
+//		//Redefine I, as it is dependent on the mass
+//		updateMomentOfInertia();
+//	}
 
 	public final double getMass() {
 		return this.state.M;

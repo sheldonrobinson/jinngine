@@ -48,6 +48,15 @@ public class TestAll implements KeyListener {
 	public TestAll(double dt) {
 		//add all testcases
 		
+		
+		//bounce test
+		tests.add(new Bounce(0.01));
+		tests.add(new Bounce(0.02));
+		tests.add(new Bounce(0.04));
+		tests.add(new Bounce(0.08));
+		tests.add(new Bounce(0.12));
+		
+		
 		//seesaw test
 		tests.add(new Seesaw(0.01));
 		tests.add(new Seesaw(0.02));

@@ -37,31 +37,23 @@ public class Sphere implements SupportMap3, Geometry, Material {
 	private Object auxiliary;
 	private double restitution = 0.7;
 	private double friction = 0.5;
+	private double mass;
 
 
-	
-
-	public Sphere(Body body, double radius, Vector3 displacement) {
+	public Sphere(double radius) {
 		super();
-		this.body = body;
 		this.radius = radius;
 		this.displacement.assign(displacement);
 		
+		this.mass = (4.0/3.0)*Math.PI*radius*radius*radius;
+		
+		this.envelope = radius * 0.25;
+
 		//set the initial local transform
 		setLocalTransform( Matrix3.identity(new Matrix3()), displacement);
 	}
 	
-	/**
-	 * Set sphere radius
-	 * @param radius
-	 */
-	public void setRadius( double radius ) {
-		this.radius = radius;
-	}
-	
-	public double getRadius() {
-		return this.radius;
-	}
+	public final double getRadius() { return this.radius; }
 
 	@Override
 	public Vector3 supportPoint(Vector3 direction) {
@@ -94,7 +86,7 @@ public class Sphere implements SupportMap3, Geometry, Material {
 	}
 	
 	@Override
-	public InertiaMatrix getInertialMatrix(double mass) {
+	public InertiaMatrix getInertialMatrix() {
 		double r = radius;
 		InertiaMatrix I = new InertiaMatrix();
 
@@ -121,10 +113,6 @@ public class Sphere implements SupportMap3, Geometry, Material {
 
 	}
 	
-	@Override
-	public void setLocalTranslation(Vector3 b) {
-		displacement.assign(b);
-	}
 
 	@Override
 	public Matrix4 getTransform() {
@@ -162,6 +150,17 @@ public class Sphere implements SupportMap3, Geometry, Material {
 	public void setRestitution(double e) {
 		this.restitution = e;
 		
+	}
+
+	@Override
+	public void getLocalTransform(Matrix3 R, Vector3 b) {
+		R.assign(Matrix3.identity());
+		b.assign(this.displacement);	
+	}
+
+	@Override
+	public double getMass() {
+		return mass;
 	}
 
 }

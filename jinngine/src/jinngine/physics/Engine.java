@@ -65,7 +65,6 @@ public final class Engine implements Model {
 		new BroadfaseCollisionDetection.Handler() {
 			@Override
 			public final void overlap(Pair<Geometry> pair) {
-				//System.out.println("Contact added");
 				//retrieve the bodies associated with overlapping geometries
 				Body a = pair.getFirst().getBody();
 				Body b = pair.getSecond().getBody();
@@ -75,6 +74,9 @@ public final class Engine implements Model {
 				
 				//ignore overlaps for non-body geometries
 				if ( a == null || b == null) return;
+				
+				//ignore overlaps of fixed bodies
+				if ( a.isFixed() && b.isFixed() ) return;
 
 				ContactConstraint constraint;
 
@@ -87,7 +89,7 @@ public final class Engine implements Model {
 					
 				//no contact constraint is present
 				} else {
-
+					
 					//do not act if some other constraint(joint) is already present
 					if (!contactGraph.alledges.containsKey(bpair))  {
 
@@ -129,7 +131,7 @@ public final class Engine implements Model {
 	
 	// Broad phase collision detection implementation 
 	private BroadfaseCollisionDetection broadfase = new SweepAndPrune(handler);
-	//private BroadfaseCollisionDetection broadfase = new AllPairsTest(handler);
+//	private BroadfaseCollisionDetection broadfase = new AllPairsTest(handler);
 
 	//Create a linear complementarity problem solver
 	private Solver solver = new ProjectedGaussSeidel();
