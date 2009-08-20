@@ -66,6 +66,7 @@ public class Gear implements Entity {
 			}
 			
 			Hull shape = new Hull(points.iterator());
+			shape.setMass(mass/n);
 			shape.setAuxiliary(this);
 			shape.setLocalTransform(Matrix3.identity(), cm);		
 			b.addGeometry(shape);

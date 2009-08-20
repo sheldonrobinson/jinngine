@@ -299,7 +299,7 @@ public class Hull implements Shape, SupportMap3, Geometry {
 		//find a possible neighbour point which can constitute an edge
 		for ( int i: adjecent.get(selectedIndex)) {
 			double u = v.dot(vertices.get(i));
-			if ( Math.abs(object-u) < 1e-6 ) {
+			if ( Math.abs(object-u) < 1e-9 ) {
 				int neighbourIndex = i;
 				returnList.add( body.state.rotation.multiply(localtransform.multiply(vertices.get(neighbourIndex)).add(localdisplacement)).add(body.state.rCm) );			
 				//System.out.println("edge case taken");
@@ -461,11 +461,15 @@ public class Hull implements Shape, SupportMap3, Geometry {
 		b.assign(this.localdisplacement);		
 	}
 
+	private double mass = 1;
 	@Override
 	public double getMass() {
-		return 1;
+		return mass;
 	}
 
+	public void setMass(double m) {
+		this.mass = m;
+	}
 
 
 }

@@ -4,6 +4,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
 
+import com.sun.org.apache.xml.internal.security.encryption.Transforms;
+
 import jinngine.demo.graphics.Entity;
 import jinngine.demo.graphics.FlatShade;
 import jinngine.demo.graphics.Graphics;
@@ -11,6 +13,7 @@ import jinngine.demo.graphics.Hull;
 import jinngine.demo.graphics.Render;
 import jinngine.geometry.Box;
 import jinngine.math.Matrix3;
+import jinngine.math.Matrix4;
 import jinngine.math.Vector3;
 import jinngine.physics.Body;
 import jinngine.physics.Model;
@@ -20,7 +23,7 @@ public class Cube implements Entity {
 	private final Body body;
 	private boolean alarmed = false;
 	
-	public Cube( Graphics m, Vector3 position, double mass, double radius ) {
+	public Cube( Graphics m, Vector3 size, Vector3 position, double mass ) {
 		Render render = m.getRender();
 		Model model = m.getModel();		
 		body = new Body();
@@ -28,15 +31,19 @@ public class Cube implements Entity {
 		List<Vector3> points = new LinkedList<Vector3>();
 
 		//just a box			
-		points.add( new Vector3( 1, 1, 1 ).multiply(radius).multiply(0.5));
-		points.add( new Vector3( -1, 1, 1 ).multiply(radius).multiply(0.5));
-		points.add( new Vector3( 1, -1, 1 ).multiply(radius).multiply(0.5));
-		points.add( new Vector3( -1, -1, 1 ).multiply(radius).multiply(0.5));
-		points.add( new Vector3( 1, 1, -1 ).multiply(radius).multiply(0.5));
-		points.add( new Vector3( -1, 1, -1 ).multiply(radius).multiply(0.5));
-		points.add( new Vector3( 1, -1, -1 ).multiply(radius).multiply(0.5));
-		points.add( new Vector3( -1, -1, -1 ).multiply(radius).multiply(0.5));
+		points.add( new Vector3( 1, 1, 1 ).multiply(0.5));
+		points.add( new Vector3( -1, 1, 1 ).multiply(0.5));
+		points.add( new Vector3( 1, -1, 1 ).multiply(0.5));
+		points.add( new Vector3( -1, -1, 1 ).multiply(0.5));
+		points.add( new Vector3( 1, 1, -1 ).multiply(0.5));
+		points.add( new Vector3( -1, 1, -1 ).multiply(0.5));
+		points.add( new Vector3( 1, -1, -1 ).multiply(0.5));
+		points.add( new Vector3( -1, -1, -1 ).multiply(0.5));
 
+		Matrix4 transform = jinngine.math.Transforms.scale(size);
+		for (Vector3 p: points)
+			p.assign( transform.multiply(p));
+		
 		Hull shape = new Hull(points.iterator());
 		shape.setAuxiliary(this);
 
@@ -44,12 +51,13 @@ public class Cube implements Entity {
 		render.addShape( new FlatShade(), shape, body.state.transform, this);
 
 		//setup the physics
-		Box box = new Box(radius, radius, radius);
+		Box box = new Box(size.a1, size.a2, size.a3);
 		box.setAuxiliary(this);
 		
 		body.addGeometry(box);		
 		body.finalize();
 		body.setPosition(position);
+		body.sleepKinetic = 0.1;
 		model.addForce(new GravityForce(body,1));
 		model.addBody(body);
 	}

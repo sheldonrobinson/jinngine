@@ -85,8 +85,9 @@ public class FlatShade implements ShapeRender {
 		
 		
 		gl.glPolygonMode( GL.GL_FRONT, GL.GL_LINE );
-		gl.glLineWidth(2.7f);
+		gl.glLineWidth(1.7f);
 		gl.glDisable(GL.GL_LIGHTING);
+		gl.glScaled(1.01, 1.01, 1.01);
 		i = shape.getFaces(); 
 		while (i.hasNext()) {
 			gl.glBegin(GL.GL_POLYGON);

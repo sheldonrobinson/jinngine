@@ -90,6 +90,12 @@ public class ObjectPlacement implements GameState {
 
 	@Override
 	public void tick(Graphics m) {
+		//get rid of sleeping
+		entity.getPrimaryBody().sleepy = false;
+		entity.getPrimaryBody().sleepyness = 0;
+		entity.getPrimaryBody().sleeping = false;
+		
+		
 		//intersect in pick-plane
 		// L , t1 t2 
 		// y = b+ax  (p0-y)  

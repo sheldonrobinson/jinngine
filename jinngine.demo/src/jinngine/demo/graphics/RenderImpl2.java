@@ -1,22 +1,20 @@
 package jinngine.demo.graphics;
 
+
 import jinngine.math.*;
-import java.awt.Frame;
-import java.awt.event.WindowAdapter;
+
 import java.util.*;
+import java.awt.Frame;
+import java.awt.event.*;
 
 // jogl imports
 import javax.media.opengl.*;
 import javax.media.opengl.glu.*;
-
-
 import com.sun.opengl.util.Animator;
-//import com.sun.opengl.util.FPSAnimator;
-//import com.sun.opengl.util.Screenshot;
+import com.sun.opengl.util.FPSAnimator;
 
 
-public class RenderImpl extends Frame implements GLEventListener, Render  {
-	private static final long serialVersionUID = 1L;
+public class RenderImpl2 extends Frame implements GLEventListener, Render  {
 
 	private class DrawTask {
 		public ShapeRender render;
@@ -26,9 +24,6 @@ public class RenderImpl extends Frame implements GLEventListener, Render  {
 	}
 	
 	List<DrawTask> tasks = new LinkedList<DrawTask>();
-
-	
-	public double zoom = 0.95;
 
 	
 	@Override
@@ -43,27 +38,19 @@ public class RenderImpl extends Frame implements GLEventListener, Render  {
 
 
 	private final GLCanvas canvas;
-//	private final GLJPanel canvas;
 	public final GLU glu = new GLU();	
 	private double width;
 	private double height;
 	private double drawHeight;
 	private Graphics callback;
-	private int frame = 0;
 
 	// Display lists
 	private int box;
 	private int sphere;
 
 	// Camera coordinates
-//	private final Vector3 cameraFrom = new Vector3(-45,287,-285).multiply(0.3);
-//	private final Vector3 cameraTo = new Vector3(0,0,-0);	
-
-//	private final Vector3 cameraFrom = new Vector3(-12,5,-45).multiply(1);
-
-	private final Vector3 cameraTo = new Vector3(-12,-4,0).multiply(1);	
-	private final Vector3 cameraFrom = cameraTo.add(new Vector3(0,0.5,1).multiply(1));
-
+	private final Vector3 cameraFrom = new Vector3(-45,287,-285).multiply(0.3);
+	private final Vector3 cameraTo = new Vector3(0,0,0);	
 	//camera transform
 	public double[] proj = new double[16];
 	public double[] camera = new double[16];
@@ -73,42 +60,21 @@ public class RenderImpl extends Frame implements GLEventListener, Render  {
 	
 
 
-	public RenderImpl(final Graphics callback ) {
+	public RenderImpl2( Graphics callback ) {
 		this.callback = callback;
 		
-
-		
-		setTitle("Jinngine");
-		setSize(1024,(int)(1024/(1.77777)));
-
+		//Setup exit function
+		addWindowListener(new WindowAdapter() {public void windowClosing(WindowEvent e){ System.exit(0);}});
+		setSize(800,600);
 		canvas = new GLCanvas();
-		//canvas = GLDrawableFactory.getFactory().
 		canvas.setIgnoreRepaint( true );
 		canvas.addGLEventListener(this);
 		canvas.setVisible(true);
-		
-		//setLayout(getLayout());
-
-		//Setup exit function
-       // setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		addWindowListener(new WindowAdapter() {public void windowClosing(java.awt.event.WindowEvent e) {System.exit(0);} } );
-
-		add(canvas, java.awt.BorderLayout.CENTER);
-
-        
-        //Display the window.
-        //pack();
-
-		
-		//add(canvas);	
-		//add(new JButton("lala"));
+		add(canvas, java.awt.BorderLayout.CENTER);		
 		setVisible(true);
 		canvas.addMouseListener(callback);
 		canvas.addMouseMotionListener(callback);
-		canvas.addMouseWheelListener(callback);
 		canvas.addKeyListener(callback);
-
-
 	}
 
 	
@@ -119,16 +85,14 @@ public class RenderImpl extends Frame implements GLEventListener, Render  {
 		GL gl = drawable.getGL();
 		gl.glEnable (GL.GL_DEPTH_TEST);
 		gl.glEnable(GL.GL_CULL_FACE);
-		gl.glEnable(GL.GL_LINE_SMOOTH);
-	//	gl.glHint(GL.GL_PERSPECTIVE_CORRECTION_HINT, GL.GL_NICEST);
+		gl.glHint(GL.GL_PERSPECTIVE_CORRECTION_HINT, GL.GL_NICEST);
 		//gl.glPolygonMode(GL.GL_FRONT, GL.GL_LINE );
 		gl.glBlendFunc(GL.GL_SRC_ALPHA, GL.GL_ONE_MINUS_SRC_ALPHA);
 
-		
+
 		//enable vsync
 		gl.setSwapInterval(1);
-
-
+		
 		//run inits for all renders
 		for (DrawTask dt: tasks) {
 			dt.render.init(this, gl);
@@ -152,7 +116,6 @@ public class RenderImpl extends Frame implements GLEventListener, Render  {
 	public void display(GLAutoDrawable drawable) {
 		// Perform ratio time-steps on the model
 		callback.callback();
-		frame=frame+1;
 
 
 		// Clear buffer, etc.
@@ -160,11 +123,9 @@ public class RenderImpl extends Frame implements GLEventListener, Render  {
 		gl.glClearColor(1.0f, 1.0f,1.0f, 1.0f);
 		gl.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT | GL.GL_STENCIL_BUFFER_BIT);
 		gl.glMatrixMode(GL.GL_MODELVIEW);
-		
 		gl.glLoadIdentity();
-		
+
 //		gl.glMultMatrixd(shadowProjectionMatrix(new Vector3(0,115,0), new Vector3(0,-100,0), new Vector3(0,-1,0)), 0);
-		//gl.glScaled(5, 5,2.1);
 
 		
 		// Set camera transform
@@ -183,7 +144,7 @@ public class RenderImpl extends Frame implements GLEventListener, Render  {
 		gl.glVertex3d(p2.a1, p2.a2, p2.a3);
 		gl.glEnd();
 		gl.glPopAttrib();
-
+		
 
 		// Go through boxes and draw them
 //		for ( Body body: boxes) {
@@ -207,9 +168,7 @@ public class RenderImpl extends Frame implements GLEventListener, Render  {
 		for ( DrawTask dt: tasks) {
 			gl.glPushAttrib(GL.GL_LIGHTING_BIT);
 			gl.glPushMatrix();
-
 			gl.glMultMatrixd(Matrix4.pack(dt.transform), 0);	
-
 			dt.render.preRenderShape(this, dt.shape, dt.entity, gl);
 			dt.render.renderShape(this, dt.shape, gl);
 			gl.glPopMatrix();
@@ -221,7 +180,6 @@ public class RenderImpl extends Frame implements GLEventListener, Render  {
 		
 		gl.glLoadIdentity();
 
-		
 		gl.glDisable(GL.GL_LIGHTING);
 		// Set camera transform
 		glu.gluLookAt(cameraFrom.a1, cameraFrom.a2, cameraFrom.a3, 
@@ -229,7 +187,7 @@ public class RenderImpl extends Frame implements GLEventListener, Render  {
 				0, 1, 0); 
 
 		
-		gl.glMultMatrixd(shadowProjectionMatrix(new Vector3(75,350,-75), new Vector3(0,-20 + 0.0,0), new Vector3(0,-1,0)), 0);
+		gl.glMultMatrixd(shadowProjectionMatrix(new Vector3(0,350,0), new Vector3(0,-19,0), new Vector3(0,-1,0)), 0);
 		
 		gl.glColor3d(0.85, 0.85, 0.85);
 		
@@ -260,18 +218,6 @@ public class RenderImpl extends Frame implements GLEventListener, Render  {
 
 		// Finish this frame
 		gl.glFlush();
-
-//		if (frame % 30 == 0 || frame == 2) {
-//			try {
-//				Screenshot.writeToFile(new File("demo2" + frame + ".png"), (int)(this.width/4.0), 0, (int)(this.width/4.0)*2, (int)this.height,  false);
-//			} catch (GLException e1) {
-//				// TODO Auto-generated catch block
-//				e1.printStackTrace();
-//			} catch (IOException e1) {
-//				// TODO Auto-generated catch block
-//				e1.printStackTrace();
-//			}
-//		}
 	}
 
 	public void reshape(GLAutoDrawable drawable ,int x,int y, int w, int h) {
@@ -279,7 +225,7 @@ public class RenderImpl extends Frame implements GLEventListener, Render  {
 		GL gl = drawable.getGL();
 		gl.glMatrixMode(GL.GL_PROJECTION);
 		gl.glLoadIdentity();
-		gl.glFrustum (-1.77777*zoom, 1.777777*zoom, -1.0*zoom, 1.0*zoom, 4.0, 100.0); 	
+		gl.glFrustum (-1.77777, 1.777777, -1.0, 1.0, 2.0, 600.0); 	
 		this.height = h; this.width = w;
 		this.drawHeight = (int)((double)width/1.77777);
 		gl.glViewport (0, (int)((height-drawHeight)/2.0), (int)width, (int)drawHeight);
@@ -290,9 +236,9 @@ public class RenderImpl extends Frame implements GLEventListener, Render  {
 
 	public void start() {
 		// Ask an animator class to run simulation at 60 fps
-		//FPSAnimator animator = new FPSAnimator(this.canvas,60);
-    	Animator animator = new Animator(this.canvas);
-		animator.start();	
+		//Animator animator = new FPSAnimator(this.canvas,60,true);
+		Animator animator = new Animator(this.canvas);
+		animator.start();
 	}
 
 	@Override
@@ -399,9 +345,6 @@ public class RenderImpl extends Frame implements GLEventListener, Render  {
 		from.assign(cameraFrom);
 		to.assign(cameraTo);
 	}
-
-
-
 		
 
 }

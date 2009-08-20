@@ -2,15 +2,12 @@ package jinngine.demo;
 
 import jinngine.demo.graphics.Graphics;
 import jinngine.geometry.Box;
-import jinngine.math.Quaternion;
 import jinngine.math.Vector3;
 import jinngine.physics.Body;
 import jinngine.physics.Model;
 
-
-public class Demo1 {
-	
-	public Demo1() {
+public class Demo2 {
+	public Demo2() {
 		Graphics g = new Graphics();
 		Model model = g.getModel();
 		
@@ -40,21 +37,21 @@ public class Demo1 {
 		model.addBody(floor);
 		model.addBody(back);
 
+		//wee need some power for this
+		model.getSolver().setMaximumIterations(15);
 		
-		//create some cubes and a gear
-		new Cube(g, new Vector3(2.5,2.5,2.5), new Vector3(-10,-10,-20), 10 );
-		new Cube(g, new Vector3(3,3,3), new Vector3(-15,-10,-20), 10 );
-		new Cube(g, new Vector3(2,2,2), new Vector3(-5,-10,-20), 10 );
-//		new Cube(g, new Vector3(30,10,10), 10, 15);
-//		new Cube(g, new Vector3(40,10,10), 10, 15);
-		
-		//new Gear(g, new Vector3(0,50,0), 1, 20);
-		new Gear(g, new Vector3(-10,-10,-20), 25, 3);
+		//build a wall
+		for (int i=0; i<5; i++) {
+			for (int j=0; j<3; j++) {
+				new Cube(g, new Vector3(3,2,2), new Vector3(-17+i*3.1 +(j%2)*1.5,-18.8+j*2.1 ,-25), 10 );
+			}
+		}
 
+		//start animation
 		g.start();
 	}
 	
 	public static void main( String args[]) {
-		new Demo1();
+		new Demo2();
 	}
 }
