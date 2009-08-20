@@ -89,6 +89,7 @@ public final class Engine implements Model {
 					
 				//no contact constraint is present
 				} else {
+					//System.out.println("contact");
 					
 					//do not act if some other constraint(joint) is already present
 					if (!contactGraph.alledges.containsKey(bpair))  {
@@ -393,7 +394,7 @@ public final class Engine implements Model {
 
 			//long t = System.currentTimeMillis();
 
-			//solver.setMaximumIterations(17);			
+			solver.setMaximumIterations(17);			
 			solver.solve( constraintList, bodies );				
 			//totalinner +=15;
 

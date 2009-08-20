@@ -40,22 +40,33 @@ public class Compositions implements Testcase {
 		model.addBody(table);
 		bodies.add(table);	
 
+		List<Geometry> spheres = new ArrayList<Geometry>();
+		
 		//build a stack
 		for (int i=0; i<dimention; i++) {
 			for (int j=0; j<dimention; j++) {
-				for ( int k=0; k<dimention; k++) {
-					Body b = new Body( new Sphere(4) );
-					b.setPosition(new Vector3(-40+i*9,j*9 ,k*9));
-					//b.setMass(5);	
-					//b.getGeometries().next().setEnvelope(1);
-					model.addBody(b);
-					model.addForce( new GravityForce(b,1.0));
-					//model.addForce( new LinearDragForce(b,5.5));
-					bodies.add(b);
+				for ( int k=0; k<j; k++) {
+					Geometry b;
+					if (i%2 == 0)
+						 b = new Sphere(i*1.5+1);
+					else {
+						double sides = i*1.5+1;
+						 b = new Box(sides,sides,sides);
+					}
+						
+					b.setLocalTransform(Matrix3.identity(), new Vector3(-40+i*12,j*12 ,k*12));
+					spheres.add(b);
 				}
 			}
 		}
 		
+		Body b = new Body(spheres.iterator());
+		b.setPosition(new Vector3(0,32,0));
+		model.addBody(b);
+		model.addForce( new GravityForce(b,1.0));
+		//model.addForce( new LinearDragForce(b,5.5));
+		bodies.add(b);
+
 	}
 
 	public static void main(String arg[]) {

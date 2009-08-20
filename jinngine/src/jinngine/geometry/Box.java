@@ -97,7 +97,7 @@ public class Box implements SupportMap3, Geometry, Material {
 		//extremal point on box
 		double max = Matrix3.multiply(localtransform, new Vector3(0.5,0.5,0.5), new Vector3()).norm();
 		bounds.assign(new Vector3(max,max,max));
-		System.out.println("max="+max);
+		//System.out.println("max="+max);
 	}
 
 	@Override
@@ -251,4 +251,9 @@ public class Box implements SupportMap3, Geometry, Material {
 	public double getMass() {
 		return mass;
 	}
+
+	public void setMass(double mass) {
+		this.mass = mass;
+	}
+
 }
