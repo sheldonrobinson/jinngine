@@ -39,7 +39,7 @@ public class Graphics implements MouseListener, MouseMotionListener, MouseWheelL
 	public Graphics() {}
 	
 	public void start() {
-		model.setDt(0.06);
+		model.setDt(0.08);
 		
 		//initial state
 		addState(new Selection());
@@ -54,7 +54,7 @@ public class Graphics implements MouseListener, MouseMotionListener, MouseWheelL
 	double spend = 0;
 	public void callback()  {
 		//do amount of ticks to meet 0.12 effective time-step per frame
-		double step = 0.06;
+		double step = 0.08;
 		do {
 			spend += model.getDt();
 			model.tick();
