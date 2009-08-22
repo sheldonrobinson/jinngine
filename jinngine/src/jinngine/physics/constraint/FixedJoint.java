@@ -60,13 +60,13 @@ public class FixedJoint implements Constraint {
 		Vector3 tnj = Matrix3.multiply(b2.state.rotation, n2, new Vector3());
 		
 		//jacobians on matrix form
-		Matrix3 Ji = new Matrix3().identity().multiply(1);
+		Matrix3 Ji = Matrix3.identity().multiply(1);
 		Matrix3 Jangi =ri.crossProductMatrix3().multiply(-1);
-		Matrix3 Jj = new Matrix3().identity().multiply(-1);
+		Matrix3 Jj = Matrix3.identity().multiply(-1);
 		Matrix3 Jangj = rj.crossProductMatrix3().multiply(1);
 
-		Matrix3 MiInv = new Matrix3().identity().multiply(1/b1.state.M);
-		Matrix3 MjInv = new Matrix3().identity().multiply(1/b2.state.M);
+		Matrix3 MiInv = Matrix3.identity().multiply(1/b1.state.M);
+		Matrix3 MjInv = Matrix3.identity().multiply(1/b2.state.M);
 
 		Matrix3 Bi = MiInv.multiply(Ji.transpose());
 		Matrix3 Bj = MjInv.multiply(Jj.transpose());

@@ -3,7 +3,6 @@ package jinngine.physics.constraint;
 import java.util.*;
 
 import jinngine.math.Matrix3;
-import jinngine.math.Quaternion;
 import jinngine.math.Vector3;
 import jinngine.physics.Body;
 import jinngine.physics.solver.*;
@@ -115,13 +114,13 @@ public final class HingeJoint implements Constraint {
 		Vector3 tn2 = Matrix3.multiply(b2.state.rotation, nj, new Vector3());
 		
 		//jacobians on matrix form
-		Matrix3 Ji = new Matrix3().identity().multiply(1);
+		Matrix3 Ji = Matrix3.identity().multiply(1);
 		Matrix3 Jangi =ri.crossProductMatrix3().multiply(-1);
-		Matrix3 Jj = new Matrix3().identity().multiply(-1);
+		Matrix3 Jj = Matrix3.identity().multiply(-1);
 		Matrix3 Jangj = rj.crossProductMatrix3().multiply(1);
 
-		Matrix3 MiInv = new Matrix3().identity().multiply(1/b1.state.M);
-		Matrix3 MjInv = new Matrix3().identity().multiply(1/b2.state.M);
+		Matrix3 MiInv = Matrix3.identity().multiply(1/b1.state.M);
+		Matrix3 MjInv = Matrix3.identity().multiply(1/b2.state.M);
 
 		Matrix3 Bi = MiInv.multiply(Ji.transpose());
 		Matrix3 Bj = MjInv.multiply(Jj.transpose());
@@ -169,7 +168,7 @@ public final class HingeJoint implements Constraint {
 		//handle the constraint modeling joint limits and motor
 		double low = 0;
 		double high = 0;
-		Vector3 wcor = new Vector3();
+		//Vector3 wcor = new Vector3();
 		double correction = 0;
 		Vector3 axis = tn1;		
 		double sign = tt2i.cross(tt2j).dot(tn1)>0?1:-1;

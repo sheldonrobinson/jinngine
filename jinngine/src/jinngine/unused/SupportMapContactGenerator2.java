@@ -110,7 +110,7 @@ public class SupportMapContactGenerator2 implements ContactGenerator {
 
 			Vector3 wpa = bodyA.toWorld(cp.pa);
 			Vector3 wpb = bodyB.toWorld(cp.pb);
-			Vector3 wab = wpa.minus(wpb);
+			//Vector3 wab = wpa.minus(wpb);
 			Vector3 wmp = wpa.add(wpb).multiply(0.5);
 			Vector3 wn = wpa.minus(wpb).normalize();
 			double  wd = wpa.minus(wpb).norm();
@@ -258,7 +258,7 @@ public class SupportMapContactGenerator2 implements ContactGenerator {
 			if ( newArea > area) {area= newArea; index = 3; }
 
 			//remove and add
-			ContactPoint old = manifold.get(index);
+			//ContactPoint old = manifold.get(index);
 			manifold.remove(index);
 			//cp.cachedNormalForce = old.cachedNormalForce;
 			manifold.add( index, cp );			

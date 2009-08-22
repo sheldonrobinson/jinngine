@@ -159,8 +159,8 @@ public class UniversalJoint implements Constraint {
 		
 		//Jangj = new Matrix3( rjw.cross(basis.row(0)), rjw.cross(basis.row(1)), rjw.cross(basis.row(2)));
 
-		Matrix3 MiInv = new Matrix3().identity().multiply(1/i.state.M);
-		Matrix3 MjInv = new Matrix3().identity().multiply(1/j.state.M);
+		Matrix3 MiInv = Matrix3.identity().multiply(1/i.state.M);
+		Matrix3 MjInv = Matrix3.identity().multiply(1/j.state.M);
 
 		Matrix3 Bi = MiInv.multiply(Ji);
 		Matrix3 Bj = MjInv.multiply(Jj);

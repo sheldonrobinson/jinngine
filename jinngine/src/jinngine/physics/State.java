@@ -60,9 +60,9 @@ public final class State  {
 	/** Transformation matrix, how to get from object space to world */
 	public final Matrix4             transform       = new Matrix4();
 	/** Rotation matrix, how to get from object orientation into world orientation */
-	public final Matrix3             rotation        = new Matrix3().identity();
+	public final Matrix3             rotation        = Matrix3.identity();
 	/** Inverse rotation matrix */	
-	public final Matrix3             rotationInverse = new Matrix3().identity();
+	public final Matrix3             rotationInverse = Matrix3.identity();
 
 	/**
 	 * Assign this state the fields in the State t

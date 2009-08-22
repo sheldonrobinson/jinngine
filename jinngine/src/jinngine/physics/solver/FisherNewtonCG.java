@@ -17,10 +17,6 @@ public class FisherNewtonCG implements Solver {
 		this.imax = n;
 	}
 
-	public void setMaximumIterations2(int n) {
-		this.imax2 = n;
-	}
-
 	
 	public void setMaximumCGIterations(int n) {
 		this.cgmax = n;
@@ -46,7 +42,6 @@ public class FisherNewtonCG implements Solver {
 
 	private int linemax =6;
 	private int imax = 10;
-	private int imax2 = 10;
 	private int cgmax = 15;
 	private double damper =0;
 	private double frictiondamp = 0;
@@ -257,7 +252,7 @@ public class FisherNewtonCG implements Solver {
 			
 			k=0; double step = 1;
 			double oldsquarederror = squarederror;
-			double olderror = error;
+			//double olderror = error;
 			while(true) {
 				//compute fisher
 				squarederror = 0;
@@ -327,72 +322,74 @@ public class FisherNewtonCG implements Solver {
 
 	
 	
-	private void computeVelocity2(List<ConstraintEntry> constraints, List<ConstraintEntry> off,  double[] lambda, double[] w, double damper) {	
-		//clear auxiliary fields
-		for (ConstraintEntry ci: constraints) {
-			ci.body1.auxDeltav.assignZero();
-			ci.body1.auxDeltaOmega.assignZero();
-			ci.body2.auxDeltav.assignZero();
-			ci.body2.auxDeltaOmega.assignZero();
-		}
-
-		// Jh M-1J^t x+ Ic x + b = 0
-		
-		//apply contributions from all constraints to bodies
-		int i = 0;
-		for (ConstraintEntry ci: constraints) {
-			Vector3.add( ci.body1.auxDeltav,     ci.b1.multiply(lambda[i] )  );
-			Vector3.add( ci.body1.auxDeltaOmega, ci.b2.multiply(lambda[i] ) );
-			Vector3.add( ci.body2.auxDeltav,     ci.b3.multiply(lambda[i] ) );
-			Vector3.add( ci.body2.auxDeltaOmega, ci.b4.multiply(lambda[i] ) );
-			i = i+1;
-		}
-
-		for (ConstraintEntry ci: off) {
-			Vector3.add( ci.body1.auxDeltav,     ci.b1.multiply(ci.lambda )  );
-			Vector3.add( ci.body1.auxDeltaOmega, ci.b2.multiply(ci.lambda ) );
-			Vector3.add( ci.body2.auxDeltav,     ci.b3.multiply(ci.lambda ) );
-			Vector3.add( ci.body2.auxDeltaOmega, ci.b4.multiply(ci.lambda ) );
-			i = i+1;
-		}
-
-		
-		i = 0;
-		for (ConstraintEntry ci: constraints) {
-			w[i] = ci.j1.dot(ci.body1.auxDeltav) + ci.j2.dot(ci.body1.auxDeltaOmega)
-			     + ci.j3.dot(ci.body2.auxDeltav) + ci.j4.dot(ci.body2.auxDeltaOmega) + (-ci.b) + damper*lambda[i];
-			i = i+1;
-		}			
-	}
+//	private void computeVelocity2(List<ConstraintEntry> constraints, List<ConstraintEntry> off,  double[] lambda, double[] w, double damper) {	
+//		//clear auxiliary fields
+//		for (ConstraintEntry ci: constraints) {
+//			ci.body1.auxDeltav.assignZero();
+//			ci.body1.auxDeltaOmega.assignZero();
+//			ci.body2.auxDeltav.assignZero();
+//			ci.body2.auxDeltaOmega.assignZero();
+//		}
+//
+//		// Jh M-1J^t x+ Ic x + b = 0
+//		
+//		//apply contributions from all constraints to bodies
+//		int i = 0;
+//		for (ConstraintEntry ci: constraints) {
+//			Vector3.add( ci.body1.auxDeltav,     ci.b1.multiply(lambda[i] )  );
+//			Vector3.add( ci.body1.auxDeltaOmega, ci.b2.multiply(lambda[i] ) );
+//			Vector3.add( ci.body2.auxDeltav,     ci.b3.multiply(lambda[i] ) );
+//			Vector3.add( ci.body2.auxDeltaOmega, ci.b4.multiply(lambda[i] ) );
+//			i = i+1;
+//		}
+//
+//		for (ConstraintEntry ci: off) {
+//			Vector3.add( ci.body1.auxDeltav,     ci.b1.multiply(ci.lambda )  );
+//			Vector3.add( ci.body1.auxDeltaOmega, ci.b2.multiply(ci.lambda ) );
+//			Vector3.add( ci.body2.auxDeltav,     ci.b3.multiply(ci.lambda ) );
+//			Vector3.add( ci.body2.auxDeltaOmega, ci.b4.multiply(ci.lambda ) );
+//			i = i+1;
+//		}
+//
+//		
+//		i = 0;
+//		for (ConstraintEntry ci: constraints) {
+//			w[i] = ci.j1.dot(ci.body1.auxDeltav) + ci.j2.dot(ci.body1.auxDeltaOmega)
+//			     + ci.j3.dot(ci.body2.auxDeltav) + ci.j4.dot(ci.body2.auxDeltaOmega) + (-ci.b) + damper*lambda[i];
+//			i = i+1;
+//		}			
+//	}
 	
 	
 	
-	private void computeFisher( List<ConstraintEntry> constraints, double[] lambda, double w[], double[] b) {
-		//evaluate b vector using fisher
-		int i=0;
-		for (ConstraintEntry c: constraints) {
-			//get the b vector and starting lambda values
-			if (c.coupledMax == null) {
-				
-				b[i] = -( Math.sqrt( w[i]*w[i]+ lambda[i]*lambda[i] )-w[i]-lambda[i]);
-			} else {
-//				double limit = Math.abs(c.coupledMax.lambda)*friction;
-//				c.lambdaMin = -limit;
-//				c.lambdaMax  = limit;
-				
-
-				b[i] = - ( fisher( lambda[i]-c.lambdaMin, fisher(c.lambdaMax-lambda[i], -w[i])));
-			}
-			i++;
-		}
-		
-	}
+//	private void computeFisher( List<ConstraintEntry> constraints, double[] lambda, double w[], double[] b) {
+//		//evaluate b vector using fisher
+//		int i=0;
+//		for (ConstraintEntry c: constraints) {
+//			//get the b vector and starting lambda values
+//			if (c.coupledMax == null) {
+//				
+//				b[i] = -( Math.sqrt( w[i]*w[i]+ lambda[i]*lambda[i] )-w[i]-lambda[i]);
+//			} else {
+////				double limit = Math.abs(c.coupledMax.lambda)*friction;
+////				c.lambdaMin = -limit;
+////				c.lambdaMax  = limit;
+//				
+//
+//				b[i] = - ( fisher( lambda[i]-c.lambdaMin, fisher(c.lambdaMax-lambda[i], -w[i])));
+//			}
+//			i++;
+//		}
+//		
+//	}
 	
 	
+	@SuppressWarnings("unused")
 	private void printA(List<ConstraintEntry> constraints) {
 		System.out.println("A = [ ");
 
-		int i = 0; int k =0;
+		//int i = 0; 
+		int k =0;
 		for (ConstraintEntry ci: constraints) {
 			System.out.println("");
 

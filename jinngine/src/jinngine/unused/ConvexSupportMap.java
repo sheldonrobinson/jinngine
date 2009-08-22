@@ -73,11 +73,6 @@ public class ConvexSupportMap implements SupportMap3, Geometry {
 		
 	}
 	
-	@Override
-	public void setLocalTranslation(Vector3 b) {
-		// TODO Auto-generated method stub
-		
-	}
 
 	@Override
 	public Vector3 getMaxBounds() {
@@ -104,7 +99,7 @@ public class ConvexSupportMap implements SupportMap3, Geometry {
 	}
 
 	@Override
-	public InertiaMatrix getInertialMatrix(double mass) {
+	public InertiaMatrix getInertialMatrix() {
 		// TODO Auto-generated method stub
 		return null;
 	}
@@ -119,6 +114,18 @@ public class ConvexSupportMap implements SupportMap3, Geometry {
 	public void supportFeature(Vector3 d, double epsilon, List<Vector3> face) {
 		// TODO Auto-generated method stub
 		
+	}
+
+	@Override
+	public void getLocalTransform(Matrix3 R, Vector3 b) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public double getMass() {
+		// TODO Auto-generated method stub
+		return 0;
 	}
 
 

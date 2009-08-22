@@ -11,7 +11,7 @@ public class BallInSocketJoint implements Constraint {
 
 
 	private final Body b1,b2;
-	private final Vector3 p1, p2, n1, n2;
+	private final Vector3 p1, p2;// n1, n2;
 	
 	public BallInSocketJoint(Body b1, Body b2, Vector3 p, Vector3 n) {
 		this.b1 = b1;
@@ -21,8 +21,8 @@ public class BallInSocketJoint implements Constraint {
 		p2 = b2.toModel(p);	
 		
 		//Vector3 n = new Vector3(1,0,0);
-		n1 = b1.toModelNoTranslation(n);
-		n2 = b2.toModelNoTranslation(n);
+		//n1 = b1.toModelNoTranslation(n);
+		//n2 = b2.toModelNoTranslation(n);
 		
 		p1.print();
 		p2.print();
@@ -40,13 +40,13 @@ public class BallInSocketJoint implements Constraint {
 		Vector3 rj = Matrix3.multiply(b2.state.rotation, p2, new Vector3());
 		
 		//jacobians on matrix form
-		Matrix3 Ji = new Matrix3().identity().multiply(1);
+		Matrix3 Ji = Matrix3.identity().multiply(1);
 		Matrix3 Jangi =ri.crossProductMatrix3().multiply(-1);
-		Matrix3 Jj = new Matrix3().identity().multiply(-1);
+		Matrix3 Jj = Matrix3.identity().multiply(-1);
 		Matrix3 Jangj = rj.crossProductMatrix3().multiply(1);
 
-		Matrix3 MiInv = new Matrix3().identity().multiply(1/b1.state.M);
-		Matrix3 MjInv = new Matrix3().identity().multiply(1/b2.state.M);
+		Matrix3 MiInv = Matrix3.identity().multiply(1/b1.state.M);
+		Matrix3 MjInv = Matrix3.identity().multiply(1/b2.state.M);
 
 		Matrix3 Bi = MiInv.multiply(Ji.transpose());
 		Matrix3 Bj = MjInv.multiply(Jj.transpose());

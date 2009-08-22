@@ -1,7 +1,6 @@
 package jinngine.unused;
 import java.util.*;
 
-import jinngine.geometry.SupportMap3;
 import jinngine.math.Matrix3;
 import jinngine.math.Vector3;
 import jinngine.physics.Body;
@@ -18,7 +17,7 @@ public class Dome extends Body {
 		//compute the tensor
 		updateMomentOfInertia();
 
-		SupportMap3 one = new HalfSphereSupportMap(r,r,r);
+		//SupportMap3 one = new HalfSphereSupportMap(r,r,r);
 
 	}
 

@@ -1,8 +1,6 @@
 package jinngine.geometry;
 
-import java.util.ArrayList;
 import java.util.List;
-
 import jinngine.math.InertiaMatrix;
 import jinngine.math.Matrix3;
 import jinngine.math.Matrix4;
@@ -29,7 +27,7 @@ public class Sphere implements SupportMap3, Geometry, Material {
 
 	private Body body;
 	private double radius;
-	private final Matrix3 localtransform = new Matrix3();
+//	private final Matrix3 localtransform = new Matrix3();
 	private final Vector3 displacement = new Vector3();
 	private final Matrix4 transform4 = new Matrix4();
 	private final Matrix4 localtransform4 = new Matrix4();

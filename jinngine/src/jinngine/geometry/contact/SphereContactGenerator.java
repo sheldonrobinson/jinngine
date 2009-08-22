@@ -20,7 +20,8 @@ public class SphereContactGenerator implements ContactGenerator {
 	private final Body b1;
 	private final Body b2;
 	private boolean incontact = false;
-	private final double envelope = 3.0;
+    private final double envelope = 0.125;
+	private final double shell = envelope*0.75;
 	private final double restitution;
 	private final double friction;
 
@@ -97,13 +98,13 @@ public class SphereContactGenerator implements ContactGenerator {
 
 		//contact within envelope
 		if ( d >= 0  && d < envelope ) {
-			double depth = envelope-d;
+			cp.depth = shell-d;
 			//cp.depth = depth-(envelope/2.0) > 0 ? depth-(envelope/2.0):0;
 			incontact = true;
 			return true;
 		//penetration
 		} else if ( d < 0){
-			cp.depth = -d+(envelope/2.0);
+			cp.depth = shell-d;
 			//cp.depth = 0;
 			incontact = true;
 			return true;

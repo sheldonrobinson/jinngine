@@ -41,8 +41,7 @@ public class Box implements SupportMap3, Geometry, Material {
 		mass = xl*yl*zl;
 		
 		//set the local transform
-		localrotation.assign( Matrix3.identity() );
-		localtransform.assign(new Matrix3(new Vector3(x,0,0), new Vector3(0,y,0), new Vector3(0,0,z)) );
+		setLocalTransform( Matrix3.identity(), new Vector3() );
 	}
 	
 	// user auxiliary methods

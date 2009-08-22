@@ -1,7 +1,6 @@
 package jinngine.util;
 
 import junit.framework.TestCase;
-import jinngine.util.ComponentGraph;
 
 public class ComponentGraphTest extends TestCase {
 

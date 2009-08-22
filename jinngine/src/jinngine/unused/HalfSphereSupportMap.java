@@ -22,7 +22,7 @@ public class HalfSphereSupportMap implements SupportMap3, Geometry {
 		
 	}
 	private double xt,yu,zv;
-	private Object auxiliary;
+	//private Object auxiliary;
 
 	
 	public HalfSphereSupportMap( double xt, double yu, double zv) {
@@ -71,17 +71,7 @@ public class HalfSphereSupportMap implements SupportMap3, Geometry {
 		// TODO Auto-generated method stub
 		
 	}
-	
-	@Override
-	public void setLocalTranslation(Vector3 b) {
-		// TODO Auto-generated method stub
-		
-	}
-//	@Override
-//	public void updateTransform() {
-//		// TODO Auto-generated method stub
-//		
-//	}
+
 	@Override
 	public Vector3 getMaxBounds() {
 		// TODO Auto-generated method stub
@@ -103,7 +93,7 @@ public class HalfSphereSupportMap implements SupportMap3, Geometry {
 		return 0;
 	}
 	@Override
-	public InertiaMatrix getInertialMatrix(double mass) {
+	public InertiaMatrix getInertialMatrix() {
 		// TODO Auto-generated method stub
 		return null;
 	}
@@ -116,5 +106,15 @@ public class HalfSphereSupportMap implements SupportMap3, Geometry {
 	public void supportFeature(Vector3 d, double epsilon, List<Vector3> face) {
 		// TODO Auto-generated method stub
 		
+	}
+	@Override
+	public void getLocalTransform(Matrix3 R, Vector3 b) {
+		// TODO Auto-generated method stub
+		
+	}
+	@Override
+	public double getMass() {
+		// TODO Auto-generated method stub
+		return 0;
 	}
 }

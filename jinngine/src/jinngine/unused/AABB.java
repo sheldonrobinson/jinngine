@@ -100,7 +100,7 @@ public class AABB<G extends Geometry> {
 		//return sourceFeature.translate( maxBounds );
 	}
 
-	public static final boolean overlap( Body iBody, AABB i, Body jBody, AABB j) {
+	public static final boolean overlap( Body iBody, AABB<?> i, Body jBody, AABB<?> j) {
 		Vector3 iminBoundsTranslated = iBody.translate( i.minBounds );
 		Vector3 imaxBoundsTranslated = iBody.translate( i.maxBounds );
 		Vector3 jminBoundsTranslated = jBody.translate( j.minBounds );

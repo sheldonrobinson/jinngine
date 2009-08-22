@@ -17,13 +17,12 @@ import com.sun.opengl.util.Animator;
 //import com.sun.opengl.util.FPSAnimator;
 
 public class BoxVisualisor extends Frame implements GLEventListener  {
+	private static final long serialVersionUID = 1L;
 	private final GLCanvas canvas;
 	private final GLU glu = new GLU();	
 	private double width;
 	private double height;
 	private double drawHeight;
-	private volatile int ratio = 4;
-	
 	// Display lists
 	private int box;
 	private int sphere;
@@ -54,8 +53,6 @@ public class BoxVisualisor extends Frame implements GLEventListener  {
 	public BoxVisualisor( Model model, List<Body> boxes, int ratio)  {
 		this.model = model;
 		this.boxes = boxes;
-		this.ratio = ratio;
-	
 		//Setup exit function
 	    addWindowListener(new WindowAdapter() {public void windowClosing(WindowEvent e){ System.exit(0);}});
 		setSize(800,600);

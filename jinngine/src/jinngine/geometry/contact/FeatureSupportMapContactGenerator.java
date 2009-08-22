@@ -3,7 +3,6 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.ListIterator;
 
 import jinngine.collision.ExpandingPolytope;
 import jinngine.collision.GJK3;
@@ -12,7 +11,6 @@ import jinngine.physics.*;
 import jinngine.geometry.*;
 
 public class FeatureSupportMapContactGenerator implements ContactGenerator {
-
 	//final double envelopeMin = 2.75;
     private static double envelope = 0.125;
 	private static double shell = envelope*0.75;
@@ -160,7 +158,6 @@ public class FeatureSupportMapContactGenerator implements ContactGenerator {
 
 				//transform and project
 				Vector3 p1tp = Si.multiply(p1.minus(midpoint));
-				double deviation = p1tp.a1;
 				p1tp.a1 = 0;
 
 				boolean inside = true;
@@ -247,7 +244,6 @@ public class FeatureSupportMapContactGenerator implements ContactGenerator {
 
 				//transform and project
 				Vector3 p1tp = Si.multiply(p1.minus(midpoint));
-				double deviation = p1tp.a1;
 				p1tp.a1 = 0;
 				
 				//System.out.println("deviation="+deviation);

@@ -337,7 +337,7 @@ public final class Engine implements Model {
 
 			//System.out.println("N="+constraintList.size());
 
-			long t = System.currentTimeMillis();
+			//long t = System.currentTimeMillis();
 
 			newton.setLinesearchIterations(0);
 			newton.setMaximumCGIterations(8);
@@ -345,7 +345,7 @@ public final class Engine implements Model {
 			newton.setErrorTolerance(0);
 			newton.setDamping(0);
 			newton.setFrictionDamping(0);
-			double errNormals = newton.solve(normals, bodies);
+//			double errNormals = newton.solve(normals, bodies);
 //			double errAll4 = newton.solve(constraintList, bodies);
 		   //System.out.println("error ="+errAll4);
 
@@ -460,7 +460,7 @@ public final class Engine implements Model {
 			if (c.ignore)
 				continue;
 
-			double prekinetic = c.totalKinetic();
+			//double prekinetic = c.totalKinetic();
 			
 			//apply external forces
 			c.advanceVelocities(dt);
@@ -515,18 +515,6 @@ public final class Engine implements Model {
 	@Override
 	public void setDt(double dt) {
 		this.dt = dt;
-	}
-
-	private Iterator<Body> getBodyIterator() {
-		return bodies.iterator();
-	}
-
-	private void muteBodyPair(Pair<Body> pair) {
-		mutedBodyPairs.put(pair, true);
-	}
-
-	private void unmuteBodyPair(Pair<Body> pair) {
-		mutedBodyPairs.remove(pair);
 	}
 
 	public void addForce( Force f ) {

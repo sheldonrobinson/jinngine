@@ -167,6 +167,7 @@ public class GJK3 implements ClosestPointsAlgorithm<SupportMap3,SupportMap3> {
 	 * @param v direction vector 
 	 * @return a new support point on the configuration space obstacle of A and B
 	 */
+	@SuppressWarnings("unused")
 	private final Vector3 support( SupportMap3 Sa, SupportMap3 Sb, Vector3 v) {
 		Vector3 sva = Sa.supportPoint(v) ;
 		//We need rotate the vector reverse in B space

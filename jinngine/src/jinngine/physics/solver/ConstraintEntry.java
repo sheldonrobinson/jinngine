@@ -2,7 +2,6 @@ package jinngine.physics.solver;
 
 import jinngine.physics.*;
 import jinngine.physics.constraint.*;
-import jinngine.geometry.contact.ContactGenerator;
 import jinngine.math.Vector3;
 
 /**

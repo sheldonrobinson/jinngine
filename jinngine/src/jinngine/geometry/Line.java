@@ -43,7 +43,7 @@ public class Line implements SupportMap3, Geometry {
 	}
 
 	@Override
-	public InertiaMatrix getInertialMatrix(double mass) {
+	public InertiaMatrix getInertialMatrix() {
 		//lines have no inertia
 		return null;
 	}
@@ -70,10 +70,6 @@ public class Line implements SupportMap3, Geometry {
 		//do nothing
 	}
 
-	@Override
-	public void setLocalTranslation(Vector3 b) {
-		// do nothing
-	}
 
 	@Override
 	public Vector3 getMaxBounds() {
@@ -94,6 +90,18 @@ public class Line implements SupportMap3, Geometry {
 	public void supportFeature(Vector3 d, double epsilon, List<Vector3> face) {
 		// TODO Auto-generated method stub
 		
+	}
+
+	@Override
+	public void getLocalTransform(Matrix3 R, Vector3 b) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public double getMass() {
+		// TODO Auto-generated method stub
+		return 0;
 	}
 
 }
