@@ -1,7 +1,5 @@
 package jinngine.demo.graphics;
 
-
-import jinngine.geometry.Geometry;
 import jinngine.math.Matrix4;
 import jinngine.math.Vector3;
 

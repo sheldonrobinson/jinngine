@@ -1,7 +1,6 @@
 package jinngine.demo.graphics;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 
@@ -82,6 +81,7 @@ public class Hull implements Shape, SupportMap3, Geometry {
 		//allocate vertex to face list
 		vertexToFace = new ArrayList<List<Integer>>();
 		for (Vector3 v: vertices) {
+			v.multiply(1); //dummy
 			vertexToFace.add(new ArrayList<Integer>());
 		}
 		
@@ -117,7 +117,7 @@ public class Hull implements Shape, SupportMap3, Geometry {
 			
 
 			
-			int incident = 0;
+			//int incident = 0;
 			//for each vertex in this face
 			for (int j=1;j<faceIndices[i].length; j++) {
 				
@@ -224,7 +224,7 @@ public class Hull implements Shape, SupportMap3, Geometry {
 
 	@Override
 	public void supportFeature(Vector3 d, double epsilon, List<Vector3> returnList) {
-		ArrayList<Integer> featureIndices = new ArrayList<Integer>();
+		//ArrayList<Integer> featureIndices = new ArrayList<Integer>();
 		//List<Vector3> returnList = new ArrayList<Vector3>();
 		Vector3 v = body.state.rotation.multiply(localtransform).transpose().multiply(d).normalize();
 

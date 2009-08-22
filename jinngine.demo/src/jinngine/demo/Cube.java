@@ -2,9 +2,6 @@ package jinngine.demo;
 
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Random;
-
-import com.sun.org.apache.xml.internal.security.encryption.Transforms;
 
 import jinngine.demo.graphics.Entity;
 import jinngine.demo.graphics.FlatShade;
@@ -12,7 +9,6 @@ import jinngine.demo.graphics.Graphics;
 import jinngine.demo.graphics.Hull;
 import jinngine.demo.graphics.Render;
 import jinngine.geometry.Box;
-import jinngine.math.Matrix3;
 import jinngine.math.Matrix4;
 import jinngine.math.Vector3;
 import jinngine.physics.Body;

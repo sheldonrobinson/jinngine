@@ -2,7 +2,6 @@ package jinngine.demo;
 
 import jinngine.demo.graphics.Graphics;
 import jinngine.geometry.Box;
-import jinngine.math.Quaternion;
 import jinngine.math.Vector3;
 import jinngine.physics.Body;
 import jinngine.physics.Model;

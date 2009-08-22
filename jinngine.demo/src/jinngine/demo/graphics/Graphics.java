@@ -8,11 +8,9 @@ import java.awt.event.MouseMotionListener;
 import java.awt.event.MouseWheelEvent;
 import java.awt.event.MouseWheelListener;
 import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.ListIterator;
 import jinngine.math.Vector3;
-import jinngine.physics.Body;
 import jinngine.physics.Engine;
 import jinngine.physics.Model;
 

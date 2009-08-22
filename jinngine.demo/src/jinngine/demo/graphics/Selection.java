@@ -1,7 +1,6 @@
 package jinngine.demo.graphics;
 
 import jinngine.collision.BroadfaseCollisionDetection;
-import jinngine.collision.GJK3;
 import jinngine.collision.RayCast;
 import jinngine.geometry.Geometry;
 import jinngine.geometry.Line;
@@ -54,7 +53,7 @@ public class Selection implements GameState {
 						SupportMap3 b = (SupportMap3)pair.getSecond();
 
 						if ( a == line || b == line) {				
-							GJK3 gjk = new GJK3();
+							//GJK3 gjk = new GJK3();
 							RayCast ray = new RayCast();
 
 							//select non-line as shape

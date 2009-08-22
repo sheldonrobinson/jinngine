@@ -2,7 +2,6 @@ package jinngine.demo;
 
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Random;
 
 
 import jinngine.demo.graphics.*;
@@ -10,9 +9,7 @@ import jinngine.math.Matrix3;
 import jinngine.math.Vector3;
 import jinngine.physics.Body;
 import jinngine.physics.Model;
-import jinngine.physics.constraint.HingeJoint;
 import jinngine.physics.force.GravityForce;
-import jinngine.util.Pair;
 
 public class Gear implements Entity {
 
@@ -29,7 +26,7 @@ public class Gear implements Entity {
 		double n = 7;
 		double r = radius*1;
 		double r2 = radius*(10/13.0);
-		double r3 = radius*(8.5/13.0);
+		//double r3 = radius*(8.5/13.0);
 		double d = radius*(6/13.0);
 		
 		b = new Body();

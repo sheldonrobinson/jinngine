@@ -10,11 +10,11 @@ import java.awt.event.*;
 // jogl imports
 import javax.media.opengl.*;
 import javax.media.opengl.glu.*;
-import com.sun.opengl.util.Animator;
-import com.sun.opengl.util.FPSAnimator;
+import com.sun.opengl.util.*;
 
 
 public class RenderImpl2 extends Frame implements GLEventListener, Render  {
+	private static final long serialVersionUID = 1L;
 
 	private class DrawTask {
 		public ShapeRender render;
@@ -45,8 +45,8 @@ public class RenderImpl2 extends Frame implements GLEventListener, Render  {
 	private Graphics callback;
 
 	// Display lists
-	private int box;
-	private int sphere;
+//	private int box;
+//	private int sphere;
 
 	// Camera coordinates
 	private final Vector3 cameraFrom = new Vector3(-45,287,-285).multiply(0.3);
@@ -203,7 +203,7 @@ public class RenderImpl2 extends Frame implements GLEventListener, Render  {
 				gl.glBegin(GL.GL_POLYGON);
 				Vector3[] face = i.next();
 				//compute normal
-				Vector3 n =face[1].minus(face[0]).cross(face[2].minus(face[1])).normalize();
+				//Vector3 n =face[1].minus(face[0]).cross(face[2].minus(face[1])).normalize();
 				
 				for ( Vector3 v: face) {
 					gl.glVertex3d(v.a1, v.a2, v.a3);

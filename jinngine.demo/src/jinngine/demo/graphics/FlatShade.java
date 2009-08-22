@@ -2,15 +2,13 @@ package jinngine.demo.graphics;
 
 import java.util.Iterator;
 import javax.media.opengl.GL;
-import javax.media.opengl.glu.*;
-
 import jinngine.math.Matrix4;
 import jinngine.math.Vector3;
 
 public class FlatShade implements ShapeRender {
 
-	private final GLU glu = new GLU();
-	
+//	private final GLU glu = new GLU();
+	 
 	@Override
 	public void preRenderShape(Render render, Shape shape, Entity entity, GL gl) {
 		
@@ -126,6 +124,7 @@ public class FlatShade implements ShapeRender {
 	 * to the plane. Hint: Gray or black color and no lighting 
 	 * looks good for shadows *g*
 	 */
+	@SuppressWarnings("unused")
 	private double[] shadowProjectionMatrix(Vector3 l, Vector3 e, Vector3  n)
 	{
 	  double d, c;

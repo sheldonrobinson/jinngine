@@ -3,8 +3,6 @@ package jinngine.demo.graphics;
 import javax.media.opengl.GL;
 
 
-import jinngine.math.Matrix4;
-
 public interface ShapeRender {
 
 	/**
