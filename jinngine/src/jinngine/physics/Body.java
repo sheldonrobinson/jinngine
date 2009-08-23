@@ -17,7 +17,7 @@ import jinngine.physics.solver.*;
  * @author mo
  *
  */
-public class Body {
+public final class Body {
 	//auxiliary
 	public final Vector3               deltaVCm = new Vector3(0,0,0);
 	public final Vector3               deltaOmegaCm = new Vector3(0,0,0);

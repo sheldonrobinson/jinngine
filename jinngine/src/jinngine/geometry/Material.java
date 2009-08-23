@@ -1,5 +1,7 @@
 package jinngine.geometry;
 
+import jinngine.physics.Body;
+
 /**
  * Material specifies physical properties for a geometric object, which are restitution and friction 
  * coefficients. The restitution coefficient specifies how much energy that dissipates during collisions. 
@@ -34,4 +36,5 @@ public interface Material {
 	public void setFrictionCoefficient(double f);
 	
 
+	public Body getBody();
 }

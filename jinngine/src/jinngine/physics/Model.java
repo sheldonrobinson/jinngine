@@ -1,7 +1,6 @@
 package jinngine.physics;
 
 import jinngine.collision.BroadfaseCollisionDetection;
-import jinngine.geometry.*;
 import jinngine.geometry.contact.*;
 import jinngine.util.*;
 import jinngine.physics.force.*;
@@ -33,23 +32,7 @@ public interface Model {
 	 * @param force
 	 */
 	public void addForce(Force force);
-	
-	/**
-	 * Add a geometry to the simulator. Geometries are normally implicitly
-	 * added through addBody(), but can also be added after bodies are added
-	 * using this method
-	 * @param g
-	 */
-	public void addGeometry( Geometry g) ;
-	
-	
-	/**
-	 * Remove a geometry
-	 * @param g
-	 */
-	public void removeGeometry( Geometry g);
-	
-	
+		
 	/**
 	 * Remove existing force
 	 * @param force
@@ -79,14 +62,11 @@ public interface Model {
 	 */
 	public void addContactGeneratorClasifier( ContactGeneratorClassifier classifier );
 
-	
-	
 	/**
 	 * Return the broad-fase collision detection instance
 	 * @return
 	 */
 	public BroadfaseCollisionDetection getBroadfase();
-	
 	
 	/**
 	 * Return the NCP solver

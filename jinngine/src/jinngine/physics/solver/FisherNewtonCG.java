@@ -5,6 +5,15 @@ import java.util.List;
 import jinngine.math.Vector3;
 import jinngine.physics.Body;
 
+/**
+ * An experimental Newton based NCP solver, based on a so called Fischer function reformulation. This solver was developed
+ * as a part of a research paper on solving multibody dynamics problems, and it is not recommended to use it. It is included 
+ * in jinngine for people that are interested in the subject to experiment with it. Generally, the solver showed good performence
+ * for normal force only problems, but had great difficulty handling friction dependent problems. As speculated in the mentioned
+ * paper, this could be due to the high amount of over-determinacy in the way that friction constraints are formulated. 
+ * @author mo
+ *
+ */
 public class FisherNewtonCG implements Solver {
 
 	@Override

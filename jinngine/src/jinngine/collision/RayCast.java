@@ -5,8 +5,22 @@ import java.util.List;
 import jinngine.geometry.SupportMap3;
 import jinngine.math.Vector3;
 
-
+/**
+ * Performs a collision query between a ray in space and a convex shape, defined by a support mapping. This implementation 
+ * is rather naive, it can be done more efficiently by integration into the GJK algorithm. However, the implementation at hand 
+ * is still usable in practice. 
+ * @author mo
+ *
+ */
 public class RayCast {
+	/** 
+	 * Perform ray cast against the convex object defined by Sb. 
+	 * @param Sb support mapping of a convex shape
+	 * @param point point on ray 
+	 * @param direction direction of ray
+	 * @return t such that c = direction t + point, where c is the point of collision. If the ray does not intersect the 
+	 * convex shape for any positive t, then positive infinity is returned
+	 */
 	public double run( 
 			final SupportMap3 Sb, 
 			final Vector3 point, 

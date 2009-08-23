@@ -605,18 +605,6 @@ public final class Engine implements Model {
 	}
 
 	@Override
-	public void addGeometry(Geometry g) {
-		broadfase.add(g);
-		
-	}
-
-	@Override
-	public void removeGeometry(Geometry g) {
-		broadfase.remove(g);
-		
-	}
-
-	@Override
 	public Solver getSolver() {
 		return solver;
 	}

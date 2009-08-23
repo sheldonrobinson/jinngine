@@ -10,6 +10,15 @@ import jinngine.math.*;
 import jinngine.physics.*;
 import jinngine.geometry.*;
 
+/**
+ * A contact generator based on feature support mappings. This contact generator uses GJK and EPA algorithms to establish
+ * a contact normal, penetrating or non-penetrating. In either case, the normal direction is used with the feature support
+ * mappings two obtaining two faces that are subsequently intersected against each other in the contact plane, to form 
+ * a contact region. See SupportMap3 for details on the feature support mapping. Currently the intersection is done in a
+ * simple way that naively intersects all edges and point-face intersections, which can be inefficient for large features. 
+ * @author mo
+ *
+ */
 public class FeatureSupportMapContactGenerator implements ContactGenerator {
 	//final double envelopeMin = 2.75;
     private static double envelope = 0.125;

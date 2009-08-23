@@ -9,13 +9,12 @@ import jinngine.math.Vector3;
 import jinngine.physics.Body;
 
 /**
- * Sphere geometry. This Geometry implementation is invariant to applied transforms. One can only affect
- * it by using the method setRadius() 
+ * Sphere geometry implementation.
+ * 
  * @author mo
  *
  */
 public class Sphere implements SupportMap3, Geometry, Material {
-
 
 	public Object getAuxiliary() {
 		return auxiliary;
@@ -27,7 +26,6 @@ public class Sphere implements SupportMap3, Geometry, Material {
 
 	private Body body;
 	private double radius;
-//	private final Matrix3 localtransform = new Matrix3();
 	private final Vector3 displacement = new Vector3();
 	private final Matrix4 transform4 = new Matrix4();
 	private final Matrix4 localtransform4 = new Matrix4();
