@@ -3,7 +3,6 @@ package jinngine.demo.graphics;
 import jinngine.collision.BroadfaseCollisionDetection;
 import jinngine.collision.RayCast;
 import jinngine.geometry.Geometry;
-import jinngine.geometry.Line;
 import jinngine.geometry.SupportMap3;
 import jinngine.math.Vector3;
 import jinngine.util.Pair;
@@ -43,7 +42,7 @@ public class Selection implements GameState {
 				final Line line = new Line(p1,p1.add(d.multiply(350)));
 
 				//add the line as geometry
-				m.getModel().addGeometry(line);
+				m.getModel().getBroadfase().add(line);
 
 				//define a handler for the broad-fase
 				BroadfaseCollisionDetection.Handler handler = new BroadfaseCollisionDetection.Handler() {				
@@ -93,7 +92,7 @@ public class Selection implements GameState {
 				m.getModel().getBroadfase().removeHandler(handler);
 
 				//remove the geometry
-				m.getModel().removeGeometry(line);
+				m.getModel().getBroadfase().remove(line);
 
 				//spawn a ObjectPlacement state
 				if (hit.first != null) {

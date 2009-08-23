@@ -48,7 +48,7 @@ public class Demo1 {
 //		new Cube(g, new Vector3(40,10,10), 10, 15);
 		
 		//new Gear(g, new Vector3(0,50,0), 1, 20);
-		new Gear(g, new Vector3(-10,-10,-20), 25, 3);
+		new Gear(g, new Vector3(-10,-5,-20), 25, 3);
 
 		g.start();
 	}

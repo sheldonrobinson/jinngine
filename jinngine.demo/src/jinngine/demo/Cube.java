@@ -50,6 +50,9 @@ public class Cube implements Entity {
 		Box box = new Box(size.a1, size.a2, size.a3);
 		box.setAuxiliary(this);
 		
+		box.setFrictionCoefficient(0.7);
+		box.setRestitution(0.4);
+		
 		body.addGeometry(box);		
 		body.finalize();
 		body.setPosition(position);

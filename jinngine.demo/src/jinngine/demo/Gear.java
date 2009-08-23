@@ -74,8 +74,10 @@ public class Gear implements Entity {
 		
 		b.finalize();		
 		b.setPosition(position);
+		b.sleepKinetic = 0.1;
 		model.addForce(new GravityForce(b,1));
 		model.addBody(b);
+		
 
 	}
 	
