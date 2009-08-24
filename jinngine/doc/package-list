@@ -1,9 +1,9 @@
 jinngine.collision
 jinngine.geometry
+jinngine.geometry.contact
 jinngine.math
 jinngine.physics
 jinngine.physics.constraint
 jinngine.physics.force
-jinngine.stuff
-jinngine.test
+jinngine.physics.solver
 jinngine.util
