@@ -22,11 +22,10 @@ public class Cube implements Entity {
 	public Cube( Graphics m, Vector3 size, Vector3 position, double mass ) {
 		Render render = m.getRender();
 		Model model = m.getModel();		
-		body = new Body();
 			
-		List<Vector3> points = new LinkedList<Vector3>();
 
-		//just a box			
+		//just a box for drawing
+		List<Vector3> points = new LinkedList<Vector3>();
 		points.add( new Vector3( 1, 1, 1 ).multiply(0.5));
 		points.add( new Vector3( -1, 1, 1 ).multiply(0.5));
 		points.add( new Vector3( 1, -1, 1 ).multiply(0.5));
@@ -36,29 +35,37 @@ public class Cube implements Entity {
 		points.add( new Vector3( 1, -1, -1 ).multiply(0.5));
 		points.add( new Vector3( -1, -1, -1 ).multiply(0.5));
 
+		//resize the drawing shape to the right dimensions
 		Matrix4 transform = jinngine.math.Transforms.scale(size);
 		for (Vector3 p: points)
 			p.assign( transform.multiply(p));
 		
+		//create drawing shape
 		Hull shape = new Hull(points.iterator());
 		shape.setAuxiliary(this);
 
-		//ask render to draw this shape
-		render.addShape( new FlatShade(), shape, body.state.transform, this);
-
-		//setup the physics
+		//Setup the physics
 		Box box = new Box(size.a1, size.a2, size.a3);
-		box.setAuxiliary(this);
+		box.setAuxiliary(this); 
 		
+		//set material properties
 		box.setFrictionCoefficient(0.7);
 		box.setRestitution(0.4);
 		
+		//create a body, and add the geometry to it
+		body = new Body();		
 		body.addGeometry(box);		
-		body.finalize();
+		body.finalize();                 // called when all geometry is added
 		body.setPosition(position);
 		body.sleepKinetic = 0.1;
+		
+		//Tell the model about our new box and attach a gravity force to it
 		model.addForce(new GravityForce(body,1));
 		model.addBody(body);
+	
+		//finally, ask render to draw this shape
+		render.addShape( new FlatShade(), shape, body.state.transform, this);
+
 	}
 	
 	public void setPosition(Vector3 p) {
