@@ -23,7 +23,6 @@ public class Cube implements Entity {
 		Render render = m.getRender();
 		Model model = m.getModel();		
 			
-
 		//just a box for drawing
 		List<Vector3> points = new LinkedList<Vector3>();
 		points.add( new Vector3( 1, 1, 1 ).multiply(0.5));
