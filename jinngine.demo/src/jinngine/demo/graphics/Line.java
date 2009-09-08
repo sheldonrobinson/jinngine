@@ -74,16 +74,16 @@ public class Line implements SupportMap3, Geometry {
 
 	@Override
 	public Vector3 getMaxBounds() {
-		return new Vector3( p1.a1 > p2.a1? p1.a1 : p2.a1, 
-				            p1.a2 > p2.a2? p1.a2 : p2.a2,
-					        p1.a3 > p2.a3? p1.a3 : p2.a3);
+		return new Vector3( p1.x > p2.x? p1.x : p2.x, 
+				            p1.y > p2.y? p1.y : p2.y,
+					        p1.z > p2.z? p1.z : p2.z);
 	}
 
 	@Override
 	public Vector3 getMinBounds() {
-		return new Vector3( p1.a1 < p2.a1? p1.a1 : p2.a1, 
-	                        p1.a2 < p2.a2? p1.a2 : p2.a2,
-	         	            p1.a3 < p2.a3? p1.a3 : p2.a3);
+		return new Vector3( p1.x < p2.x? p1.x : p2.x, 
+	                        p1.y < p2.y? p1.y : p2.y,
+	         	            p1.z < p2.z? p1.z : p2.z);
 	}
 
 

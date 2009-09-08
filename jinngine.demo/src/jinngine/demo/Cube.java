@@ -44,11 +44,11 @@ public class Cube implements Entity {
 		shape.setAuxiliary(this);
 
 		//Setup the physics
-		Box box = new Box(size.a1, size.a2, size.a3);
+		Box box = new Box(size.x, size.y, size.z);
 		box.setAuxiliary(this); 
 		
 		//set material properties
-		box.setFrictionCoefficient(0.7);
+		box.setFrictionCoefficient(0.65);
 		box.setRestitution(0.4);
 		
 		//create a body, and add the geometry to it
@@ -56,10 +56,12 @@ public class Cube implements Entity {
 		body.addGeometry(box);		
 		body.finalize();                 // called when all geometry is added
 		body.setPosition(position);
-		body.sleepKinetic = 0.1;
+		body.sleepKinetic = 0.0;
 		
 		//Tell the model about our new box and attach a gravity force to it
-		model.addForce(new GravityForce(body,1));
+		model.addForce(new GravityForce(body));
+		//model.addForce(new GravityForce(body,new Vector3(1,0,0),0.4));
+
 		model.addBody(body);
 	
 		//finally, ask render to draw this shape

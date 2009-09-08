@@ -38,12 +38,14 @@ public class Demo2 {
 		model.addBody(back);
 
 		//wee need some power for this
-		model.getSolver().setMaximumIterations(15);
+		model.getSolver().setMaximumIterations(22);
 		
 		//build a wall
 		for (int i=0; i<5; i++) {
 			for (int j=0; j<3; j++) {
 				new Cube(g, new Vector3(3,2,2), new Vector3(-17+i*3.1 +(j%2)*1.5,-18.8+j*2.1 ,-25), 10 );
+//				new Cube(g, new Vector3(3,2,2), new Vector3(-17+i*3.1 +(j%2)*1.5*.2,-18.8+j*2.1 ,-25), 10 );
+
 			}
 		}
 

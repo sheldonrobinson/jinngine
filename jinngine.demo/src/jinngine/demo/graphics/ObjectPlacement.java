@@ -47,9 +47,9 @@ public class ObjectPlacement implements GameState {
 	@Override
 	public void start(Graphics m) {
 		entity.setAlarmed(true);
-		mousebiasx = m.mouse.a1;
-		mousebiasy = m.mouse.a2;
-		mousebiasz = m.mouse.a3;
+		mousebiasx = m.mouse.x;
+		mousebiasy = m.mouse.y;
+		mousebiasz = m.mouse.z;
 		
 		initialPosition = entity.getPosition();
 		dummy.setPosition(initialPosition);

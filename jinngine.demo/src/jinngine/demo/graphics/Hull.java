@@ -41,7 +41,7 @@ public class Hull implements Shape, SupportMap3, Geometry {
 		//convert vectors into internal qhull representation		
 		while (input.hasNext()) {
 			Vector3 v = input.next();
-			points.add(new Point3d(v.a1, v.a2, v.a3));
+			points.add(new Point3d(v.x, v.y, v.z));
 		}
 
 		hull.build((Point3d[]) points.toArray(dummy));
@@ -140,18 +140,18 @@ public class Hull implements Shape, SupportMap3, Geometry {
 		Vector3 extremal = new Vector3();
 		for ( Vector3 v: vertices) {
 			if (extremal.norm() < v.norm()) extremal.assign(v);
-			if ( v.a1 < minBounds.a1 ) minBounds.a1=v.a1;
-			if ( v.a2 < minBounds.a2 ) minBounds.a2=v.a2;
-			if ( v.a3 < minBounds.a3 ) minBounds.a3=v.a3;
-			if ( v.a1 > maxBounds.a1 ) maxBounds.a1=v.a1;
-			if ( v.a2 > maxBounds.a2 ) maxBounds.a2=v.a2;
-			if ( v.a3 > maxBounds.a3 ) maxBounds.a3=v.a3;
+			if ( v.x < minBounds.x ) minBounds.x=v.x;
+			if ( v.y < minBounds.y ) minBounds.y=v.y;
+			if ( v.z < minBounds.z ) minBounds.z=v.z;
+			if ( v.x > maxBounds.x ) maxBounds.x=v.x;
+			if ( v.y > maxBounds.y ) maxBounds.y=v.y;
+			if ( v.z > maxBounds.z ) maxBounds.z=v.z;
 		}
 		
 //		minBounds.print();
 //		maxBounds.print();
 		
-		double max = extremal.norm()+5.0;
+		double max = extremal.norm()+1.0;
 		minBounds.assign(new Vector3(-max,-max,-max));
 		maxBounds.assign(new Vector3(max,max,max));
 
@@ -283,7 +283,7 @@ public class Hull implements Shape, SupportMap3, Geometry {
 			Vector3 faceNormal = v1.minus(v2).cross(v3.minus(v2)).normalize();
 			
 			//if normal is within tolerance
-			if ( Math.abs(faceNormal.dot(v)) > 0.98 ) {
+			if ( Math.abs(faceNormal.dot(v)) > 0.90 ) {
 				//return face in WCS
 				for (Vector3 vertex: faces.get(faceIndex))
 					returnList.add( body.state.rotation.multiply(localtransform.multiply(vertex).add(localdisplacement)).add(body.state.rCm) );
@@ -296,17 +296,22 @@ public class Hull implements Shape, SupportMap3, Geometry {
 		//*) edge or point case
 		returnList.add( body.state.rotation.multiply(localtransform.multiply(vertices.get(selectedIndex)).add(localdisplacement)).add(body.state.rCm) );
 
-		//find a possible neighbour point which can constitute an edge
+		//find the best possible neighbour point which can constitute an edge
+		double best = Double.NEGATIVE_INFINITY;
+		int neighbourIndex = 0;
 		for ( int i: adjecent.get(selectedIndex)) {
 			double u = v.dot(vertices.get(i));
-			if ( Math.abs(object-u) < 1e-9 ) {
-				int neighbourIndex = i;
-				returnList.add( body.state.rotation.multiply(localtransform.multiply(vertices.get(neighbourIndex)).add(localdisplacement)).add(body.state.rCm) );			
-				//System.out.println("edge case taken");
-
-				break;
+			if ( u > best ) {
+				best = u;
+				neighbourIndex = i;
 			}
 		}
+		
+		//if neighbour is within threshhold, take the edge case
+		if ( Math.abs(object-best) < 0.1 )
+			returnList.add( body.state.rotation.multiply(localtransform.multiply(vertices.get(neighbourIndex)).add(localdisplacement)).add(body.state.rCm) );			
+		//System.out.println("edge case taken");
+
 			
 		// return from edge or point case
 		return;

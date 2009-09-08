@@ -168,8 +168,8 @@ public class RenderImpl extends Frame implements GLEventListener, Render  {
 
 		
 		// Set camera transform
-		glu.gluLookAt(cameraFrom.a1, cameraFrom.a2, cameraFrom.a3, 
-				cameraTo.a1, cameraTo.a2, cameraTo.a3, 
+		glu.gluLookAt(cameraFrom.x, cameraFrom.y, cameraFrom.z, 
+				cameraTo.x, cameraTo.y, cameraTo.z, 
 				0, 1, 0); 
 
 		//copy camera transform
@@ -179,8 +179,8 @@ public class RenderImpl extends Frame implements GLEventListener, Render  {
 		gl.glPushAttrib(GL.GL_LIGHTING_BIT);
 		gl.glDisable(GL.GL_LIGHTING);
 		gl.glBegin(GL.GL_LINES);
-		gl.glVertex3d(p1.a1, p1.a2, p1.a3);
-		gl.glVertex3d(p2.a1, p2.a2, p2.a3);
+		gl.glVertex3d(p1.x, p1.y, p1.z);
+		gl.glVertex3d(p2.x, p2.y, p2.z);
 		gl.glEnd();
 		gl.glPopAttrib();
 
@@ -224,8 +224,8 @@ public class RenderImpl extends Frame implements GLEventListener, Render  {
 		
 		gl.glDisable(GL.GL_LIGHTING);
 		// Set camera transform
-		glu.gluLookAt(cameraFrom.a1, cameraFrom.a2, cameraFrom.a3, 
-				cameraTo.a1, cameraTo.a2, cameraTo.a3, 
+		glu.gluLookAt(cameraFrom.x, cameraFrom.y, cameraFrom.z, 
+				cameraTo.x, cameraTo.y, cameraTo.z, 
 				0, 1, 0); 
 
 		
@@ -248,7 +248,7 @@ public class RenderImpl extends Frame implements GLEventListener, Render  {
 				//Vector3 n =face[1].minus(face[0]).cross(face[2].minus(face[1])).normalize();
 				
 				for ( Vector3 v: face) {
-					gl.glVertex3d(v.a1, v.a2, v.a3);
+					gl.glVertex3d(v.x, v.y, v.z);
 				}
 				gl.glEnd();
 			}
@@ -312,8 +312,8 @@ public class RenderImpl extends Frame implements GLEventListener, Render  {
 
 	@Override
 	public void getPointerRay(Vector3 p, Vector3 d) {
-		double x = callback.mouse.a1;
-		double y = callback.mouse.a2;
+		double x = callback.mouse.x;
+		double y = callback.mouse.y;
 //		gl.glVertex3d(x/(double)width,-(y-((height-drawHeight)*0.5))/(double)drawHeight, 0);
 		Vector3 near = new Vector3(2*x/(double)width-1,-2*(y-((height-drawHeight)*0.5))/(double)drawHeight+1, 0.7);
 		Vector3 far = new Vector3(2*x/(double)width-1,-2*(y-((height-drawHeight)*0.5))/(double)drawHeight+1, 0.9);
@@ -364,30 +364,30 @@ public class RenderImpl extends Frame implements GLEventListener, Render  {
 
 	  // These are c and d (corresponding to the tutorial)
 	  
-	  d = n.a1*l.a1 + n.a2*l.a2 + n.a3*l.a3;
-	  c = e.a1*n.a1 + e.a2*n.a2 + e.a3*n.a3 - d;
+	  d = n.x*l.x + n.y*l.y + n.z*l.z;
+	  c = e.x*n.x + e.y*n.y + e.z*n.z - d;
 
 	  // Create the matrix. OpenGL uses column by column
 	  // ordering
 
-	  mat[0]  = l.a1*n.a1+c; 
-	  mat[4]  = n.a2*l.a1; 
-	  mat[8]  = n.a3*l.a1; 
-	  mat[12] = -l.a1*c-l.a1*d;
+	  mat[0]  = l.x*n.x+c; 
+	  mat[4]  = n.y*l.x; 
+	  mat[8]  = n.z*l.x; 
+	  mat[12] = -l.x*c-l.x*d;
 	  
-	  mat[1]  = n.a1*l.a2;        
-	  mat[5]  = l.a2*n.a2+c;
-	  mat[9]  = n.a3*l.a2; 
-	  mat[13] = -l.a2*c-l.a2*d;
+	  mat[1]  = n.x*l.y;        
+	  mat[5]  = l.y*n.y+c;
+	  mat[9]  = n.z*l.y; 
+	  mat[13] = -l.y*c-l.y*d;
 	  
-	  mat[2]  = n.a1*l.a3;        
-	  mat[6]  = n.a2*l.a3; 
-	  mat[10] = l.a3*n.a3+c; 
-	  mat[14] = -l.a3*c-l.a3*d;
+	  mat[2]  = n.x*l.z;        
+	  mat[6]  = n.y*l.z; 
+	  mat[10] = l.z*n.z+c; 
+	  mat[14] = -l.z*c-l.z*d;
 	  
-	  mat[3]  = n.a1;        
-	  mat[7]  = n.a2; 
-	  mat[11] = n.a3; 
+	  mat[3]  = n.x;        
+	  mat[7]  = n.y; 
+	  mat[11] = n.z; 
 	  mat[15] = -d;
 
 	  return mat;

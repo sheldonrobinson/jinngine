@@ -72,10 +72,10 @@ public class FlatShade implements ShapeRender {
 			Vector3 n =face[1].minus(face[0]).cross(face[2].minus(face[1])).normalize();
 			
 			for ( Vector3 v: face) {
-				gl.glNormal3d(n.a1, n.a2, n.a3);
+				gl.glNormal3d(n.x, n.y, n.z);
 				//gl.glTexCoord2f(1.0f, 1.0f);
 				//gl.glColor3d(v.a1, v.a2, v.a3);
-				gl.glVertex3d(v.a1, v.a2, v.a3);
+				gl.glVertex3d(v.x, v.y, v.z);
 				gl.glTexCoord2f(0.0f, 1.0f);
 			}
 			gl.glEnd();
@@ -94,10 +94,10 @@ public class FlatShade implements ShapeRender {
 			Vector3 n =face[1].minus(face[0]).cross(face[2].minus(face[1])).normalize();
 			
 			for ( Vector3 v: face) {
-				gl.glNormal3d(n.a1, n.a2, n.a3);
+				gl.glNormal3d(n.x, n.y, n.z);
 				//gl.glTexCoord2f(1.0f, 1.0f);
 				gl.glColor3d(0.2,0.2, 0.2);
-				gl.glVertex3d(v.a1, v.a2, v.a3);
+				gl.glVertex3d(v.x, v.y, v.z);
 				gl.glTexCoord2f(0.0f, 1.0f);
 			}
 			gl.glEnd();
@@ -132,30 +132,30 @@ public class FlatShade implements ShapeRender {
 
 	  // These are c and d (corresponding to the tutorial)
 	  
-	  d = n.a1*l.a1 + n.a2*l.a2 + n.a3*l.a3;
-	  c = e.a1*n.a1 + e.a2*n.a2 + e.a3*n.a3 - d;
+	  d = n.x*l.x + n.y*l.y + n.z*l.z;
+	  c = e.x*n.x + e.y*n.y + e.z*n.z - d;
 
 	  // Create the matrix. OpenGL uses column by column
 	  // ordering
 
-	  mat[0]  = l.a1*n.a1+c; 
-	  mat[4]  = n.a2*l.a1; 
-	  mat[8]  = n.a3*l.a1; 
-	  mat[12] = -l.a1*c-l.a1*d;
+	  mat[0]  = l.x*n.x+c; 
+	  mat[4]  = n.y*l.x; 
+	  mat[8]  = n.z*l.x; 
+	  mat[12] = -l.x*c-l.x*d;
 	  
-	  mat[1]  = n.a1*l.a2;        
-	  mat[5]  = l.a2*n.a2+c;
-	  mat[9]  = n.a3*l.a2; 
-	  mat[13] = -l.a2*c-l.a2*d;
+	  mat[1]  = n.x*l.y;        
+	  mat[5]  = l.y*n.y+c;
+	  mat[9]  = n.z*l.y; 
+	  mat[13] = -l.y*c-l.y*d;
 	  
-	  mat[2]  = n.a1*l.a3;        
-	  mat[6]  = n.a2*l.a3; 
-	  mat[10] = l.a3*n.a3+c; 
-	  mat[14] = -l.a3*c-l.a3*d;
+	  mat[2]  = n.x*l.z;        
+	  mat[6]  = n.y*l.z; 
+	  mat[10] = l.z*n.z+c; 
+	  mat[14] = -l.z*c-l.z*d;
 	  
-	  mat[3]  = n.a1;        
-	  mat[7]  = n.a2; 
-	  mat[11] = n.a3; 
+	  mat[3]  = n.x;        
+	  mat[7]  = n.y; 
+	  mat[11] = n.z; 
 	  mat[15] = -d;
 
 	  return mat;

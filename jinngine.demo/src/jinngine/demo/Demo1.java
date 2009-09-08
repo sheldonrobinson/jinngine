@@ -39,6 +39,7 @@ public class Demo1 {
 		model.addBody(floor);
 		model.addBody(back);
 
+		model.getSolver().setMaximumIterations(15);
 		
 		//create some cubes and a gear
 		new Cube(g, new Vector3(2.5,2.5,2.5), new Vector3(-10,-10,-20), 10 );
