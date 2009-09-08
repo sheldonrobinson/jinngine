@@ -21,18 +21,18 @@ public class InertiaMatrix extends Matrix3 {
 	public static void translate(InertiaMatrix M, double mass, Vector3 r) {
 		//as described in [Erleben et. al 2001]
 		//Ixx
-		double t11 = M.a11 + mass*(r.a2*r.a2 + r.a3*r.a3);
+		double t11 = M.a11 + mass*(r.y*r.y + r.z*r.z);
 		//Iyy
-		double t22 = M.a22 + mass*(r.a1*r.a1 + r.a3*r.a3);
+		double t22 = M.a22 + mass*(r.x*r.x + r.z*r.z);
 		//Izz
-		double t33 = M.a33 + mass*(r.a1*r.a1 + r.a2*r.a2);
+		double t33 = M.a33 + mass*(r.x*r.x + r.y*r.y);
 		
 		//Ixy
-		double t12 = M.a12 - mass*(r.a1*r.a2);
+		double t12 = M.a12 - mass*(r.x*r.y);
 		//Ixz
-		double t13 = M.a13 - mass*(r.a1*r.a3);
+		double t13 = M.a13 - mass*(r.x*r.z);
 		//Iyz
-		double t23 = M.a23 - mass*(r.a2*r.a3);
+		double t23 = M.a23 - mass*(r.y*r.z);
 
 		//set result
 		M.a11 = t11; M.a12 = t12; M.a13 = t13;

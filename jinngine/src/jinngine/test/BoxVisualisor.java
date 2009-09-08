@@ -187,8 +187,8 @@ public class BoxVisualisor extends Frame implements GLEventListener  {
         gl.glLoadIdentity();
 
         // Set camera transform
-        glu.gluLookAt(cameraFrom.a1, cameraFrom.a2, cameraFrom.a3, 
-        		cameraTo.a1, cameraTo.a2, cameraTo.a3, 
+        glu.gluLookAt(cameraFrom.x, cameraFrom.y, cameraFrom.z, 
+        		cameraTo.x, cameraTo.y, cameraTo.z, 
         		0, 1, 0); 
 
 

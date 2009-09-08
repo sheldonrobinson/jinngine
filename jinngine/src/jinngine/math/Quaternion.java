@@ -136,9 +136,9 @@ public final class Quaternion {
 	  double s = q.s;
 	  
 	  Matrix3.set(R, 
-			  1-2*(v.a2*v.a2+v.a3*v.a3), 2*v.a1*v.a2-2*s*v.a3,       2*s*v.a2+2*v.a1*v.a3, 
-			  2*v.a1*v.a2+2*s*v.a3,      1-2*(v.a1*v.a1+v.a3*v.a3), -2*s*v.a1+2*v.a2*v.a3,
-			  -2*s*v.a2+2*v.a1*v.a3,      2*s*v.a1+2*v.a2*v.a3,       1-2*(v.a1*v.a1+v.a2*v.a2));
+			  1-2*(v.y*v.y+v.z*v.z), 2*v.x*v.y-2*s*v.z,       2*s*v.y+2*v.x*v.z, 
+			  2*v.x*v.y+2*s*v.z,      1-2*(v.x*v.x+v.z*v.z), -2*s*v.x+2*v.y*v.z,
+			  -2*s*v.y+2*v.x*v.z,      2*s*v.x+2*v.y*v.z,       1-2*(v.x*v.x+v.y*v.y));
 	  
 	  return R;
   }
@@ -152,19 +152,19 @@ public final class Quaternion {
 	  Matrix4 M = new Matrix4();
 	  Vector3 v = this.v;
 	  double s = this.s;
-	  M.a11 = 1-2*(v.a2*v.a2+v.a3*v.a3); M.a12 =  2*v.a1*v.a2-2*s*v.a3;      M.a13 = 2*s*v.a2+2*v.a1*v.a3;  
-	  M.a21 = 2*v.a1*v.a2+2*s*v.a3;      M.a22 =  1-2*(v.a1*v.a1+v.a3*v.a3); M.a23 = -2*s*v.a1+2*v.a2*v.a3;
-	  M.a31 = -2*s*v.a2+2*v.a1*v.a3;     M.a32 =  2*s*v.a1+2*v.a2*v.a3;      M.a33 =  1-2*(v.a1*v.a1+v.a2*v.a2);	  
+	  M.a11 = 1-2*(v.y*v.y+v.z*v.z); M.a12 =  2*v.x*v.y-2*s*v.z;      M.a13 = 2*s*v.y+2*v.x*v.z;  
+	  M.a21 = 2*v.x*v.y+2*s*v.z;      M.a22 =  1-2*(v.x*v.x+v.z*v.z); M.a23 = -2*s*v.x+2*v.y*v.z;
+	  M.a31 = -2*s*v.y+2*v.x*v.z;     M.a32 =  2*s*v.x+2*v.y*v.z;      M.a33 =  1-2*(v.x*v.x+v.y*v.y);	  
 	  M.a44 = 1;	  
 	  return M;
   }
   
   public void normalize() {
-    double l = (double)Math.sqrt( s*s + v.a1*v.a1 + v.a2*v.a2 + v.a3*v.a3 );
+    double l = (double)Math.sqrt( s*s + v.x*v.x + v.y*v.y + v.z*v.z );
     s = s/l;
-    v.a1 = v.a1/l;
-    v.a2 = v.a2/l;
-    v.a3 = v.a3/l;
+    v.x = v.x/l;
+    v.y = v.y/l;
+    v.z = v.z/l;
   }
   
   public Quaternion copy() {

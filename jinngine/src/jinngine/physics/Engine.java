@@ -56,8 +56,9 @@ public final class Engine implements Model {
 	// Create the contact graph using the classifier above
 	private final ComponentGraph<Body,Constraint> contactGraph = new ComponentGraph<Body,Constraint>(classifier);
 
-	// Set of maintained contact constraints
+	// Set of maintained contact constraints and generators
 	private final Map<Pair<Body>,ContactConstraint> contactConstraints = new HashMap<Pair<Body>,ContactConstraint>();
+	private final Map<Pair<Geometry>,ContactGenerator> contactGenerators = new HashMap<Pair<Geometry>,ContactGenerator>();
 	
 	// Setup a broad-phase handler. The handler ensures that ContactConstraints are properly inserted and 
 	// removed from the contact graph, whenever the broad-phase collision detection detects overlaps and separations
@@ -69,12 +70,11 @@ public final class Engine implements Model {
 				Body a = pair.getFirst().getBody();
 				Body b = pair.getSecond().getBody();
 				Pair<Body> bpair = new Pair<Body>(a,b);
+				
 				//ignore overlaps stemming from the same body				
 				if ( a == b) return;
-				
 				//ignore overlaps for non-body geometries
 				if ( a == null || b == null) return;
-				
 				//ignore overlaps of fixed bodies
 				if ( a.isFixed() && b.isFixed() ) return;
 
@@ -85,27 +85,39 @@ public final class Engine implements Model {
 					constraint = contactConstraints.get(bpair);
 					
 					//add a new contact generator to this contact constraint
-					constraint.addGenerator(getContactGenerator(pair));
+					ContactGenerator generator = getContactGenerator(pair);
+					contactGenerators.put(pair, generator);
+					constraint.addGenerator(generator);
+
+//					System.out.println("Contact generator added");
+//					System.out.println("ADD:"+pair.getFirst() + ","+pair.getSecond());
+
 					
 				//no contact constraint is present
-				} else {
-					//System.out.println("contact");
-					
+				} else {					
 					//do not act if some other constraint(joint) is already present
+					//in the contact graph
 					if (!contactGraph.alledges.containsKey(bpair))  {
 
+//						System.out.println("Contact constraint and generator added");
+//						System.out.println("ADD:"+pair.getFirst() + ","+pair.getSecond());
+
+						//create a new contact generator
+						ContactGenerator generator = getContactGenerator(pair);
+						
 						//create a new contact constraint
-						constraint = new ContactConstraint(a,b,getContactGenerator(pair));
+						constraint = new ContactConstraint(a,b,generator);
 						
 						//insert into data structures
 						contactConstraints.put(bpair, constraint);
+						contactGenerators.put(pair, generator);
 						contactGraph.addEdge( bpair, constraint);
 					}
 				}
 			}
+			
 			@Override
 			public final void separation(Pair<Geometry> pair) {
-				//System.out.println("Contact removed");
 				
 				//retrieve the bodies associated with overlapping geometries
 				Body a = pair.getFirst().getBody();
@@ -116,23 +128,52 @@ public final class Engine implements Model {
 				if ( a == b) return;
 				//ignore overlaps for non-body geometries
 				if ( a == null || b == null) return;
-
+				//ignore overlaps of fixed bodies
+				if ( a.isFixed() && b.isFixed() ) return;
 				
-				//if this geometry pair had an acting contact constraint,
-				//remove it
+				//if this geometry pair has an acting contact constraint,
+				//we must remove the contact generator
 				if (contactConstraints.containsKey(bpair)) {
-					contactConstraints.remove(bpair);
-					contactGraph.removeEdge(bpair);					
-				}
 
+//					System.out.println("REMOVE:"+pair.getFirst() + ","+pair.getSecond());
+
+					//check that we have the generator (if not, something is very wrong)
+					if (contactGenerators.containsKey(pair)) {
 				
-				
+						//remove the generator from the contact constraint
+						ContactConstraint constraint = contactConstraints.get(bpair);					
+						constraint.removeGenerator(contactGenerators.get(pair));
+						
+						//remove the generator from our list
+						contactGenerators.remove(pair);
+
+						//System.out.println("generator removed, generators="+contactGenerators.size());
+
+						
+						//if the contact constraint has no more generators, also
+						//remove the contact constraint
+						if (constraint.getNumberOfGenerators() < 1 ) {
+							contactConstraints.remove(bpair);
+							contactGraph.removeEdge(bpair);	
+							//System.out.println("Contact constraint removed");
+						}
+					} else {
+						//this is not good, report an error
+						System.out.println("missing contact generator");
+						System.exit(0);
+					}
+				} else {
+					//this is not good, report an error
+					System.out.println("no constraint pressent");
+					//System.exit(0);
+					
+				}
 			}
 	};
 	
 	// Broad phase collision detection implementation 
-	private BroadfaseCollisionDetection broadfase = new SweepAndPrune(handler);
-//	private BroadfaseCollisionDetection broadfase = new AllPairsTest(handler);
+//	private BroadfaseCollisionDetection broadfase = new SweepAndPrune(handler);
+	private BroadfaseCollisionDetection broadfase = new AllPairsTest(handler);
 
 	//Create a linear complementarity problem solver
 	private Solver solver = new ProjectedGaussSeidel();
@@ -239,11 +280,11 @@ public final class Engine implements Model {
 		// Run the broad-phase collision detection (this automatically updates the contactGraph,
 		// through the BroadfaseCollisionDetection.Handler type)
 		broadfase.run();
-
 		
 		// Create a special iterator to be used with joints. All joints use this iterator to 
 		// insert constraint entries into the constraintList
-		ConstraintListIterator constraintIterator = new ConstraintListIterator(constraintList.listIterator());
+		constraintList.clear();
+		ListIterator<ConstraintEntry> constraintIterator = constraintList.listIterator();
 
 		
 		// Iterate through groups/components in the contact graph
@@ -291,26 +332,7 @@ public final class Engine implements Model {
 			
 		} //while groups
 
-		
-		// Remove any remaining constraint entries, inserted in previous iteration 
-		constraintIterator.removeRemaining();
-
-		
-//		Comparator<ConstraintEntry> comp = new Comparator<ConstraintEntry>() {
-//			@Override
-//			public int compare(ConstraintEntry o1, ConstraintEntry o2) {
-//				if ( o1.coupledMax != null && o2.coupledMax != null ) 
-//					return 0;
-//				if ( o1.coupledMax == null && o2.coupledMax != null ) 
-//					return -1;
-//				if ( o1.coupledMax != null && o2.coupledMax == null ) 
-//					return 1;
-//				
-//				return 0;
-//			}
-//		};
-//		Collections.sort(constraintList, comp);
-		
+				
 		//System.out.println(" constraints = "+constraintList.size());
 		
 		if (constraintList.size()>0) 
@@ -394,7 +416,7 @@ public final class Engine implements Model {
 
 			//long t = System.currentTimeMillis();
 
-			solver.setMaximumIterations(17);			
+			//solver.setMaximumIterations(17);			
 			solver.solve( constraintList, bodies );				
 			//totalinner +=15;
 
@@ -403,7 +425,23 @@ public final class Engine implements Model {
 
 		}
 
-
+		
+//		for (ConstraintEntry c: constraintList) {
+//			if (c.coupledMax != null) {
+//				double v = c.j1.dot(c.body1.state.vCm) + c.j2.dot(c.body1.state.omegaCm) 
+//				+ c.j3.dot(c.body2.state.vCm) + c.j4.dot(c.body2.state.omegaCm);
+//				if (Math.abs(v)>0.01||true) {
+//				System.out.println("normal limit="+c.coupledMax.lambda*c.coupledMax.mu+" friciton force="+c.lambda + " velocity="+v);
+//				}
+//			}
+//			else {
+//				double v = c.j1.dot(c.body1.state.vCm) + c.j2.dot(c.body1.state.omegaCm) 
+//				+ c.j3.dot(c.body2.state.vCm) + c.j4.dot(c.body2.state.omegaCm);
+//				System.out.println("force="+c.lambda + " velocity="+v);
+//			}
+//
+//		}
+//System.out.println("************");
 		
 		//double en = NewtonConjugateGradientSolverFriction.fisherError(normals, frictions);
 		//double ef = NewtonConjugateGradientSolverFriction.fisherError(frictions, normals);
@@ -531,8 +569,10 @@ public final class Engine implements Model {
 		
 		//install geometries into the broad-phase collision detection
 		Iterator<Geometry> i = c.getGeometries();
-		while (i.hasNext()) 
-			broadfase.add(i.next()); 
+		while (i.hasNext()) {
+			Geometry g = i.next();
+			broadfase.add(g);
+		}
 	}
 
 	

@@ -1,6 +1,7 @@
 package jinngine.physics.constraint;
 
-import java.util.Iterator;
+import java.util.ListIterator;
+
 import jinngine.math.Matrix3;
 import jinngine.math.Vector3;
 import jinngine.physics.Body;
@@ -42,7 +43,7 @@ public class FixedJoint implements Constraint {
 		t3i = v3.minus( t1.multiply(t1.dot(v3)).minus( t2i.multiply(t2i.dot(v3)) )).normalize();
 	}
 
-	public final void applyConstraints(Iterator<ConstraintEntry> iterator, double dt) {
+	public final void applyConstraints(ListIterator<ConstraintEntry> iterator, double dt) {
 		// TODO Auto-generated method stub
 //		Vector3 ri = b1.state.q.rotate(p1);
 //		Vector3 rj = b2.state.q.rotate(p2);

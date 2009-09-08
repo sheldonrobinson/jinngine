@@ -4,6 +4,7 @@ import java.util.*;
 
 import jinngine.geometry.AxisAlignedBoundingBox;
 import jinngine.geometry.Geometry;
+import jinngine.geometry.Sphere;
 import jinngine.math.Vector3;
 import jinngine.util.Pair;
 
@@ -21,6 +22,8 @@ public class AllPairsTest implements BroadfaseCollisionDetection {
 	private final Set<Pair<Geometry>> leavingPairs = new HashSet<Pair<Geometry>>();
 	private final List<Geometry> geometries = new ArrayList<Geometry>();
 	private final List<BroadfaseCollisionDetection.Handler> handlers = new ArrayList<Handler>();
+
+	public AllPairsTest() {}
 	
 	public AllPairsTest(BroadfaseCollisionDetection.Handler handler) {
 		this.handlers.add(handler);
@@ -41,7 +44,7 @@ public class AllPairsTest implements BroadfaseCollisionDetection {
 						
 						//if we discover a new pair, report it and add to table
 						if ( !existingPairs.contains(pair)) {
-							existingPairs.add( new Pair<Geometry>(c1,c2) );
+							existingPairs.add( pair );
 							
 							//notify handlers
 							for ( Handler handler: handlers)
@@ -71,28 +74,33 @@ public class AllPairsTest implements BroadfaseCollisionDetection {
 	
 	private static final boolean overlap( AxisAlignedBoundingBox i , AxisAlignedBoundingBox j) {
 
-		Vector3 iminBoundsTranslated = i.getMinBounds();
-		Vector3 imaxBoundsTranslated = i.getMaxBounds();
-		Vector3 jminBoundsTranslated = j.getMinBounds();
-		Vector3 jmaxBoundsTranslated = j.getMaxBounds();
+		Vector3 bi = i.getMinBounds();
+		Vector3 ei = i.getMaxBounds();
+		Vector3 bj = j.getMinBounds();
+		Vector3 ej = j.getMaxBounds();
 		
-		double ixMin = iminBoundsTranslated.a1;
-		double iyMin = iminBoundsTranslated.a2;
-		double izMin = iminBoundsTranslated.a3;
-		double ixMax = imaxBoundsTranslated.a1;
-		double iyMax = imaxBoundsTranslated.a2;
-		double izMax = imaxBoundsTranslated.a3;
-		double jxMin = jminBoundsTranslated.a1;
-		double jyMin = jminBoundsTranslated.a2;
-		double jzMin = jminBoundsTranslated.a3;
-		double jxMax = jmaxBoundsTranslated.a1;
-		double jyMax = jmaxBoundsTranslated.a2;
-		double jzMax = jmaxBoundsTranslated.a3;
+		double bix = bi.x;
+		double biy = bi.y;
+		double biz = bi.z;
+		double eix = ei.x;
+		double eiy = ei.y;
+		double eiz = ei.z;
+		double bjx = bj.x;
+		double bjy = bj.y;
+		double bjz = bj.z;
+		double ejx = ej.x;
+		double ejy = ej.y;
+		double ejz = ej.z;
 
 		//TODO test this 
-		if( (((jxMin < ixMin) && (ixMin <= jxMax)) || ((ixMin <= jxMin) && (jxMin < ixMax ))) &&
-				(((jyMin < iyMin) && (iyMin <= jyMax)) || ((iyMin <= jyMin) && (jyMin < iyMax ))) &&
-				(((jzMin < izMin) && (izMin <= jzMax)) || ((izMin <= jzMin) && (jzMin < izMax )))) {
+		if( (((bjx < bix) && (bix <= ejx)) || ((bix <= bjx) && (bjx < eix ))) &&
+				(((bjy < biy) && (biy <= ejy)) || ((biy <= bjy) && (bjy < eiy ))) &&
+				(((bjz < biz) && (biz <= ejz)) || ((biz <= bjz) && (bjz < eiz )))) {
+			
+//			if (i instanceof Sphere && j instanceof Sphere) {
+//				if ( ((Sphere)i).getBody() != ((Sphere)j).getBody() )
+//					System.out.println("sphere-sphere overlap");
+//			}
 			return true;
 		} else {
 			return false;
@@ -117,6 +125,11 @@ public class AllPairsTest implements BroadfaseCollisionDetection {
 	@Override
 	public void removeHandler(Handler h) {
 		handlers.remove(h);
+	}
+
+	@Override
+	public Set<Pair<Geometry>> getOverlappingPairs() {
+		return new HashSet<Pair<Geometry>>(existingPairs);
 	}
 	
 	

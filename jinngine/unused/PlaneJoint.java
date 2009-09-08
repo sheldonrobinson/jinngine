@@ -1,5 +1,5 @@
 package jinngine.physics.constraint;
-import java.util.Iterator;
+import java.util.ListIterator;
 
 import jinngine.math.Matrix3;
 import jinngine.math.Vector3;
@@ -24,7 +24,7 @@ public class PlaneJoint implements Constraint {
 //		p2.print();
 	}
 	
-	public void applyConstraints( Iterator<ConstraintEntry> iterator, double dt ) {
+	public void applyConstraints( ListIterator<ConstraintEntry> iterator, double dt ) {
 		// Ball-In-Socket joint has a 3x12 jacobian matrix, since
 		// it has 3 DOFs, thus removing 3, inducing 3 new constraints
 

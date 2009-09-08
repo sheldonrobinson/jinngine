@@ -49,17 +49,17 @@ public class Matrix3 {
   * @param e3
   */
   public Matrix3( Vector3 e1, Vector3 e2, Vector3 e3) {
-    a11 = e1.a1;
-    a21 = e1.a2;
-    a31 = e1.a3;
+    a11 = e1.x;
+    a21 = e1.y;
+    a31 = e1.z;
     
-    a12 = e2.a1;
-    a22 = e2.a2;
-    a32 = e2.a3;
+    a12 = e2.x;
+    a22 = e2.y;
+    a32 = e2.z;
     
-    a13 = e3.a1;
-    a23 = e3.a2;
-    a33 = e3.a3;
+    a13 = e3.x;
+    a23 = e3.y;
+    a33 = e3.z;
   }
   
   /**
@@ -130,17 +130,17 @@ public class Matrix3 {
    * @param r3
    */
   public void getColumnVectors( Vector3 r1, Vector3 r2, Vector3 r3) {
-	  r1.a1 = a11;
-	  r1.a2 = a21;
-	  r1.a3 = a31;
+	  r1.x = a11;
+	  r1.y = a21;
+	  r1.z = a31;
 
-	  r2.a1 = a12;
-	  r2.a2 = a22;
-	  r2.a3 = a32;
+	  r2.x = a12;
+	  r2.y = a22;
+	  r2.z = a32;
 	  
-	  r3.a1 = a13;
-	  r3.a2 = a23;
-	  r3.a3 = a33;
+	  r3.x = a13;
+	  r3.y = a23;
+	  r3.z = a33;
   }
   
   /**
@@ -150,17 +150,17 @@ public class Matrix3 {
    * @param r3
    */
   public void getRowVectors( Vector3 r1, Vector3 r2, Vector3 r3) {
-	  r1.a1 = a11;
-	  r1.a2 = a12;
-	  r1.a3 = a13;
+	  r1.x = a11;
+	  r1.y = a12;
+	  r1.z = a13;
 
-	  r2.a1 = a21;
-	  r2.a2 = a22;
-	  r2.a3 = a23;
+	  r2.x = a21;
+	  r2.y = a22;
+	  r2.z = a23;
 	  
-	  r3.a1 = a31;
-	  r3.a2 = a32;
-	  r3.a3 = a33;
+	  r3.x = a31;
+	  r3.y = a32;
+	  r3.z = a33;
   }
   
   /**
@@ -334,13 +334,13 @@ public class Matrix3 {
     //      ----------------------
     // vT   v1 v2 v3 |  c1  c2  c3
     
-    double t1 = v.a1*A.a11+v.a2*A.a21+v.a3*A.a31;
-    double t2 = v.a1*A.a12+v.a2*A.a22+v.a3*A.a32;
-    double t3 = v.a1*A.a13+v.a2*A.a23+v.a3*A.a33;
+    double t1 = v.x*A.a11+v.y*A.a21+v.z*A.a31;
+    double t2 = v.x*A.a12+v.y*A.a22+v.z*A.a32;
+    double t3 = v.x*A.a13+v.y*A.a23+v.z*A.a33;
     
-    r.a1 = t1;
-    r.a2 = t2;
-    r.a3 = t3;
+    r.x = t1;
+    r.y = t2;
+    r.z = t3;
 
     return r;
   }
@@ -356,13 +356,13 @@ public class Matrix3 {
     //     a21 a22 a23 | c2
     //     a31 a32 a33 | c3   
     
-    double t1 = v.a1*A.a11+v.a2*A.a12+v.a3*A.a13;
-    double t2 = v.a1*A.a21+v.a2*A.a22+v.a3*A.a23;
-    double t3 = v.a1*A.a31+v.a2*A.a32+v.a3*A.a33;
+    double t1 = v.x*A.a11+v.y*A.a12+v.z*A.a13;
+    double t2 = v.x*A.a21+v.y*A.a22+v.z*A.a23;
+    double t3 = v.x*A.a31+v.y*A.a32+v.z*A.a33;
     
-    r.a1 = t1;
-    r.a2 = t2;
-    r.a3 = t3;
+    r.x = t1;
+    r.y = t2;
+    r.z = t3;
     
     return r;
   }  
@@ -437,9 +437,9 @@ public class Matrix3 {
 
   //C = S(s)
   public final static Matrix3 scale( final Matrix3 C, Vector3 s ) {
-    C.a11 = s.a1; C.a12 = 0; C.a13 = 0;
-    C.a21 = 0; C.a22 = s.a2; C.a23 = 0;
-    C.a31 = 0; C.a32 = 0; C.a33 = s.a3;
+    C.a11 = s.x; C.a12 = 0; C.a13 = 0;
+    C.a21 = 0; C.a22 = s.y; C.a23 = 0;
+    C.a31 = 0; C.a32 = 0; C.a33 = s.z;
     return C;
   } 
   

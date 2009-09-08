@@ -83,18 +83,33 @@ public class SphereContactGenerator implements ContactGenerator {
 
 	@Override
 	public boolean run(double dt) {
-		//System.out.println(""+s1.getRadius()+","+s2.getRadius());
-		Vector3 normal = b1.state.rCm.minus(b2.state.rCm).normalize();
-		cp.pa.assign( normal.multiply(-s1.getRadius()).add(b1.state.rCm));
-		cp.pb.assign(normal.multiply(s2.getRadius()).add(b2.state.rCm));		
+		//sphere centers
+		Vector3 ca = s1.getTransform().multiply(Vector3.zero);
+		Vector3 cb = s2.getTransform().multiply(Vector3.zero);
+
+		Vector3 normal = ca.minus(cb).normalize();
+
+		cp.pa.assign( normal.multiply(-s1.getRadius()).add(ca));
+		cp.pb.assign(normal.multiply(s2.getRadius()).add(cb));		
 		cp.midpoint.assign(cp.pa.add(cp.pb).multiply(0.5));
-		cp.normal.assign(normal.multiply(1));
+		cp.normal.assign(normal);
+
+		double d = ca.minus(cb).norm() - (s1.getRadius()+s2.getRadius());  
 		
-		//cp.normal.assign(Vector3.j.multiply(-1));
-		//double d = cp.pa.minus(cp.pb).norm();
-		//normal.print();
-		//signed distance between spheres
-		double d = b1.state.rCm.minus(b2.state.rCm).norm() - (s1.getRadius()+s2.getRadius());  
+		
+		
+		//System.out.println(""+s1.getRadius()+","+s2.getRadius());
+//		Vector3 normal = b1.state.rCm.minus(b2.state.rCm).normalize();
+//		cp.pa.assign( normal.multiply(-s1.getRadius()).add(b1.state.rCm));
+//		cp.pb.assign(normal.multiply(s2.getRadius()).add(b2.state.rCm));		
+//		cp.midpoint.assign(cp.pa.add(cp.pb).multiply(0.5));
+//		cp.normal.assign(normal.multiply(1));
+//		
+//		//cp.normal.assign(Vector3.j.multiply(-1));
+//		//double d = cp.pa.minus(cp.pb).norm();
+//		//normal.print();
+//		//signed distance between spheres
+//		double d = b1.state.rCm.minus(b2.state.rCm).norm() - (s1.getRadius()+s2.getRadius());  
 
 		//contact within envelope
 		if ( d >= 0  && d < envelope ) {

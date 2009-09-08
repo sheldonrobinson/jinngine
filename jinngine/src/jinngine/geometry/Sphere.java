@@ -29,7 +29,7 @@ public class Sphere implements SupportMap3, Geometry, Material {
 	private final Vector3 displacement = new Vector3();
 	private final Matrix4 transform4 = new Matrix4();
 	private final Matrix4 localtransform4 = new Matrix4();
-	private double envelope = 0;
+	private double envelope = 1;
 	private Object auxiliary;
 	private double restitution = 0.7;
 	private double friction = 0.5;
@@ -38,15 +38,12 @@ public class Sphere implements SupportMap3, Geometry, Material {
 
 	public Sphere(double radius) {
 		super();
-		this.radius = radius;
-		this.displacement.assign(displacement);
-		
+		this.radius = radius;		
 		this.mass = (4.0/3.0)*Math.PI*radius*radius*radius;
-		
-		this.envelope = radius * 0.25;
+		this.envelope = 1;
 
 		//set the initial local transform
-		setLocalTransform( Matrix3.identity(new Matrix3()), displacement);
+		setLocalTransform( Matrix3.identity(), new Vector3());
 	}
 	
 	public final double getRadius() { return this.radius; }
@@ -64,21 +61,21 @@ public class Sphere implements SupportMap3, Geometry, Material {
 
 	@Override
 	public double getEnvelope(double dt) {
-		if (envelope > 0) {
-			return envelope;
-		}
-		//TODO just a static value for now, should vary in radius
-		return 0.5;
+		return envelope;
 	}
 	
 	@Override
 	public Vector3 getMaxBounds() {
-		return new Vector3(radius+envelope,radius+envelope,radius+envelope).add(displacement).add(body.state.rCm);
+		//return new Vector3(radius+envelope,radius+envelope,radius+envelope).add(Matrix3.multiply(body.state.rotation, displacement, new Vector3())).add(body.state.rCm);
+		return body.state.rCm.add( Matrix3.multiply(body.state.rotation, displacement, new Vector3())).add( new Vector3(radius+envelope,radius+envelope,radius+envelope));
+		
 	}
 
 	@Override
 	public Vector3 getMinBounds() {
-		return  new Vector3(-radius-envelope,-radius-envelope,-radius-envelope).add(displacement).add(body.state.rCm);	
+		//return  new Vector3(-radius-envelope,-radius-envelope,-radius-envelope).add(Matrix3.multiply(body.state.rotation, displacement, new Vector3())).add(body.state.rCm);	
+		return body.state.rCm.add( Matrix3.multiply(body.state.rotation, displacement, new Vector3())).add( new Vector3(-radius-envelope,-radius-envelope,-radius-envelope));
+
 	}
 	
 	@Override
@@ -105,8 +102,7 @@ public class Sphere implements SupportMap3, Geometry, Material {
 	public void setLocalTransform(Matrix3 B, Vector3 b2) {
 		//A sphere only supports translations as local transform
 		displacement.assign(b2);
-		Matrix4.set(Transforms.transformAndTranslate4(Matrix3.identity(new Matrix3()).multiply(radius), displacement), localtransform4);
-
+		Matrix4.set(Transforms.transformAndTranslate4(Matrix3.identity().multiply(radius), displacement), localtransform4);
 	}
 	
 
@@ -117,7 +113,7 @@ public class Sphere implements SupportMap3, Geometry, Material {
 
 	@Override
 	public void setEnvelope(double envelope) {
-		this.envelope = envelope;
+		//this.envelope = envelope;
 	}
 
 	@Override

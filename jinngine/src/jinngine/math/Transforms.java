@@ -12,9 +12,9 @@ public final class Transforms {
 	public final static Matrix4 translate4(Vector3 r) {
 		Matrix4 T = new Matrix4();
 		Matrix4.identity(T);
-		T.a14 = r.a1;
-		T.a24 = r.a2;
-		T.a34 = r.a3;
+		T.a14 = r.x;
+		T.a24 = r.y;
+		T.a34 = r.z;
 		return T;
 	}
 	/**
@@ -35,9 +35,9 @@ public final class Transforms {
 		  Matrix4 M = new Matrix4();
 		  Vector3 v = q.v;
 		  double s = q.s;
-		  M.a11 = 1-2*(v.a2*v.a2+v.a3*v.a3); M.a12 =  2*v.a1*v.a2-2*s*v.a3;      M.a13 = 2*s*v.a2+2*v.a1*v.a3;  
-		  M.a21 = 2*v.a1*v.a2+2*s*v.a3;      M.a22 =  1-2*(v.a1*v.a1+v.a3*v.a3); M.a23 = -2*s*v.a1+2*v.a2*v.a3;
-		  M.a31 = -2*s*v.a2+2*v.a1*v.a3;     M.a32 =  2*s*v.a1+2*v.a2*v.a3;      M.a33 =  1-2*(v.a1*v.a1+v.a2*v.a2);	  
+		  M.a11 = 1-2*(v.y*v.y+v.z*v.z); M.a12 =  2*v.x*v.y-2*s*v.z;      M.a13 = 2*s*v.y+2*v.x*v.z;  
+		  M.a21 = 2*v.x*v.y+2*s*v.z;      M.a22 =  1-2*(v.x*v.x+v.z*v.z); M.a23 = -2*s*v.x+2*v.y*v.z;
+		  M.a31 = -2*s*v.y+2*v.x*v.z;     M.a32 =  2*s*v.x+2*v.y*v.z;      M.a33 =  1-2*(v.x*v.x+v.y*v.y);	  
 		  M.a44 = 1;	  
 		  return M;
 	  }
@@ -57,9 +57,9 @@ public final class Transforms {
 		  Matrix4 M = new Matrix4();
 		  Vector3 v = q.v;
 		  double s = q.s;
-		  M.a11 = 1-2*(v.a2*v.a2+v.a3*v.a3); M.a12 =  2*v.a1*v.a2-2*s*v.a3;      M.a13 = 2*s*v.a2+2*v.a1*v.a3;       M.a14 = r.a1;
-		  M.a21 = 2*v.a1*v.a2+2*s*v.a3;      M.a22 =  1-2*(v.a1*v.a1+v.a3*v.a3); M.a23 = -2*s*v.a1+2*v.a2*v.a3;      M.a24 = r.a2;
-		  M.a31 = -2*s*v.a2+2*v.a1*v.a3;     M.a32 =  2*s*v.a1+2*v.a2*v.a3;      M.a33 =  1-2*(v.a1*v.a1+v.a2*v.a2); M.a34 = r.a3;	  
+		  M.a11 = 1-2*(v.y*v.y+v.z*v.z); M.a12 =  2*v.x*v.y-2*s*v.z;      M.a13 = 2*s*v.y+2*v.x*v.z;       M.a14 = r.x;
+		  M.a21 = 2*v.x*v.y+2*s*v.z;      M.a22 =  1-2*(v.x*v.x+v.z*v.z); M.a23 = -2*s*v.x+2*v.y*v.z;      M.a24 = r.y;
+		  M.a31 = -2*s*v.y+2*v.x*v.z;     M.a32 =  2*s*v.x+2*v.y*v.z;      M.a33 =  1-2*(v.x*v.x+v.y*v.y); M.a34 = r.z;	  
 		  M.a44 = 1;	  
 		  return M;
 		  
@@ -73,9 +73,9 @@ public final class Transforms {
 	   */
 	  public final static Matrix4 transformAndTranslate4(Matrix3 B, Vector3 r) {
 		  Matrix4 M = new Matrix4();
-		  M.a11 = B.a11; M.a12 = B.a12; M.a13 = B.a13; M.a14 = r.a1;
-		  M.a21 = B.a21; M.a22 = B.a22; M.a23 = B.a23; M.a24 = r.a2;
-		  M.a31 = B.a31; M.a32 = B.a32; M.a33 = B.a33; M.a34 = r.a3;	  
+		  M.a11 = B.a11; M.a12 = B.a12; M.a13 = B.a13; M.a14 = r.x;
+		  M.a21 = B.a21; M.a22 = B.a22; M.a23 = B.a23; M.a24 = r.y;
+		  M.a31 = B.a31; M.a32 = B.a32; M.a33 = B.a33; M.a34 = r.z;	  
 		                                               M.a44 = 1;	  
 		  return M;
 	  }
@@ -87,9 +87,9 @@ public final class Transforms {
 	   */
 	  public final static Matrix4 scale(Vector3 s) {
 		  Matrix4 M = new Matrix4();
-		  M.a11 = s.a1; M.a12 = 0; M.a13 = 0; M.a14 = 0;
-		  M.a21 = 0; M.a22 = s.a2; M.a23 = 0; M.a24 = 0;
-		  M.a31 = 0; M.a32 = 0; M.a33 = s.a3; M.a34 = 0;	  
+		  M.a11 = s.x; M.a12 = 0; M.a13 = 0; M.a14 = 0;
+		  M.a21 = 0; M.a22 = s.y; M.a23 = 0; M.a24 = 0;
+		  M.a31 = 0; M.a32 = 0; M.a33 = s.z; M.a34 = 0;	  
 		                                               M.a44 = 1;	  
 		  return M;
 		  

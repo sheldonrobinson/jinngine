@@ -15,7 +15,7 @@ import jinngine.geometry.*;
  * a contact normal, penetrating or non-penetrating. In either case, the normal direction is used with the feature support
  * mappings two obtaining two faces that are subsequently intersected against each other in the contact plane, to form 
  * a contact region. See SupportMap3 for details on the feature support mapping. Currently the intersection is done in a
- * simple way that naively intersects all edges and point-face intersections, which can be inefficient for large features. 
+ * simple way that naively intersects all edges and point-face intersections, which can be inefficient for large features.  
  * @author mo
  *
  */
@@ -167,7 +167,7 @@ public class FeatureSupportMapContactGenerator implements ContactGenerator {
 
 				//transform and project
 				Vector3 p1tp = Si.multiply(p1.minus(midpoint));
-				p1tp.a1 = 0;
+				p1tp.x = 0;
 
 				boolean inside = true;
 				Vector3 pp = faceB.get(faceB.size()-1).copy();
@@ -175,16 +175,16 @@ public class FeatureSupportMapContactGenerator implements ContactGenerator {
 
 					//transform and project
 					Vector3 pptp = Si.multiply(pp.minus(midpoint));
-					pptp.a1 = 0;
+					pptp.x = 0;
 					Vector3 p2tp = Si.multiply(p2.minus(midpoint));
-					p2tp.a1 = 0;
+					p2tp.x = 0;
 
 					Vector3 cr = p1tp.minus(pptp).cross(p2tp.minus(pptp));
 
 					//first sign
-					if (firstsign == 0) firstsign = cr.a1;
+					if (firstsign == 0) firstsign = cr.x;
 					
-					if (Math.signum(cr.a1) != Math.signum(firstsign) ) {
+					if (Math.signum(cr.x) != Math.signum(firstsign) ) {
 						inside = false; 
 						//System.out.println("outside");
 						break;
@@ -253,7 +253,7 @@ public class FeatureSupportMapContactGenerator implements ContactGenerator {
 
 				//transform and project
 				Vector3 p1tp = Si.multiply(p1.minus(midpoint));
-				p1tp.a1 = 0;
+				p1tp.x = 0;
 				
 				//System.out.println("deviation="+deviation);
 
@@ -263,17 +263,17 @@ public class FeatureSupportMapContactGenerator implements ContactGenerator {
 
 					//transform and project
 					Vector3 pptp = Si.multiply(pp.minus(midpoint));
-					pptp.a1 = 0;
+					pptp.x = 0;
 					Vector3 p2tp = Si.multiply(p2.minus(midpoint));
-					p2tp.a1 = 0;
+					p2tp.x = 0;
 
 					Vector3 cr = p1tp.minus(pptp).cross(p2tp.minus(pptp));
 					//cr.print();
 
 					//first sign
-					if (firstsign == 0) firstsign = cr.a1;
+					if (firstsign == 0) firstsign = cr.x;
 					
-					if (Math.signum(cr.a1) != Math.signum(firstsign) ) {
+					if (Math.signum(cr.x) != Math.signum(firstsign) ) {
 						inside = false; break;
 					}
 
@@ -329,10 +329,10 @@ public class FeatureSupportMapContactGenerator implements ContactGenerator {
 
 				Vector3 d1 = p1.minus(p1p);
 				Vector3 d1t = Si.multiply(d1);
-				d1t.a1 = 0;
+				d1t.x = 0;
 				//create and project starting point for line1
 				Vector3 p1pt = Si.multiply(p1p.minus(midpoint));
-				p1pt.a1 = 0;
+				p1pt.x = 0;
 
 				
 				Vector3 p2p = faceB.get(faceB.size()-1);
@@ -340,22 +340,22 @@ public class FeatureSupportMapContactGenerator implements ContactGenerator {
 
 					Vector3 d2 = p2.minus(p2p);
 					Vector3 d2t = Si.multiply(d2);
-					d2t.a1 = 0;
+					d2t.x = 0;
 					Vector3 point = p2p.minus(p1p);
 					Vector3 pointt = Si.multiply(point);
-					pointt.a1 = 0;
+					pointt.x = 0;
 			
 					
 //					d1t = d1t;
 //					d2t = d2t;
 					
 					
-					double det =  d1t.a2 * (-d2t.a3) - d1t.a3 * (-d2t.a2);
+					double det =  d1t.y * (-d2t.z) - d1t.z * (-d2t.y);
 					
 					if (Math.abs(det) > 1e-7) {
 
-						double alpha = (1/det)* ((-d2t.a3) * pointt.a2 + d2t.a2 * pointt.a3);
-						double beta  = (1/det)* ((-d1t.a3) * pointt.a2 + d1t.a2 * pointt.a3); 
+						double alpha = (1/det)* ((-d2t.z) * pointt.y + d2t.y * pointt.z);
+						double beta  = (1/det)* ((-d1t.z) * pointt.y + d1t.y * pointt.z); 
 
 						if ( alpha>0 && alpha <1 && beta>0 && beta<1 ) {
 							//generate point

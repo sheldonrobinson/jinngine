@@ -1,5 +1,5 @@
 package jinngine.physics.constraint;
-import java.util.Iterator;
+import java.util.ListIterator;
 
 import jinngine.math.Vector3;
 import jinngine.physics.Body;
@@ -23,7 +23,7 @@ public class AngularJointMotor implements Constraint {
 	}
 
 
-	public void applyConstraints(Iterator<ConstraintEntry> iterator, double dt) {
+	public void applyConstraints(ListIterator<ConstraintEntry> iterator, double dt) {
 		// TODO Auto-generated method stub
 		Vector3 axe = b1.toWorldNoTranslation(axe1);
 		

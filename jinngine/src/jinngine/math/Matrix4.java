@@ -125,14 +125,14 @@ public class Matrix4 {
 	    //     a31 a32 a33 a34 | c3   
 	    //     a41 a42 a43 a44 | c4
 		  
-		  final double t1 = v.a1*A.a11+v.a2*A.a12+v.a3*A.a13+ 1*A.a14;
-		  final double t2 = v.a1*A.a21+v.a2*A.a22+v.a3*A.a23+ 1*A.a24;
-		  final double t3 = v.a1*A.a31+v.a2*A.a32+v.a3*A.a33+ 1*A.a34;
-		  final double t4 = v.a1*A.a41+v.a2*A.a42+v.a3*A.a43+ 1*A.a44;
+		  final double t1 = v.x*A.a11+v.y*A.a12+v.z*A.a13+ 1*A.a14;
+		  final double t2 = v.x*A.a21+v.y*A.a22+v.z*A.a23+ 1*A.a24;
+		  final double t3 = v.x*A.a31+v.y*A.a32+v.z*A.a33+ 1*A.a34;
+		  final double t4 = v.x*A.a41+v.y*A.a42+v.z*A.a43+ 1*A.a44;
 
-	    r.a1 = t1/t4;
-	    r.a2 = t2/t4;
-	    r.a3 = t3/t4;
+	    r.x = t1/t4;
+	    r.y = t2/t4;
+	    r.z = t3/t4;
 	    
 	    return r;
 	  }  

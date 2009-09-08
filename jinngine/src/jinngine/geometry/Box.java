@@ -51,9 +51,9 @@ public class Box implements SupportMap3, Geometry, Material {
 	@Override
 	public Vector3 supportPoint(Vector3 direction) {
 		Vector3 v = body.state.rotation.multiply(localrotation).transpose().multiply(direction);
-		double sv1 = v.a1<0?-0.5:0.5;
-		double sv2 = v.a2<0?-0.5:0.5;
-		double sv3 = v.a3<0?-0.5:0.5;
+		double sv1 = v.x<0?-0.5:0.5;
+		double sv2 = v.y<0?-0.5:0.5;
+		double sv3 = v.z<0?-0.5:0.5;
 		//return Matrix4.multiply(transform4, new Vector3(sv1, sv2, sv3), new Vector3());
 		return body.state.rotation.multiply(localtransform.multiply(new Vector3(sv1, sv2, sv3)).add(localdisplacement)).add(body.state.rCm);
 	}
@@ -138,22 +138,22 @@ public class Box implements SupportMap3, Geometry, Material {
 		int numberOfNonZeroAxis = 0;
 		int[] nonZeroAxisIndices = new int[3];
 		
-		if (Math.abs(v.a1) < epsilon ) {
+		if (Math.abs(v.x) < epsilon ) {
 			zeroAxisIndices[numberOfZeroAxis++]=0;
 		} else { nonZeroAxisIndices[ numberOfNonZeroAxis++] = 0; }
-		if (Math.abs(v.a2) < epsilon ) {
+		if (Math.abs(v.y) < epsilon ) {
 			zeroAxisIndices[numberOfZeroAxis++]=1;
 		} else { nonZeroAxisIndices[ numberOfNonZeroAxis++] = 1; }
-		if (Math.abs(v.a3) < epsilon ) {
+		if (Math.abs(v.z) < epsilon ) {
 			zeroAxisIndices[numberOfZeroAxis++]=2;
 		} else { nonZeroAxisIndices[ numberOfNonZeroAxis++] = 2; }
 		
 		if (numberOfZeroAxis == 0) {
 			//eight possible points
 
-			double sv1 = v.a1<0?-0.5:0.5;
-			double sv2 = v.a2<0?-0.5:0.5;
-			double sv3 = v.a3<0?-0.5:0.5;
+			double sv1 = v.x<0?-0.5:0.5;
+			double sv2 = v.y<0?-0.5:0.5;
+			double sv3 = v.z<0?-0.5:0.5;
 			//return Matrix4.multiply(transform4, new Vector3(sv1, sv2, sv3), new Vector3());
 			featureList.add( body.state.rotation.multiply(localtransform.multiply(new Vector3(sv1, sv2, sv3)).add(localdisplacement)).add(body.state.rCm) );
 		}
@@ -162,8 +162,8 @@ public class Box implements SupportMap3, Geometry, Material {
 			//System.out.println("edge case");
 
 			//four possible edges
-			Vector3 p1 = new Vector3(v.a1<0?-0.5:0.5, v.a2<0?-0.5:0.5, v.a3<0?-0.5:0.5 );
-			Vector3 p2 = new Vector3(v.a1<0?-0.5:0.5, v.a2<0?-0.5:0.5, v.a3<0?-0.5:0.5 );
+			Vector3 p1 = new Vector3(v.x<0?-0.5:0.5, v.y<0?-0.5:0.5, v.z<0?-0.5:0.5 );
+			Vector3 p2 = new Vector3(v.x<0?-0.5:0.5, v.y<0?-0.5:0.5, v.z<0?-0.5:0.5 );
 			p1.set( zeroAxisIndices[0], 0.5);
 			p2.set( zeroAxisIndices[0], -0.5);
 			
@@ -175,10 +175,10 @@ public class Box implements SupportMap3, Geometry, Material {
 			//System.out.println("face case");
 			//two possible faces
 			//four possible edges
-			Vector3 p1 = new Vector3(v.a1<0?-0.5:0.5, v.a2<0?-0.5:0.5, v.a3<0?-0.5:0.5 );
-			Vector3 p2 = new Vector3(v.a1<0?-0.5:0.5, v.a2<0?-0.5:0.5, v.a3<0?-0.5:0.5 );
-			Vector3 p3 = new Vector3(v.a1<0?-0.5:0.5, v.a2<0?-0.5:0.5, v.a3<0?-0.5:0.5 );
-			Vector3 p4 = new Vector3(v.a1<0?-0.5:0.5, v.a2<0?-0.5:0.5, v.a3<0?-0.5:0.5 );
+			Vector3 p1 = new Vector3(v.x<0?-0.5:0.5, v.y<0?-0.5:0.5, v.z<0?-0.5:0.5 );
+			Vector3 p2 = new Vector3(v.x<0?-0.5:0.5, v.y<0?-0.5:0.5, v.z<0?-0.5:0.5 );
+			Vector3 p3 = new Vector3(v.x<0?-0.5:0.5, v.y<0?-0.5:0.5, v.z<0?-0.5:0.5 );
+			Vector3 p4 = new Vector3(v.x<0?-0.5:0.5, v.y<0?-0.5:0.5, v.z<0?-0.5:0.5 );
 
 
 			

@@ -1,5 +1,8 @@
 package jinngine.collision;
 
+import java.util.List;
+import java.util.Set;
+
 import jinngine.geometry.*;
 import jinngine.util.Pair;
 
@@ -52,6 +55,13 @@ public interface BroadfaseCollisionDetection {
 	 * @param a Body to be removed
 	 */
 	public void remove(Geometry a);
+	
+
+	/**
+	 * Return a complete set of the overlapping geometry pairs
+	 * @return
+	 */
+	public Set<Pair<Geometry>> getOverlappingPairs();
 	
 	/**
 	 * Run the broad-phase collision detection. This call will invoke calls to any registered event handler, se {@link Handler}.

@@ -226,7 +226,8 @@ public final class Body {
 		Matrix3.identity(state.rotation);
 		Matrix4.identity(state.transform);
 
-		Matrix3.multiply(state.q.rotationMatrix3(), state.rotation, state.rotation);
+		//Matrix3.multiply(state.q.rotationMatrix3(), state.rotation, state.rotation);
+		Matrix3.set(state.q.rotationMatrix3(), state.rotation);
 
 		//affine transform
 		Matrix4.multiply(Transforms.rotateAndTranslate4( state.q, state.rCm), state.transform, state.transform);

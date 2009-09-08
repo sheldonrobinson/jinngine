@@ -21,9 +21,13 @@ public class SweepAndPrune implements BroadfaseCollisionDetection {
 	private final SweepPoint[] xAxis = new SweepPoint[MAX_GEOMETRIES];
 	private final SweepPoint[] yAxis = new SweepPoint[MAX_GEOMETRIES];
 	private final SweepPoint[] zAxis = new SweepPoint[MAX_GEOMETRIES];
-	private final Map<Pair<Geometry>,Integer>  overlap = new LinkedHashMap<Pair<Geometry>,Integer>();
+	private final Map<Pair<Geometry>,Integer>  counters = new LinkedHashMap<Pair<Geometry>,Integer>();
 	private final Set<Pair<Geometry>> overlappingPairs = new LinkedHashSet<Pair<Geometry>>();
+	private final Set<Pair<Geometry>> incomming = new LinkedHashSet<Pair<Geometry>>();
+	private final Set<Pair<Geometry>> leaving = new LinkedHashSet<Pair<Geometry>>();
 
+	public SweepAndPrune() {}
+	
 	/**
 	 * 
 	 * @param handler A handler to receive events from the sweep and prune implementation
@@ -48,10 +52,10 @@ public class SweepAndPrune implements BroadfaseCollisionDetection {
 	/**
 	 * Internal method. An implementation of insertion sort that observes when elements are interchanged. 
 	 * @param A
-	 * @param overlaps
+	 * @param counters
 	 * @param pairs
 	 */
-	private final void sort(SweepPoint[] A, Map<Pair<Geometry>,Integer> overlaps, Set<Pair<Geometry>> pairs) {
+	private final void sort(SweepPoint[] A, Map<Pair<Geometry>,Integer> counters, Set<Pair<Geometry>> pairs, Set<Pair<Geometry>> incomming, Set<Pair<Geometry>> leaving) {
 		for (int i = 1;i<geometries*2;i++) {
 			//SweepPoint pivot = a.get(i);
 			SweepPoint pivot = A[i];
@@ -68,8 +72,8 @@ public class SweepAndPrune implements BroadfaseCollisionDetection {
 				//				SweepPoint e = a.get(j);
 				SweepPoint e = A[j];
 
-				if ( e.geometry.getBody() != null )
-					if(!e.geometry.getBody().isFixed() && !e.geometry.getBody().sleepy)
+				//if ( e.geometry.getBody() != null )
+					//if(!e.geometry.getBody().isFixed() && !e.geometry.getBody().sleepy)
 						e.updateValue();
 
 
@@ -87,48 +91,40 @@ public class SweepAndPrune implements BroadfaseCollisionDetection {
 					//handle counters
 					if (!e.begin && pivot.begin) {
 						//an end-point was put before a begin point, we increment
-						Integer counter = overlap.get(new Pair<Geometry>(e.geometry,pivot.geometry));
+						Integer counter = counters.get(new Pair<Geometry>(e.geometry,pivot.geometry));
 						if (counter == null) {
 							counter = new Integer(0);
 						}
-						overlap.put(new Pair<Geometry>(e.geometry,pivot.geometry),++counter);
-						//System.out.println("vounter="+counter);
+						counters.put(new Pair<Geometry>(e.geometry,pivot.geometry),++counter);
+//						System.out.println("vounter="+counter);
 						//overlap was found
-						if (counter > 2 ) {
-
-							pairs.add(new Pair<Geometry>(e.geometry,pivot.geometry));
-
-							//TODO potentially, this could be called multiple times
-							//for the same pair during the same run. This is however assumed 
-							//to be rarely occurring
-
-							//invoke event handlers
-							for ( Handler handler: handlers)
-								handler.overlap(new Pair<Geometry>(e.geometry,pivot.geometry));
+						if (counter == 3 ) {
+							Pair<Geometry> pair = new Pair<Geometry>(e.geometry,pivot.geometry);
+							pairs.add(pair);
+							incomming.add(pair);
+							leaving.remove(pair);
 						}
 					}
 
 					if (e.begin && !pivot.begin) {
 						//a begin point was put before an end point, we decrement
-						Integer counter = overlap.get(new Pair<Geometry>(e.geometry,pivot.geometry));
+						Integer counter = counters.get(new Pair<Geometry>(e.geometry,pivot.geometry));
 						if (counter == null) {
+							System.out.println("why does this happen?");
+							System.exit(0);
 							break;
 							//counter = new Integer(0);
 						}
-						overlap.put(new Pair<Geometry>(e.geometry,pivot.geometry),--counter);
-						//System.out.println("vounter="+counter);
+						counters.put(new Pair<Geometry>(e.geometry,pivot.geometry),--counter);
+						System.out.println("vounter="+counter);
 						//overlap vanished
 						if (counter == 2) { //counter < 3 (but ==2 is more effective)
 							//O(k) operation
-							pairs.remove(new Pair<Geometry>(e.geometry,pivot.geometry));
+							Pair<Geometry> pair = new Pair<Geometry>(e.geometry,pivot.geometry);
+							pairs.remove(pair);
+							if(!incomming.remove(pair))
+								leaving.add(pair);
 
-							//TODO potentially, this could be called multiple times
-							//for the same pair during the same run. This is however assumed 
-							//to be rarely occurring
-							
-							//invoke event handlers
-							for ( Handler handler: handlers)
-								handler.separation(new Pair<Geometry>(e.geometry,pivot.geometry));								
 						}
 					}
 
@@ -234,7 +230,7 @@ public class SweepAndPrune implements BroadfaseCollisionDetection {
 			Pair<Geometry> gp = iter.next();
 			//deleted geometry is part of overlaps
 			if (gp.contains(a)) {
-				overlap.remove(gp);
+				counters.remove(gp);
 				
 				//invoke event handler to report 
 				//vanishing overlap
@@ -250,10 +246,25 @@ public class SweepAndPrune implements BroadfaseCollisionDetection {
 	}
     
 	public void run() {
+		incomming.clear();
+		leaving.clear();
 		//Sort sweep lines
-		sort(xAxis, overlap, overlappingPairs);
-		sort(yAxis, overlap, overlappingPairs);
-		sort(zAxis, overlap, overlappingPairs);
+		sort(xAxis, counters, overlappingPairs, incomming, leaving);
+		sort(yAxis, counters, overlappingPairs, incomming, leaving);
+		sort(zAxis, counters, overlappingPairs, incomming, leaving);
+
+		//report overlaps
+		for (Pair<Geometry> p: incomming) {
+			for ( Handler handler: handlers)
+				handler.overlap(p);
+		}
+
+		//report separations
+		for (Pair<Geometry> p: leaving) {
+			for ( Handler handler: handlers)
+				handler.separation(p);
+		}
+		
 	}
 
 	//	inner private class SweepPoint
@@ -303,5 +314,10 @@ public class SweepAndPrune implements BroadfaseCollisionDetection {
 	public void removeHandler(Handler h) {
 		handlers.remove(h);
 		
+	}
+
+	@Override
+	public Set<Pair<Geometry>> getOverlappingPairs() {
+		return new HashSet<Pair<Geometry>>(overlappingPairs);
 	}
 }

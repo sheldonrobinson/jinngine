@@ -1,11 +1,13 @@
 package jinngine.physics.constraint;
 
 import java.util.*;
+
 import jinngine.geometry.contact.*;
 import jinngine.math.Matrix3;
 import jinngine.math.Vector3;
 import jinngine.physics.Body;
 import jinngine.physics.solver.*;
+import jinngine.util.GramSchmidt;
 
 
 /**
@@ -16,25 +18,11 @@ import jinngine.physics.solver.*;
  * Determining and instantiating these ContactGenerators should be handled by the simulator itself, however, one can create new 
  * and possibly optimised ContactGenerators for certain geometry pairs. A trivial example would be a ContactGenerator
  * for the Sphere-Sphere case, which is already implemented in Jinngine.
- * <p>
- * This ContactConstraint uses a simplified friction model, where there is no coupling between the 
- * normal force and the tangential frictional forces. This model reduces the number of needed constriants, and 
- * thus improoves performance. On the other hand, it is know to induce an energy gain,cr which hurts stability in various 
- * configurations, such as stacked objects. 
- * 
- * 
- * 
+ *
  * @author mo
  *
  */
 public final class ContactConstraint implements Constraint {	
-	//constraint in  J B lambda = b
-	// where J is the Jacobian of the velocity constraint, 
-	// M is the generalized mass matrix, and B = M^-1 J^T, lambda = f Delta t
-	//
-	// J can be seen as J = N^T C^T, where N is the normal-matrix, and C is the contact matrix,
-	// as described in [Erleben et al 2005]
-
 	private final Body b1, b2;                  //bodies in constraint
 	private final List<ContactGenerator> generators = new ArrayList<ContactGenerator>();
 	
@@ -47,17 +35,17 @@ public final class ContactConstraint implements Constraint {
 		ContactConstraint.restitution = restitution;
 	}
 
-	public static double getMu() {
-		return mu;
-	}
+//	public static double getMu() {
+//		return mu;
+//	}
+//
+//	public static void setMu(double mu) {
+//		ContactConstraint.mu = mu;
+//	}
 
-	public static void setMu(double mu) {
-		ContactConstraint.mu = mu;
-	}
 
-
-	private static double mu = 0.7;
-	private static double K = 0.8;
+//	private static double mu = 0.7;
+//	private static double K = 0.8;
 
 	/**
 	 * Create a new ContactConstraint, using one initial ContactGenerator
@@ -90,8 +78,16 @@ public final class ContactConstraint implements Constraint {
 		this.generators.remove(g);
 	}
 	
+	/**
+	 * Return the number of contact point generators
+	 * @return
+	 */
+	public double getNumberOfGenerators() {
+		return generators.size();
+	}
+	
 	@Override
-	public final void applyConstraints(Iterator<ConstraintEntry> constraintIterator, double dt) {
+	public final void applyConstraints(ListIterator<ConstraintEntry> constraintIterator, double dt) {
 		//use ContactGenerators to create new contactpoints
 		for ( ContactGenerator cg: generators) {
 			//run contact generator
@@ -160,28 +156,14 @@ public final class ContactConstraint implements Constraint {
 	public final void createFrictionalContactConstraint( 
 			ContactGenerator.ContactPoint cp,
 			Body b1, Body b2, Vector3 p, Vector3 n, double depth, double dt,
-			Iterator<ConstraintEntry> outConstraints 
+			ListIterator<ConstraintEntry> outConstraints 
 	) {
 
-		//Use a gram-schmidt process to create a orthonormal basis for the impact space
-		Vector3 v1 = n.normalize(); Vector3 v2 = Vector3.i; Vector3 v3 = Vector3.k;    
-		Vector3 t1 = v1.normalize(); 
-		Vector3 t2 = v2.minus( t1.multiply(t1.dot(v2)) );
-
-		//in case v1 and v2 are parallel
-		if ( t2.norm()<1e-7 ) {
-			v2 = Vector3.j; v3 = Vector3.k;
-			t2 = v2.minus( t1.multiply(t1.dot(v2)) ).normalize();    
-		} else {
-			t2 = t2.normalize();
-		}
-		//v1 paralell with v3
-		if( v1.cross(v3).norm()< 1e-7 ) {
-			v3 = Vector3.j;
-		}
-		//finaly calculate t3
-		Vector3 t3 = v3.minus( t1.multiply(t1.dot(v3)).minus( t2.multiply(t2.dot(v3)) )).normalize();
-
+		//Use a gram-schmidt process to create a orthonormal basis for the contact point ( normal and tangential directions)
+		Vector3 t1 = new Vector3(), t2 = new Vector3(), t3 = new Vector3();
+		Matrix3 B  = GramSchmidt.run(n);
+		B.getColumnVectors(t1, t2, t3);
+		
 		
 		//First off, create the constraint in the normal direction
 		double e = cp.restitution; //coeficient of restitution
@@ -191,13 +173,8 @@ public final class ContactConstraint implements Constraint {
 		//truncate small collision
 		//unf = unf < 0.1? 0: unf;
 		
-//		depth = depth*0.33333;
-//		if (unf < (0.5 * depth)) unf = depth*0.5;
-
-		//******* 
 		Vector3 r1 = p.minus(b1.state.rCm);
 		Vector3 r2 = p.minus(b2.state.rCm);
-
 		Vector3 J1 = n.multiply(-1);
 		Vector3 J2 = r1.cross(n).multiply(-1);
 		Vector3 J3 = n;
@@ -229,7 +206,7 @@ public final class ContactConstraint implements Constraint {
 		double correction = 0;
 		double lowerNormalLimit = 0;
 
-		correction = depth*(1/dt)*K;
+		correction = depth*(1/dt)*0.8;
 		
 		double limit = 5.5;
 		correction = correction< -limit? -limit:correction;
@@ -270,7 +247,7 @@ public final class ContactConstraint implements Constraint {
 		//correction = 0;
 		//constraint in normal direction
 		//		Constraint c = new Constraint(b1,b2,B1,B2,B3,B4,J1,J2,J3,J4,0,Double.POSITIVE_INFINITY,unf-uni + 1 * depth);
-		ConstraintEntry c = outConstraints.next();
+		ConstraintEntry c = new ConstraintEntry();
 		c.assign(this,b1,b2,
 				B1,B2,B3,B4,
 				J1,J2,J3,J4,
@@ -304,7 +281,7 @@ public final class ContactConstraint implements Constraint {
 		Vector3 t2B3 = t2.multiply(1/m2);				
 		Vector3 t2B4 = I2.multiply(r2.cross(t2));
 		double t2Fext = t2B1.dot(b1.state.FCm) + t2B2.dot(b1.state.tauCm) + t2B3.dot(b2.state.FCm) + t2B4.dot(b2.state.tauCm);
-		ConstraintEntry c2 = outConstraints.next();
+		ConstraintEntry c2 = new ConstraintEntry();
 		c2.assign(null,b1,
 				b2,
 				t2B1,
@@ -315,8 +292,8 @@ public final class ContactConstraint implements Constraint {
 				r1.cross(t2).multiply(-1),
 				t2,
 				r2.cross(t2).multiply(1),
-				-35,
-				35,
+				Double.NEGATIVE_INFINITY,
+				Double.POSITIVE_INFINITY,
 				c, ut1f-ut1i + t2Fext*dt 
 
 		);
@@ -332,7 +309,7 @@ public final class ContactConstraint implements Constraint {
 		Vector3 t3B3 = t3.multiply(1/m2);				
 		Vector3 t3B4 = I2.multiply(r2.cross(t3));
 		double t3Fext = t3B1.dot(b1.state.FCm) + t3B2.dot(b1.state.tauCm) + t3B3.dot(b2.state.FCm) + t3B4.dot(b2.state.tauCm);
-		ConstraintEntry c3 = outConstraints.next();
+		ConstraintEntry c3 = new ConstraintEntry();
 		c3.assign(null,b1,
 				b2,
 				t3B1,
@@ -343,22 +320,24 @@ public final class ContactConstraint implements Constraint {
 				r1.cross(t3).multiply(-1),
 				t3,
 				r2.cross(t3).multiply(1),
-				-35,
-				35,
+				Double.NEGATIVE_INFINITY,
+				Double.POSITIVE_INFINITY,
 				c, ut2f-ut2i + t3Fext*dt
 		);
 
 		//book-keep constraints in each body
 		//b1.constraints.add(c3);
 		//b2.constraints.add(c3);
-
+		outConstraints.add(c);
+		outConstraints.add(c2);
+		outConstraints.add(c3);
 	}
 
-	public static double getCorrectionConstant() {
-		return K;
-	}
-
-	public static void setCorrectionConstant(double k) {
-		K = k;
-	}
+//	public static double getCorrectionConstant() {
+//		return K;
+//	}
+//
+//	public static void setCorrectionConstant(double k) {
+//		K = k;
+//	}
 }

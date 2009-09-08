@@ -1,5 +1,5 @@
 package jinngine.physics.constraint;
-import java.util.Iterator;
+import java.util.ListIterator;
 
 import jinngine.math.Matrix3;
 import jinngine.math.Vector3;
@@ -90,7 +90,7 @@ public class UniversalJoint implements Constraint {
 	}
 	
 	@Override
-	public void applyConstraints(Iterator<ConstraintEntry> iterator, double dt) {
+	public void applyConstraints(ListIterator<ConstraintEntry> iterator, double dt) {
 		// TODO Auto-generated method stub
 		
 		// Ball-In-Socket joint has a 3x12 jacobian matrix, since
