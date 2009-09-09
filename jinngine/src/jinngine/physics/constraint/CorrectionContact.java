@@ -13,15 +13,14 @@ import jinngine.util.GramSchmidt;
 public final class CorrectionContact implements ContactConstraint {	
 	private final Body b1, b2;                  //bodies in constraint
 	private final List<ContactGenerator> generators = new ArrayList<ContactGenerator>();
-	private final Map<ContactGenerator,contactpoint> contacts = new HashMap<ContactGenerator,contactpoint>();
+	private final Map<ContactGenerator,List<contactpoint>> contacts = new HashMap<ContactGenerator,List<contactpoint>>();
 	
 	
 	private class contactpoint {
 		boolean sticking = false;
 		Vector3 point = new Vector3();
 		Vector3 pa = new Vector3();
-		Vector3 pb = new Vector3();
-		
+		Vector3 pb = new Vector3();		
 		ConstraintEntry n = new ConstraintEntry();
 		ConstraintEntry t1 = new ConstraintEntry();
 		ConstraintEntry t2 = new ConstraintEntry();
@@ -38,7 +37,7 @@ public final class CorrectionContact implements ContactConstraint {
 
 	public void addGenerator(ContactGenerator g) {
 		this.generators.add(g);
-		this.contacts.put(g,new contactpoint());
+		this.contacts.put(g,new ArrayList<contactpoint>());
 	}
 
 	public void removeGenerator(ContactGenerator g) {
@@ -59,13 +58,24 @@ public final class CorrectionContact implements ContactConstraint {
 			//run contact generator
 			cg.run(dt);
 
+			List<contactpoint> pointlist = contacts.get(cg); 
+
+			ListIterator<contactpoint> pointiter = pointlist.listIterator();
 			Iterator<ContactGenerator.ContactPoint> i = cg.getContacts();
 			
+			//System.out.println("pointlist size="+pointlist.size());
 			// ONLY apply one contact for each generator
-			if (i.hasNext()) {
+			while (i.hasNext()) {
 				ContactGenerator.ContactPoint cp = i.next();
-				
-				contactpoint co = contacts.get(cg);
+
+				contactpoint co;
+
+				if (pointiter.hasNext()) {
+					co = pointiter.next();
+				} else {
+					co = new contactpoint();
+					pointiter.add(co);
+				}
 
 				//investigate sticking
 				if (co.t1.body1 != null) {
@@ -77,13 +87,15 @@ public final class CorrectionContact implements ContactConstraint {
 					double lim = co.t1.coupledMax.lambda*co.t1.coupledMax.mu;
 					double force = co.t1.lambda;
 					
-					if ( lim-Math.abs(force) < 1e-2 ) {
+					if ( lim-Math.abs(force) < 1e-9 &&  Math.abs(prev) > 1e-4  ) {
 						co.sticking = false;
 					} else {
+						if (!co.sticking) {
 						co.sticking = true;
 						co.point.assign(cp.midpoint);
 						co.pa.assign(cp.pa);
 						co.pb.assign(cp.pb);
+						}
 					}
 					
 				}

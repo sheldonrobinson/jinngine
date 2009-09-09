@@ -376,11 +376,12 @@ public final class Body {
 	
 	//Go from world to model
 	public final Vector3 toModel( final Vector3 v) {
-		Vector3 vmark = v.copy();
-		Vector3.sub( vmark, state.rCm );
-		Quaternion cq = state.q.conjugate();
-		Quaternion.applyRotation( cq, vmark );
-		return vmark;    
+//		Vector3 vmark = v.copy();
+//		Vector3.sub( vmark, state.rCm );
+//		Quaternion cq = state.q.conjugate();
+//		Quaternion.applyRotation( cq, vmark );
+//		return vmark;
+		return state.rotation.transpose().multiply(v.minus(state.rCm));
 	}
 
 	//Go from world to model without translating
@@ -391,7 +392,8 @@ public final class Body {
 	//Go to world coordinates from model coordinates
 	public final Vector3 toWorld( final Vector3 v) {
 		//apply complete transform
-		return  Matrix4.multiply(state.transform, v, new Vector3());	
+		//return  Matrix4.multiply(state.transform, v, new Vector3());
+		return state.rotation.multiply(v).add(state.rCm);
 	}
 
 	//Go from model to rotated model

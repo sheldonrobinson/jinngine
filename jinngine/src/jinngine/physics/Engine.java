@@ -106,8 +106,9 @@ public final class Engine implements Model {
 						ContactGenerator generator = getContactGenerator(pair);
 						
 						//create a new contact constraint
-						constraint = new ContactConstraint(a,b,generator);
-						
+				//		constraint = new FrictionalContactConstraint(a,b,generator);
+						constraint = new CorrectionContact(a,b,generator);
+								
 						//insert into data structures
 						contactConstraints.put(bpair, constraint);
 						contactGenerators.put(pair, generator);

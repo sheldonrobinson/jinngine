@@ -157,20 +157,24 @@ public class FeatureSupportMapContactGenerator implements ContactGenerator {
 		Matrix3 Si = S.transpose();
 
 		
-		
+		// *)face-point case
 		if ( faceB.size()>2) {
 			//determine face normal
 			Vector3 facenormal = faceB.get(0).minus(faceB.get(1)).cross(faceB.get(2).minus(faceB.get(1))).normalize();
 			
-			for (Vector3 p1: faceA)  {
+			//for all points in face A
+			for (Vector3 paw: faceA)  {
 				double firstsign = 0;
 
-				//transform and project
-				Vector3 p1tp = Si.multiply(p1.minus(midpoint));
+				//transform p1 into contact space, and project onto tangential plane
+				Vector3 p1tp = Si.multiply(paw.minus(midpoint));
 				p1tp.x = 0;
 
 				boolean inside = true;
 				Vector3 pp = faceB.get(faceB.size()-1).copy();
+				
+				//run thru edges of face B, and check if they form a closed
+				//curve around the point in face A
 				for (Vector3 p2: faceB) {
 
 					//transform and project
@@ -200,50 +204,33 @@ public class FeatureSupportMapContactGenerator implements ContactGenerator {
 					cp.friction = friction;
 
 					//determine the true distance to the other face along the contact normal
-
-					// ((d t + p1) - pp) . facenormal = 0
-					// d t fn + p1 fn - pp fn =  0
-					// d t fn = pp fn - p1 fn
-					// t = (pp-p1).fn / d.fn
+					// ((d t + paw) - pp) . facenormal = 0
+					// d t fn + paw fn - pp fn =  0
+					// d t fn = pp fn - paw fn
+					// t = (pp-paw).fn / d.fn										 
+					double t = -pp.minus(paw).dot(facenormal) / direction.dot(facenormal);
+					cp.distance = t;
 					
-					double d= p1.minus(pp).dot(direction);
-					 
-					d = -pp.minus(p1).dot(facenormal) / direction.dot(facenormal);
-
-					cp.distance = d;
-					//System.out.println("point face contact distance=" + cp.distance);
-
+					//use t to calculate to intersection point on face B
+					Vector3 pbw = direction.multiply(t).add(paw);
 					
-					if (d<0) {
-						//System.out.println("d is =" + d);
-
-						cp.depth = (shell-d);
+					//if within envelope, generate a contact point
+					if (cp.distance < envelope) {
+						cp.depth = shell-cp.distance;
+						cp.paw.assign(paw);
+						cp.pbw.assign(pbw);
+						cp.pa.assign(bodyA.toModel(paw));
+						cp.pb.assign(bodyB.toModel(pbw));
 						cp.midpoint.assign(S.multiply(p1tp).add(midpoint));
 						cp.normal.assign(direction);
-//						cp.penetrating = penetrating;
 						contacts.add(cp);
-						
-						//cp.normal.print();
-
-					} else {
-
-						if (cp.distance < envelope) {
-							cp.depth = shell-d;
-
-							//System.out.println("non-penetrating correction depth=" + cp.depth);
-
-							cp.midpoint.assign(S.multiply(p1tp).add(midpoint));
-							cp.normal.assign(direction);
-//							cp.penetrating = penetrating;
-							contacts.add(cp);
-						} 
-					}
+					} 
 				} //inside
 			}
 		}
 
 
-		//face - point intersection
+		//*) face - point intersection
 		if (faceA.size()>2 ) {
 			//determine face normal
 			Vector3 facenormal = faceA.get(0).minus(faceA.get(1)).cross(faceA.get(2).minus(faceA.get(1))).normalize();
@@ -281,42 +268,74 @@ public class FeatureSupportMapContactGenerator implements ContactGenerator {
 				}
 
 				if (inside) {
+//					//generate point
+//					ContactPoint cp = new ContactPoint();
+//					cp.restitution = restitution;
+//					cp.friction = friction;
+//
+//					//determine the true distance to the other face along the contact normal
+//
+//					// ((d t + p1) - pp) . facenormal = 0
+//					// d t fn + p1 fn - pp fn =  0
+//					// d t fn = pp fn - p1 fn
+//					// t = (pp-p1).fn / d.fn
+//										 
+//					double d = pp.minus(p1).dot(facenormal) / direction.dot(facenormal);
+//					cp.distance = d;
+//					//System.out.println("point face contact distance=" + cp.distance);
+//
+//					
+//					//if (penetrating) {
+//					if (d<0) { //(penetrating contact point)
+//						cp.depth = (shell-d);
+//
+//						cp.midpoint.assign(S.multiply(p1tp).add(midpoint));
+//						cp.normal.assign(direction);
+////						cp.penetrating = penetrating;
+//						contacts.add(cp);
+//					} else {
+//						cp.depth = shell-d;
+//
+//						if (cp.distance < envelope) {
+//
+//							cp.midpoint.assign(S.multiply(p1tp).add(midpoint));
+//							cp.normal.assign(direction);
+////							cp.penetrating = penetrating;
+//							contacts.add(cp);
+//						} 
+//					}
+
+				
+				
+				
 					//generate point
 					ContactPoint cp = new ContactPoint();
 					cp.restitution = restitution;
 					cp.friction = friction;
 
 					//determine the true distance to the other face along the contact normal
-
-					// ((d t + p1) - pp) . facenormal = 0
-					// d t fn + p1 fn - pp fn =  0
-					// d t fn = pp fn - p1 fn
-					// t = (pp-p1).fn / d.fn
-										 
-					double d = pp.minus(p1).dot(facenormal) / direction.dot(facenormal);
-					cp.distance = d;
-					//System.out.println("point face contact distance=" + cp.distance);
-
+					// ((d t + paw) - pp) . facenormal = 0
+					// d t fn + paw fn - pp fn =  0
+					// d t fn = pp fn - paw fn
+					// t = (pp-paw).fn / d.fn										 
+					double t = pp.minus(p1).dot(facenormal) / direction.dot(facenormal);
+					cp.distance = t;
 					
-					//if (penetrating) {
-					if (d<0) { //(penetrating contact point)
-						cp.depth = (shell-d);
-
+					//use t to calculate to intersection point on face B
+					Vector3 paw = direction.multiply(t).add(p1);
+					
+					//if within envelope, generate a contact point
+					if (cp.distance < envelope) {
+						cp.depth = shell-cp.distance;
+						cp.paw.assign(paw);
+						cp.pbw.assign(p1);
+						cp.pa.assign(bodyA.toModel(paw));
+						cp.pb.assign(bodyB.toModel(p1));
 						cp.midpoint.assign(S.multiply(p1tp).add(midpoint));
 						cp.normal.assign(direction);
-//						cp.penetrating = penetrating;
 						contacts.add(cp);
-					} else {
-						cp.depth = shell-d;
-
-						if (cp.distance < envelope) {
-
-							cp.midpoint.assign(S.multiply(p1tp).add(midpoint));
-							cp.normal.assign(direction);
-//							cp.penetrating = penetrating;
-							contacts.add(cp);
-						} 
-					}
+					} 
+				
 				} //inside
 				
 			}
@@ -362,23 +381,29 @@ public class FeatureSupportMapContactGenerator implements ContactGenerator {
 							ContactPoint cp = new ContactPoint();
 							cp.restitution = restitution;
 							cp.friction = friction;
-
 							
-							cp.distance = p1p.add(d1.multiply(alpha)).minus( p2p.add(d2.multiply(beta))).dot(direction);
+							//find points on bodies
+							Vector3 paw = p1p.add(d1.multiply(alpha));
+							Vector3 pbw = p2p.add(d2.multiply(beta));
+							
+//							cp.distance = p1p.add(d1.multiply(alpha)).minus( p2p.add(d2.multiply(beta))).dot(direction);
+							cp.distance = paw.minus(pbw).dot(direction);
+							
 							double d = cp.distance;
 
 							
 							//find distance of projected points
-							if (d<0) {
+							if (d<envelope) {
 								cp.depth = shell-d;
-							} else {
-								cp.depth = shell-d;
-							}
+								cp.paw.assign(paw);
+								cp.pbw.assign(pbw);
+								cp.pa.assign(bodyA.toModel(paw));
+								cp.pb.assign(bodyB.toModel(pbw));
 								
-							cp.midpoint.assign(S.multiply(p1pt.add(d1t.multiply(alpha))).add(midpoint)  );
-							cp.normal.assign(direction);
-							contacts.add(cp);
-
+								cp.midpoint.assign(S.multiply(p1pt.add(d1t.multiply(alpha))).add(midpoint)  );
+								cp.normal.assign(direction);
+								contacts.add(cp);
+							}
 						 //contacts.get(contacts.size()-1).midpoint.print();
 
 

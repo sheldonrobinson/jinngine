@@ -29,6 +29,7 @@ public class ConstraintEntry  {
 	public double lambdaMin = 0;
 	public double lambdaMax = 0;
 	public double diagonal = 0;
+	public double correction = 0;
 	public double b = 0;
 	public double mu = 0;
 	public boolean enabled = true;
@@ -75,6 +76,7 @@ public class ConstraintEntry  {
 		lambdaMax = constraint.lambdaMax;
 		coupledMax = constraint.coupledMax;
 		b = constraint.b;
+		correction = constraint.correction;
 		lambda = constraint.lambda;
 		diagonal = constraint.diagonal;
 		enabled = true;
@@ -83,7 +85,7 @@ public class ConstraintEntry  {
 	
 	public final ConstraintEntry assign( Constraint owner, Body body1, Body body2, Vector3 b1, Vector3 b2, Vector3 b3, 
 			Vector3 b4, Vector3 j1, Vector3 j2, Vector3 j3,
-			Vector3 j4, double lambdaMin, double lambdaMax, ConstraintEntry coupledMax, double b) {
+			Vector3 j4, double lambdaMin, double lambdaMax, ConstraintEntry coupledMax, double b, double correction) {
 		
 		this.owner = owner;
 		this.body1 = body1;
@@ -101,6 +103,7 @@ public class ConstraintEntry  {
 		this.lambdaMax = lambdaMax;
 		this.coupledMax = coupledMax;
 		this.b = b;
+		this.correction = correction;
 		this.diagonal = j1.dot(b1) + j2.dot(b2) +  j3.dot(b3) + j4.dot(b4);
 		
 		return this;
