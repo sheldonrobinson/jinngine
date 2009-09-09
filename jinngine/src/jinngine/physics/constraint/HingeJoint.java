@@ -168,7 +168,7 @@ public final class HingeJoint implements Constraint {
 				Double.NEGATIVE_INFINITY,
 				Double.POSITIVE_INFINITY,
 				null, 
-				u.x );
+				u.x, 0 );
 
 		
 //		iterator.next().assign( 
@@ -189,7 +189,7 @@ public final class HingeJoint implements Constraint {
 				Double.NEGATIVE_INFINITY,
 				Double.POSITIVE_INFINITY,
 				null, 
-				u.y );
+				u.y, 0 );
 
 //		iterator.next().assign( 
 //				null, 
@@ -209,7 +209,7 @@ public final class HingeJoint implements Constraint {
 				Double.NEGATIVE_INFINITY,
 				Double.POSITIVE_INFINITY,
 				null, 
-				u.z );	
+				u.z, 0 );	
 
 	
 		//handle the constraint modelling joint limits and motor
@@ -297,7 +297,7 @@ public final class HingeJoint implements Constraint {
 				low,
 				high,
 				null, 
-				bvalue + Fextaxis*dt);
+				bvalue + Fextaxis*dt, 0);
 
 		
 		//keep bodies aligned to the axis
@@ -320,7 +320,7 @@ public final class HingeJoint implements Constraint {
 				Double.NEGATIVE_INFINITY,
 				Double.POSITIVE_INFINITY,
 				null, 
-				tt2i.dot(b1.state.omegaCm)-tt2i.dot(b2.state.omegaCm) - Kcor*tt2i.dot(nerror)*(1/dt) + Fexttt2i*dt );	
+				tt2i.dot(b1.state.omegaCm)-tt2i.dot(b2.state.omegaCm) - Kcor*tt2i.dot(nerror)*(1/dt) + Fexttt2i*dt, 0 );	
 
 
 		
@@ -345,7 +345,7 @@ public final class HingeJoint implements Constraint {
 				Double.NEGATIVE_INFINITY,
 				Double.POSITIVE_INFINITY,
 				null,
-				tt3i.dot(b1.state.omegaCm)-tt3i.dot(b2.state.omegaCm) - Kcor*tt3i.dot(nerror)*(1/dt) + Fexttt3i*dt);		
+				tt3i.dot(b1.state.omegaCm)-tt3i.dot(b2.state.omegaCm) - Kcor*tt3i.dot(nerror)*(1/dt) + Fexttt3i*dt, 0);		
 
 
 		iterator.add(linear1);
