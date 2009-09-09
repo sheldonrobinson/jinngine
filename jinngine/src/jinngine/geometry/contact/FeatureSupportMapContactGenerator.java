@@ -220,7 +220,7 @@ public class FeatureSupportMapContactGenerator implements ContactGenerator {
 						cp.depth = (shell-d);
 						cp.midpoint.assign(S.multiply(p1tp).add(midpoint));
 						cp.normal.assign(direction);
-						cp.penetrating = penetrating;
+//						cp.penetrating = penetrating;
 						contacts.add(cp);
 						
 						//cp.normal.print();
@@ -234,7 +234,7 @@ public class FeatureSupportMapContactGenerator implements ContactGenerator {
 
 							cp.midpoint.assign(S.multiply(p1tp).add(midpoint));
 							cp.normal.assign(direction);
-							cp.penetrating = penetrating;
+//							cp.penetrating = penetrating;
 							contacts.add(cp);
 						} 
 					}
@@ -304,7 +304,7 @@ public class FeatureSupportMapContactGenerator implements ContactGenerator {
 
 						cp.midpoint.assign(S.multiply(p1tp).add(midpoint));
 						cp.normal.assign(direction);
-						cp.penetrating = penetrating;
+//						cp.penetrating = penetrating;
 						contacts.add(cp);
 					} else {
 						cp.depth = shell-d;
@@ -313,7 +313,7 @@ public class FeatureSupportMapContactGenerator implements ContactGenerator {
 
 							cp.midpoint.assign(S.multiply(p1tp).add(midpoint));
 							cp.normal.assign(direction);
-							cp.penetrating = penetrating;
+//							cp.penetrating = penetrating;
 							contacts.add(cp);
 						} 
 					}

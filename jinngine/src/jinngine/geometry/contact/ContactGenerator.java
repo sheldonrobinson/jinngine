@@ -5,19 +5,13 @@ import java.util.Iterator;
 import jinngine.math.Vector3;
 
 /**
- * A contact generator is used by the {@link ContactConstraint} to generate its contact information. 
- * As of present day, the only ContactGenerator available in jinngine is SupportMapContactGenerator,
- * which handles only convex-convex geometries given by support maps. (SupportMap3) 
- * 
- * ContactGenerator encapsulates all geometry and algorithm specific details. Therefore, it is the responsibility 
+ * A contact generator is used by the {@link ContactConstraint} to generate its contact information. ContactGenerator 
+ * encapsulates all geometry and algorithm specific details. Therefore, it is the responsibility 
  * of the simulator (Model) to instantiate correct implementations of ContactGenerators, when various types of geometries 
- * in proximity are encountered during simulation. 
+ * in proximity are encountered during simulation. A ContactConstraint can handle one or more ContactGenerators. This allows for bodies in the simulation, which have more 
+ * than one geometry instance attached.
  * 
- * A ContactConstraint can handle one or more ContactGenerators. This allows for bodies in the simulation, which have more 
- * than one geometry instance defined.
- * 
- * @author Moo
- *
+ * @author silcowitz
  */
 public interface ContactGenerator {
 
@@ -26,13 +20,45 @@ public interface ContactGenerator {
 	 * @author Moo
 	 */
 	public class ContactPoint {
-		public final Vector3 pa = new Vector3(), pb = new Vector3(), 
-		midpoint = new Vector3(), normal = new Vector3();
+		/**
+		 * Point on body A in world space
+		 */
+		public final Vector3 paw = new Vector3();
+
+		/**
+		 * Point on body A in A space
+		 */
+		public final Vector3 pa = new Vector3();
+		
+		/**
+		 * Point on body B in world space
+		 */
+		public final Vector3 pbw = new Vector3();
+		
+		/**
+		 * Point on body B in B space
+		 */
+		public final Vector3 pb = new Vector3();
+
+		/**
+		 * Interaction point in world space
+		 */
+		public final Vector3 midpoint = new Vector3();
+
+		/**
+		 * Contact normal in world space
+		 */
+		public final Vector3 normal = new Vector3();
+
+		/**
+		 * Penetration depth
+		 */
 		public double depth;
+		
+		
 		public double distance;
 		public double restitution;
 		public double friction;
-		public boolean penetrating = false;
 	}
 	
 	/**
