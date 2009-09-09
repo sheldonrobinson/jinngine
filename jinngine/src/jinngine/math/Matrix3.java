@@ -443,6 +443,14 @@ public class Matrix3 {
     return C;
   } 
   
+  public final static Matrix3 diagonal( Vector3 d) {
+	  Matrix3 C = new Matrix3();
+	  C.a11 = d.x; C.a12 = 0; C.a13 = 0;
+	  C.a21 = 0; C.a22 = d.y; C.a23 = 0;
+	  C.a31 = 0; C.a32 = 0; C.a33 = d.z;
+	  return C;	  
+  }
+  
   public final Matrix3 copy() {
 	  Matrix3 M = new Matrix3();
 	  Matrix3.set(this, M);
