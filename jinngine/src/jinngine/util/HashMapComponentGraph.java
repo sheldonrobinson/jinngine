@@ -49,12 +49,12 @@ public class HashMapComponentGraph<T,U> implements ComponentGraph<T,U> {
 //		public boolean isDelimitor(final T node);
 //	}
 		
-	public  final Map<Component,Set<Node>>     componentNodes = new HashMap<Component,Set<Node>>();//
-	public  final Map<Component,Set<Pair<T>>>  componentEdges = new HashMap<Component,Set<Pair<T>>>();//
+	private final Map<Component,Set<Node>>     componentNodes = new HashMap<Component,Set<Node>>();//
+	private final Map<Component,Set<Pair<T>>>  componentEdges = new HashMap<Component,Set<Pair<T>>>();//
 	private final Map<Node,Set<Node>>          edges = new HashMap<Node,Set<Node>>();
 	private final Map<Node,Component>          component = new HashMap<Node,Component>();
 	private final Map<Node,Node>               nodes = new HashMap<Node,Node>();
-	public  final Map<Pair<T>,U>               edgeData = new HashMap<Pair<T>,U>();//
+	private final Map<Pair<T>,U>               edgeData = new HashMap<Pair<T>,U>();//
 	
 	private final NodeClassifier<T> nodeClassifier;
 
