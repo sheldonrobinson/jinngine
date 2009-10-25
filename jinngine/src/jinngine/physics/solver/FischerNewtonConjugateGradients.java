@@ -14,7 +14,7 @@ import jinngine.physics.Body;
  * @author mo
  *
  */
-public class FisherNewtonCG implements Solver {
+public class FischerNewtonConjugateGradients implements Solver {
 
 	@Override
 	public void setErrorTolerance(double epsilon) {
@@ -49,12 +49,12 @@ public class FisherNewtonCG implements Solver {
 		return Math.sqrt(a*a+b*b)-(a+b);
 	}
 
-	private int linemax =6;
-	private int imax = 10;
-	private int cgmax = 15;
-	private double damper =0;
+	private int linemax =1;
+	private int imax = 1;
+	private int cgmax = 1;
+	private double damper =0.00;
 	private double frictiondamp = 0;
-	private double epsilon = 1e-7;
+	private double epsilon = 1e-5;
 	
 	
 	@Override

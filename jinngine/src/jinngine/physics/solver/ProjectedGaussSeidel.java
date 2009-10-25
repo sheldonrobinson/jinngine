@@ -10,7 +10,7 @@ import jinngine.physics.Body;
  */
 public class ProjectedGaussSeidel implements Solver {
 
-	private int maximumIterations = 5;
+	private int maximumIterations = 15;
 	
 	
 	@Override
@@ -20,6 +20,7 @@ public class ProjectedGaussSeidel implements Solver {
 
 	@Override
 	public void setMaximumIterations(int n) {
+		System.out.println("PGS iterations = " + n);
 		this.maximumIterations = n;
 	}
 
