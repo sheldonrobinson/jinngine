@@ -1,4 +1,4 @@
-package jinngine.test;
+package jinngine.test.visual;
 
 import jinngine.physics.Model;
 

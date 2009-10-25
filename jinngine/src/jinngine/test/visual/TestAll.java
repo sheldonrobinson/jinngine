@@ -1,4 +1,4 @@
-package jinngine.test;
+package jinngine.test.visual;
 
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;

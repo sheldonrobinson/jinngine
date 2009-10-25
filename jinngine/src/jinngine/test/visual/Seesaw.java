@@ -1,4 +1,4 @@
-package jinngine.test;
+package jinngine.test.visual;
 
 import java.util.ArrayList;
 import java.util.List;

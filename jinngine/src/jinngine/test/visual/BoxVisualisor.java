@@ -1,4 +1,4 @@
-package jinngine.test;
+package jinngine.test.visual;
 
 import jinngine.geometry.Box;
 import jinngine.geometry.Geometry;
