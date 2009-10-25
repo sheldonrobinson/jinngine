@@ -29,10 +29,6 @@ public final class Engine implements Model {
 	private final List<ConstraintEntry> constraintList = new LinkedList<ConstraintEntry>();  
 	private final List<Force> forces = new LinkedList<Force>(); 
 
-	
-	private final List<ConstraintEntry> normals = new ArrayList<ConstraintEntry>();
-	private final List<ConstraintEntry> frictions = new ArrayList<ConstraintEntry>();
-
 
 	// Pairs not to be considered by contact constraints
 	private final Map<Pair<Body>,Boolean> mutedBodyPairs = new HashMap<Pair<Body>,Boolean>();
@@ -46,15 +42,15 @@ public final class Engine implements Model {
 	
 	// Create a contact graph classifier, used by the contact graph for determining
 	// fixed bodies, i.e. bodies considered to have infinite mass. 
-	private final ComponentGraph.NodeClassifier<Body> classifier = 
-		new ComponentGraph.NodeClassifier<Body>() {
+	private final HashMapComponentGraph.NodeClassifier<Body> classifier = 
+		new HashMapComponentGraph.NodeClassifier<Body>() {
 			public boolean isDelimitor(Body node) {
 				return node.isFixed();
 			}
 	};
 
 	// Create the contact graph using the classifier above
-	private final ComponentGraph<Body,Constraint> contactGraph = new ComponentGraph<Body,Constraint>(classifier);
+	private final HashMapComponentGraph<Body,Constraint> contactGraph = new HashMapComponentGraph<Body,Constraint>(classifier);
 
 	// Set of maintained contact constraints and generators
 	private final Map<Pair<Body>,ContactConstraint> contactConstraints = new HashMap<Pair<Body>,ContactConstraint>();
@@ -89,24 +85,16 @@ public final class Engine implements Model {
 					contactGenerators.put(pair, generator);
 					constraint.addGenerator(generator);
 
-//					System.out.println("Contact generator added");
-//					System.out.println("ADD:"+pair.getFirst() + ","+pair.getSecond());
-
-					
 				//no contact constraint is present
 				} else {					
 					//do not act if some other constraint(joint) is already present
 					//in the contact graph
-					if (!contactGraph.alledges.containsKey(bpair))  {
-
-//						System.out.println("Contact constraint and generator added");
-//						System.out.println("ADD:"+pair.getFirst() + ","+pair.getSecond());
-
+					if (contactGraph.getEdge(bpair) == null)  {
 						//create a new contact generator
 						ContactGenerator generator = getContactGenerator(pair);
 						
 						//create a new contact constraint
-				//		constraint = new FrictionalContactConstraint(a,b,generator);
+//						constraint = new FrictionalContactConstraint(a,b,generator);
 						constraint = new CorrectionContact(a,b,generator);
 								
 						//insert into data structures
@@ -119,7 +107,6 @@ public final class Engine implements Model {
 			
 			@Override
 			public final void separation(Pair<Geometry> pair) {
-				
 				//retrieve the bodies associated with overlapping geometries
 				Body a = pair.getFirst().getBody();
 				Body b = pair.getSecond().getBody();
@@ -135,9 +122,6 @@ public final class Engine implements Model {
 				//if this geometry pair has an acting contact constraint,
 				//we must remove the contact generator
 				if (contactConstraints.containsKey(bpair)) {
-
-//					System.out.println("REMOVE:"+pair.getFirst() + ","+pair.getSecond());
-
 					//check that we have the generator (if not, something is very wrong)
 					if (contactGenerators.containsKey(pair)) {
 				
@@ -148,15 +132,11 @@ public final class Engine implements Model {
 						//remove the generator from our list
 						contactGenerators.remove(pair);
 
-						//System.out.println("generator removed, generators="+contactGenerators.size());
-
-						
 						//if the contact constraint has no more generators, also
 						//remove the contact constraint
 						if (constraint.getNumberOfGenerators() < 1 ) {
 							contactConstraints.remove(bpair);
 							contactGraph.removeEdge(bpair);	
-							//System.out.println("Contact constraint removed");
 						}
 					} else {
 						//this is not good, report an error
@@ -167,7 +147,6 @@ public final class Engine implements Model {
 					//this is not good, report an error
 					System.out.println("no constraint pressent");
 					//System.exit(0);
-					
 				}
 			}
 	};
@@ -178,16 +157,16 @@ public final class Engine implements Model {
 
 	//Create a linear complementarity problem solver
 	private Solver solver = new ProjectedGaussSeidel();
+	//private Solver solver = new FisherNewtonCG();
 	
 	//time-step size
-	public double dt = 0.01f; 
+	public double dt = 0.01; 
 
 	/**
 	 * 
 	 */
 	public Engine() {
 		//create some initial ContactGeneratorClassifiers
-
 		//The sphere-sphere classifier
 		geometryClassifiers.add(new ContactGeneratorClassifier() {
 			@Override
@@ -195,30 +174,13 @@ public final class Engine implements Model {
 					Geometry b) {
 				if ( a instanceof jinngine.geometry.Sphere && b instanceof jinngine.geometry.Sphere) {
 					return new SphereContactGenerator((jinngine.geometry.Sphere)a, (jinngine.geometry.Sphere)b);
+					//return new SamplingSupportMapContacts(a.getBody(),b.getBody(), (SupportMap3)a, (SupportMap3)b);
 				}
 				
 				//not recognised
 				return null;	
 			}
 		});
-
-		
-		//Box-Box support maps
-		geometryClassifiers.add(new ContactGeneratorClassifier() {
-			@Override
-			public ContactGenerator createGeneratorFromGeometries(Geometry a,
-					Geometry b) {
-				if ( a instanceof jinngine.geometry.Box && b instanceof jinngine.geometry.Box) {
-					//return new SupportMapContactGenerator2((SupportMap3)a, a,  (SupportMap3)b, b);
-					return new FeatureSupportMapContactGenerator((SupportMap3)a, a,  (SupportMap3)b, b);
-					//return new BoxBoxContactGenerator((jinngine.geometry.Box)a,(jinngine.geometry.Box)b);					
-				}
-				
-				//not recognised
-				return null;	
-			}
-		});
-
 		
 		//General convex support maps
 		geometryClassifiers.add(new ContactGeneratorClassifier() {
@@ -229,8 +191,6 @@ public final class Engine implements Model {
 					//return new SupportMapContactGenerator2((SupportMap3)a, a,  (SupportMap3)b, b);
 					//return new SupportMapContactGenerator2((SupportMap3)a, a,  (SupportMap3)b, b);
 					return new FeatureSupportMapContactGenerator((SupportMap3)a, a,  (SupportMap3)b, b);
-
-					
 				}
 				
 				//not recognised
@@ -271,13 +231,11 @@ public final class Engine implements Model {
 			c.constraints.clear();
 		}
 
-		
         // Apply all forces	
 		for (Force f: forces) {
 			f.apply();
 		}
 
-		
 		// Run the broad-phase collision detection (this automatically updates the contactGraph,
 		// through the BroadfaseCollisionDetection.Handler type)
 		broadfase.run();
@@ -286,220 +244,47 @@ public final class Engine implements Model {
 		// insert constraint entries into the constraintList
 		constraintList.clear();
 		ListIterator<ConstraintEntry> constraintIterator = constraintList.listIterator();
-
 		
 		// Iterate through groups/components in the contact graph
-		Iterator<ComponentGraph<Body,Constraint>.Group> groups = contactGraph.groupPairs.keySet().iterator();		
-		while (groups.hasNext()) {
-			//constraintList.clear();			
-			
-			//The group 
-			ComponentGraph<Body,Constraint>.Group g = groups.next();
+		Iterator<ComponentGraph.Component> components = contactGraph.getComponents();		
+		while (components.hasNext()) {
+			//The component 
+			ComponentGraph.Component g = components.next();
 
 			//check if group is all sleepy, then ignore its constraints
-			//get nodes (bodies)
 			boolean ignoreGroup = true;
-			Iterator<ComponentGraph<Body,Constraint>.Node> nodeiter = contactGraph.groups.get(g).iterator();
+			Iterator<Body> nodeiter = contactGraph.getNodesInComponent(g);
 			while (nodeiter.hasNext()) {
-				if ( !nodeiter.next().element.sleeping ) {
+				if (!nodeiter.next().sleeping) {
 					ignoreGroup = false;
 					break;
-				} 		
+				}
 			}
 
-			//mark bodies
-			//if (ignoreGroup) System.out.println("Sleeping group");
-			nodeiter = contactGraph.groups.get(g).iterator();
+			// mark bodies in group as sleeping
+			nodeiter = contactGraph.getNodesInComponent(g);
 			while (nodeiter.hasNext()) {
-				nodeiter.next().element.ignore = ignoreGroup;
+				nodeiter.next().ignore = ignoreGroup;
 			}
 			
 			//apply constraints off group
 			if (!ignoreGroup) {
-				Iterator<Pair<Body>> overlapping = contactGraph.groupPairs.get(g).iterator();
-				// Iterate through all edges in this contact graph component
-				while( overlapping.hasNext()) {
-					Pair<Body> pair = overlapping.next();
-
-					// Apply joint constraints
-					Constraint joint = contactGraph.alledges.get(pair);
-					joint.applyConstraints(constraintIterator, dt);
-
-				} //while overlapping
-
-			}
-
-
-			
+				Iterator<Constraint> constraints = contactGraph.getEdgesInComponent(g);
+				while (constraints.hasNext())
+					constraints.next().applyConstraints(constraintIterator, dt);
+			}	
 		} //while groups
 
-				
-		//System.out.println(" constraints = "+constraintList.size());
-		
-		if (constraintList.size()>0) 
-			//reset lambda values
-			for (ConstraintEntry e: constraintList) {
-				e.lambda = 0;
-			}
 
+		//run the solver
+		solver.solve( constraintList, bodies );				
 
-		normals.clear();
-		frictions.clear();
-		
-		for (ConstraintEntry e: constraintList) {
-			if (e.coupledMax == null)
-				normals.add(e);
-			else
-				frictions.add(e);
-		}
-
-		FisherNewtonCG newton = new FisherNewtonCG();
-
-
-		if (method == 2) {
-
-			//System.out.println("N="+constraintList.size());
-
-			//long t = System.currentTimeMillis();
-
-			newton.setLinesearchIterations(0);
-			newton.setMaximumCGIterations(8);
-			newton.setMaximumIterations(10);
-			newton.setErrorTolerance(0);
-			newton.setDamping(0);
-			newton.setFrictionDamping(0);
-//			double errNormals = newton.solve(normals, bodies);
-//			double errAll4 = newton.solve(constraintList, bodies);
-		   //System.out.println("error ="+errAll4);
-
-//			solver.setMaximumIterations(35);			
-//			solver.solve( constraintList, bodies );				
-
-			
-			//recompute limits
-			double mu=0.7;
-			for (ConstraintEntry ci: constraintList) {
-				if (ci.coupledMax != null) {
-					double limit = Math.abs(ci.coupledMax.lambda)*mu; ci.lambdaMin = -limit; ci.lambdaMax = limit;
-					//ci.lambdaMin=-100; ci.lambdaMax = 100;
-				}
-			}
-
-			newton.setLinesearchIterations(5);
-			newton.setMaximumCGIterations(15);
-			newton.setMaximumIterations(10);
-			newton.setErrorTolerance(0);
-			newton.setDamping(0.000000);
-			newton.setFrictionDamping(0.0000000);
-
-			double errAll4 = newton.solve(constraintList, bodies);
-//
-//			long delta = System.currentTimeMillis() -t;
-//			//System.out.println("delta="+delta);
-			 System.out.println("error final="+errAll4);
-//
-//			
-//			if (errAll4>0.1) {
-//
-//
-//				
-//		 System.out.println("error final="+errAll4);
-
-				//newton.printA(constraintList);
-			//}
-
-
-		} else {
-			//				solver.setMaximumIterations(30);			
-			//				solver.solve( normals );
-			//				totalinner += 30/3;
-
-
-			//long t = System.currentTimeMillis();
-
-			//solver.setMaximumIterations(17);			
-			solver.solve( constraintList, bodies );				
-			//totalinner +=15;
-
-			//long delta = System.currentTimeMillis() -t;
-			//System.out.println("delta="+delta);
-
-		}
-
-		
-//		for (ConstraintEntry c: constraintList) {
-//			if (c.coupledMax != null) {
-//				double v = c.j1.dot(c.body1.state.vCm) + c.j2.dot(c.body1.state.omegaCm) 
-//				+ c.j3.dot(c.body2.state.vCm) + c.j4.dot(c.body2.state.omegaCm);
-//				if (Math.abs(v)>0.01||true) {
-//				System.out.println("normal limit="+c.coupledMax.lambda*c.coupledMax.mu+" friciton force="+c.lambda + " velocity="+v);
-//				}
-//			}
-//			else {
-//				double v = c.j1.dot(c.body1.state.vCm) + c.j2.dot(c.body1.state.omegaCm) 
-//				+ c.j3.dot(c.body2.state.vCm) + c.j4.dot(c.body2.state.omegaCm);
-//				System.out.println("force="+c.lambda + " velocity="+v);
-//			}
-//
-//		}
-//System.out.println("************");
-		
-		//double en = NewtonConjugateGradientSolverFriction.fisherError(normals, frictions);
-		//double ef = NewtonConjugateGradientSolverFriction.fisherError(frictions, normals);
-		
-		tick ++;
-		//accumen += en;
-		//accumef += ef;
-		
-		
-		if (tick % 200 == 0) {
-			
-			//newton.printA(constraintList);
-			
-			//for (ConstraintEntry entry: constraintList)
-			//	System.out.println(" " + entry.diagonal);
-			
-			//System.out.println("N="+constraintList.size()+"  Last "+en + " -- " + ef );
-
-			//System.out.println(""+accumen + " -- " + accumef + " = " +totalinner);
-		    accumen =0; accumef = 0;
-		    totalinner = 0;
-		    
-		    energy = 0;
-		    for (Body b: bodies) {
-		    	energy += b.totalKinetic();
-		    }
-		    //System.out.println("energy="+energy);
-		}
-		
-
-
-	
-
-		// Solve the velocity based LCP problem for all constraints
-		// TODO (experimenting could reveal a speed up if constraints were solved per group)
-		//solver.solve( constraintList );
-
-		//hack, clear delta velocities 
-//		for (Body b: bodies) {
-//			b.deltaOmegaCm.assignZero();
-//			b.deltaVCm.assignZero();
-//		}
-		
-		
-
-		
-
-
-		
 		// Apply delta velocities and integrate positions forward
 		for (Body c : bodies ) {
 			
-			//dont process inactive bodies
+			//don't process inactive bodies
 			if (c.ignore)
 				continue;
-
-			//double prekinetic = c.totalKinetic();
 			
 			//apply external forces
 			c.advanceVelocities(dt);
@@ -511,9 +296,7 @@ public final class Engine implements Model {
 				Matrix3.multiply(c.state.I, c.state.omegaCm, c.state.L);
 				c.state.P.assign(c.state.vCm.multiply(c.state.M));
 			}
-			
-			
-			
+
 			//integrate forward on positions 
 			if (!c.sleepy) 
 				c.advancePositions(dt);
@@ -525,9 +308,6 @@ public final class Engine implements Model {
 					c.sleeping = true;
 				}
 			}
-//				double value = Math.pow(c.totalKinetic() / c.sleepKinetic, 0.125); 
-//				c.advancePositions(dt * value );
-//			}
 			
 //			fall asleep or awake
 			if (c.totalKinetic() < c.sleepKinetic ) {
@@ -536,12 +316,7 @@ public final class Engine implements Model {
 					c.sleepyness=1;
 				}
 				
-				c.sleepy = true;
-				
-//				c.state.vCm.assignZero();
-//				c.state.omegaCm.assignZero();
-//				c.state.P.assignZero();
-//				c.state.L.assignZero();
+				c.sleepy = true;				
 			} else {
 				c.sleepy = false;
 				c.sleeping = false;
@@ -593,16 +368,6 @@ public final class Engine implements Model {
 	}  
 	
 	private ContactGenerator getContactGenerator(Pair<Geometry> pair) {
-//		if (pair.getFirst() instanceof Sphere && pair.getSecond() instanceof Sphere  ){
-//			System.out.println("Sphere pair");
-//			return new SphereContactGenerator((Sphere)pair.getFirst(),(Sphere)pair.getSecond());
-//
-//		} else {
-//			SupportMap3 Sa = (SupportMap3)pair.getFirst();
-//			SupportMap3 Sb = (SupportMap3)pair.getSecond();	
-//			return new SupportMapContactGenerator(Sa,Sb);
-//		}
-		
 		for ( ContactGeneratorClassifier gc: geometryClassifiers) {
 			ContactGenerator g = gc.createGeneratorFromGeometries(pair.getFirst(), pair.getSecond());
 			
@@ -610,9 +375,7 @@ public final class Engine implements Model {
 				return g;
 			}
 		}
-		
 		return null;
-
 	}
 
 	@Override
@@ -649,7 +412,4 @@ public final class Engine implements Model {
 	public Solver getSolver() {
 		return solver;
 	}
-	
-
-	
 }

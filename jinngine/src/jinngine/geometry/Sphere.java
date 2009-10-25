@@ -10,9 +10,6 @@ import jinngine.physics.Body;
 
 /**
  * Sphere geometry implementation.
- * 
- * @author mo
- *
  */
 public class Sphere implements SupportMap3, Geometry, Material {
 
@@ -154,5 +151,10 @@ public class Sphere implements SupportMap3, Geometry, Material {
 	public double getMass() {
 		return mass;
 	}
+	
+	public void setMass(double mass) {
+		this.mass = mass;
+	}
+
 
 }

@@ -326,7 +326,7 @@ public class Matrix3 {
     C.a31 = t31; C.a32 = t32; C.a33 = t33;
   }
   
-  // rT = (vT)A   NOTE that the result of this is actualy a transposed vector!! 
+  // rT = (vT)A   NOTE that the result of this is actually a transposed vector!! 
   public final static Vector3 transposeVectorAndMultiply( final Vector3 v, final Matrix3 A, final Vector3 r ){
     //            A  | a11 a12 a13
     //               | a21 a22 a23

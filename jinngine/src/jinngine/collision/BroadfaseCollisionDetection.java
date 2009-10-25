@@ -1,8 +1,6 @@
 package jinngine.collision;
 
-import java.util.List;
 import java.util.Set;
-
 import jinngine.geometry.*;
 import jinngine.util.Pair;
 

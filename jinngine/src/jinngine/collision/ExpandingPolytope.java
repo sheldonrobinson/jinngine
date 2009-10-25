@@ -34,7 +34,7 @@ public class ExpandingPolytope {
 			this.p2 = p2;
 			this.p3 = p3;
 
-			//setup linear system of equations to find closest point to the origin
+			// setup linear system of equations to find closest point to the origin
 			Matrix3 M = new Matrix3(   1,                    1,                    1,
 					p1.dot(p2.minus(p1)), p2.dot(p2.minus(p1)), p3.dot(p2.minus(p1)),
 					p1.dot(p3.minus(p1)), p2.dot(p3.minus(p1)), p3.dot(p3.minus(p1)) );

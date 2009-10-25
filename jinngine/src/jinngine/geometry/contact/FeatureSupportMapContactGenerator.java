@@ -15,7 +15,8 @@ import jinngine.geometry.*;
  * a contact normal, penetrating or non-penetrating. In either case, the normal direction is used with the feature support
  * mappings two obtaining two faces that are subsequently intersected against each other in the contact plane, to form 
  * a contact region. See SupportMap3 for details on the feature support mapping. Currently the intersection is done in a
- * simple way that naively intersects all edges and point-face intersections, which can be inefficient for large features.  
+ * simple way that naively intersects all edges and point-face intersections, which can be inefficient for large features. 
+ * Also note, that the implementation of these intersections is quite ugly...  
  * @author mo
  *
  */
@@ -268,46 +269,6 @@ public class FeatureSupportMapContactGenerator implements ContactGenerator {
 				}
 
 				if (inside) {
-//					//generate point
-//					ContactPoint cp = new ContactPoint();
-//					cp.restitution = restitution;
-//					cp.friction = friction;
-//
-//					//determine the true distance to the other face along the contact normal
-//
-//					// ((d t + p1) - pp) . facenormal = 0
-//					// d t fn + p1 fn - pp fn =  0
-//					// d t fn = pp fn - p1 fn
-//					// t = (pp-p1).fn / d.fn
-//										 
-//					double d = pp.minus(p1).dot(facenormal) / direction.dot(facenormal);
-//					cp.distance = d;
-//					//System.out.println("point face contact distance=" + cp.distance);
-//
-//					
-//					//if (penetrating) {
-//					if (d<0) { //(penetrating contact point)
-//						cp.depth = (shell-d);
-//
-//						cp.midpoint.assign(S.multiply(p1tp).add(midpoint));
-//						cp.normal.assign(direction);
-////						cp.penetrating = penetrating;
-//						contacts.add(cp);
-//					} else {
-//						cp.depth = shell-d;
-//
-//						if (cp.distance < envelope) {
-//
-//							cp.midpoint.assign(S.multiply(p1tp).add(midpoint));
-//							cp.normal.assign(direction);
-////							cp.penetrating = penetrating;
-//							contacts.add(cp);
-//						} 
-//					}
-
-				
-				
-				
 					//generate point
 					ContactPoint cp = new ContactPoint();
 					cp.restitution = restitution;

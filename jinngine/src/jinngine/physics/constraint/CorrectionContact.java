@@ -15,6 +15,8 @@ public final class CorrectionContact implements ContactConstraint {
 	private final List<ContactGenerator> generators = new ArrayList<ContactGenerator>();
 	private final Map<ContactGenerator,List<contactpoint>> contacts = new HashMap<ContactGenerator,List<contactpoint>>();
 	
+	private final double nfactor = 1;	
+	private final double cfactor = 1;
 	
 	private class contactpoint {
 		boolean sticking = false;
@@ -87,14 +89,14 @@ public final class CorrectionContact implements ContactConstraint {
 					double lim = co.t1.coupledMax.lambda*co.t1.coupledMax.mu;
 					double force = co.t1.lambda;
 					
-					if ( lim-Math.abs(force) < 1e-9 &&  Math.abs(prev) > 1e-4  ) {
+					if ( lim-Math.abs(force) < 1e-10 &&  Math.abs(prev) > 1e-3  ) {
 						co.sticking = false;
 					} else {
 						if (!co.sticking) {
-						co.sticking = true;
-						co.point.assign(cp.midpoint);
-						co.pa.assign(cp.pa);
-						co.pb.assign(cp.pb);
+							co.sticking = true;
+							co.point.assign(cp.midpoint);
+							co.pa.assign(cp.pa);
+							co.pb.assign(cp.pb);
 						}
 					}
 					
@@ -266,7 +268,7 @@ public final class CorrectionContact implements ContactConstraint {
 				J1,J2,J3,J4,
 				lowerNormalLimit,Double.POSITIVE_INFINITY,
 				null, 
-				unf-uni + Fext*dt + correction, 0 );
+				unf-uni + Fext*dt + correction*nfactor, 0 );
 		
 		//set the correct friction setting for this contact
 		c.mu = cp.friction;
@@ -291,7 +293,7 @@ public final class CorrectionContact implements ContactConstraint {
 				r2.cross(t2).multiply(1),
 				Double.NEGATIVE_INFINITY,
 				Double.POSITIVE_INFINITY,
-				c, ut1f-ut1i + t2Fext*dt + dt1, dt1
+				c, ut1f-ut1i + t2Fext*dt + dt1*cfactor, dt1
 
 		);
 		
@@ -319,7 +321,7 @@ public final class CorrectionContact implements ContactConstraint {
 				r2.cross(t3).multiply(1),
 				Double.NEGATIVE_INFINITY,
 				Double.POSITIVE_INFINITY,
-				c, ut2f-ut2i + t3Fext*dt +dt2, dt2
+				c, ut2f-ut2i + t3Fext*dt +dt2 * cfactor, dt2
 		);
 
 		//book-keep constraints in each body
