@@ -103,7 +103,7 @@ public class HeapTest extends TestCase {
 		//create some random numbers and insert them into the heap and
 		//the list
 		int n = 2048;
-		Random r = new Random(0); //note fixed seed
+		Random r = new Random(6); //note fixed seed
 		List<Double> l = new ArrayList<Double>();
 		for (int i=0;i<n; i++) {
 			Double number = r.nextDouble()-0.5;
