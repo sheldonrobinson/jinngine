@@ -2,38 +2,38 @@ package jinngine.physics.force;
 import jinngine.math.Vector3;
 import jinngine.physics.Body;
 
-
 /**
- * A gravity force is a force acting upon the center of mass of a body, and is proportional to the total mass 
- * of the body. The force is pointing in the negative y direction. 
- * @author mo
+ * A gravity force is a force acting upon the centre of mass of a body, and is proportional to the total mass 
+ * of the body. The force is pointing in the negative y direction, unless another direction is specified.
  */
-public class GravityForce implements Force {
+public final class GravityForce implements Force {
 	private final Body a;
-	private final double factor;
 	private final Vector3 d = new Vector3();
 
+	/**
+	 * Create a gravity force, accelerating the body 9.8m/s^2. The direction of the force is along the
+	 * negative y-axis.
+	 * @param a Body on which to act
+	 */
 	public GravityForce(Body a) {
 		this.a = a;
-		this.factor = 1;
+		//this.factor = factor;
 		this.d.assign(new Vector3(0,-1,0));
 	}
 
-	public GravityForce(Body a, double factor) {
+	/**
+	 * Create a gravity force, accelerating the body 9.8m/s^2 in the direction d
+	 * @param a Body on which to act
+	 * @param d Direction of gravity force.
+	 */
+	public GravityForce(Body a, Vector3 d)  {
 		this.a = a;
-		this.factor = factor;
-		this.d.assign(new Vector3(0,-1,0));
-	}
-
-	public GravityForce(Body a, Vector3 d, double factor)  {
-		this.a = a;
-		this.factor = factor;
+		//this.factor = factor;
 		this.d.assign(d);
 	}
 
-	
-	public void apply() {
-		a.applyForce(Vector3.zero, d.multiply(9.8*factor*a.state.M) );		
+	@Override
+	public final void apply() {
+		a.applyForce(Vector3.zero, d.multiply(9.8*a.state.M) );		
 	}
-
 }
