@@ -86,7 +86,7 @@ public class HeapTest extends TestCase {
 	/**
 	 * min-heap test doing heap-sort. A list of random numbers is 
 	 * created and sorted. The sorted list is compared to the result of 
-	 * sorting using Arrays.sort() method.
+	 * sorting using Collections.sort() method.
 	 */
 	public void testHeapSort() {
 		//dummy comparator for Doubles

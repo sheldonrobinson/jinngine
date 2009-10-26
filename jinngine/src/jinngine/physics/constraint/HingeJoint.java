@@ -10,8 +10,6 @@ import jinngine.physics.solver.*;
 /**
  * Implementation of a hinge joint. This type of joint leaves only one degree of freedom left for the involved bodies, 
  * where they can have angular motion along some axis.
- * @author mo
- *
  */
 public final class HingeJoint implements Constraint {
 	// members
@@ -77,7 +75,7 @@ public final class HingeJoint implements Constraint {
 		t3i = v3.minus( t1.multiply(t1.dot(v3)).minus( t2i.multiply(t2i.dot(v3)) )).normalize();
 		
 		
-		//create the controller
+		// create the controller
 		this.controler = new JointAxisController() {
 			@Override
 			public double getPosition() {
@@ -354,7 +352,6 @@ public final class HingeJoint implements Constraint {
 		iterator.add(angular1);
 		iterator.add(angular2);
 		iterator.add(angular3);
-		
 	}
 
 

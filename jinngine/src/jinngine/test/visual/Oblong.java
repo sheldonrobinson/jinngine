@@ -43,7 +43,7 @@ public class Oblong implements Testcase {
 //		seesaw.setMass(10);
 		seesaw.setPosition(new Vector3(0,-2,0));
 		model.addBody(seesaw);
-		model.addForce( new GravityForce(seesaw,1.0));
+		model.addForce( new GravityForce(seesaw));
 		
 		Body table = new Body(new Box(50,1+40,50));
 //		table.getBoxGeometry().setEnvelope(2);

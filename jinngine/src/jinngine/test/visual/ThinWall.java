@@ -49,8 +49,7 @@ import jinngine.physics.force.*;
 					b.setPosition(new Vector3(-40+i*9 +(j%2)*4,-9+j*5 ,0));
 //					b.getBoxGeometry().setEnvelope(1+7*dt);
 					model.addBody(b);
-					model.addForce( new GravityForce(b,1.0));
-					model.addForce( new LinearDragForce(b,0.125));
+					model.addForce( new GravityForce(b));
 					boxes.add(b);
 				}
 			}

@@ -45,14 +45,14 @@ public class Seesaw implements Testcase {
 		//cube.setAngularVelocity(new Vector3(0.1,0,0.1));
 		cube.setPosition(new Vector3(0,-8,0));
 		model.addBody(cube);
-		model.addForce( new GravityForce(cube,1.0));
+		model.addForce( new GravityForce(cube));
 		
 		Body seesaw = new Body(new Box(30,2,8));
 		//seesaw.getBoxGeometry().setEnvelope(1);
 		//seesaw.setMass(10);
 		seesaw.setPosition(new Vector3(0,-2,0));
 		model.addBody(seesaw);
-		model.addForce( new GravityForce(seesaw,1.0));
+		model.addForce( new GravityForce(seesaw));
 		
 		model.addConstraint(new Pair<Body>(cube,seesaw), new HingeJoint(cube,seesaw, new Vector3(0,-6,0), new Vector3(0,0,1)) );
 		
@@ -60,20 +60,20 @@ public class Seesaw implements Testcase {
 		//weight.getBoxGeometry().setEnvelope(1);
 		weight.setPosition(new Vector3(10,6,0));
 		model.addBody(weight);
-		model.addForce( new GravityForce(weight,1.0));
+		model.addForce( new GravityForce(weight));
 		
 		Body weight3 = new Body(new Box(4,4,4));		
 		//weight3.getBoxGeometry().setEnvelope(1);
 		weight3.setPosition(new Vector3(7,11,0));
 		model.addBody(weight3);
-		model.addForce( new GravityForce(weight3,1.0));
+		model.addForce( new GravityForce(weight3));
 		
 		Body weight2 = new Body( new Box(4,4,4) );
 		//weight2.getBoxGeometry().setEnvelope(1);
 		//weight2.setMass(1.5);
 		weight2.setPosition(new Vector3(-10,10,0));
 		model.addBody(weight2);
-		model.addForce( new GravityForce(weight2,1.0));	
+		model.addForce( new GravityForce(weight2));	
 
 		Body table = new Body(new Box(50,1+40,50));
 		//table.getBoxGeometry().setEnvelope(2);

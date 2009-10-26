@@ -10,10 +10,9 @@ import jinngine.physics.Body;
  * <p>
  * F = -k e x - v d 
  * <p>
- * where x is the vector pointing from pa to pb, e is the deviation from the equilibrium length,
+ * where x is the unit vector pointing from pa to pb, e is the deviation from the equilibrium length,
  *  k is the force coefficient, v is the velocity of the spring ( v = u x ) and d is the damping coefficient.  
  *
- * @author mo
  */
 public class SpringForce implements Force {
 	private final Body a;
@@ -110,17 +109,10 @@ public class SpringForce implements Force {
 		//Forces
 		Vector3 Fspring = x.minus(n.multiply(equilibrium)).multiply(this.force); //spring force
 		Vector3 Fdamper = n.multiply( (-upax+upbx) * this.damper  ); //damping force
-
-//		Vector3 Fspring = x.minus(n.multiply(equilibrilium)).multiply(0.5); //spring force
-//		Vector3 Fdamper = n.multiply( (-upax+upbx) * 0   ); //damping force
-
 		Vector3 Ftotal = Fspring.add( Fdamper );
-		
-		//System.out.println("damper relative velocity " + -(upax-upbx) ); 
-		
+				
 		a.applyForce( pra, Ftotal.multiply(1) );
 		b.applyForce( prb, Ftotal.multiply(-1));
-		//a_cm = a_cm.add((new Vector3(0,-53,0)).multiply(1/this.mass));
 	}
 
 }

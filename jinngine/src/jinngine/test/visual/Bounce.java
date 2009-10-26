@@ -28,7 +28,7 @@ public class Bounce implements Testcase {
 		Body cube = new Body(new Box(6,6,6));
 		cube.setAngularVelocity(new Vector3(0.1,0,0.1));
 		model.addBody(cube);
-		model.addForce( new GravityForce(cube,1.0));
+		model.addForce( new GravityForce(cube));
 
 		Body table = new Body(new Box(50,1,50));
 		table.setPosition( new Vector3(0,-17,0));
@@ -61,7 +61,7 @@ public class Bounce implements Testcase {
 		Body cube = new Body(new Box(24,24,5));
 		cube.setAngularVelocity(new Vector3(0.1,0,0.1));
 		model.addBody(cube);
-		model.addForce( new GravityForce(cube,1.0));
+		model.addForce( new GravityForce(cube));
 
 		Body table = new Body(new Box(50,1,50));
 		table.setPosition( new Vector3(0,-27,0));

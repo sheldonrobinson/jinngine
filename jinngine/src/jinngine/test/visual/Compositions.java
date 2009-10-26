@@ -63,7 +63,7 @@ public class Compositions implements Testcase {
 		Body b = new Body(spheres.iterator());
 		b.setPosition(new Vector3(0,32,0));
 		model.addBody(b);
-		model.addForce( new GravityForce(b,1.0));
+		model.addForce( new GravityForce(b));
 		//model.addForce( new LinearDragForce(b,5.5));
 		bodies.add(b);
 

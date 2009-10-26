@@ -52,7 +52,7 @@ import jinngine.physics.force.*;
 						//b.setMass(5);	
 						//b.getGeometries().next().setEnvelope(1);
 						model.addBody(b);
-						model.addForce( new GravityForce(b,1.0));
+						model.addForce( new GravityForce(b));
 						//model.addForce( new LinearDragForce(b,5.5));
 						boxes.add(b);
 					}
