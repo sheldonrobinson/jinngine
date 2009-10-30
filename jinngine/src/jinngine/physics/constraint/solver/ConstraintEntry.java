@@ -21,7 +21,7 @@ import jinngine.math.Vector3;
  */
 public class ConstraintEntry  {
 
-	public Constraint owner;
+	//public Constraint owner;
 	public Body body1,body2;
 	public final Vector3 b1 = new Vector3(),b2= new Vector3(),b3= new Vector3(),b4= new Vector3();
 	public final Vector3 j1= new Vector3(),j2= new Vector3(),j3= new Vector3(),j4= new Vector3();
@@ -41,7 +41,6 @@ public class ConstraintEntry  {
 	
 	public ConstraintEntry(Constraint owner, final Body body1, final Body body2, final Vector3 b1, final Vector3 b2, final Vector3 b3, final Vector3 b4, final Vector3 j1, final Vector3 j2, final Vector3 j3, final Vector3 j4, double lambdaMin, double lambdaMax, ConstraintEntry coupledMax, double b) {
 		super();
-		this.owner = owner;
 		this.body1 = body1;
 		this.body2 = body2;
 		this.b1.assign(b1);
@@ -60,7 +59,6 @@ public class ConstraintEntry  {
 	}
 	
 	public final ConstraintEntry assign(ConstraintEntry constraint) {
-		owner = constraint.owner;
 		body1 = constraint.body1;
 		body2 = constraint.body2;
 		j1.assign(constraint.j1);
@@ -87,7 +85,6 @@ public class ConstraintEntry  {
 			Vector3 b4, Vector3 j1, Vector3 j2, Vector3 j3,
 			Vector3 j4, double lambdaMin, double lambdaMax, ConstraintEntry coupledMax, double b, double correction) {
 		
-		this.owner = owner;
 		this.body1 = body1;
 		this.body2 = body2;
 		this.b1.assign(b1);

@@ -94,8 +94,8 @@ public final class Engine implements Model {
 						ContactGenerator generator = getContactGenerator(pair);
 						
 						//create a new contact constraint
-//						constraint = new FrictionalContactConstraint(a,b,generator);
-						constraint = new CorrectionContact(a,b,generator);
+						constraint = new FrictionalContactConstraint(a,b,generator);
+//						constraint = new CorrectionContact(a,b,generator);
 								
 						//insert into data structures
 						contactConstraints.put(bpair, constraint);
@@ -157,7 +157,7 @@ public final class Engine implements Model {
 
 	//Create a linear complementarity problem solver
 	private Solver solver = new ProjectedGaussSeidel();
-	//private Solver solver = new FisherNewtonCG();
+	//private Solver solver = new FischerNewtonConjugateGradients();
 	
 	//time-step size
 	public double dt = 0.01; 

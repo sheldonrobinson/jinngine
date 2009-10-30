@@ -49,9 +49,9 @@ public class FischerNewtonConjugateGradients implements Solver {
 		return Math.sqrt(a*a+b*b)-(a+b);
 	}
 
-	private int linemax =1;
-	private int imax = 1;
-	private int cgmax = 1;
+	private int linemax =15;
+	private int imax = 15;
+	private int cgmax = 15;
 	private double damper =0.00;
 	private double frictiondamp = 0;
 	private double epsilon = 1e-5;
@@ -258,7 +258,7 @@ public class FischerNewtonConjugateGradients implements Solver {
 				j = j+1;
 			}
 
-			
+			//linesearch
 			k=0; double step = 1;
 			double oldsquarederror = squarederror;
 			//double olderror = error;
@@ -296,12 +296,11 @@ public class FischerNewtonConjugateGradients implements Solver {
 				
 				//termination
 				if (0.5*squarederror <= 0.5*oldsquarederror + step*0.01*(-oldsquarederror) ) {
-//					System.out.println("k="+k);
+					//System.out.println("k="+k);
 					break;
 				}
 				
 				if (k>=linemax) {
-//					System.out.println("k="+k);
 					break;
 				}
 				
@@ -313,6 +312,8 @@ public class FischerNewtonConjugateGradients implements Solver {
 				}
 			} // linesearch
 
+			System.out.println("k="+k);
+
 
 			if ( error < besterror) {
 				besterror = error;
@@ -323,7 +324,7 @@ public class FischerNewtonConjugateGradients implements Solver {
 				}
 			}
 
-
+			System.out.println("e="+error);
 
 			i=i+1;
 		} // Newton iterations
