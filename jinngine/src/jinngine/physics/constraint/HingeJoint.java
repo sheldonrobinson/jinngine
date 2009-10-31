@@ -6,6 +6,7 @@ import jinngine.math.Matrix3;
 import jinngine.math.Vector3;
 import jinngine.physics.Body;
 import jinngine.physics.solver.*;
+import jinngine.physics.solver.Solver.constraint;
 
 /**
  * Implementation of a hinge joint. This type of joint leaves only one degree of freedom left for the involved bodies, 
@@ -27,12 +28,12 @@ public final class HingeJoint implements Constraint {
 	private final double shell = 0.05;
 	
 	// constraint entries
-	private ConstraintEntry linear1 = new ConstraintEntry();
-	private ConstraintEntry linear2 = new ConstraintEntry();
-	private ConstraintEntry linear3 = new ConstraintEntry();
-	private ConstraintEntry angular1 = new ConstraintEntry();
-	private ConstraintEntry angular2 = new ConstraintEntry();
-	private ConstraintEntry angular3 = new ConstraintEntry();
+	private constraint linear1 = new constraint();
+	private constraint linear2 = new constraint();
+	private constraint linear3 = new constraint();
+	private constraint angular1 = new constraint();
+	private constraint angular2 = new constraint();
+	private constraint angular3 = new constraint();
 		
 	/**
 	 * Get the axis controller for the hinge joint. Use this controller to adjust joint limits, motor and friction
@@ -107,7 +108,7 @@ public final class HingeJoint implements Constraint {
 		
 	}
 
-	public final void applyConstraints(ListIterator<ConstraintEntry> iterator, double dt) {
+	public final void applyConstraints(ListIterator<constraint> iterator, double dt) {
 		//transform points
 		Vector3 ri = Matrix3.multiply(b1.state.rotation, pi, new Vector3());
 		Vector3 rj = Matrix3.multiply(b2.state.rotation, pj, new Vector3());
@@ -159,14 +160,13 @@ public final class HingeJoint implements Constraint {
 //				u.a1 );
 		
 		linear1.assign( 
-				null, 
-				b1, b2, 
-				Bi.column(0), Bangi.column(0), Bj.column(0), Bangj.column(0), 
-				Ji.row(0),    Jangi.row(0),    Jj.row(0),    Jangj.row(0),
-				Double.NEGATIVE_INFINITY,
+				b1, 
+				b2, Bi.column(0), 
+				Bangi.column(0), Bj.column(0), Bangj.column(0), Ji.row(0), 
+				Jangi.row(0),    Jj.row(0),    Jangj.row(0),    Double.NEGATIVE_INFINITY,
 				Double.POSITIVE_INFINITY,
-				null, 
-				u.x, 0 );
+				null,
+				u.x );
 
 		
 //		iterator.next().assign( 
@@ -180,14 +180,13 @@ public final class HingeJoint implements Constraint {
 //				u.a2 );
 		
 		linear2.assign( 
-				null, 
-				b1, b2, 
-				Bi.column(1), Bangi.column(1), Bj.column(1), Bangj.column(1), 
-				Ji.row(1),    Jangi.row(1),    Jj.row(1),    Jangj.row(1),
-				Double.NEGATIVE_INFINITY,
+				b1, 
+				b2, Bi.column(1), 
+				Bangi.column(1), Bj.column(1), Bangj.column(1), Ji.row(1), 
+				Jangi.row(1),    Jj.row(1),    Jangj.row(1),    Double.NEGATIVE_INFINITY,
 				Double.POSITIVE_INFINITY,
-				null, 
-				u.y, 0 );
+				null,
+				u.y );
 
 //		iterator.next().assign( 
 //				null, 
@@ -200,14 +199,13 @@ public final class HingeJoint implements Constraint {
 //				u.a3 );	
 
 		linear3.assign( 
-				null, 
-				b1, b2, 
-				Bi.column(2), Bangi.column(2), Bj.column(2), Bangj.column(2), 
-				Ji.row(2),    Jangi.row(2),    Jj.row(2),    Jangj.row(2),
-				Double.NEGATIVE_INFINITY,
+				b1, 
+				b2, Bi.column(2), 
+				Bangi.column(2), Bj.column(2), Bangj.column(2), Ji.row(2), 
+				Jangi.row(2),    Jj.row(2),    Jangj.row(2),    Double.NEGATIVE_INFINITY,
 				Double.POSITIVE_INFINITY,
-				null, 
-				u.z, 0 );	
+				null,
+				u.z );	
 
 	
 		//handle the constraint modelling joint limits and motor
@@ -288,14 +286,13 @@ public final class HingeJoint implements Constraint {
 //				bvalue + Fextaxis*dt);
 
 		angular1.assign( 
-				null, 
-				b1, b2, 
-				new Vector3(), b1.state.Iinverse.multiply(axis), new Vector3(), b2.state.Iinverse.multiply(axis.multiply(-1)), 
-				new Vector3(), axis,                             new Vector3(), axis.multiply(-1),
-				low,
+				b1, 
+				b2, new Vector3(), 
+				b1.state.Iinverse.multiply(axis), new Vector3(), b2.state.Iinverse.multiply(axis.multiply(-1)), new Vector3(), 
+				axis, new Vector3(),                             axis.multiply(-1), low,
 				high,
-				null, 
-				bvalue + Fextaxis*dt, 0);
+				null,
+				bvalue + Fextaxis*dt);
 
 		
 		//keep bodies aligned to the axis
@@ -311,14 +308,13 @@ public final class HingeJoint implements Constraint {
 //				tt2i.dot(b1.state.omegaCm)-tt2i.dot(b2.state.omegaCm) - Kcor*tt2i.dot(nerror)*(1/dt) + Fexttt2i*dt );	
 
 		angular2.assign( 
-				null, 
-				b1, b2, 
-				new Vector3(), b1.state.Iinverse.multiply(tt2i), new Vector3(), b2.state.Iinverse.multiply(tt2i.multiply(-1)), 
-				new Vector3(), tt2i,                             new Vector3(), tt2i.multiply(-1),
-				Double.NEGATIVE_INFINITY,
+				b1, 
+				b2, new Vector3(), 
+				b1.state.Iinverse.multiply(tt2i), new Vector3(), b2.state.Iinverse.multiply(tt2i.multiply(-1)), new Vector3(), 
+				tt2i, new Vector3(),                             tt2i.multiply(-1), Double.NEGATIVE_INFINITY,
 				Double.POSITIVE_INFINITY,
-				null, 
-				tt2i.dot(b1.state.omegaCm)-tt2i.dot(b2.state.omegaCm) - Kcor*tt2i.dot(nerror)*(1/dt) + Fexttt2i*dt, 0 );	
+				null,
+				tt2i.dot(b1.state.omegaCm)-tt2i.dot(b2.state.omegaCm) - Kcor*tt2i.dot(nerror)*(1/dt) + Fexttt2i*dt );	
 
 
 		
@@ -336,14 +332,13 @@ public final class HingeJoint implements Constraint {
 
 
 		angular3.assign( 
-				null, 
-				b1, b2, 
-				new Vector3(), b1.state.Iinverse.multiply(tt3i), new Vector3(), b2.state.Iinverse.multiply(tt3i.multiply(-1)), 
-				new Vector3(), tt3i,                             new Vector3(), tt3i.multiply(-1),
-				Double.NEGATIVE_INFINITY,
+				b1, 
+				b2, new Vector3(), 
+				b1.state.Iinverse.multiply(tt3i), new Vector3(), b2.state.Iinverse.multiply(tt3i.multiply(-1)), new Vector3(), 
+				tt3i, new Vector3(),                             tt3i.multiply(-1), Double.NEGATIVE_INFINITY,
 				Double.POSITIVE_INFINITY,
 				null,
-				tt3i.dot(b1.state.omegaCm)-tt3i.dot(b2.state.omegaCm) - Kcor*tt3i.dot(nerror)*(1/dt) + Fexttt3i*dt, 0);		
+				tt3i.dot(b1.state.omegaCm)-tt3i.dot(b2.state.omegaCm) - Kcor*tt3i.dot(nerror)*(1/dt) + Fexttt3i*dt);		
 
 
 		iterator.add(linear1);

@@ -10,6 +10,7 @@ import jinngine.math.Quaternion;
 import jinngine.math.Transforms;
 import jinngine.math.Vector3;
 import jinngine.physics.solver.*;
+import jinngine.physics.solver.Solver.constraint;
 
 /**
  * Abstract class representing a rigid body. This class implements most functionality needed to handle bodies 
@@ -21,7 +22,7 @@ public final class Body {
 	//auxiliary
 	public final Vector3               deltaVCm = new Vector3(0,0,0);
 	public final Vector3               deltaOmegaCm = new Vector3(0,0,0);
-	public final List<ConstraintEntry> constraints = new ArrayList<ConstraintEntry>();
+	public final List<constraint> constraints = new ArrayList<constraint>();
 	public final Vector3               auxDeltav = new Vector3();
 	public final Vector3               auxDeltaOmega = new Vector3();
 	public final Vector3               auxDeltav2 = new Vector3();

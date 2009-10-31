@@ -7,6 +7,7 @@ import jinngine.math.Matrix3;
 import jinngine.math.Vector3;
 import jinngine.physics.Body;
 import jinngine.physics.solver.*;
+import jinngine.physics.solver.Solver.constraint;
 import jinngine.util.GramSchmidt;
 
 
@@ -23,9 +24,9 @@ public final class CorrectionContact implements ContactConstraint {
 		Vector3 point = new Vector3();
 		Vector3 pa = new Vector3();
 		Vector3 pb = new Vector3();		
-		ConstraintEntry n = new ConstraintEntry();
-		ConstraintEntry t1 = new ConstraintEntry();
-		ConstraintEntry t2 = new ConstraintEntry();
+		constraint n = new constraint();
+		constraint t1 = new constraint();
+		constraint t2 = new constraint();
 	}
 	
 	
@@ -52,7 +53,7 @@ public final class CorrectionContact implements ContactConstraint {
 	}
 	
 	@Override
-	public final void applyConstraints(ListIterator<ConstraintEntry> constraintIterator, double dt) {
+	public final void applyConstraints(ListIterator<constraint> constraintIterator, double dt) {
 //		System.out.println("------");
 
 		//use ContactGenerators to create new contactpoints
@@ -86,7 +87,7 @@ public final class CorrectionContact implements ContactConstraint {
 					
 //					System.out.println("t1:prev v="+prev+ "  force="+co.t1.lambda+" ["+(co.t1.coupledMax.lambda*co.t1.coupledMax.mu)+"]");
 
-					double lim = co.t1.coupledMax.lambda*co.t1.coupledMax.mu;
+					double lim = co.t1.coupling.lambda*co.t1.coupling.mu;
 					double force = co.t1.lambda;
 					
 					if ( lim-Math.abs(force) < 1e-10 &&  Math.abs(prev) > 1e-3  ) {
@@ -161,7 +162,7 @@ public final class CorrectionContact implements ContactConstraint {
 	public final void createFrictionalContactConstraint( 
 			ContactGenerator.ContactPoint cp,
 			Body b1, Body b2, Vector3 p, Vector3 n, double depth, double dt, contactpoint co,
-			ListIterator<ConstraintEntry> outConstraints 
+			ListIterator<constraint> outConstraints 
 	) {
 
 		//Use a gram-schmidt process to create a orthonormal basis for the contact point ( normal and tangential directions)
@@ -262,13 +263,12 @@ public final class CorrectionContact implements ContactConstraint {
 		
 
 		//normal
-		ConstraintEntry c = co.n;
-		c.assign(this,b1,b2,
-				B1,B2,B3,B4,
-				J1,J2,J3,J4,
-				lowerNormalLimit,Double.POSITIVE_INFINITY,
-				null, 
-				unf-uni + Fext*dt + correction*nfactor, 0 );
+		constraint c = co.n;
+		c.assign(b1,b2,B1,
+				B2,B3,B4,J1,
+				J2,J3,J4,lowerNormalLimit,
+				Double.POSITIVE_INFINITY,null,
+				unf-uni + Fext*dt + correction*nfactor );
 		
 		//set the correct friction setting for this contact
 		c.mu = cp.friction;
@@ -280,20 +280,20 @@ public final class CorrectionContact implements ContactConstraint {
 		Vector3 t2B3 = t2.multiply(1/m2);				
 		Vector3 t2B4 = I2.multiply(r2.cross(t2));
 		double t2Fext = t2B1.dot(b1.state.FCm) + t2B2.dot(b1.state.tauCm) + t2B3.dot(b2.state.FCm) + t2B4.dot(b2.state.tauCm);
-		ConstraintEntry c2 = co.t1;
-		c2.assign(null,b1,
-				b2,
+		constraint c2 = co.t1;
+		c2.assign(b1,b2,
 				t2B1,
 				t2B2,
-				t2B3,				
-				t2B4,
+				t2B3,
+				t2B4,				
 				t2.multiply(-1),
 				r1.cross(t2).multiply(-1),
 				t2,
 				r2.cross(t2).multiply(1),
 				Double.NEGATIVE_INFINITY,
 				Double.POSITIVE_INFINITY,
-				c, ut1f-ut1i + t2Fext*dt + dt1*cfactor, dt1
+				c,
+				ut1f-ut1i + t2Fext*dt + dt1*cfactor
 
 		);
 		
@@ -308,9 +308,8 @@ public final class CorrectionContact implements ContactConstraint {
 		Vector3 t3B3 = t3.multiply(1/m2);				
 		Vector3 t3B4 = I2.multiply(r2.cross(t3));
 		double t3Fext = t3B1.dot(b1.state.FCm) + t3B2.dot(b1.state.tauCm) + t3B3.dot(b2.state.FCm) + t3B4.dot(b2.state.tauCm);
-		ConstraintEntry c3 = co.t2;
-		c3.assign(null,b1,
-				b2,
+		constraint c3 = co.t2;
+		c3.assign(b1,b2,
 				t3B1,
 				t3B2,
 				t3B3,
@@ -321,7 +320,8 @@ public final class CorrectionContact implements ContactConstraint {
 				r2.cross(t3).multiply(1),
 				Double.NEGATIVE_INFINITY,
 				Double.POSITIVE_INFINITY,
-				c, ut2f-ut2i + t3Fext*dt +dt2 * cfactor, dt2
+				c,
+				ut2f-ut2i + t3Fext*dt +dt2 * cfactor
 		);
 
 		//book-keep constraints in each body

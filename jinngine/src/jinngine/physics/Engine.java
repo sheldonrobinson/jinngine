@@ -2,6 +2,7 @@ package jinngine.physics;
 import java.util.*;
 
 import jinngine.physics.solver.*;
+import jinngine.physics.solver.Solver.constraint;
 import jinngine.geometry.contact.*;
 import jinngine.collision.*;
 import jinngine.geometry.*;
@@ -26,7 +27,7 @@ public final class Engine implements Model {
 	private final List<ContactGeneratorClassifier> geometryClassifiers = new ArrayList<ContactGeneratorClassifier>();
 
 	// Constraints, joints and forces
-	private final List<ConstraintEntry> constraintList = new LinkedList<ConstraintEntry>();  
+	private final List<constraint> constraintList = new LinkedList<constraint>();  
 	private final List<Force> forces = new LinkedList<Force>(); 
 
 
@@ -74,16 +75,16 @@ public final class Engine implements Model {
 				//ignore overlaps of fixed bodies
 				if ( a.isFixed() && b.isFixed() ) return;
 
-				ContactConstraint constraint;
+				ContactConstraint contactConstraint;
 
 				//a contact constraint already exists 
 				if (contactConstraints.containsKey(bpair)) {
-					constraint = contactConstraints.get(bpair);
+					contactConstraint = contactConstraints.get(bpair);
 					
 					//add a new contact generator to this contact constraint
 					ContactGenerator generator = getContactGenerator(pair);
 					contactGenerators.put(pair, generator);
-					constraint.addGenerator(generator);
+					contactConstraint.addGenerator(generator);
 
 				//no contact constraint is present
 				} else {					
@@ -94,13 +95,13 @@ public final class Engine implements Model {
 						ContactGenerator generator = getContactGenerator(pair);
 						
 						//create a new contact constraint
-						constraint = new FrictionalContactConstraint(a,b,generator);
+						contactConstraint = new FrictionalContactConstraint(a,b,generator);
 //						constraint = new CorrectionContact(a,b,generator);
 								
 						//insert into data structures
-						contactConstraints.put(bpair, constraint);
+						contactConstraints.put(bpair, contactConstraint);
 						contactGenerators.put(pair, generator);
-						contactGraph.addEdge( bpair, constraint);
+						contactGraph.addEdge( bpair, contactConstraint);
 					}
 				}
 			}
@@ -158,6 +159,7 @@ public final class Engine implements Model {
 	//Create a linear complementarity problem solver
 	private Solver solver = new ProjectedGaussSeidel();
 	//private Solver solver = new FischerNewtonConjugateGradients();
+	//private Solver solver = new ConjugateGradients();
 	
 	//time-step size
 	public double dt = 0.01; 
@@ -243,7 +245,7 @@ public final class Engine implements Model {
 		// Create a special iterator to be used with joints. All joints use this iterator to 
 		// insert constraint entries into the constraintList
 		constraintList.clear();
-		ListIterator<ConstraintEntry> constraintIterator = constraintList.listIterator();
+		ListIterator<constraint> constraintIterator = constraintList.listIterator();
 		
 		// Iterate through groups/components in the contact graph
 		Iterator<ComponentGraph.Component> components = contactGraph.getComponents();		

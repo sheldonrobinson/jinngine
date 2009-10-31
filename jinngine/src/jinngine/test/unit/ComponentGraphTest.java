@@ -31,7 +31,7 @@ public class ComponentGraphTest extends TestCase {
 		Object n2 = new Object();
 		Object e1 = new Object();
 		
-		//insert into graph
+		//insert into graph egde (n1->n2)
 		graph.addEdge(new Pair<Object>(n1,n2), e1);
 		
 		//we expect one component containing n1 and n2
@@ -45,10 +45,10 @@ public class ComponentGraphTest extends TestCase {
 		Object na = nodes.next();
 		Object nb = nodes.next();
 		
-		//elements as expected
+		//elements as expected (we can't know their order)
 		assertTrue ( (na==n1&&nb==n2) || (na==n2&&nb==n1) );
 		
-		//number of components as expected
+		//number of components as expected (1) 
 		assertTrue( graph.getNumberOfComponents() == 1);
 		
 		//remove the edge
@@ -152,7 +152,7 @@ public class ComponentGraphTest extends TestCase {
 		final Object n5 = new Object();
 		final Object d6 = new Object();
 
-		
+		//create a node classifier, that recognises d6 as a delimiter node
 		NodeClassifier<Object> nc = new NodeClassifier<Object>() {
 			@Override
 			public boolean isDelimitor(Object node) {

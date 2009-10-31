@@ -1,6 +1,7 @@
 package jinngine.physics.constraint;
 import java.util.ListIterator;
 import jinngine.physics.solver.*;
+import jinngine.physics.solver.Solver.constraint;
 
 
 public interface Constraint {
@@ -9,6 +10,6 @@ public interface Constraint {
          * @param iterator
          * @param dt
          */
-        public void applyConstraints( ListIterator<ConstraintEntry> iterator, double dt );
+        public void applyConstraints( ListIterator<constraint> iterator, double dt );
 
 }

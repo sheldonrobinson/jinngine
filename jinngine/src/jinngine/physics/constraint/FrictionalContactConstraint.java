@@ -7,6 +7,7 @@ import jinngine.math.Matrix3;
 import jinngine.math.Vector3;
 import jinngine.physics.Body;
 import jinngine.physics.solver.*;
+import jinngine.physics.solver.Solver.constraint;
 import jinngine.util.GramSchmidt;
 
 
@@ -87,7 +88,7 @@ public final class FrictionalContactConstraint implements ContactConstraint {
 	}
 	
 	@Override
-	public final void applyConstraints(ListIterator<ConstraintEntry> constraintIterator, double dt) {
+	public final void applyConstraints(ListIterator<constraint> constraintIterator, double dt) {
 		//use ContactGenerators to create new contactpoints
 		for ( ContactGenerator cg: generators) {
 			//run contact generator
@@ -156,7 +157,7 @@ public final class FrictionalContactConstraint implements ContactConstraint {
 	public final void createFrictionalContactConstraint( 
 			ContactGenerator.ContactPoint cp,
 			Body b1, Body b2, Vector3 p, Vector3 n, double depth, double dt,
-			ListIterator<ConstraintEntry> outConstraints 
+			ListIterator<constraint> outConstraints 
 	) {
 
 		//Use a gram-schmidt process to create a orthonormal basis for the contact point ( normal and tangential directions)
@@ -247,13 +248,12 @@ public final class FrictionalContactConstraint implements ContactConstraint {
 		//correction = 0;
 		//constraint in normal direction
 		//		Constraint c = new Constraint(b1,b2,B1,B2,B3,B4,J1,J2,J3,J4,0,Double.POSITIVE_INFINITY,unf-uni + 1 * depth);
-		ConstraintEntry c = new ConstraintEntry();
-		c.assign(this,b1,b2,
-				B1,B2,B3,B4,
-				J1,J2,J3,J4,
-				lowerNormalLimit,Double.POSITIVE_INFINITY,
-				null, 
-				unf-uni + Fext*dt + correction, 0 );
+		constraint c = new constraint();
+		c.assign(b1,b2,B1,
+				B2,B3,B4,J1,
+				J2,J3,J4,lowerNormalLimit,
+				Double.POSITIVE_INFINITY,null,
+				unf-uni + Fext*dt + correction );
 		
 		//set the correct friction setting for this contact
 		c.mu = cp.friction;
@@ -281,20 +281,20 @@ public final class FrictionalContactConstraint implements ContactConstraint {
 		Vector3 t2B3 = t2.multiply(1/m2);				
 		Vector3 t2B4 = I2.multiply(r2.cross(t2));
 		double t2Fext = t2B1.dot(b1.state.FCm) + t2B2.dot(b1.state.tauCm) + t2B3.dot(b2.state.FCm) + t2B4.dot(b2.state.tauCm);
-		ConstraintEntry c2 = new ConstraintEntry();
-		c2.assign(null,b1,
-				b2,
+		constraint c2 = new constraint();
+		c2.assign(b1,b2,
 				t2B1,
 				t2B2,
-				t2B3,				
-				t2B4,
+				t2B3,
+				t2B4,				
 				t2.multiply(-1),
 				r1.cross(t2).multiply(-1),
 				t2,
 				r2.cross(t2).multiply(1),
 				Double.NEGATIVE_INFINITY,
 				Double.POSITIVE_INFINITY,
-				c, ut1f-ut1i + t2Fext*dt, 0 
+				c,
+				ut1f-ut1i + t2Fext*dt 
 
 		);
 		
@@ -309,9 +309,8 @@ public final class FrictionalContactConstraint implements ContactConstraint {
 		Vector3 t3B3 = t3.multiply(1/m2);				
 		Vector3 t3B4 = I2.multiply(r2.cross(t3));
 		double t3Fext = t3B1.dot(b1.state.FCm) + t3B2.dot(b1.state.tauCm) + t3B3.dot(b2.state.FCm) + t3B4.dot(b2.state.tauCm);
-		ConstraintEntry c3 = new ConstraintEntry();
-		c3.assign(null,b1,
-				b2,
+		constraint c3 = new constraint();
+		c3.assign(b1,b2,
 				t3B1,
 				t3B2,
 				t3B3,
@@ -322,7 +321,8 @@ public final class FrictionalContactConstraint implements ContactConstraint {
 				r2.cross(t3).multiply(1),
 				Double.NEGATIVE_INFINITY,
 				Double.POSITIVE_INFINITY,
-				c, ut2f-ut2i + t3Fext*dt, 0
+				c,
+				ut2f-ut2i + t3Fext*dt
 		);
 
 		//book-keep constraints in each body

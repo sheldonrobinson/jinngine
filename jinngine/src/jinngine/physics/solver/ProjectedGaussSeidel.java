@@ -12,21 +12,16 @@ public class ProjectedGaussSeidel implements Solver {
 	private double damper = 0.0;
 	
 	@Override
-	public void setErrorTolerance(double epsilon) {
-		//this.epsilon = epsilon;
-	}
-
-	@Override
 	public void setMaximumIterations(int n) {
 		this.maximumIterations = n;
 	}
 
 	@Override
 	//solve NCP problem
-	public final double solve(List<ConstraintEntry> constraints, List<Body> bodies) {		
+	public final double solve(List<constraint> constraints, List<Body> bodies) {		
 		//perform iterations
 		for (int m=0; m<maximumIterations; m++) {
-			for (ConstraintEntry constraint: constraints) {
+			for (constraint constraint: constraints) {
 				//calculate (Ax+b)_i 
 				double a =  constraint.j1.dot(constraint.body1.deltaVCm) 
 				+ constraint.j2.dot(constraint.body1.deltaOmegaCm)
@@ -37,15 +32,15 @@ public class ProjectedGaussSeidel implements Solver {
 				double lambda0 = constraint.lambda;
 
 				//Clamp the lambda[i] value to the constraints
-				if (constraint.coupledMax != null) {
+				if (constraint.coupling != null) {
 					//if the constraint is coupled, allow only lambda <= coupled lambda
-					constraint.lambdaMin = -Math.abs(constraint.coupledMax.lambda)*constraint.coupledMax.mu;
-					constraint.lambdaMax =  Math.abs(constraint.coupledMax.lambda)*constraint.coupledMax.mu;
+					constraint.lower = -Math.abs(constraint.coupling.lambda)*constraint.coupling.mu;
+					constraint.upper =  Math.abs(constraint.coupling.lambda)*constraint.coupling.mu;
 				} 
 
 				//do projection
 				constraint.lambda =
-					Math.max(constraint.lambdaMin, Math.min(lambda0 + deltaLambda,constraint.lambdaMax ));
+					Math.max(constraint.lower, Math.min(lambda0 + deltaLambda,constraint.upper ));
 					
 				//update the V vector
 				deltaLambda = constraint.lambda - lambda0;
