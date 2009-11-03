@@ -8,8 +8,12 @@ import jinngine.physics.Body;
  */
 public class ProjectedGaussSeidel implements Solver {
 
-	private int maximumIterations = 15;
+	private int maximumIterations = 20;
 	private double damper = 0.0;
+	
+	public ProjectedGaussSeidel(int n) {
+		this.maximumIterations = n;
+	}
 	
 	@Override
 	public void setMaximumIterations(int n) {
@@ -23,12 +27,12 @@ public class ProjectedGaussSeidel implements Solver {
 		for (int m=0; m<maximumIterations; m++) {
 			for (constraint constraint: constraints) {
 				//calculate (Ax+b)_i 
-				double a =  constraint.j1.dot(constraint.body1.deltaVCm) 
+				double w =  constraint.j1.dot(constraint.body1.deltaVCm) 
 				+ constraint.j2.dot(constraint.body1.deltaOmegaCm)
 				+  constraint.j3.dot(constraint.body2.deltaVCm) 
 				+ constraint.j4.dot(constraint.body2.deltaOmegaCm);
 
-				double deltaLambda = (constraint.b - a)/(constraint.diagonal + damper );
+				double deltaLambda = (constraint.b - w)/(constraint.diagonal + damper );
 				double lambda0 = constraint.lambda;
 
 				//Clamp the lambda[i] value to the constraints
@@ -41,7 +45,8 @@ public class ProjectedGaussSeidel implements Solver {
 				//do projection
 				constraint.lambda =
 					Math.max(constraint.lower, Math.min(lambda0 + deltaLambda,constraint.upper ));
-					
+//				constraint.lambda = lambda0 + deltaLambda;
+				
 				//update the V vector
 				deltaLambda = constraint.lambda - lambda0;
 

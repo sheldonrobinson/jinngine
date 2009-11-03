@@ -18,9 +18,9 @@ import jinngine.physics.*;
  * <p>
  *  where
  * <p>
- *   if x_i=l_i  then  w_i<=0 <br>
+ *   if x_i=u_i  then  w_i<=0 <br>
  *   if x_i in (l_i,u_i) then w_i = 0 <br>
- *   if x_i=u_i then w_i>=0 <p>
+ *   if x_i=l_i then w_i>=0 <p>
  *  
  *  <b>A</b> is the matrix <b>J M^(-1) J^T</b> which describes constraint relations, 
  *  and b is the vector of desired change in velocities. 
@@ -90,6 +90,9 @@ public interface Solver {
 		public double d;
 		public double q;
 		public double z;
+		public double dlambda;
+		public double bestdlambda;
+		public double s;
 		
 		/**
 		 * Assign operator for a constraint
