@@ -121,7 +121,7 @@ public class FischerNewtonConjugateGradients implements Solver {
 			//System.out.println("error="+error);
 			//termination condition
 			if (error<epsilon || i>imax ) {
-				System.out.println("e="+error+", i = "+i+" imax="+imax);		
+				//System.out.println("e="+error+", i = "+i+" imax="+imax);		
 				
 				if (besterror < error) {
 					//copy best solution to delta velocities
@@ -393,32 +393,44 @@ public class FischerNewtonConjugateGradients implements Solver {
 //		}			
 //	}
 	
-	
-	
-//	private void computeFisher( List<ConstraintEntry> constraints, double[] lambda, double w[], double[] b) {
-//		//evaluate b vector using fisher
-//		int i=0;
-//		for (ConstraintEntry c: constraints) {
-//			//get the b vector and starting lambda values
-//			if (c.coupledMax == null) {
-//				
-//				b[i] = -( Math.sqrt( w[i]*w[i]+ lambda[i]*lambda[i] )-w[i]-lambda[i]);
-//			} else {
-////				double limit = Math.abs(c.coupledMax.lambda)*friction;
-////				c.lambdaMin = -limit;
-////				c.lambdaMax  = limit;
-//				
-//
-//				b[i] = - ( fisher( lambda[i]-c.lambdaMin, fisher(c.lambdaMax-lambda[i], -w[i])));
-//			}
-//			i++;
-//		}
-//		
-//	}
+	/**
+	 * Evaluate the fischer funciton merit, based on a MLCP formulation having lower 
+	 * and upper limit vectors. This funciton handles limits at infinty.
+	 */
+	public static double fischerMerit( List<constraint> constraints, List<Body> bodies, double damper) {
+		double phi = 0;
+		for (constraint ci: constraints) {
+			//calculate (Ax+b)_i 
+			double w =  ci.j1.dot(ci.body1.deltaVCm) 
+			+ ci.j2.dot(ci.body1.deltaOmegaCm)
+			+  ci.j3.dot(ci.body2.deltaVCm) 
+			+ ci.j4.dot(ci.body2.deltaOmegaCm) + (-ci.b) + ci.lambda*damper;
+			
+            // (-oo,oo)
+			if (ci.lower == Double.NEGATIVE_INFINITY && ci.upper == Double.POSITIVE_INFINITY) {
+				phi += w*w;
+			// (-oo,u]
+			} else if ( ci.lower == Double.NEGATIVE_INFINITY) {
+				double p = 	-fisher(ci.upper-ci.lambda, -w);
+				phi += p*p;			
+			// [l,oo)
+			} else if (ci.upper == Double.POSITIVE_INFINITY) {
+				double p = fisher(ci.lambda-ci.lower, w);
+				phi += p*p;
+			// [l,u]
+			} else {
+				double p = fisher( ci.lambda-ci.lower, 
+						fisher(ci.upper-ci.lambda, -w));
+				phi += p*p;
+			}
+		}
+		//psi = 1/2 * ||phi(x)||^2
+		return phi*0.5;
+	}
 	
 	
 	@SuppressWarnings("unused")
-	public void printA(List<constraint> constraints) {
+	public static void printA(List<constraint> constraints) {
 		System.out.println("A = [ ");
 
 		//int i = 0; 
@@ -474,6 +486,83 @@ public class FischerNewtonConjugateGradients implements Solver {
 		}		
 		System.out.println("]");
 			
+	}
+	
+	public static void fillInA(List<constraint> constraints, double[][] A) {
+		//int i = 0; 
+		int k =0;
+		for (constraint ci: constraints) {
+			int j=0;
+			for (constraint cj: constraints) {
+				//for each interacting constraint
+				A[k][j] = 0;
+				if( ci.body1 == cj.body1) {
+					A[k][j] = ci.j1.dot(cj.b1) + ci.j2.dot(cj.b2);
+				}
+
+				if (ci.body2 == cj.body2) {
+					A[k][j] += ci.j3.dot(cj.b3) + ci.j4.dot(cj.b4);
+				}
+
+				if (ci.body1 == cj.body2) {
+					A[k][j]+= ci.j1.dot(cj.b3) + ci.j2.dot(cj.b4);
+				}
+
+				if (ci.body2 == cj.body1) {
+					A[k][j]+= ci.j3.dot(cj.b1) + ci.j4.dot(cj.b2);
+				}
+				j++;
+			}// for cj
+			k++;
+		} //for ci
+	}
+	
+	public static void fillInA(List<constraint> constraint1, List<constraint> constraint2, double[][] A) {
+		//int i = 0; 
+		int k =0;
+		for (constraint ci: constraint1) {
+			int j=0;
+			for (constraint cj: constraint2) {
+				//for each interacting constraint
+				A[k][j] = 0;
+				if( ci.body1 == cj.body1) {
+					A[k][j] = ci.j1.dot(cj.b1) + ci.j2.dot(cj.b2);
+				}
+
+				if (ci.body2 == cj.body2) {
+					A[k][j] += ci.j3.dot(cj.b3) + ci.j4.dot(cj.b4);
+				}
+
+				if (ci.body1 == cj.body2) {
+					A[k][j]+= ci.j1.dot(cj.b3) + ci.j2.dot(cj.b4);
+				}
+
+				if (ci.body2 == cj.body1) {
+					A[k][j]+= ci.j3.dot(cj.b1) + ci.j4.dot(cj.b2);
+				}
+				j++;
+			}// for cj
+			k++;
+		} //for ci
+	}
+
+	
+	public static void fillInb(List<constraint> constraints, double[] b) {
+		int i=0;
+		for (constraint ci: constraints) {
+			b[i] = ci.b;
+			i++;
+		}		
+		
+	}
+
+	public static void fillInLambda(List<constraint> constraints, double[] lambda) {
+		int i=0;
+		for (constraint ci: constraints) {
+			lambda[i] = ci.lambda;
+			i++;
+		}		
+		
 	}
 
 }

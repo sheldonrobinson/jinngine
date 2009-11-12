@@ -11,8 +11,13 @@ import jinngine.physics.Body;
  * Phased in another way, CG can solve the NCP, if l=-infinity and u=infinity for all constraints.
  */
 public class ConjugateGradients implements Solver {
+	int maxIterations = 999;
+	private double damping = 0;
+	
 
-	int maxIterations = 200;
+	public void setDamping(double damping) {
+		this.damping = damping;
+	}
 	
 	@Override
 	public void setMaximumIterations(int n) {
@@ -29,7 +34,7 @@ public class ConjugateGradients implements Solver {
 		double delta_low=Double.POSITIVE_INFINITY;
 		double delta_best=delta_low;
 		double epsilon = 1e-7;
-		double division_epsilon = 1e-5;
+		double division_epsilon = 1e-7;
 		int iterations=0;
 		
 		for (Body b: bodies) {
@@ -43,14 +48,16 @@ public class ConjugateGradients implements Solver {
 		for (constraint ci: constraints) {
 			ci.residual = 
 				(ci.b) - (ci.j1.dot(ci.body1.deltaVCm) + ci.j2.dot(ci.body1.deltaOmegaCm)
-						+ ci.j3.dot(ci.body2.deltaVCm) + ci.j4.dot(ci.body2.deltaOmegaCm));
+						+ ci.j3.dot(ci.body2.deltaVCm) + ci.j4.dot(ci.body2.deltaOmegaCm))
+						- ci.lambda*ci.damper;
 				
 			//d = M^-1 r
-			ci.d = ci.residual / ci.diagonal;
+			ci.d = ci.residual / (ci.diagonal+ci.damper);
 			
-//			if (Math.abs(ci.diagonal)<1e-13) {
-//				System.exit(0);
-//			}
+			//TODO remove
+			if (Math.abs(ci.diagonal)<1e-13) {
+				System.exit(0);
+			}
 
 			//reflect d in the delta velocities
 			Vector3.add( ci.body1.auxDeltav,     ci.b1.multiply(ci.d));
@@ -68,18 +75,23 @@ public class ConjugateGradients implements Solver {
 		
 		//CG iterations
 		while (iterations < maxIterations &&  delta_new>epsilon*epsilon*delta_zero && delta_new > epsilon ) {			
+			//System.out.println("cg iterate");
 			//q = Ad
 			//alpha = delta_new/dTq
 			double dTq = 0;
 			for (constraint ci: constraints) {
 				ci.q = ci.j1.dot(ci.body1.auxDeltav) + ci.j2.dot(ci.body1.auxDeltaOmega)
-				+ ci.j3.dot(ci.body2.auxDeltav) + ci.j4.dot(ci.body2.auxDeltaOmega);
+				+ ci.j3.dot(ci.body2.auxDeltav) + ci.j4.dot(ci.body2.auxDeltaOmega)
+				+ ci.d * ci.damper;
 				
 				dTq += ci.d*ci.q;
 			} 			
 
 			if (Math.abs(dTq)<division_epsilon) {
-				//System.out.println("orthogonal search direction");
+				//System.out.println("at solution, delta_new " + delta_new );
+				if (iterations==0){
+					delta_best = Double.POSITIVE_INFINITY;
+				}
 				break;
 			}
 			
@@ -95,7 +107,7 @@ public class ConjugateGradients implements Solver {
 				ci.residual -= alpha*ci.q;
 				
 				//s = M^(-1) r
-				ci.s = ci.residual / ci.diagonal;
+				ci.s = ci.residual / (ci.diagonal+ci.damper);
 								
 				//delta_new = rTs
 				delta_new += ci.residual*ci.s;
@@ -168,9 +180,18 @@ public class ConjugateGradients implements Solver {
 			ci.bestdlambda = 0;
 		}
 
-	//	System.out.println("iterations: " + iterations +" best is "+ delta_best);
+		//if (delta_best>1 && delta_best < 100000)
+			//System.out.println("iterations: " + iterations +" best is "+ delta_best);
 		
-		return 0;
+		//dump A if bad convergence
+		if (delta_best > 1e-2) {
+			System.out.println("(*******************  residual=" + delta_best );
+			//FischerNewtonConjugateGradients.printA(constraints);
+		}
+		
+		//System.out.println("delta_best="+delta_best+ "iterations "+iterations);
+		
+		return delta_best;
 	}
 
 }

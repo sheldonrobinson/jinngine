@@ -31,4 +31,10 @@ public class QuadraticPrograming implements Solver {
     	return 0;
 	}
 
+	@Override
+	public void setDamping(double damping) {
+		// TODO Auto-generated method stub
+		
+	}
+
 }
