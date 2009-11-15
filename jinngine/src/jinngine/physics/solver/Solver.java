@@ -55,6 +55,21 @@ public interface Solver {
 	 */
 	public void setMaximumIterations( int n );
 	
+	/**
+	 * Set the damping coefficient, so the A matrix of the solved system
+	 * becomes (A + I damping ) 
+	 * @param damping
+	 */
+	public void setDamping(double damping);
+	
+	
+	
+	
+	
+	
+	
+	
+	
 	
 	/**
 	 * A constraint definition involving a pair of bodies. A list of Solver.constraint 
@@ -81,6 +96,8 @@ public interface Solver {
 		public double mu = 0;
 		/** Friction coupling */
 		public constraint coupling;
+		/** Damping coefficient */
+		public double damper = 0;
 		
 		// Auxiliary variables. These variables is included to aid the implementation of solvers. 
 		/** The Fischer reformulation value */

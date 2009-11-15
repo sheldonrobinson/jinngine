@@ -12,7 +12,7 @@ import jinngine.physics.solver.Solver.constraint;
 import Jama.*;
 
 /**
- * The PGS-Subspace Minimisation method. Method is based on using PGS to guess 
+ * The PGS-Subspace Minimisation method. Method is based on using PGS to guess f
  * which variables is in the active set. Having that, it remains to solve a 
  * linear system of equations, which is done using Conjugate Gradients. 
  */
@@ -22,13 +22,15 @@ public class SubspaceMinimization implements Solver {
 	private final Solver projection = new Projection();
 	//private final Solver cg  = new FischerNewtonConjugateGradients();	
 	private final List<constraint> inactive = new ArrayList<constraint>();
+	private final List<constraint> active = new ArrayList<constraint>();
 	private final List<constraint> normals = new ArrayList<constraint>();
+	private final List<constraint> frictions = new ArrayList<constraint>();
 	
-	private final double epsilon = 1e-7;
-	private final int pgsmin = 15;
+	private final double epsilon = 1e-10;
+	private final int pgsmin = 35;
 	private final ProjectedGaussSeidel pgs = new ProjectedGaussSeidel(pgsmin);
 	private double phi;
-	
+	private final Random rand = new Random();
 	
 	@Override
 	public void setMaximumIterations(int n) {
@@ -38,14 +40,63 @@ public class SubspaceMinimization implements Solver {
 
 	@Override
 	public double solve(List<constraint> constraints, List<Body> bodies) {
+		//solvePlain(constraints,bodies);
+		//solveNormal(constraints,bodies);
+		//solveStaggered(constraints, bodies);
+		solveMLCP(constraints, bodies);
+		return 0;
+	}
+	
+	private void solvePlain(List<constraint> constraints, List<Body> bodies) {
+//	   	normals.clear();
+//    	for (constraint ci: constraints) 
+//    		if (ci.coupling == null)
+//    			normals.add(ci);
+//    	
+//		solveInternal(normals, bodies,true);
+		
+		solveInternal(constraints, bodies,true);
+	}
+
+	private double solveMLCP(List<constraint> constraints, List<Body> bodies) {
 	   	normals.clear();
     	for (constraint ci: constraints) 
     		if (ci.coupling == null)
     			normals.add(ci);
     	
-		solveInternal(normals, bodies);
+		solveInternal(normals, bodies,false);
+//   	pgs.solve( normals, bodies );
 //		
 //		//compute bounds
+		for (constraint ci: constraints) {
+			if (ci.coupling != null) {
+				//if the constraint is coupled, allow only lambda <= coupled lambda
+				ci.lower = -Math.abs(ci.coupling.lambda)*ci.coupling.mu;
+				ci.upper =  Math.abs(ci.coupling.lambda)*ci.coupling.mu;
+			} 
+		}
+		
+		solveInternal(constraints,bodies,true);
+
+	//	solveInternal(normals, bodies);
+
+		
+		
+		return 0;
+	}
+	
+	private double solveStaggered(List<constraint> constraints, List<Body> bodies) {
+	   	normals.clear();
+	   	frictions.clear();
+    	for (constraint ci: constraints) 
+    		if (rand.nextBoolean())
+    			normals.add(ci);
+    		else
+    			frictions.add(ci);
+    	
+		solveInternal(normals, bodies, true);
+//		
+////		//compute bounds
 //		for (constraint ci: constraints) {
 //			if (ci.coupling != null) {
 //				//if the constraint is coupled, allow only lambda <= coupled lambda
@@ -54,24 +105,56 @@ public class SubspaceMinimization implements Solver {
 //			} 
 //		}
 		
-		//solveInternal(constraints,bodies);
+		solveInternal(frictions,bodies,true);
+		
+		
+	   	normals.clear();
+	   	frictions.clear();
+    	for (constraint ci: constraints) 
+    		if (rand.nextBoolean())
+    			normals.add(ci);
+    		else
+    			frictions.add(ci);
+    	
+		solveInternal(normals, bodies, true);
+//		
+////		//compute bounds
+//		for (constraint ci: constraints) {
+//			if (ci.coupling != null) {
+//				//if the constraint is coupled, allow only lambda <= coupled lambda
+//				ci.lower = -Math.abs(ci.coupling.lambda)*ci.coupling.mu;
+//				ci.upper =  Math.abs(ci.coupling.lambda)*ci.coupling.mu;
+//			} 
+//		}
+		
+		solveInternal(frictions,bodies,true);
 
-		solveInternal(normals, bodies);
+//	    solveInternal(normals, bodies,true);
+//
+//		solveInternal(frictions,bodies,true);
+//
+//	    solveInternal(normals, bodies,true);
+//		
+//		solveInternal(frictions,bodies,true);
+//
+//	    solveInternal(normals, bodies,true);
 
+		
 		return 0;
 	}
-
 	
-	public double solveInternal(List<constraint> constraints, List<Body> bodies) {
-		boolean bounds = true;
-		double damper = 0.000;
+	
+	public double solveInternal(List<constraint> constraints, List<Body> bodies, boolean bounds) {
+		double damper = 0.00000;
 		pgs.setDamping(damper);
 		pgs.setUpdateBounds(bounds);
 		cg.setDamping(damper);
 		//set damping
 		for (constraint ci: constraints) {
+			//System.out.println(ci.lower+"-"+ci.upper);
+
 			if (ci.coupling != null) 
-				ci.damper = 0.0000;
+				ci.damper = 0.0;
 			else
 				ci.damper = 0.0;
 		}
@@ -89,16 +172,77 @@ public class SubspaceMinimization implements Solver {
 		int i=-1;
 		while (true) {
 			i++;			
-			//run PGS a random amount of iterations
+			//run PGS 
 			pgs.solve(constraints,bodies);
 			
 			//find inactive set
 			inactive.clear();
+			phi = 0;
 			for (constraint ci: constraints) {
-				if (ci.lower < ci.lambda && ci.lambda < ci.upper ) { 
+				
+				if ((ci.lower < ci.lambda && ci.lambda < ci.upper) ) { 
 					inactive.add(ci);
+				} else {
+
 				}
+
+
+				if (ci.coupling != null && bounds) {
+					//if the constraint is coupled, allow only lambda <= coupled lambda
+					 double lower = -Math.abs(ci.coupling.lambda)*ci.coupling.mu;					
+					ci.lower = lower<ci.lower?lower:ci.lower;					
+					double upper = Math.abs(ci.coupling.lambda)*ci.coupling.mu;
+					ci.upper =  upper>ci.upper?upper:ci.upper;
+
+				} 
+
+				//double localphi = Math.pow( FischerNewtonConjugateGradients.fischer(ci),2);
+				
+//				if (ci.coupling != null) {
+//					if ( localphi > 0.001) {
+//						ci.damper +=1.5;
+//						System.out.println("damping");
+//					}
+//				}
+
+				//phi += localphi;
+
+				
 			}
+			
+			//the merit 
+			//phi = phi *0.5;
+			
+			
+//			if (phi < epsilon || i>0) {
+//				break;
+//			}
+			
+			
+			//for active friction constraints, send them to their limits (in the hope that they will stay active)
+//			for (constraint ci: active) {
+//				if (ci.coupling !=null) {
+//					double w =  ci.j1.dot(ci.body1.deltaVCm) 
+//					+ ci.j2.dot(ci.body1.deltaOmegaCm)
+//					+  ci.j3.dot(ci.body2.deltaVCm) 
+//					+ ci.j4.dot(ci.body2.deltaOmegaCm) + (-ci.b) + ci.lambda*ci.damper;
+//				
+//					double lambda0 = ci.lambda;
+//					
+//					if (w>0) ci.lambda = ci.lower;
+//					if (w<0) ci.lambda = ci.upper;
+//					
+//					double delta = ci.lambda -lambda0;
+//					
+//					Vector3.add( ci.body1.deltaVCm,     ci.b1.multiply(delta) );
+//					Vector3.add( ci.body1.deltaOmegaCm, ci.b2.multiply(delta) );
+//					Vector3.add( ci.body2.deltaVCm,     ci.b3.multiply(delta) );
+//					Vector3.add( ci.body2.deltaOmegaCm, ci.b4.multiply(delta) );
+//
+//				}		
+//			}
+			
+			//System.out.println("in active set: "+inactive.size());
 
 			//Subspace minimisation
 			//boolean done = false;
@@ -110,15 +254,7 @@ public class SubspaceMinimization implements Solver {
 				//solve the active set
 				double residual = cg.solve( inactive, bodies);
 				
-//				if (residual > 0.01) {
-//					//increase friction damping
-//					for (constraint ci: constraints) {
-//						if (ci.coupling != null) 
-//							ci.damper += 0.100;
-//					
-//					}
-//
-//				}
+				
 				
 				//use Jama to compute pseudoinverse
 //				int n = inactive.size();
@@ -132,7 +268,7 @@ public class SubspaceMinimization implements Solver {
 //
 //					//Reciprocal inverse
 //					for (int x=0;x<n;x++)
-//						if(Math.abs(sigma_m[x][x])>1e-4) 
+//						if(Math.abs(sigma_m[x][x])>1e-10) 
 //							sigma_m[x][x] = 1.0/sigma_m[x][x];
 //						else
 //							sigma_m[x][x] = 0;
@@ -178,9 +314,23 @@ public class SubspaceMinimization implements Solver {
 //				for (constraint ci:inactive)
 //					System.out.println(""+ci.lambda);
 				
-				double p =projection.solve(inactive,bodies);
+				if (bounds)
+					for (constraint ci: inactive) {
+						if (ci.coupling != null) {
+							//if the constraint is coupled, allow only lambda <= coupled lambda
+							//ci.lower = -Math.abs(ci.coupling.lambda)*ci.coupling.mu;
+							//ci.upper =  Math.abs(ci.coupling.lambda)*ci.coupling.mu;
+							 double lower = -Math.abs(ci.coupling.lambda)*ci.coupling.mu;					
+								ci.lower = lower<ci.lower?lower:ci.lower;					
+								double upper = Math.abs(ci.coupling.lambda)*ci.coupling.mu;
+								ci.upper =  upper>ci.upper?upper:ci.upper;
 
-				if (p == 0) {
+						} 
+					}
+
+				double p = projection.solve(inactive,bodies);
+
+				if (p == 0 ) {
 					if (k==1) {
 						//System.out.println("first SM iteration had no change");
 						//done = true;
@@ -192,14 +342,7 @@ public class SubspaceMinimization implements Solver {
 				//remove active constraints
 				ListIterator<constraint> j = inactive.listIterator();
 				while(j.hasNext()) {
-					constraint ci = j.next();
-					
-					if (ci.coupling != null && bounds) {
-						//if the constraint is coupled, allow only lambda <= coupled lambda
-						ci.lower = -Math.abs(ci.coupling.lambda)*ci.coupling.mu;
-						ci.upper =  Math.abs(ci.coupling.lambda)*ci.coupling.mu;
-					} 
-					
+					constraint ci = j.next();			
 					if (ci.lower < ci.lambda && ci.lambda < ci.upper) { 
 						//do nothing
 					} else {
@@ -207,51 +350,39 @@ public class SubspaceMinimization implements Solver {
 					}					
 				}
 			} //sub space
-			
-			if (bounds) 
-				for (constraint ci: constraints) {
-					if (ci.coupling != null) {
-						//if the constraint is coupled, allow only lambda <= coupled lambda
-						ci.lower = -Math.abs(ci.coupling.lambda)*ci.coupling.mu;
-						ci.upper =  Math.abs(ci.coupling.lambda)*ci.coupling.mu;
-					} 
-				}
-			phi = FischerNewtonConjugateGradients.fischerMerit(constraints, bodies, damper);	
-		    //System.out.println("*) pgs-sm iteration "+i+" error="+phi );	
 
-			if (phi < best_phi) {
-				best_phi = phi;
-				for (int n=0;n<constraints.size(); n++) 
-					best_lambda[n] = constraints.get(n).lambda;
-			}
 			
+			phi = FischerNewtonConjugateGradients.fischerMerit(constraints, bodies);
 			
-			if (phi < epsilon || i>3) {
+			if (phi<epsilon||i==2)
 				break;
-			}
-			
-			//damper = damper*0.5;
 		}
 		
-		
-		// Set the best known solution
-		for (Body b: bodies) {
-			b.deltaVCm.assignZero();
-			b.deltaOmegaCm.assignZero();
-		}
-		int n=0;
-		for (constraint ci: constraints) {
-			ci.lambda = best_lambda[n];
-			Vector3.add( ci.body1.deltaVCm,     ci.b1.multiply(ci.lambda));
-			Vector3.add( ci.body1.deltaOmegaCm, ci.b2.multiply(ci.lambda));
-			Vector3.add( ci.body2.deltaVCm,     ci.b3.multiply(ci.lambda));
-			Vector3.add( ci.body2.deltaOmegaCm, ci.b4.multiply(ci.lambda));						
-			n++;
-		}
+    System.out.println("*) pgs-sm iteration "+i+" error="+phi );	
+    
+    
+    
+    
+    
+    if (phi>0.1 && false) {
+    	for (constraint ci: constraints) {
+    		if (ci.coupling != null)
+    			System.out.print("F:");
 
-	  //System.out.println("*) pgs-sm iteration "+i+" error="+phi );	
+    		if (inactive.contains(ci))
+    			System.out.print("A:");
+    		System.out.print(" lambda=" +ci.lambda);
+    		
+    		System.out.println(" phi="+FischerNewtonConjugateGradients.fischer(ci));
+    	}
+    	
+    	
+    	System.exit(0);
+    }
 
-		
+	  
+	  
+	  
 		return 0;
 	}
 

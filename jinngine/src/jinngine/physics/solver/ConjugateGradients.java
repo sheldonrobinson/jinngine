@@ -11,7 +11,7 @@ import jinngine.physics.Body;
  * Phased in another way, CG can solve the NCP, if l=-infinity and u=infinity for all constraints.
  */
 public class ConjugateGradients implements Solver {
-	int maxIterations = 999;
+	int maxIterations = 25;
 	private double damping = 0;
 	
 
@@ -33,8 +33,8 @@ public class ConjugateGradients implements Solver {
 		double delta_new=0, delta_old=0, delta_zero=0;
 		double delta_low=Double.POSITIVE_INFINITY;
 		double delta_best=delta_low;
-		double epsilon = 1e-7;
-		double division_epsilon = 1e-7;
+		double epsilon = 1e-10;
+		double division_epsilon = 1e-10;
 		int iterations=0;
 		
 		for (Body b: bodies) {
@@ -130,7 +130,7 @@ public class ConjugateGradients implements Solver {
 //				break;
 //			}
 			
-			if (delta_new > 100*delta_zero) {
+			if (delta_new > 10*delta_zero) {
 				//System.out.println("error larger then start");
 				break;
 			}
@@ -160,36 +160,35 @@ public class ConjugateGradients implements Solver {
 			
 			iterations += 1;
 			
-			//System.out.println("iteration " + iterations +", delta_new=" + delta_new +", alpha=" +alpha +", beta=" + beta);
+			System.out.println("iteration " + iterations +", delta_new=" + delta_new +", alpha=" +alpha +", beta=" + beta);
 
 		} //CG iterations
 
 
-		//apply the lambda values to the final velocities
-		for (constraint ci: constraints) {
-			ci.lambda += ci.bestdlambda;
-			
-			//reflect in delta velocities
-			Vector3.add( ci.body1.deltaVCm,     ci.b1.multiply(ci.bestdlambda));
-			Vector3.add( ci.body1.deltaOmegaCm, ci.b2.multiply(ci.bestdlambda));
-			Vector3.add( ci.body2.deltaVCm,     ci.b3.multiply(ci.bestdlambda));
-			Vector3.add( ci.body2.deltaOmegaCm, ci.b4.multiply(ci.bestdlambda));
+		//if solution was accepted
+		//if (delta_best < epsilon) {
 
-			//reset
-			ci.dlambda = 0;
-			ci.bestdlambda = 0;
-		}
+			//apply the lambda values to the final velocities
+			for (constraint ci: constraints) {
+				ci.lambda += ci.bestdlambda;
+
+				//reflect in delta velocities
+				Vector3.add( ci.body1.deltaVCm,     ci.b1.multiply(ci.bestdlambda));
+				Vector3.add( ci.body1.deltaOmegaCm, ci.b2.multiply(ci.bestdlambda));
+				Vector3.add( ci.body2.deltaVCm,     ci.b3.multiply(ci.bestdlambda));
+				Vector3.add( ci.body2.deltaOmegaCm, ci.b4.multiply(ci.bestdlambda));
+
+				//reset
+				ci.dlambda = 0;
+				ci.bestdlambda = 0;
+			}
+		//}
 
 		//if (delta_best>1 && delta_best < 100000)
 			//System.out.println("iterations: " + iterations +" best is "+ delta_best);
 		
-		//dump A if bad convergence
-		if (delta_best > 1e-2) {
-			System.out.println("(*******************  residual=" + delta_best );
-			//FischerNewtonConjugateGradients.printA(constraints);
-		}
 		
-		//System.out.println("delta_best="+delta_best+ "iterations "+iterations);
+		System.out.println("delta_best="+delta_best+ "iterations "+iterations);
 		
 		return delta_best;
 	}

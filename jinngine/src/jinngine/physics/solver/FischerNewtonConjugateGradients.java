@@ -397,14 +397,14 @@ public class FischerNewtonConjugateGradients implements Solver {
 	 * Evaluate the fischer funciton merit, based on a MLCP formulation having lower 
 	 * and upper limit vectors. This funciton handles limits at infinty.
 	 */
-	public static double fischerMerit( List<constraint> constraints, List<Body> bodies, double damper) {
+	public static double fischerMerit( List<constraint> constraints, List<Body> bodies) {
 		double phi = 0;
 		for (constraint ci: constraints) {
 			//calculate (Ax+b)_i 
 			double w =  ci.j1.dot(ci.body1.deltaVCm) 
 			+ ci.j2.dot(ci.body1.deltaOmegaCm)
 			+  ci.j3.dot(ci.body2.deltaVCm) 
-			+ ci.j4.dot(ci.body2.deltaOmegaCm) + (-ci.b) + ci.lambda*damper;
+			+ ci.j4.dot(ci.body2.deltaOmegaCm) + (-ci.b) + ci.lambda*ci.damper;
 			
             // (-oo,oo)
 			if (ci.lower == Double.NEGATIVE_INFINITY && ci.upper == Double.POSITIVE_INFINITY) {
@@ -427,7 +427,36 @@ public class FischerNewtonConjugateGradients implements Solver {
 		//psi = 1/2 * ||phi(x)||^2
 		return phi*0.5;
 	}
-	
+
+	public static double fischer( constraint ci ) {
+		double phi = 0;
+			//calculate (Ax+b)_i 
+			double w =  ci.j1.dot(ci.body1.deltaVCm) 
+			+ ci.j2.dot(ci.body1.deltaOmegaCm)
+			+  ci.j3.dot(ci.body2.deltaVCm) 
+			+ ci.j4.dot(ci.body2.deltaOmegaCm) + (-ci.b) + ci.lambda*ci.damper;
+			
+            // (-oo,oo)
+			if (ci.lower == Double.NEGATIVE_INFINITY && ci.upper == Double.POSITIVE_INFINITY) {
+				phi = w;
+			// (-oo,u]
+			} else if ( ci.lower == Double.NEGATIVE_INFINITY) {
+				double p = 	-fisher(ci.upper-ci.lambda, -w);
+				phi = p;			
+			// [l,oo)
+			} else if (ci.upper == Double.POSITIVE_INFINITY) {
+				double p = fisher(ci.lambda-ci.lower, w);
+				phi = p;
+			// [l,u]
+			} else {
+				double p = fisher( ci.lambda-ci.lower, 
+						fisher(ci.upper-ci.lambda, -w));
+				phi = p;
+			}
+			
+			return phi;
+	}
+
 	
 	@SuppressWarnings("unused")
 	public static void printA(List<constraint> constraints) {
