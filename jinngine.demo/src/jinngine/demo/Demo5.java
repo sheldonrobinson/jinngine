@@ -5,12 +5,9 @@ import jinngine.geometry.Box;
 import jinngine.math.Vector3;
 import jinngine.physics.Body;
 import jinngine.physics.Model;
-import jinngine.physics.solver.SubspaceMinimization;
 
-
-public class Demo1 {
-	
-	public Demo1() {
+public class Demo5 {
+	public Demo5() {
 		Graphics g = new Graphics();
 		Model model = g.getModel();
 		
@@ -40,23 +37,23 @@ public class Demo1 {
 		model.addBody(floor);
 		model.addBody(back);
 
-		model.getSolver().setMaximumIterations(17);
-		model.setSolver(new SubspaceMinimization());
+		//wee need some power for this
+		model.getSolver().setMaximumIterations(24);
 		
-		//create some cubes and a gear
-		new Cube(g, new Vector3(2.5,2.5,2.5), new Vector3(-10,-10,-20), 10 );
-		new Cube(g, new Vector3(3,3,3), new Vector3(-15,-10,-20), 10 );
-		new Cube(g, new Vector3(2,2,2), new Vector3(-5,-10,-20), 10 );
-//		new Cube(g, new Vector3(30,10,10), 10, 15);
-//		new Cube(g, new Vector3(40,10,10), 10, 15);
-		
-		//new Gear(g, new Vector3(0,50,0), 1, 20);
-		new Gear(g, new Vector3(-10,-5,-20), 25, 3);
+		//build a wall
+		for (int i=0; i<2; i++) {
+			for (int j=0; j<1; j++) {
+				new Sphere(g, new Vector3(0.5,2,2), new Vector3(-17+i*(3.1) +(j%2)*1.5,-18.8+j*2.1 ,-25), 1000000*i+1 );
+//				new Cube(g, new Vector3(3,2,2), new Vector3(-17+i*3.1 +(j%2)*1.5*.2,-18.8+j*2.1 ,-25), 10 );
 
+			}
+		}
+
+		//start animation
 		g.start();
 	}
 	
 	public static void main( String args[]) {
-		new Demo1();
+		new Demo5();
 	}
 }

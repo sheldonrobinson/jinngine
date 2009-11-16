@@ -18,6 +18,7 @@ import com.sun.opengl.util.Animator;
 public class RenderImpl extends Frame implements GLEventListener, Render  {
 	private static final long serialVersionUID = 1L;
 
+	
 	private class DrawTask {
 		public ShapeRender render;
 		public Shape shape;
@@ -42,7 +43,8 @@ public class RenderImpl extends Frame implements GLEventListener, Render  {
 	}
 
 
-	private final GLCanvas canvas;
+	public final GLCanvas canvas = new GLCanvas();
+	private Animator animator = new Animator(this.canvas);
 //	private final GLJPanel canvas;
 	public final GLU glu = new GLU();	
 	private double width;
@@ -81,7 +83,6 @@ public class RenderImpl extends Frame implements GLEventListener, Render  {
 		setTitle("Jinngine");
 		setSize(1024,(int)(1024/(1.77777)));
 
-		canvas = new GLCanvas();
 		//canvas = GLDrawableFactory.getFactory().
 		canvas.setIgnoreRepaint( true );
 		canvas.addGLEventListener(this);
@@ -291,8 +292,11 @@ public class RenderImpl extends Frame implements GLEventListener, Render  {
 	public void start() {
 		// Ask an animator class to run simulation at 60 fps
 		//FPSAnimator animator = new FPSAnimator(this.canvas,60);
-    	Animator animator = new Animator(this.canvas);
-		animator.start();	
+		animator.start();
+	}
+	
+	public void stop() {
+		animator.stop();
 	}
 
 	@Override

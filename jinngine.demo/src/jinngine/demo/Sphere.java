@@ -2,6 +2,7 @@ package jinngine.demo;
 
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Random;
 
 import jinngine.demo.graphics.Entity;
 import jinngine.demo.graphics.FlatShade;
@@ -15,42 +16,38 @@ import jinngine.physics.Body;
 import jinngine.physics.Model;
 import jinngine.physics.force.GravityForce;
 
-public class Cube implements Entity {
+public class Sphere implements Entity {
 	private final Body body;
 	private boolean alarmed = false;
 	
-	public Cube( Graphics m, Vector3 size, Vector3 position, double mass ) {
+	public Sphere( Graphics m, Vector3 size, Vector3 position, double mass ) {
 		Render render = m.getRender();
 		Model model = m.getModel();		
 			
-		//just a box for drawing
+		//just a sphere for drawing
+		Random random = new Random();
 		List<Vector3> points = new LinkedList<Vector3>();
-		points.add( new Vector3( 1, 1, 1 ).multiply(0.5));
-		points.add( new Vector3( -1, 1, 1 ).multiply(0.5));
-		points.add( new Vector3( 1, -1, 1 ).multiply(0.5));
-		points.add( new Vector3( -1, -1, 1 ).multiply(0.5));
-		points.add( new Vector3( 1, 1, -1 ).multiply(0.5));
-		points.add( new Vector3( -1, 1, -1 ).multiply(0.5));
-		points.add( new Vector3( 1, -1, -1 ).multiply(0.5));
-		points.add( new Vector3( -1, -1, -1 ).multiply(0.5));
+		for (int n=0;n<75; n++) {
+			points.add((new Vector3(random.nextGaussian(),random.nextGaussian(),random.nextGaussian())).normalize().multiply(2));
+		}
 
 		//resize the drawing shape to the right dimensions
-		Matrix4 transform = jinngine.math.Transforms.scale(size);
-		for (Vector3 p: points)
-			p.assign( transform.multiply(p));
+//		Matrix4 transform = jinngine.math.Transforms.scale(size);
+//		for (Vector3 p: points)
+//			p.assign( transform.multiply(p));
 		
 		//create drawing shape
 		Hull shape = new Hull(points.iterator());
 		shape.setAuxiliary(this);
 
 		//Setup the physics
-		Box box = new Box(size.x, size.y, size.z);
-		box.setAuxiliary(this); 
+		jinngine.geometry.Sphere box = new jinngine.geometry.Sphere(2);
 		box.setMass(mass);
+		box.setAuxiliary(this); 
 		
 		//set material properties
-		box.setFrictionCoefficient(0.5);
-		box.setRestitution(0.75);
+		box.setFrictionCoefficient(0.55);
+		box.setRestitution(0.3);
 		
 		//create a body, and add the geometry to it
 		body = new Body();		

@@ -10,6 +10,11 @@ public interface Render {
 	 */
 	public void start();
 	
+	/**
+	 * Stop game loop thread
+	 */
+	public void stop();	
+	
 
 	/**
 	 * Add a shape with an associated render

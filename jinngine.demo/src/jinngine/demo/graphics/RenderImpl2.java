@@ -345,6 +345,15 @@ public class RenderImpl2 extends Frame implements GLEventListener, Render  {
 		from.assign(cameraFrom);
 		to.assign(cameraTo);
 	}
+
+
+
+
+	@Override
+	public void stop() {
+		// TODO Auto-generated method stub
+		
+	}
 		
 
 }

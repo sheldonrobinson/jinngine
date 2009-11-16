@@ -15,6 +15,8 @@ import jinngine.physics.Body;
 import jinngine.physics.Model;
 import jinngine.physics.constraint.HingeJoint;
 import jinngine.physics.force.GravityForce;
+import jinngine.physics.solver.ProjectedGaussSeidel;
+import jinngine.physics.solver.SubspaceMinimization;
 import jinngine.util.Pair;
 
 public class Demo3 {
@@ -71,22 +73,25 @@ public class Demo3 {
 		model.addBody(back);
 
 		//we need some power for this
-		model.getSolver().setMaximumIterations(5);
+		//model.getSolver().setMaximumIterations(15);
+		//model.setSolver(new ProjectedGaussSeidel(100));
+		model.setSolver(new SubspaceMinimization());
 
+		
 		//get renderer from graphics
 		Render render = g.getRender();
 		
 		//build a chain of joined boxes
 		Body prevBody = null;
-		for (int i=0; i<5; i++) {
+		for (int i=0; i<6; i++) {
 			final Body body;
 
 			//Setup the physics
 			Box box = new Box(size.x, size.y, size.z);
 
 			//set material properties
-			box.setFrictionCoefficient(0.7);
-			box.setRestitution(0.4);
+			box.setFrictionCoefficient(0.5);
+			box.setRestitution(0.7);
 			
 			//create a body, and add the geometry to it
 			body = new Body();		
@@ -96,15 +101,15 @@ public class Demo3 {
 			body.sleepKinetic = 0.0;
 
 			//Tell the model about our new box and attach a gravity force to it
-			model.addForce(new GravityForce(body,1));
+			model.addForce(new GravityForce(body));
 			model.addBody(body);
 
 			//create chain joints
 			if (prevBody !=null) {
 				HingeJoint joint = new HingeJoint(prevBody,body,new Vector3(-17+i*4-5-2.7,-20,-25), new Vector3(0,0,1));
 				joint.getHingeControler().setLimits(-Math.PI/4, Math.PI/4);
-				joint.getHingeControler().setFrictionMagnitude(100);
-				joint.getHingeControler().setMotorForce(0);
+				joint.getHingeControler().setFrictionMagnitude(5);
+				//joint.getHingeControler().setMotorForce(45);
 				model.addConstraint(new Pair<Body>(prevBody,body), joint);
 				prevBody = body;
 			} else {

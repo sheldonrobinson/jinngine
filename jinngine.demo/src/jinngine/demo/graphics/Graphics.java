@@ -19,7 +19,7 @@ public class Graphics implements MouseListener, MouseMotionListener, MouseWheelL
 	Model model = new Engine();
 
 	//create a view
-	Render render = new RenderImpl(this);
+	RenderImpl render = new RenderImpl(this);
 	
 	//some mouse control stuff
 	public final Vector3 mouse = new Vector3();
@@ -43,7 +43,7 @@ public class Graphics implements MouseListener, MouseMotionListener, MouseWheelL
 		addState(new Selection());
 				
 		//start visualisation thread
-		render.start();	
+		render.start();
 	}
 	
 	/**
@@ -171,6 +171,14 @@ public class Graphics implements MouseListener, MouseMotionListener, MouseWheelL
 	public void keyTyped(KeyEvent e) {
 		// TODO Auto-generated method stub
 		
+	}
+	
+	public void setWindowTitle(String s) {
+		render.setTitle(s);
+	}
+	
+	public void addKeyListener( KeyListener k) {
+		render.canvas.addKeyListener(k);
 	}
 	
 }

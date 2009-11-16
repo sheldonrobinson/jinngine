@@ -1,5 +1,6 @@
 package jinngine.demo.graphics;
 
+import jinngine.demo.LinearDragForce;
 import jinngine.math.Matrix3;
 import jinngine.math.Vector3;
 import jinngine.physics.Body;
@@ -70,7 +71,7 @@ public class ObjectPlacement implements GameState {
 		m.getModel().addForce(force);
 		m.getModel().addForce(damper);
 				
-		System.out.println("object placement start");
+		//System.out.println("object placement start");
 	}
 
 	@Override
@@ -125,7 +126,7 @@ public class ObjectPlacement implements GameState {
 		//release object and respawn the selection state
 		if (!m.pressed) {
 			done = true;
-			System.out.println("starting selevtion");
+			//System.out.println("starting selevtion");
 			m.addState(new Selection());
 		}
 		

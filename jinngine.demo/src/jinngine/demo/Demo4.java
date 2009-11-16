@@ -73,13 +73,14 @@ public class Demo4 {
 		model.addBody(back);
 
 		//we need some power for this
-		model.getSolver().setMaximumIterations(12);
+		model.getSolver().setMaximumIterations(5);
 
 		//get renderer from graphics
 		Render render = g.getRender();
 		
 		//build a stack of objects
-		for (int i=0; i<2; i++) {
+		for (int j=0;j<1;j++)
+		for (int i=0; i<3; i++) {
 			final Body body;
 
 			//Setup the physics
@@ -90,29 +91,30 @@ public class Demo4 {
 			//box.setRestitution(0.4);
 			
 			//create a body, and add the geometry to it
+			double r = 1;
 			body = new Body();
-			Sphere s = new Sphere(1);
+			Sphere s = new Sphere(r);
 			s.setLocalTransform(Matrix3.identity(), new Vector3(-1,0,-1));			
 			body.addGeometry(s);
 
-			Sphere s2 = new Sphere(1);
+			Sphere s2 = new Sphere(r);
 			s2.setLocalTransform(Matrix3.identity(), new Vector3(1,0,-1));			
 			body.addGeometry(s2);
 
-			Sphere s3 = new Sphere(1);
+			Sphere s3 = new Sphere(r);
 			s3.setLocalTransform(Matrix3.identity(), new Vector3(-1,0,1));			
 			body.addGeometry(s3);
 
-			Sphere s4 = new Sphere(1);
+			Sphere s4 = new Sphere(r);
 			s4.setLocalTransform(Matrix3.identity(), new Vector3(1,0,1));			
 			body.addGeometry(s4);
 			
 			body.finalize();                 // called when all geometry is added
-			body.setPosition(new Vector3(-17-0,-18.9+i*2.2,-25));
+			body.setPosition(new Vector3(-18-0+2.1*j+(0*1.5*(i%2)),-18.9+i*2.05,-25));
 			body.sleepKinetic = 0.0;
 
 			//Tell the model about our new box and attach a gravity force to it
-			model.addForce(new GravityForce(body,1));
+			model.addForce(new GravityForce(body));
 			model.addBody(body);
 
 			
