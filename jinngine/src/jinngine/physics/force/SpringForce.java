@@ -72,7 +72,7 @@ public class SpringForce implements Force {
 		this.damper = 1;
 	}
 	
-	public void apply() {
+	public void apply(double dt) {
 		//point on a 
 		Vector3 pra = a.toWorldNoTranslation(pa);
 		
@@ -111,8 +111,8 @@ public class SpringForce implements Force {
 		Vector3 Fdamper = n.multiply( (-upax+upbx) * this.damper  ); //damping force
 		Vector3 Ftotal = Fspring.add( Fdamper );
 				
-		a.applyForce( pra, Ftotal.multiply(1) );
-		b.applyForce( prb, Ftotal.multiply(-1));
+		a.applyForce( pra, Ftotal.multiply(1), dt );
+		b.applyForce( prb, Ftotal.multiply(-1), dt);
 	}
 
 }

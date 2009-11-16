@@ -33,7 +33,7 @@ public final class GravityForce implements Force {
 	}
 
 	@Override
-	public final void apply() {
-		a.applyForce(Vector3.zero, d.multiply(9.8*a.state.M) );		
+	public final void apply(double dt) {
+		a.applyForce(Vector3.zero, d.multiply(9.8*a.state.M), dt );		
 	}
 }

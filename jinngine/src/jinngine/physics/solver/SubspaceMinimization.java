@@ -17,9 +17,10 @@ import Jama.*;
  * linear system of equations, which is done using Conjugate Gradients. 
  */
 public class SubspaceMinimization implements Solver {
-	private final Solver newton = new FischerNewtonConjugateGradients();
+	//private final Solver newton = new FischerNewtonConjugateGradients();
 	private final Solver cg  = new ConjugateGradients();
 	private final Solver projection = new Projection();
+	private final Solver gs = new GaussSeidel(25);
 	//private final Solver cg  = new FischerNewtonConjugateGradients();	
 	private final List<constraint> inactive = new ArrayList<constraint>();
 	private final List<constraint> active = new ArrayList<constraint>();
@@ -27,7 +28,7 @@ public class SubspaceMinimization implements Solver {
 	private final List<constraint> frictions = new ArrayList<constraint>();
 	
 	private final double epsilon = 1e-10;
-	private final int pgsmin = 35;
+	private final int pgsmin = 15;
 	private final ProjectedGaussSeidel pgs = new ProjectedGaussSeidel(pgsmin);
 	private double phi;
 	private final Random rand = new Random();
@@ -252,9 +253,25 @@ public class SubspaceMinimization implements Solver {
 				//System.out.println("sm stage: " + inactive.size() + " constraints");
 				
 				//solve the active set
-				double residual = cg.solve( inactive, bodies);
+				gs.solve(inactive,bodies);
 				
+
+				double residual = 0;
+				for (constraint ci: inactive) {
+					double w =  ci.j1.dot(ci.body1.deltaVCm) 
+					+ ci.j2.dot(ci.body1.deltaOmegaCm)
+					+  ci.j3.dot(ci.body2.deltaVCm) 
+					+ ci.j4.dot(ci.body2.deltaOmegaCm) + (-ci.b) + ci.lambda*ci.damper;
+					
+					residual +=w*w;
+				}
+
 				
+			//	System.out.println("GS residual " + residual);
+				
+				if (residual > 1e-6) {
+					residual = cg.solve( inactive, bodies);
+				}
 				
 				//use Jama to compute pseudoinverse
 //				int n = inactive.size();
@@ -358,7 +375,7 @@ public class SubspaceMinimization implements Solver {
 				break;
 		}
 		
-    System.out.println("*) pgs-sm iteration "+i+" error="+phi );	
+   // System.out.println("*) pgs-sm iteration "+i+" error="+phi );	
     
     
     

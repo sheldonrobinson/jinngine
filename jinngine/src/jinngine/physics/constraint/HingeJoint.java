@@ -137,72 +137,41 @@ public final class HingeJoint implements Constraint {
 		Vector3 u = b1.state.vCm.minus( ri.cross(b1.state.omegaCm)).minus(b2.state.vCm).add(rj.cross(b2.state.omegaCm));
 		
 		//u.assign ( u.add(uextf));
-		Vector3 Vext = Bi.multiply(b1.state.FCm).add(Bangi.multiply(b1.state.tauCm)).add( Bj.multiply(b2.state.FCm)).add(Bangj.multiply( b2.state.tauCm)).multiply(dt);
-		u.assign( u.add(Vext));
+		//Vector3 Vext = Bi.multiply(b1.state.FCm).add(Bangi.multiply(b1.state.tauCm)).add( Bj.multiply(b2.state.FCm)).add(Bangj.multiply( b2.state.tauCm)).multiply(dt);
+		//u.assign( u.add(Vext));
 		
 //		Vector3 posError = b1.state.rCm.add(b1.state.q.rotate(p1)).minus(b2.state.rCm).minus(b2.state.q.rotate(p2)).multiply(Kcor);
 		Vector3 posError = b1.state.rCm.add(ri).minus(b2.state.rCm).minus(rj).multiply(1/dt);
 //		Vector3 u = b1.state.v_cm.minus( ri.cross(b1.state.omega_cm)).add(b2.state.v_cm).minus(rj.cross(b2.state.omega_cm)).multiply(1);
 		//error in transformed normal
 		Vector3 nerror = tn1.cross(tn2);
-
 		u.assign( u.add(posError.multiply(Kcor)));
 		
-		//go through matrices and create rows in the final A matrix to be solved
-//		iterator.next().assign( 
-//				null, 
-//				b1, b2, 
-//				Bi.column(0), Bangi.column(0), Bj.column(0), Bangj.column(0), 
-//				Ji.row(0),    Jangi.row(0),    Jj.row(0),    Jangj.row(0),
-//				Double.NEGATIVE_INFINITY,
-//				Double.POSITIVE_INFINITY,
-//				null, 
-//				u.a1 );
+		//Vector3.multiply(u, -1);
 		
 		linear1.assign( 
-				b1, 
-				b2, Bi.column(0), 
-				Bangi.column(0), Bj.column(0), Bangj.column(0), Ji.row(0), 
-				Jangi.row(0),    Jj.row(0),    Jangj.row(0),    Double.NEGATIVE_INFINITY,
+				b1,	b2, 
+				Bi.column(0), Bangi.column(0), Bj.column(0), Bangj.column(0), 
+				Ji.row(0), Jangi.row(0), Jj.row(0), Jangj.row(0),
+				Double.NEGATIVE_INFINITY,
 				Double.POSITIVE_INFINITY,
 				null,
 				u.x );
 
-		
-//		iterator.next().assign( 
-//				null, 
-//				b1, b2, 
-//				Bi.column(1), Bangi.column(1), Bj.column(1), Bangj.column(1), 
-//				Ji.row(1),    Jangi.row(1),    Jj.row(1),    Jangj.row(1),
-//				Double.NEGATIVE_INFINITY,
-//				Double.POSITIVE_INFINITY,
-//				null, 
-//				u.a2 );
-		
 		linear2.assign( 
-				b1, 
-				b2, Bi.column(1), 
-				Bangi.column(1), Bj.column(1), Bangj.column(1), Ji.row(1), 
-				Jangi.row(1),    Jj.row(1),    Jangj.row(1),    Double.NEGATIVE_INFINITY,
+				b1,	b2, 
+				Bi.column(1), Bangi.column(1), Bj.column(1), Bangj.column(1), 
+				Ji.row(1), Jangi.row(1), Jj.row(1), Jangj.row(1),
+				Double.NEGATIVE_INFINITY,
 				Double.POSITIVE_INFINITY,
 				null,
 				u.y );
 
-//		iterator.next().assign( 
-//				null, 
-//				b1, b2, 
-//				Bi.column(2), Bangi.column(2), Bj.column(2), Bangj.column(2), 
-//				Ji.row(2),    Jangi.row(2),    Jj.row(2),    Jangj.row(2),
-//				Double.NEGATIVE_INFINITY,
-//				Double.POSITIVE_INFINITY,
-//				null, 
-//				u.a3 );	
-
 		linear3.assign( 
-				b1, 
-				b2, Bi.column(2), 
-				Bangi.column(2), Bj.column(2), Bangj.column(2), Ji.row(2), 
-				Jangi.row(2),    Jj.row(2),    Jangj.row(2),    Double.NEGATIVE_INFINITY,
+				b1,	b2, 
+				Bi.column(2), Bangi.column(2), Bj.column(2), Bangj.column(2), 
+				Ji.row(2), Jangi.row(2), Jj.row(2), Jangj.row(2),
+				Double.NEGATIVE_INFINITY,
 				Double.POSITIVE_INFINITY,
 				null,
 				u.z );	
@@ -216,31 +185,35 @@ public final class HingeJoint implements Constraint {
 		double sign = tt2i.cross(tt2j).dot(tn1)>0?1:-1;
 		double product = tt2i.dot(tt2j);
 		//avoid values slightly greater then one
-		theta = Math.acos( product>1?1:product )*sign;
+//		theta = Math.acos( product>1?1:product )*sign;
+		theta = -Math.acos( product )*sign;
 
 		//set the motor limits
 		double motorHigh = motor>0?motor:0;
 		double motorLow = motor<0?motor:0;
 		
-		//angular velocity along axis with external force contribution
+		//angular velocity along axis 
 		velocity = axis.dot(b1.state.omegaCm)-axis.dot(b2.state.omegaCm);
 		double bvalue = 0;
 		double e = 0;
 		
 		//if joint is stretched upper
 		if ( theta > upperLimit  ) {
-			correction = -(theta - (upperLimit+shell) )*(1/dt)*Kcor;
+			correction = (theta - (upperLimit+shell) )*(1/dt)*Kcor;
 			high = motorHigh;
 			low = Double.NEGATIVE_INFINITY;// + motorLow;
 			bvalue = (1+e)*velocity + correction ;
+			
+			//System.out.println("velocity="+velocity+ "friction=" + friction);
+
 		} 
 		
 		//if joint is stretched lower
 		else if ( theta < lowerLimit ) {
-			correction = -(theta - (lowerLimit-shell) )*(1/dt)*Kcor;
+			correction = (theta - (lowerLimit-shell) )*(1/dt)*Kcor;
 			high = Double.POSITIVE_INFINITY;// + motorHigh;
 			low = motorLow;
-			bvalue = (1+e)*velocity + correction ;
+			bvalue = ((1+e)*velocity + correction) ;
 
 		}
 		
@@ -258,87 +231,45 @@ public final class HingeJoint implements Constraint {
 			low = -friction;
 
 			//friction tries to prevent motion along the joint axis
-			bvalue = velocity*1 ;			
+			bvalue = velocity;			
+
 		}
 		
-//		if (tt2i.dot(tt2j) < Math.cos(Math.PI/32.0)) {
-//			axis.assign(tt2i.cross(tt2j).normalize());
-//			//rotate tt2i along axis to the maximum allowed displacement angle
-//			Matrix3 Rlimit = Quaternion.rotation(Math.PI/3.0, axis).rotationMatrix3();
-//			Vector3 tt2ilimit = Matrix3.multiply(Rlimit, tt2i, new Vector3());
-//			
-//			low = Double.NEGATIVE_INFINITY;
-//			//high = 122;
-//			
-//			//with low error, and approximation will do (theta aproximates sin(theta) for small theta)
-//			wcor.assign(tt2j.cross(tt2ilimit));
-//		}
-
-		double Fextaxis = b1.state.Iinverse.multiply(axis).dot(b1.state.tauCm) + b2.state.Iinverse.multiply(axis.multiply(-1)).dot(b2.state.tauCm); 
-//		iterator.next().assign( 
-//				null, 
-//				b1, b2, 
-//				new Vector3(), b1.state.Iinverse.multiply(axis), new Vector3(), b2.state.Iinverse.multiply(axis.multiply(-1)), 
-//				new Vector3(), axis,                             new Vector3(), axis.multiply(-1),
-//				low,
-//				high,
-//				null, 
-//				bvalue + Fextaxis*dt);
-
 		angular1.assign( 
-				b1, 
-				b2, new Vector3(), 
-				b1.state.Iinverse.multiply(axis), new Vector3(), b2.state.Iinverse.multiply(axis.multiply(-1)), new Vector3(), 
-				axis, new Vector3(),                             axis.multiply(-1), low,
+				b1,	b2, 
+				new Vector3(), b1.state.Iinverse.multiply(axis), new Vector3(), b2.state.Iinverse.multiply(axis.multiply(-1)), 
+				new Vector3(), axis, new Vector3(), axis.multiply(-1), 
+				low,
 				high,
 				null,
-				bvalue + Fextaxis*dt);
+				bvalue );
+//				Double.NEGATIVE_INFINITY,
+//				Double.POSITIVE_INFINITY,
+//				null,
+//				velocity );
 
 		
 		//keep bodies aligned to the axis
 		double Fexttt2i = b1.state.Iinverse.multiply(tt2i).dot(b1.state.tauCm) + b2.state.Iinverse.multiply(tt2i.multiply(-1)).dot(b2.state.tauCm); 
-//		iterator.next().assign( 
-//				null, 
-//				b1, b2, 
-//				new Vector3(), b1.state.Iinverse.multiply(tt2i), new Vector3(), b2.state.Iinverse.multiply(tt2i.multiply(-1)), 
-//				new Vector3(), tt2i,                             new Vector3(), tt2i.multiply(-1),
-//				Double.NEGATIVE_INFINITY,
-//				Double.POSITIVE_INFINITY,
-//				null, 
-//				tt2i.dot(b1.state.omegaCm)-tt2i.dot(b2.state.omegaCm) - Kcor*tt2i.dot(nerror)*(1/dt) + Fexttt2i*dt );	
-
 		angular2.assign( 
-				b1, 
-				b2, new Vector3(), 
-				b1.state.Iinverse.multiply(tt2i), new Vector3(), b2.state.Iinverse.multiply(tt2i.multiply(-1)), new Vector3(), 
-				tt2i, new Vector3(),                             tt2i.multiply(-1), Double.NEGATIVE_INFINITY,
+				b1, b2, 
+				new Vector3(), b1.state.Iinverse.multiply(tt2i), new Vector3(), b2.state.Iinverse.multiply(tt2i.multiply(-1)), 
+				new Vector3(), tt2i, new Vector3(), tt2i.multiply(-1),
+				Double.NEGATIVE_INFINITY,
 				Double.POSITIVE_INFINITY,
 				null,
-				tt2i.dot(b1.state.omegaCm)-tt2i.dot(b2.state.omegaCm) - Kcor*tt2i.dot(nerror)*(1/dt) + Fexttt2i*dt );	
-
+				tt2i.dot(b1.state.omegaCm)-tt2i.dot(b2.state.omegaCm) - Kcor*tt2i.dot(nerror)*(1/dt) + Fexttt2i*dt*0 );	
 
 		
 		double Fexttt3i = b1.state.Iinverse.multiply(tt3i).dot(b1.state.tauCm) + b2.state.Iinverse.multiply(tt3i.multiply(-1)).dot(b2.state.tauCm); 
-
-//		iterator.next().assign( 
-//				null, 
-//				b1, b2, 
-//				new Vector3(), b1.state.Iinverse.multiply(tt3i), new Vector3(), b2.state.Iinverse.multiply(tt3i.multiply(-1)), 
-//				new Vector3(), tt3i,                             new Vector3(), tt3i.multiply(-1),
-//				Double.NEGATIVE_INFINITY,
-//				Double.POSITIVE_INFINITY,
-//				null,
-//				tt3i.dot(b1.state.omegaCm)-tt3i.dot(b2.state.omegaCm) - Kcor*tt3i.dot(nerror)*(1/dt) + Fexttt3i*dt);		
-
-
 		angular3.assign( 
-				b1, 
-				b2, new Vector3(), 
-				b1.state.Iinverse.multiply(tt3i), new Vector3(), b2.state.Iinverse.multiply(tt3i.multiply(-1)), new Vector3(), 
-				tt3i, new Vector3(),                             tt3i.multiply(-1), Double.NEGATIVE_INFINITY,
+				b1,	b2, 
+				new Vector3(), b1.state.Iinverse.multiply(tt3i), new Vector3(), b2.state.Iinverse.multiply(tt3i.multiply(-1)), 
+				new Vector3(), tt3i, new Vector3(), tt3i.multiply(-1),
+				Double.NEGATIVE_INFINITY,
 				Double.POSITIVE_INFINITY,
 				null,
-				tt3i.dot(b1.state.omegaCm)-tt3i.dot(b2.state.omegaCm) - Kcor*tt3i.dot(nerror)*(1/dt) + Fexttt3i*dt);		
+				tt3i.dot(b1.state.omegaCm)-tt3i.dot(b2.state.omegaCm) - Kcor*tt3i.dot(nerror)*(1/dt) + Fexttt3i*dt*0 );		
 
 
 		iterator.add(linear1);

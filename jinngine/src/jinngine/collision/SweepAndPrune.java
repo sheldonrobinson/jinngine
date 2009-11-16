@@ -116,7 +116,7 @@ public class SweepAndPrune implements BroadfaseCollisionDetection {
 							//counter = new Integer(0);
 						}
 						counters.put(new Pair<Geometry>(e.geometry,pivot.geometry),--counter);
-						System.out.println("vounter="+counter);
+						//System.out.println("vounter="+counter);
 						//overlap vanished
 						if (counter == 2) { //counter < 3 (but ==2 is more effective)
 							//O(k) operation

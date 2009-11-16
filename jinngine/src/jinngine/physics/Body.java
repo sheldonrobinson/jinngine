@@ -22,7 +22,7 @@ public final class Body {
 	//auxiliary
 	public final Vector3               deltaVCm = new Vector3(0,0,0);
 	public final Vector3               deltaOmegaCm = new Vector3(0,0,0);
-	public final List<constraint> constraints = new ArrayList<constraint>();
+//	public final List<constraint> constraints = new ArrayList<constraint>();
 	public final Vector3               auxDeltav = new Vector3();
 	public final Vector3               auxDeltaOmega = new Vector3();
 	public final Vector3               auxDeltav2 = new Vector3();
@@ -268,12 +268,14 @@ public final class Body {
 		this.state.tauCm.assign(new Vector3(0,0,0));	  
 	}
 
-	public final void applyForce( Vector3 delta_ri, Vector3 F ) {
+	public final void applyForce( Vector3 delta_ri, Vector3 F, double dt ) {
 		Vector3.add(this.state.tauCm, delta_ri.cross(F));
-		//Vector3.add(this.a_cm, F.multiply(1/this.mass));
-
 		Vector3.add(this.state.FCm, F );	  
 		Vector3.multiply(this.state.FCm, 1.0/this.state.M, this.state.aCm );
+		
+		//apply directly to delta velocities
+		Vector3.add(this.deltaVCm, F.multiply(dt/this.state.M));
+		Vector3.add(this.deltaOmegaCm, state.Iinverse.multiply(delta_ri.cross(F)).multiply(dt));
 	}
 
 	public final double totalKinetic() {

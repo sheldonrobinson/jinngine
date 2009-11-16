@@ -58,19 +58,19 @@ public class RayCast {
 			
 			n.assign(x.minus(c));
 			if ( n.normalize().dot(direction) >= 0) {
-				System.out.println("RayCast: miss, lambda="+lambda);
+				//System.out.println("RayCast: miss, lambda="+lambda);
 				return Double.POSITIVE_INFINITY;
 			} else {
 				lambda = lambda - n.dot(n) / n.dot(direction);
 				x.assign(point.add(direction.multiply(lambda)));
-				System.out.println("lambda="+lambda);
+				//System.out.println("lambda="+lambda);
 				
 				gjk.run(Sa,Sb,pa,pb,Double.POSITIVE_INFINITY);
 				c.assign(pb);
 			}			
 		}
 		
-		System.out.println("RayCast: Hitpoint lambda=" + lambda);
+		//System.out.println("RayCast: Hitpoint lambda=" + lambda);
 		n.print();
 		return lambda;
 	}

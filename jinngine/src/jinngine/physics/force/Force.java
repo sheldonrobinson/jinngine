@@ -7,5 +7,5 @@ package jinngine.physics.force;
  *
  */
 public interface Force {
-	public void apply();
+	public void apply(double dt);
 }

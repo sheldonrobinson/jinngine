@@ -153,16 +153,19 @@ public final class Engine implements Model {
 	};
 	
 	// Broad phase collision detection implementation 
-//	private BroadfaseCollisionDetection broadfase = new SweepAndPrune(handler);
-	private BroadfaseCollisionDetection broadfase = new AllPairsTest(handler);
+	private BroadfaseCollisionDetection broadfase = new SweepAndPrune(handler);
+//	private BroadfaseCollisionDetection broadfase = new AllPairsTest(handler);
 
 	//Create a linear complementarity problem solver
-	private Solver solver = new ProjectedGaussSeidel();
-	//private Solver solver = new FischerNewtonConjugateGradients();
-	//private Solver solver = new ConjugateGradients();
+	private Solver solver = new ProjectedGaussSeidel(15);
+	private Solver pgs = new ProjectedGaussSeidel(25);
+//	private Solver solver = new FischerNewtonConjugateGradients();
+//	private Solver solver = new ConjugateGradients();
+//	private Solver solver = new SubspaceMinimization();
+//	private FischerNewtonConjugateGradients solver2 = new FischerNewtonConjugateGradients();
 	
 	//time-step size
-	public double dt = 0.01; 
+	private double dt = 0.01; 
 
 	/**
 	 * 
@@ -230,12 +233,11 @@ public final class Engine implements Model {
 			// clear out auxillary delta velocity fields and constraint lists
 			c.deltaVCm.assign(Vector3.zero);
 			c.deltaOmegaCm.assign(Vector3.zero);
-			c.constraints.clear();
 		}
 
         // Apply all forces	
 		for (Force f: forces) {
-			f.apply();
+			f.apply(dt);
 		}
 
 		// Run the broad-phase collision detection (this automatically updates the contactGraph,
@@ -252,78 +254,80 @@ public final class Engine implements Model {
 		while (components.hasNext()) {
 			//The component 
 			ComponentGraph.Component g = components.next();
-
+			
 			//check if group is all sleepy, then ignore its constraints
-			boolean ignoreGroup = true;
-			Iterator<Body> nodeiter = contactGraph.getNodesInComponent(g);
-			while (nodeiter.hasNext()) {
-				if (!nodeiter.next().sleeping) {
-					ignoreGroup = false;
-					break;
-				}
-			}
+//			boolean ignoreGroup = false;
+//			Iterator<Body> nodeiter = contactGraph.getNodesInComponent(g);
+//			while (nodeiter.hasNext()) {
+//				if (!nodeiter.next().sleeping) {
+//					ignoreGroup = false;
+//					break;
+//				}
+//			}
 
 			// mark bodies in group as sleeping
-			nodeiter = contactGraph.getNodesInComponent(g);
-			while (nodeiter.hasNext()) {
-				nodeiter.next().ignore = ignoreGroup;
-			}
+//			nodeiter = contactGraph.getNodesInComponent(g);
+//			while (nodeiter.hasNext()) {
+//				nodeiter.next().ignore = ignoreGroup;
+//			}
 			
 			//apply constraints off group
-			if (!ignoreGroup) {
-				Iterator<Constraint> constraints = contactGraph.getEdgesInComponent(g);
-				while (constraints.hasNext())
-					constraints.next().applyConstraints(constraintIterator, dt);
-			}	
+//			if (!ignoreGroup) {
+			Iterator<Constraint> constraints = 
+				contactGraph.getEdgesInComponent(g);
+
+			while (constraints.hasNext()) {
+				constraints.next().applyConstraints(constraintIterator, dt);
+			}
+//			}	
 		} //while groups
 
-
+		
 		//run the solver
-		solver.solve( constraintList, bodies );				
+		solver.solve( constraintList, bodies );
+		
 
 		// Apply delta velocities and integrate positions forward
 		for (Body c : bodies ) {
-			
 			//don't process inactive bodies
 			if (c.ignore)
 				continue;
-			
-			//apply external forces
-			c.advanceVelocities(dt);
-			
+						
 			// Apply computed forces to bodies
 			if ( !c.isFixed() ) {
-				c.state.vCm.assign( c.state.vCm.minus( c.deltaVCm));
-				c.state.omegaCm.assign( c.state.omegaCm.minus( c.deltaOmegaCm));	
+				c.state.vCm.assign( c.state.vCm.add( c.deltaVCm));
+				c.state.omegaCm.assign( c.state.omegaCm.add( c.deltaOmegaCm));	
+				
 				Matrix3.multiply(c.state.I, c.state.omegaCm, c.state.L);
 				c.state.P.assign(c.state.vCm.multiply(c.state.M));
 			}
 
-			//integrate forward on positions 
-			if (!c.sleepy) 
-				c.advancePositions(dt);
-			else {
-				c.advancePositions(dt*c.sleepyness);
-				c.sleepyness *= 0.75;
-				
-				if (c.sleepyness < 1e-3) {
-					c.sleeping = true;
-				}
-			}
-			
-//			fall asleep or awake
-			if (c.totalKinetic() < c.sleepKinetic ) {
-				
-				if (c.sleepy == false ) {
-					c.sleepyness=1;
-				}
-				
-				c.sleepy = true;				
-			} else {
-				c.sleepy = false;
-				c.sleeping = false;
-				c.sleepyness = 1;
-			}	
+			//integrate forward on positions
+			c.advancePositions(dt);
+//			if (!c.sleepy) 
+//				c.advancePositions(dt);
+//			else {
+//				c.advancePositions(dt*c.sleepyness);
+//				c.sleepyness *= 0.75;
+//				
+//				if (c.sleepyness < 1e-3) {
+//					c.sleeping = true;
+//				}
+//			}
+//			
+////			fall asleep or awake
+//			if (c.totalKinetic() < c.sleepKinetic ) {
+//				
+//				if (c.sleepy == false ) {
+//					c.sleepyness=1;
+//				}
+//				
+//				c.sleepy = true;				
+//			} else {
+//				c.sleepy = false;
+//				c.sleeping = false;
+//				c.sleepyness = 1;
+//			}	
 		}
 	} //time-step
 
@@ -344,6 +348,7 @@ public final class Engine implements Model {
 
 	public void addBody( Body c) {
 		bodies.add(c);
+		c.updateTransformations();
 		
 		//install geometries into the broad-phase collision detection
 		Iterator<Geometry> i = c.getGeometries();
@@ -351,8 +356,9 @@ public final class Engine implements Model {
 			Geometry g = i.next();
 			broadfase.add(g);
 		}
+		
+		
 	}
-
 	
 	public void addConstraint(Pair<Body> pair, Constraint joint) {
 		mutedBodyPairs.put(pair,true);		
@@ -413,5 +419,15 @@ public final class Engine implements Model {
 	@Override
 	public Solver getSolver() {
 		return solver;
+	}
+
+	@Override
+	public void setSolver(Solver s) {
+		solver = s;
+	}
+
+	@Override
+	public Iterator<Body> getBodies() {
+		return bodies.iterator();
 	}
 }

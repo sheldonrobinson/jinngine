@@ -11,7 +11,7 @@ import jinngine.physics.Body;
  * Phased in another way, CG can solve the NCP, if l=-infinity and u=infinity for all constraints.
  */
 public class ConjugateGradients implements Solver {
-	int maxIterations = 25;
+	int maxIterations = 15;
 	private double damping = 0;
 	
 
@@ -33,7 +33,7 @@ public class ConjugateGradients implements Solver {
 		double delta_new=0, delta_old=0, delta_zero=0;
 		double delta_low=Double.POSITIVE_INFINITY;
 		double delta_best=delta_low;
-		double epsilon = 1e-10;
+		double epsilon = 1e-8;
 		double division_epsilon = 1e-10;
 		int iterations=0;
 		
@@ -42,12 +42,13 @@ public class ConjugateGradients implements Solver {
 			b.auxDeltaOmega.assignZero();
 		}
 		
+		//We solve Ax+b = 0 => r = -b-Ax
 		//r  = b-Ax
 		//d  = M^(-1)r
 		//delta_new = rTr
 		for (constraint ci: constraints) {
 			ci.residual = 
-				(ci.b) - (ci.j1.dot(ci.body1.deltaVCm) + ci.j2.dot(ci.body1.deltaOmegaCm)
+				(-ci.b) - (ci.j1.dot(ci.body1.deltaVCm) + ci.j2.dot(ci.body1.deltaOmegaCm)
 						+ ci.j3.dot(ci.body2.deltaVCm) + ci.j4.dot(ci.body2.deltaOmegaCm))
 						- ci.lambda*ci.damper;
 				
@@ -130,7 +131,7 @@ public class ConjugateGradients implements Solver {
 //				break;
 //			}
 			
-			if (delta_new > 10*delta_zero) {
+			if (delta_new > 100*delta_zero) {
 				//System.out.println("error larger then start");
 				break;
 			}
@@ -160,7 +161,7 @@ public class ConjugateGradients implements Solver {
 			
 			iterations += 1;
 			
-			System.out.println("iteration " + iterations +", delta_new=" + delta_new +", alpha=" +alpha +", beta=" + beta);
+			//System.out.println("iteration " + iterations +", delta_new=" + delta_new +", alpha=" +alpha +", beta=" + beta);
 
 		} //CG iterations
 
@@ -188,7 +189,7 @@ public class ConjugateGradients implements Solver {
 			//System.out.println("iterations: " + iterations +" best is "+ delta_best);
 		
 		
-		System.out.println("delta_best="+delta_best+ "iterations "+iterations);
+		//System.out.println("delta_best="+delta_best+ "iterations "+iterations);
 		
 		return delta_best;
 	}

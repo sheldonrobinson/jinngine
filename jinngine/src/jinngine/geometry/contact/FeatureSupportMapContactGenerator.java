@@ -73,6 +73,7 @@ public class FeatureSupportMapContactGenerator implements ContactGenerator {
 
 	@Override
 	public boolean run(double dt) {
+		//System.out.println("generator called");
 		//get envelopes
 		//envelope = Sa.getEnvelope(dt)> Sb.getEnvelope(dt)? Sa.getEnvelope(dt) : Sb.getEnvelope(dt);
 		//shell = envelope*0.25;
@@ -83,6 +84,7 @@ public class FeatureSupportMapContactGenerator implements ContactGenerator {
 		principalNormal.assign(v.normalize());
 		double  d = v.norm();
 
+		//Sa.supportPoint(Vector3.j).print();
 		
 		//penetration
 		if (closest.getState().simplexSize > 3 ) {
@@ -98,7 +100,7 @@ public class FeatureSupportMapContactGenerator implements ContactGenerator {
 			double depth = d+shell;
 			
 			generate(a,b,principalNormal,depth, true);
-			//principalNormal.print();
+			principalNormal.print();
 			
 			
 			return true;

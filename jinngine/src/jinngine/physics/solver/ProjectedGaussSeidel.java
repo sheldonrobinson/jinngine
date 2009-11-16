@@ -52,19 +52,19 @@ public class ProjectedGaussSeidel implements Solver {
 				+  ci.j3.dot(ci.body2.deltaVCm) 
 				+ ci.j4.dot(ci.body2.deltaOmegaCm) + ci.lambda*ci.damper;
 
-				double deltaLambda = (ci.b - w)/(ci.diagonal + ci.damper );
+				double deltaLambda = (-ci.b-w)/(ci.diagonal + ci.damper );
 				double lambda0 = ci.lambda;
 
 				//Clamp the lambda[i] value to the constraints
 				if (ci.coupling != null && bounds) {
 					//if the constraint is coupled, allow only lambda <= coupled lambda
-//					ci.lower = -Math.abs(ci.coupling.lambda)*ci.coupling.mu;
-//					ci.upper =  Math.abs(ci.coupling.lambda)*ci.coupling.mu;
+					ci.lower = -Math.abs(ci.coupling.lambda)*ci.coupling.mu;
+					ci.upper =  Math.abs(ci.coupling.lambda)*ci.coupling.mu;
 					
-					 double lower = -Math.abs(ci.coupling.lambda)*ci.coupling.mu;					
-						ci.lower = lower<ci.lower?lower:ci.lower;					
-						double upper = Math.abs(ci.coupling.lambda)*ci.coupling.mu;
-						ci.upper =  upper>ci.upper?upper:ci.upper;
+//					 double lower = -Math.abs(ci.coupling.lambda)*ci.coupling.mu;					
+//						ci.lower = lower<ci.lower?lower:ci.lower;					
+//						double upper = Math.abs(ci.coupling.lambda)*ci.coupling.mu;
+//						ci.upper =  upper>ci.upper?upper:ci.upper;
 
 				} 
 
@@ -84,24 +84,8 @@ public class ProjectedGaussSeidel implements Solver {
 				Vector3.add( ci.body1.deltaOmegaCm, ci.b2.multiply(deltaLambda) );
 				Vector3.add( ci.body2.deltaVCm,     ci.b3.multiply(deltaLambda));
 				Vector3.add( ci.body2.deltaOmegaCm, ci.b4.multiply(deltaLambda));
-			} //for constraints
-			
-			//System.out.println("PGS: deltaResidual="+deltaResidual);
-//			if (deltaResidual<1e-3) {
-//				System.out.println("iter="+m);
-//				return 0;
-//			}
+			} //for constraints			
 		}
-
-//		//reavaluate bounds
-//		for (constraint ci: constraints)
-//			if (ci.coupling != null && bounds) {
-//				//if the constraint is coupled, allow only lambda <= coupled lambda
-//				ci.lower = -Math.abs(ci.coupling.lambda)*ci.coupling.mu;
-//				ci.upper =  Math.abs(ci.coupling.lambda)*ci.coupling.mu;
-//			} 
-//
-//		System.out.println("PGS/ fischer="+FischerNewtonConjugateGradients.fischerMerit(constraints, bodies));
 		return 0;
 	}
 }

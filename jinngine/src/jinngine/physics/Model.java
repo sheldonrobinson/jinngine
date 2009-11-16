@@ -1,5 +1,7 @@
 package jinngine.physics;
 
+import java.util.Iterator;
+
 import jinngine.collision.BroadfaseCollisionDetection;
 import jinngine.geometry.contact.*;
 import jinngine.util.*;
@@ -26,6 +28,12 @@ public interface Model {
 	 * @param body 
 	 */
 	public void removeBody(Body body);
+	
+	/**
+	 * Get an iterator for all bodies in the model
+	 * @return
+	 */
+	public Iterator<Body> getBodies(); 
 	
 	/**
 	 * Add an acting force. 
@@ -73,6 +81,14 @@ public interface Model {
 	 * @return
 	 */
 	public Solver getSolver();
+	
+	/**
+	 * Set another NCP solver
+	 * @return
+	 */
+	public void setSolver(Solver s);
+	
+	
 	
 	/**
 	 * Set the time step size

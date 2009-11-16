@@ -254,5 +254,13 @@ public class Box implements SupportMap3, Geometry, Material {
 	public void setMass(double mass) {
 		this.mass = mass;
 	}
+	
+	/**
+	 * Return the side lengths of this box
+	 * @return
+	 */
+	public Vector3 getDimentions() {
+		return new Vector3(xl,yl,zl);
+	}
 
 }

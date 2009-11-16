@@ -23,7 +23,8 @@ public class GJK3 implements ClosestPointsAlgorithm<SupportMap3,SupportMap3> {
 		public final  Vector3[][] simplices = new Vector3[4][4]; //contains 3 simplices for A-B, Sa, Sb
 		public final double[] lambda = new double[] {1,0,0,0};
 		public final int[] permutation = new int[] {0,1,2,3};
-		public int simplexSize;		
+		public int simplexSize;	
+		//public boolean initialized = false;
 	}
 
 	private State state = new State();
@@ -40,6 +41,13 @@ public class GJK3 implements ClosestPointsAlgorithm<SupportMap3,SupportMap3> {
     	//Working variables
 		final double epsilon = 1e-6f;
 		int iterations = 0;
+		
+//		if (!state.initialized) {
+//			state.v.assign( Sa.supportPoint(Vector3.j.multiply(-1)).minus( Sb.supportPoint(Vector3.j)) );
+//			//state.v.assign( Sa.supportPoint(state.v.multiply(-1)).minus( Sb.supportPoint(state.v)) );
+//			state.initialized = true;
+//		}
+		
     	Vector3 v = state.v;
 		Vector3 w = new Vector3();
 		Vector3 sa = new Vector3();
@@ -84,6 +92,7 @@ public class GJK3 implements ClosestPointsAlgorithm<SupportMap3,SupportMap3> {
 			
 			//separating axis test (distance is at least more than the envelope)
 			if ( v.normalize().dot(w) > envelope ) {
+				//System.out.println("sep axis, envelope="+envelope+" v.w ="+v.normalize().dot(w)+ " iteration " + iterations);
 				break;
 			} 
 						
