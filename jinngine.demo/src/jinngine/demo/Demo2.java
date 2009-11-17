@@ -35,7 +35,7 @@ public class Demo2 implements KeyListener {
 		
 		Body floor = new Body(new Box(1500,10,1500));
 		floor.setPosition(new Vector3(0,-25,0));
-		//floor.state.q.assign(Quaternion.rotation(-0.1, Vector3.k));
+		//floor.state.q.assign(Quaternion.rotation(-0.27, Vector3.k));
 		floor.setFixed(true);
 		
 		Body back = new Body( new Box(200,200,2));		
@@ -64,13 +64,13 @@ public class Demo2 implements KeyListener {
 		//wee need some power for this
 		//model.getSolver().setMaximumIterations(3224);		
 		//model.setSolver(new ProjectedGaussSeidel(115));
-		model.setSolver(new SubspaceMinimization());
+		model.setSolver(new SubspaceMinimization(true));
 		//model.setSolver(new QuadraticPrograming());
 		
 		
 		//build a wall
-		for (int i=0; i<4; i++) {
-			for (int j=0; j<4; j++) {
+		for (int i=0; i<2; i++) {
+			for (int j=0; j<2; j++) {
 				new Cube(g, new Vector3(3,2,2), new Vector3(-17+i*(3.1) +(j%2)*1.5,-18.8+j*2.1 ,-25), 10+j*0 );
 //				new Cube(g, new Vector3(3,2,2), new Vector3(-17+i*3.1 +(j%2)*1.5*.2,-18.8+j*2.1 ,-25), 10 );
 
@@ -113,7 +113,7 @@ public class Demo2 implements KeyListener {
 						Vector3 size = box.getDimentions();
 						Vector3 pos = b.state.rCm.copy();
 						Quaternion q = b.state.q.copy();
-						writer.write(("<box height=\""+size.x+"\" width=\""+size.y+"\" depth=\""+size.z+"\" mass=\""+b.state.M+"\">\n"));
+						writer.write(("<box height=\""+size.x+"\" width=\""+size.y+"\" depth=\""+size.z+"\" mass=\""+b.state.M+"\" fixed=\""+b.isFixed()+"\">\n"));
 						writer.write(("  <position x=\""+pos.x+"\" y=\""+pos.y+"\" z=\""+pos.z+"\"/>\n"));
 						writer.write(("  <orientation s=\""+q.s+"\" x=\""+q.v.x+"\" y=\""+q.v.y+"\" z=\""+q.v.z+"\"/>\n"));
 						writer.write(("  <velocity x=\""+b.state.vCm.x+"\" y=\""+b.state.vCm.y+"\" z=\""+b.state.vCm.z+"\"/>\n"));

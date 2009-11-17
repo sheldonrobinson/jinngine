@@ -1,11 +1,16 @@
 package jinngine.demo;
 
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
 
 import jinngine.demo.graphics.*;
+import jinngine.geometry.Box;
+import jinngine.geometry.Geometry;
 import jinngine.math.Matrix3;
+import jinngine.math.Matrix4;
+import jinngine.math.Quaternion;
 import jinngine.math.Vector3;
 import jinngine.physics.Body;
 import jinngine.physics.Model;
@@ -23,62 +28,75 @@ public class Gear implements Entity {
 		render = m.getRender();
 		model = m.getModel();
 		
-		double n = 7;
-		double r = radius*1;
-		double r2 = radius*(10/13.0);
-		//double r3 = radius*(8.5/13.0);
-		double d = radius*(6/13.0);
 		
 		b = new Body();
 			
-		double delta = 2*Math.PI*(1/n);
-		for ( double theta=0; theta<1.9*Math.PI; theta+=delta) {
-			List<Vector3> points = new LinkedList<Vector3>();
+		int k = 8; double r = 2.0;
+		for ( int n=0; n<k; n++) {
+			double theta = (n+1)*Math.PI*2/k;
+			r = 2.0;
+			//resize the drawing shape to the right dimensions
+			Vector3 displacement = new Vector3(Math.cos(theta)*r, Math.sin(theta)*r,0);
+			Matrix3 transform = Quaternion.toRotationMatrix3(Quaternion.rotation(-theta-Math.PI/4, Vector3.k), new Matrix3());
 
-			//gear tooth			
-			points.add( new Vector3( r*Math.sin(theta-delta*0.20), r*Math.cos(theta-delta*0.20), -d ));
-			points.add( new Vector3( r*Math.sin(theta-delta*0.20), r*Math.cos(theta-delta*0.20), d ));
-			points.add( new Vector3( r*Math.sin(theta+delta*0.20), r*Math.cos(theta+delta*0.20), -d ));
-			points.add( new Vector3( r*Math.sin(theta+delta*0.20), r*Math.cos(theta+delta*0.20), d ));
+			Vector3 size = new Vector3(2,2,3);
 			
-			points.add( new Vector3( r2*Math.sin(theta-delta*0.5), r2*Math.cos(theta-delta*0.5), -d ));
-			points.add( new Vector3( r2*Math.sin(theta-delta*0.5), r2*Math.cos(theta-delta*0.5), d ));
-			points.add( new Vector3( r2*Math.sin(theta+delta*0.5), r2*Math.cos(theta+delta*0.5), -d ));
-			points.add( new Vector3( r2*Math.sin(theta+delta*0.5), r2*Math.cos(theta+delta*0.5), d ));
-//			points.add( new Vector3( r3*Math.sin(theta-delta*0.25), r3*Math.cos(theta-delta*0.25), -d ));
-//			points.add( new Vector3( r3*Math.sin(theta-delta*0.25), r3*Math.cos(theta-delta*0.25), d ));
-//			points.add( new Vector3( r3*Math.sin(theta+delta*0.25), r3*Math.cos(theta+delta*0.25), -d ));
-//			points.add( new Vector3( r3*Math.sin(theta+delta*0.25), r3*Math.cos(theta+delta*0.25), d ));
-
-			
-			//find translation
-			Vector3 cm = new Vector3();
-			for (Vector3 p: points) {
-				cm.assign(cm.add(p.multiply(1/(double)points.size())));
-			}
-			
-			//translate points
-			for (Vector3 p: points) {
-				p.assign(p.minus(cm));
-			}
-			
-			Hull shape = new Hull(points.iterator());
-			shape.setMass(mass/n);
-			shape.setAuxiliary(this);
-			shape.setLocalTransform(Matrix3.identity(), cm);		
-			b.addGeometry(shape);
-			
-			render.addShape( new FlatShade(), shape, b.state.transform, this);
-			
+			//Setup the physics
+			Box box = new Box(size.x, size.y, size.z);
+			box.setAuxiliary(this);			
+			box.setLocalTransform(transform, displacement);
+//			box.setMass(mass);
+			b.addGeometry(box);
 		}
 		
+
 		b.finalize();		
 		b.setPosition(position);
 		b.sleepKinetic = 0.1;
 		model.addForce(new GravityForce(b));
 		model.addBody(b);
-		
 
+		Iterator<Geometry> gi = b.getGeometries();
+		while(gi.hasNext()) {
+			Geometry geo = gi.next();
+
+			//just a box for drawing
+//			List<Vector3> points = new LinkedList<Vector3>();
+//			points.add( new Vector3( 1, 1, 1 ).multiply(0.5));
+//			points.add( new Vector3( -1, 0.333, 1 ).multiply(0.5));
+//			points.add( new Vector3( 0.333, -1, 1 ).multiply(0.5));
+//			points.add( new Vector3( -1, -1, 1 ).multiply(0.5));
+//			points.add( new Vector3( 1, 1, -1 ).multiply(0.5));
+//			points.add( new Vector3( -1, 0.3333, -1 ).multiply(0.5));
+//			points.add( new Vector3( 0.333, -1, -1 ).multiply(0.5));
+//			points.add( new Vector3( -1, -1, -1 ).multiply(0.5));
+			List<Vector3> points = new LinkedList<Vector3>();
+			points.add( new Vector3( 1, 0.333, 1 ).multiply(0.5));
+			points.add( new Vector3( -1.5, 1.5, 1 ).multiply(0.5));
+			points.add( new Vector3( 1, -1, 1 ).multiply(0.5));
+			points.add( new Vector3( -0.333, -1, 1 ).multiply(0.5));
+			points.add( new Vector3( 1, 0.333, -1 ).multiply(0.5));
+			points.add( new Vector3( -1.5, 1.5, -1 ).multiply(0.5));
+			points.add( new Vector3( 1, -1, -1 ).multiply(0.5));
+			points.add( new Vector3( -0.333, -1, -1 ).multiply(0.5));
+
+			//transform
+			Vector3 size = ((Box)geo).getDimentions();
+			Matrix3 scale = Matrix3.diagonal(size);
+			Matrix3 transform = new Matrix3();
+			Vector3 displacement = new Vector3();
+			geo.getLocalTransform(transform, displacement);
+			
+			for (Vector3 p: points) {
+				p.assign( transform.multiply(scale.multiply(p)).add(displacement) );
+			}
+			
+			//create drawing shape
+			Hull shape = new Hull(points.iterator());
+			shape.setAuxiliary(this);
+			
+			render.addShape( new FlatShade(), shape, b.state.transform, this);			
+		}
 	}
 	
 	public void fix() {

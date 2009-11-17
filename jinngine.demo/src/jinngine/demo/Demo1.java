@@ -5,6 +5,7 @@ import jinngine.geometry.Box;
 import jinngine.math.Vector3;
 import jinngine.physics.Body;
 import jinngine.physics.Model;
+import jinngine.physics.solver.ProjectedGaussSeidel;
 import jinngine.physics.solver.SubspaceMinimization;
 
 
@@ -41,7 +42,8 @@ public class Demo1 {
 		model.addBody(back);
 
 		model.getSolver().setMaximumIterations(17);
-		model.setSolver(new SubspaceMinimization());
+		model.setSolver(new ProjectedGaussSeidel(145,false));
+		//model.setSolver(new SubspaceMinimization(false));
 		
 		//create some cubes and a gear
 		new Cube(g, new Vector3(2.5,2.5,2.5), new Vector3(-10,-10,-20), 10 );
@@ -51,6 +53,7 @@ public class Demo1 {
 //		new Cube(g, new Vector3(40,10,10), 10, 15);
 		
 		//new Gear(g, new Vector3(0,50,0), 1, 20);
+		new Gear(g, new Vector3(-10,-5,-20), 25, 3);
 		new Gear(g, new Vector3(-10,-5,-20), 25, 3);
 
 		g.start();

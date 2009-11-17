@@ -40,8 +40,8 @@ public class Player implements KeyListener {
 
 	public Player() {
 		
-		model.setSolver(new SubspaceMinimization());
-		//model.setSolver(new ProjectedGaussSeidel(645));
+		model.setSolver(new SubspaceMinimization(false));
+		//model.setSolver(new ProjectedGaussSeidel(1315));
 		
 		try {
 			SAXParser parser = SAXParserFactory.newInstance().newSAXParser();
@@ -57,11 +57,16 @@ public class Player implements KeyListener {
 						double h = Double.parseDouble(attributes.getValue("height"));
 						double w = Double.parseDouble(attributes.getValue("width"));
 						double d = Double.parseDouble(attributes.getValue("depth"));						
-						double mass = Double.parseDouble(attributes.getValue("mass"));
+						//double mass = Double.parseDouble(attributes.getValue("mass"));
+						boolean fixed = Boolean.parseBoolean(attributes.getValue("fixed"));
 						
 						Box box = new Box(h,w,d);
-						box.setMass(mass);
+						//box.setMass(mass);
 						currentBody = new Body(box);
+						
+						if (fixed) {
+							currentBody.setFixed(true);
+						}
 						
 						//Setup a shape (a box) for drawing
 						Vector3 size = new Vector3(h,w,d);
@@ -86,33 +91,38 @@ public class Player implements KeyListener {
 						currentBody.sleepKinetic = 0.0;
 
 						//Tell the model about our new box and attach a gravity force to it
-						model.addForce(new GravityForce(currentBody));
 						model.addBody(currentBody);
-						
-						//tell the renderer about all this (not directly related to jinngine physics)
-						//looks weird, but just a simple class to make the graphics work
-						Entity e = new Entity() {
-							final Body body = currentBody;
-							private boolean alarmed = false;
-							@Override
-							public boolean getAlarmed() { return alarmed; }
-							@Override
-							public Vector3 getPosition() { return body.state.rCm.copy();}
-							@Override
-							public Body getPrimaryBody() {return body;}
-							@Override
-							public void setAlarmed(boolean alarmed) {this.alarmed = alarmed;}
-							@Override
-							public void setPosition(Vector3 p) {body.setPosition(p);}
-							@Override
-							public void setSelected(boolean selected) {}
-						};
 
-						//bind the box geometry to the entity
-						box.setAuxiliary(e); 
-						
-						//finally, ask render to draw this shape
-						g.getRender().addShape( new FlatShade(), shape, currentBody.state.transform, e);						
+						//draw and interact with non-fixed stuff
+						if (!fixed) {
+							model.addForce(new GravityForce(currentBody));
+
+
+							//tell the renderer about all this (not directly related to jinngine physics)
+							//looks weird, but just a simple class to make the graphics work
+							Entity e = new Entity() {
+								final Body body = currentBody;
+								private boolean alarmed = false;
+								@Override
+								public boolean getAlarmed() { return alarmed; }
+								@Override
+								public Vector3 getPosition() { return body.state.rCm.copy();}
+								@Override
+								public Body getPrimaryBody() {return body;}
+								@Override
+								public void setAlarmed(boolean alarmed) {this.alarmed = alarmed;}
+								@Override
+								public void setPosition(Vector3 p) {body.setPosition(p);}
+								@Override
+								public void setSelected(boolean selected) {}
+							};
+
+							//bind the box geometry to the entity
+							box.setAuxiliary(e); 
+
+							//finally, ask render to draw this shape
+							g.getRender().addShape( new FlatShade(), shape, currentBody.state.transform, e);
+						}
 						
 					}
 					
@@ -157,53 +167,53 @@ public class Player implements KeyListener {
 		}
 		
 		
-		//Setup a shape (a box) for drawing
-		Vector3 size = new Vector3(3,2,2);
-		List<Vector3> points = new LinkedList<Vector3>();
-		points.add( new Vector3( 1, 1, 1 ).multiply(0.5));
-		points.add( new Vector3( -1, 1, 1 ).multiply(0.5));
-		points.add( new Vector3( 1, -1, 1 ).multiply(0.5));
-		points.add( new Vector3( -1, -1, 1 ).multiply(0.5));
-		points.add( new Vector3( 1, 1, -1 ).multiply(0.5));
-		points.add( new Vector3( -1, 1, -1 ).multiply(0.5));
-		points.add( new Vector3( 1, -1, -1 ).multiply(0.5));
-		points.add( new Vector3( -1, -1, -1 ).multiply(0.5));
-
-		//resize the drawing shape to the right dimensions
-		Matrix4 transform = jinngine.math.Transforms.scale(size);
-		for (Vector3 p: points)
-			p.assign( transform.multiply(p));
-		
-		//create drawing shape
-		Hull shape = new Hull(points.iterator());
-					
-		//create a world that contains walls and a floor (not drawn)
-		Body floor = new Body(new Box(1500,10,1500));
-		floor.setPosition(new Vector3(0,-25,0));
-		//floor.state.q.assign(Quaternion.rotation(-0.1, Vector3.k));
-		floor.setFixed(true);
-		
-		Body back = new Body( new Box(200,200,2));		
-		back.setPosition(new Vector3(0,0,-45));
-		back.setFixed(true);
-
-		Body front = new Body( new Box(200,200,2));		
-		front.setPosition(new Vector3(0,0,-15));
-		front.setFixed(true);
-
-		Body left = new Body( new Box(2,200,200));		
-		left.setPosition(new Vector3(-25,0,0));
-		left.setFixed(true);
-
-		Body right = new Body( new Box(2,200,200));		
-		right.setPosition(new Vector3(0,0,0));
-		right.setFixed(true);
-
-		model.addBody(left);
-		model.addBody(right);
-		model.addBody(front);
-		model.addBody(floor);
-		model.addBody(back);
+//		//Setup a shape (a box) for drawing
+//		Vector3 size = new Vector3(3,2,2);
+//		List<Vector3> points = new LinkedList<Vector3>();
+//		points.add( new Vector3( 1, 1, 1 ).multiply(0.5));
+//		points.add( new Vector3( -1, 1, 1 ).multiply(0.5));
+//		points.add( new Vector3( 1, -1, 1 ).multiply(0.5));
+//		points.add( new Vector3( -1, -1, 1 ).multiply(0.5));
+//		points.add( new Vector3( 1, 1, -1 ).multiply(0.5));
+//		points.add( new Vector3( -1, 1, -1 ).multiply(0.5));
+//		points.add( new Vector3( 1, -1, -1 ).multiply(0.5));
+//		points.add( new Vector3( -1, -1, -1 ).multiply(0.5));
+//
+//		//resize the drawing shape to the right dimensions
+//		Matrix4 transform = jinngine.math.Transforms.scale(size);
+//		for (Vector3 p: points)
+//			p.assign( transform.multiply(p));
+//		
+//		//create drawing shape
+//		Hull shape = new Hull(points.iterator());
+//					
+//		//create a world that contains walls and a floor (not drawn)
+//		Body floor = new Body(new Box(1500,10,1500));
+//		floor.setPosition(new Vector3(0,-25,0));
+//		//floor.state.q.assign(Quaternion.rotation(-0.1, Vector3.k));
+//		floor.setFixed(true);
+//		
+//		Body back = new Body( new Box(200,200,2));		
+//		back.setPosition(new Vector3(0,0,-45));
+//		back.setFixed(true);
+//
+//		Body front = new Body( new Box(200,200,2));		
+//		front.setPosition(new Vector3(0,0,-15));
+//		front.setFixed(true);
+//
+//		Body left = new Body( new Box(2,200,200));		
+//		left.setPosition(new Vector3(-25,0,0));
+//		left.setFixed(true);
+//
+//		Body right = new Body( new Box(2,200,200));		
+//		right.setPosition(new Vector3(0,0,0));
+//		right.setFixed(true);
+//
+//		model.addBody(left);
+//		model.addBody(right);
+//		model.addBody(front);
+//		model.addBody(floor);
+//		model.addBody(back);
 		
 		//start animation
 		g.addKeyListener(this);
@@ -237,12 +247,12 @@ public class Player implements KeyListener {
 				while(i.hasNext()) {
 					Body b = i.next();
 					Geometry geo = b.getGeometries().next();
-					if (geo instanceof Box && !b.isFixed()) {
+					if (geo instanceof Box) {
 						Box box = (Box)geo;
 						Vector3 size = box.getDimentions();
 						Vector3 pos = b.state.rCm.copy();
 						Quaternion q = b.state.q.copy();
-						writer.write(("<box height=\""+size.x+"\" width=\""+size.y+"\" depth=\""+size.z+"\" mass=\""+b.state.M+"\">\n"));
+						writer.write(("<box height=\""+size.x+"\" width=\""+size.y+"\" depth=\""+size.z+"\" mass=\""+b.state.M+"\" fixed=\""+b.isFixed()+"\">\n"));
 						writer.write(("  <position x=\""+pos.x+"\" y=\""+pos.y+"\" z=\""+pos.z+"\"/>\n"));
 						writer.write(("  <orientation s=\""+q.s+"\" x=\""+q.v.x+"\" y=\""+q.v.y+"\" z=\""+q.v.z+"\"/>\n"));
 						writer.write(("  <velocity x=\""+b.state.vCm.x+"\" y=\""+b.state.vCm.y+"\" z=\""+b.state.vCm.z+"\"/>\n"));

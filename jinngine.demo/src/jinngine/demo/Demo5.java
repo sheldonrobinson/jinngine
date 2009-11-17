@@ -5,6 +5,7 @@ import jinngine.geometry.Box;
 import jinngine.math.Vector3;
 import jinngine.physics.Body;
 import jinngine.physics.Model;
+import jinngine.physics.solver.SubspaceMinimization;
 
 public class Demo5 {
 	public Demo5() {
@@ -39,6 +40,7 @@ public class Demo5 {
 
 		//wee need some power for this
 		model.getSolver().setMaximumIterations(24);
+		model.setSolver(new SubspaceMinimization(false));
 		
 		//build a wall
 		for (int i=0; i<2; i++) {

@@ -29,8 +29,7 @@ public class RenderImpl extends Frame implements GLEventListener, Render  {
 	List<DrawTask> tasks = new LinkedList<DrawTask>();
 
 	
-	public double zoom = 0.95;
-
+	public double zoom = 1.1;//0.95;
 	
 	@Override
 	public void addShape(ShapeRender r, Shape s, Matrix4 transform, Entity e) {

@@ -74,8 +74,8 @@ public class Demo3 {
 
 		//we need some power for this
 		//model.getSolver().setMaximumIterations(15);
-		//model.setSolver(new ProjectedGaussSeidel(100));
-		model.setSolver(new SubspaceMinimization());
+		//model.setSolver(new ProjectedGaussSeidel(100,true));
+		model.setSolver(new SubspaceMinimization(true));
 
 		
 		//get renderer from graphics
@@ -83,7 +83,7 @@ public class Demo3 {
 		
 		//build a chain of joined boxes
 		Body prevBody = null;
-		for (int i=0; i<6; i++) {
+		for (int i=0; i<5; i++) {
 			final Body body;
 
 			//Setup the physics

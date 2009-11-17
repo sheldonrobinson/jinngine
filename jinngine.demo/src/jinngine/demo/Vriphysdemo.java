@@ -45,7 +45,7 @@ public class Vriphysdemo implements KeyListener{
 		model.addBody(back);
 
 //		model.setSolver(new FischerNewtonConjugateGradients());
-		model.setSolver(new ProjectedGaussSeidel(1000));
+		model.setSolver(new ProjectedGaussSeidel(1000, false));
 		g.setWindowTitle("Projected Gauss Seidel, 1000 iterations, mass ratio 1/1e6");
 		
 		//wee need some power for this
@@ -81,7 +81,7 @@ public class Vriphysdemo implements KeyListener{
 		
 		switch (arg0.getKeyChar()) {
 		case '1':
-			model.setSolver(new ProjectedGaussSeidel(1000));
+			model.setSolver(new ProjectedGaussSeidel(1000, false));
 			g.setWindowTitle("Projected Gauss Seidel, 1000 iterations,  mass ratio 1/1000");
 			break;
 		case '2':
@@ -89,7 +89,7 @@ public class Vriphysdemo implements KeyListener{
 			g.setWindowTitle("Fischer-Newton-CG, (max 25 outer iteration, about the same as 1125 PGS iterations) mass ratio 1/1000");
 			break;
 		case '3':
-			model.setSolver(new SubspaceMinimization());
+			model.setSolver(new SubspaceMinimization(false));
 			g.setWindowTitle("PGS-CG Subspace minimization, 3 outer iterations, 15 PGS+about 20 CG in each,  mass ratio 1/1000");
 			break;
 		case 'w':

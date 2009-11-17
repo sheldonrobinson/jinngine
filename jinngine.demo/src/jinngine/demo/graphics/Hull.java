@@ -140,18 +140,18 @@ public class Hull implements Shape, SupportMap3, Geometry {
 		Vector3 extremal = new Vector3();
 		for ( Vector3 v: vertices) {
 			if (extremal.norm() < v.norm()) extremal.assign(v);
-			if ( v.x < minBounds.x ) minBounds.x=v.x;
-			if ( v.y < minBounds.y ) minBounds.y=v.y;
-			if ( v.z < minBounds.z ) minBounds.z=v.z;
-			if ( v.x > maxBounds.x ) maxBounds.x=v.x;
-			if ( v.y > maxBounds.y ) maxBounds.y=v.y;
-			if ( v.z > maxBounds.z ) maxBounds.z=v.z;
+//			if ( v.x < minBounds.x ) minBounds.x=v.x;
+//			if ( v.y < minBounds.y ) minBounds.y=v.y;
+//			if ( v.z < minBounds.z ) minBounds.z=v.z;
+//			if ( v.x > maxBounds.x ) maxBounds.x=v.x;
+//			if ( v.y > maxBounds.y ) maxBounds.y=v.y;
+//			if ( v.z > maxBounds.z ) maxBounds.z=v.z;
 		}
 		
 //		minBounds.print();
 //		maxBounds.print();
 		
-		double max = extremal.norm()+1.0;
+		double max = extremal.norm()+5.0;
 		minBounds.assign(new Vector3(-max,-max,-max));
 		maxBounds.assign(new Vector3(max,max,max));
 
@@ -282,8 +282,11 @@ public class Hull implements Shape, SupportMap3, Geometry {
 			//set normal
 			Vector3 faceNormal = v1.minus(v2).cross(v3.minus(v2)).normalize();
 			
+//			System.out.println("lala" +  faceNormal.dot(v.normalize()));
+//			v.print();
 			//if normal is within tolerance
-			if ( Math.abs(faceNormal.dot(v)) > 0.90 ) {
+			if ( Math.abs(faceNormal.dot(v.normalize())) > 0.8 ) {
+				System.out.println("taken");
 				//return face in WCS
 				for (Vector3 vertex: faces.get(faceIndex))
 					returnList.add( body.state.rotation.multiply(localtransform.multiply(vertex).add(localdisplacement)).add(body.state.rCm) );
@@ -308,10 +311,10 @@ public class Hull implements Shape, SupportMap3, Geometry {
 		}
 		
 		//if neighbour is within threshhold, take the edge case
-		if ( Math.abs(object-best) < 0.1 )
+		if ( Math.abs(object-best) < 0.2 ){
 			returnList.add( body.state.rotation.multiply(localtransform.multiply(vertices.get(neighbourIndex)).add(localdisplacement)).add(body.state.rCm) );			
-		//System.out.println("edge case taken");
-
+		 System.out.println("edge case taken");
+		}
 			
 		// return from edge or point case
 		return;
