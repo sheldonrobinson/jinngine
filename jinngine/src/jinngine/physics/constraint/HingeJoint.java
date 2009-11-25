@@ -1,11 +1,9 @@
 package jinngine.physics.constraint;
 
 import java.util.*;
-
 import jinngine.math.Matrix3;
 import jinngine.math.Vector3;
 import jinngine.physics.Body;
-import jinngine.physics.solver.*;
 import jinngine.physics.solver.Solver.constraint;
 
 /**
@@ -186,19 +184,10 @@ public final class HingeJoint implements Constraint {
 		double Kcor = 0.99;
 		
 		Vector3 u = b1.state.vCm.minus( ri.cross(b1.state.omegaCm)).minus(b2.state.vCm).add(rj.cross(b2.state.omegaCm));
-		
-		//u.assign ( u.add(uextf));
-		//Vector3 Vext = Bi.multiply(b1.state.FCm).add(Bangi.multiply(b1.state.tauCm)).add( Bj.multiply(b2.state.FCm)).add(Bangj.multiply( b2.state.tauCm)).multiply(dt);
-		//u.assign( u.add(Vext));
-		
-//		Vector3 posError = b1.state.rCm.add(b1.state.q.rotate(p1)).minus(b2.state.rCm).minus(b2.state.q.rotate(p2)).multiply(Kcor);
 		Vector3 posError = b1.state.rCm.add(ri).minus(b2.state.rCm).minus(rj).multiply(1/dt);
-//		Vector3 u = b1.state.v_cm.minus( ri.cross(b1.state.omega_cm)).add(b2.state.v_cm).minus(rj.cross(b2.state.omega_cm)).multiply(1);
 		//error in transformed normal
 		Vector3 nerror = tn1.cross(tn2);
 		u.assign( u.add(posError.multiply(Kcor)));
-		
-		//Vector3.multiply(u, -1);
 		
 		linear1.assign( 
 				b1,	b2, 
@@ -235,8 +224,6 @@ public final class HingeJoint implements Constraint {
 		Vector3 axis = tn1;		
 		double sign = tt2i.cross(tt2j).dot(tn1)>0?1:-1;
 		double product = tt2i.dot(tt2j);
-		//avoid values slightly greater then one
-//		theta = Math.acos( product>1?1:product )*sign;
 		theta = -Math.acos( product )*sign;
 
 		//set the motor limits
@@ -253,29 +240,19 @@ public final class HingeJoint implements Constraint {
 			correction = (theta - (upperLimit+shell) )*(1/dt)*Kcor;
 			high = motorHigh;
 			low = Double.NEGATIVE_INFINITY;// + motorLow;
-			bvalue = (1+e)*velocity + correction ;
-			
-			//System.out.println("velocity="+velocity+ "friction=" + friction);
-
-		} 
-		
+			bvalue = (1+e)*velocity + correction ;		
 		//if joint is stretched lower
-		else if ( theta < lowerLimit ) {
+		} else if ( theta < lowerLimit ) {
 			correction = (theta - (lowerLimit-shell) )*(1/dt)*Kcor;
 			high = Double.POSITIVE_INFINITY;// + motorHigh;
 			low = motorLow;
 			bvalue = ((1+e)*velocity + correction) ;
-
-		}
-		
 		//not at limits (motor is working)
-		else if (motor!=0 ){
+		}else if (motor!=0 ){
 			high = motorHigh;
 			low = motorLow;
-
 			//motor tries to accelerate joint to the maximum velocity possible
 			bvalue = Math.signum(motor)>0? Double.POSITIVE_INFINITY: Double.NEGATIVE_INFINITY;
-		
 		// not at limits and motor is not working
 		} else {
 			high = friction;
@@ -283,7 +260,6 @@ public final class HingeJoint implements Constraint {
 
 			//friction tries to prevent motion along the joint axis
 			bvalue = velocity;			
-
 		}
 		
 		angular1.assign( 
@@ -294,14 +270,8 @@ public final class HingeJoint implements Constraint {
 				high,
 				null,
 				bvalue );
-//				Double.NEGATIVE_INFINITY,
-//				Double.POSITIVE_INFINITY,
-//				null,
-//				velocity );
-
 		
 		//keep bodies aligned to the axis
-		double Fexttt2i = b1.state.Iinverse.multiply(tt2i).dot(b1.state.tauCm) + b2.state.Iinverse.multiply(tt2i.multiply(-1)).dot(b2.state.tauCm); 
 		angular2.assign( 
 				b1, b2, 
 				new Vector3(), b1.state.Iinverse.multiply(tt2i), new Vector3(), b2.state.Iinverse.multiply(tt2i.multiply(-1)), 
@@ -309,10 +279,9 @@ public final class HingeJoint implements Constraint {
 				Double.NEGATIVE_INFINITY,
 				Double.POSITIVE_INFINITY,
 				null,
-				tt2i.dot(b1.state.omegaCm)-tt2i.dot(b2.state.omegaCm) - Kcor*tt2i.dot(nerror)*(1/dt) + Fexttt2i*dt*0 );	
+				tt2i.dot(b1.state.omegaCm)-tt2i.dot(b2.state.omegaCm) - Kcor*tt2i.dot(nerror)*(1/dt)  );	
 
 		
-		double Fexttt3i = b1.state.Iinverse.multiply(tt3i).dot(b1.state.tauCm) + b2.state.Iinverse.multiply(tt3i.multiply(-1)).dot(b2.state.tauCm); 
 		angular3.assign( 
 				b1,	b2, 
 				new Vector3(), b1.state.Iinverse.multiply(tt3i), new Vector3(), b2.state.Iinverse.multiply(tt3i.multiply(-1)), 
@@ -320,19 +289,15 @@ public final class HingeJoint implements Constraint {
 				Double.NEGATIVE_INFINITY,
 				Double.POSITIVE_INFINITY,
 				null,
-				tt3i.dot(b1.state.omegaCm)-tt3i.dot(b2.state.omegaCm) - Kcor*tt3i.dot(nerror)*(1/dt) + Fexttt3i*dt*0 );		
+				tt3i.dot(b1.state.omegaCm)-tt3i.dot(b2.state.omegaCm) - Kcor*tt3i.dot(nerror)*(1/dt)  );		
 
 
+		//add constraints to return list
 		iterator.add(linear1);
 		iterator.add(linear2);
 		iterator.add(linear3);
-		if (hinge) {
-			//iterator.add(angular1);
-
-			iterator.add(angular2);
-			iterator.add(angular3);
-		}
+		iterator.add(angular1);
+		iterator.add(angular2);
+		iterator.add(angular3);
 	}
-
-
 }
