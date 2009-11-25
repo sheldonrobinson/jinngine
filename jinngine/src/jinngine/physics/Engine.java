@@ -30,17 +30,6 @@ public final class Engine implements Model {
 	// Constraints, joints and forces
 	private final List<constraint> constraintList = new LinkedList<constraint>();  
 	private final List<Force> forces = new LinkedList<Force>(); 
-
-
-	// Pairs not to be considered by contact constraints
-	private final Map<Pair<Body>,Boolean> mutedBodyPairs = new HashMap<Pair<Body>,Boolean>();
-
-	public int method = 1;
-	int tick = 0;
-	double accumen;
-	double accumef;
-	int totalinner = 0;
-	public static double energy;
 	
 	// Create a contact graph classifier, used by the contact graph for determining
 	// fixed bodies, i.e. bodies considered to have infinite mass. 
@@ -160,8 +149,9 @@ public final class Engine implements Model {
 						System.exit(0);
 					}
 				} else {
+					//TODO enable this and do tests
 					//this is not good, report an error
-					System.out.println("no constraint pressent");
+					//System.out.println("no constraint pressent");
 					//System.exit(0);
 				}
 			}
@@ -173,18 +163,9 @@ public final class Engine implements Model {
 
 	//Create a linear complementarity problem solver
 	private Solver solver = new ProjectedGaussSeidel();
-	private Solver pgs = new ProjectedGaussSeidel();
-//	private Solver solver = new FischerNewtonConjugateGradients();
-//	private Solver solver = new ConjugateGradients();
-//	private Solver solver = new SubspaceMinimization();
-//	private FischerNewtonConjugateGradients solver2 = new FischerNewtonConjugateGradients();
-	
 	//time-step size
 	private double dt = 0.01; 
 
-	/**
-	 * 
-	 */
 	public Engine() {
 		//create some initial ContactGeneratorClassifiers
 		//The sphere-sphere classifier
@@ -196,7 +177,6 @@ public final class Engine implements Model {
 					return new SphereContactGenerator((jinngine.geometry.Sphere)a, (jinngine.geometry.Sphere)b);
 					//return new SamplingSupportMapContacts(a.getBody(),b.getBody(), (SupportMap3)a, (SupportMap3)b);
 				}
-				
 				//not recognised
 				return null;	
 			}
@@ -212,14 +192,10 @@ public final class Engine implements Model {
 					//return new SupportMapContactGenerator2((SupportMap3)a, a,  (SupportMap3)b, b);
 					return new FeatureSupportMapContactGenerator((SupportMap3)a, a,  (SupportMap3)b, b);
 				}
-				
 				//not recognised
 				return null;	
 			}
 		});
-		
-		
-		
 	}
 
 	/**
@@ -242,10 +218,7 @@ public final class Engine implements Model {
 	private final void timeStep() {
 		// Clear acting forces and auxillary variables
 		for (Body c:bodies) {
-			// force
 			c.clearForces();
-
-			// clear out auxillary delta velocity fields and constraint lists
 			c.deltaVCm.assign(Vector3.zero);
 			c.deltaOmegaCm.assign(Vector3.zero);
 		}
@@ -270,38 +243,15 @@ public final class Engine implements Model {
 			//The component 
 			ComponentGraph.Component g = components.next();
 			
-			//check if group is all sleepy, then ignore its constraints
-//			boolean ignoreGroup = false;
-//			Iterator<Body> nodeiter = contactGraph.getNodesInComponent(g);
-//			while (nodeiter.hasNext()) {
-//				if (!nodeiter.next().sleeping) {
-//					ignoreGroup = false;
-//					break;
-//				}
-//			}
-
-			// mark bodies in group as sleeping
-//			nodeiter = contactGraph.getNodesInComponent(g);
-//			while (nodeiter.hasNext()) {
-//				nodeiter.next().ignore = ignoreGroup;
-//			}
-			
-			//apply constraints off group
-//			if (!ignoreGroup) {
-			Iterator<Constraint> constraints = 
-				contactGraph.getEdgesInComponent(g);
-
+			Iterator<Constraint> constraints = contactGraph.getEdgesInComponent(g);
 			while (constraints.hasNext()) {
 				constraints.next().applyConstraints(constraintIterator, dt);
 			}
-//			}	
 		} //while groups
-
 		
 		//run the solver
 		solver.solve( constraintList, bodies, 0.0 );
 		
-
 		// Apply delta velocities and integrate positions forward
 		for (Body c : bodies ) {
 			//don't process inactive bodies
@@ -312,37 +262,12 @@ public final class Engine implements Model {
 			if ( !c.isFixed() ) {
 				c.state.vCm.assign( c.state.vCm.add( c.deltaVCm));
 				c.state.omegaCm.assign( c.state.omegaCm.add( c.deltaOmegaCm));	
-				
 				Matrix3.multiply(c.state.I, c.state.omegaCm, c.state.L);
 				c.state.P.assign(c.state.vCm.multiply(c.state.M));
 			}
 
 			//integrate forward on positions
 			c.advancePositions(dt);
-//			if (!c.sleepy) 
-//				c.advancePositions(dt);
-//			else {
-//				c.advancePositions(dt*c.sleepyness);
-//				c.sleepyness *= 0.75;
-//				
-//				if (c.sleepyness < 1e-3) {
-//					c.sleeping = true;
-//				}
-//			}
-//			
-////			fall asleep or awake
-//			if (c.totalKinetic() < c.sleepKinetic ) {
-//				
-//				if (c.sleepy == false ) {
-//					c.sleepyness=1;
-//				}
-//				
-//				c.sleepy = true;				
-//			} else {
-//				c.sleepy = false;
-//				c.sleeping = false;
-//				c.sleepyness = 1;
-//			}	
 		}
 	} //time-step
 
@@ -371,12 +296,9 @@ public final class Engine implements Model {
 			Geometry g = i.next();
 			broadfase.add(g);
 		}
-		
-		
 	}
 	
 	public void addConstraint(Pair<Body> pair, Constraint joint) {
-		mutedBodyPairs.put(pair,true);		
 		contactGraph.addEdge(pair, joint);
 	}
 	
@@ -393,13 +315,12 @@ public final class Engine implements Model {
 		return list;
 	}
 	
-	public void removeConstraint(Pair<Body> pair) {
-		mutedBodyPairs.remove(pair);
+	public final void removeConstraint(Pair<Body> pair) {
 		contactGraph.removeEdge(pair);
 	}
 
 	@Override
-	public BroadfaseCollisionDetection getBroadfase() {
+	public final BroadfaseCollisionDetection getBroadfase() {
 		return broadfase;
 	}  
 	
@@ -415,14 +336,14 @@ public final class Engine implements Model {
 	}
 
 	@Override
-	public void addContactGeneratorClasifier(
+	public final void addContactGeneratorClasifier(
 			ContactGeneratorClassifier classifier) {
 		geometryClassifiers.add(classifier);
 		
 	}
 
 	@Override
-	public void removeBody(Body body) {
+	public final void removeBody(Body body) {
 		//remove associated geometries from collision detection
 		Iterator<Geometry> i = body.getGeometries();
 		while( i.hasNext()) {
@@ -435,22 +356,22 @@ public final class Engine implements Model {
 	}
 
 	@Override
-	public void tick() {
+	public final void tick() {
 		timeStep();
 	}
 
 	@Override
-	public double getDt() {
+	public final double getDt() {
 		return dt;
 	}
 
 	@Override
-	public Solver getSolver() {
+	public final Solver getSolver() {
 		return solver;
 	}
 
 	@Override
-	public void setSolver(Solver s) {
+	public final void setSolver(Solver s) {
 		solver = s;
 	}
 
