@@ -19,6 +19,7 @@ import jinngine.physics.solver.Solver.constraint;
  *
  */
 public final class Body {
+	public  String identifier = new String("none");
 	//auxiliary
 	public final Vector3               deltaVCm = new Vector3(0,0,0);
 	public final Vector3               deltaOmegaCm = new Vector3(0,0,0);
@@ -39,6 +40,8 @@ public final class Body {
 	//fixed setting
 	private boolean isFixed = false;
 
+	public boolean hidden = false;
+	
 	//Sleepy
 	public boolean sleepy = false;
 	private SupportMap3 supportMap = null;
@@ -158,7 +161,7 @@ public final class Body {
 
 			}
 
-			//fill out the invers tensor
+			//fill out the inverse tensor
 			Matrix3.inverse(this.state.I, this.state.Iinverse);
 
 		} else {

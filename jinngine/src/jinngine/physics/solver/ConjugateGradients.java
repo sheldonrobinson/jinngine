@@ -1,7 +1,6 @@
 package jinngine.physics.solver;
 
 import java.util.List;
-
 import jinngine.math.Vector3;
 import jinngine.physics.Body;
 
@@ -11,32 +10,27 @@ import jinngine.physics.Body;
  * Phased in another way, CG can solve the NCP, if l=-infinity and u=infinity for all constraints.
  */
 public class ConjugateGradients implements Solver {
-	int maxIterations = 15;
-	private double damping = 0;
-	
+	int maxIterations = 0;
 
-	public void setDamping(double damping) {
-		this.damping = damping;
-	}
-	
 	@Override
 	public void setMaximumIterations(int n) {
-		// TODO Auto-generated method stub
+		maxIterations = n;
 	}
 
 	@Override
-	public double solve(List<constraint> constraints, List<Body> bodies) {
-		int n = constraints.size();
+	public double solve(List<constraint> constraints, List<Body> bodies, double epsilon) {
+		maxIterations = constraints.size();
 		//System.out.println("*) CG "+ n+"x" + n+" system");
 		
 		//Conjugate Gradients
 		double delta_new=0, delta_old=0, delta_zero=0;
 		double delta_low=Double.POSITIVE_INFINITY;
 		double delta_best=delta_low;
-		double epsilon = 1e-8;
-		double division_epsilon = 1e-10;
+		//double epsilon = 1e-6;
+		double division_epsilon = 1e-12;
 		int iterations=0;
 		
+		//reset auxiliary deltas
 		for (Body b: bodies) {
 			b.auxDeltav.assignZero();
 			b.auxDeltaOmega.assignZero();
@@ -48,8 +42,8 @@ public class ConjugateGradients implements Solver {
 		//delta_new = rTr
 		for (constraint ci: constraints) {
 			ci.residual = 
-				(-ci.b) - (ci.j1.dot(ci.body1.deltaVCm) + ci.j2.dot(ci.body1.deltaOmegaCm)
-						+ ci.j3.dot(ci.body2.deltaVCm) + ci.j4.dot(ci.body2.deltaOmegaCm))
+				-ci.b - ci.j1.dot(ci.body1.deltaVCm) - ci.j2.dot(ci.body1.deltaOmegaCm)
+						- ci.j3.dot(ci.body2.deltaVCm) - ci.j4.dot(ci.body2.deltaOmegaCm)
 						- ci.lambda*ci.damper;
 				
 			//d = M^-1 r
@@ -68,11 +62,16 @@ public class ConjugateGradients implements Solver {
 
 			
 			delta_new += ci.residual * ci.d;
-		} 			
+			//System.out.println("initial residuals "+ci.residual + " b=" + ci.b);
+
+		} 		
+		
 				
 		delta_old = delta_new;
 		delta_zero = delta_new;
 		delta_best = delta_new;
+		
+		//System.out.println(""+FischerNewtonConjugateGradients.fischerMerit(errormeassure, bodies));
 		
 		//CG iterations
 		while (iterations < maxIterations &&  delta_new>epsilon*epsilon*delta_zero && delta_new > epsilon ) {			
@@ -160,7 +159,8 @@ public class ConjugateGradients implements Solver {
 			}	
 			
 			iterations += 1;
-			
+
+			//System.out.println(""+FischerNewtonConjugateGradients.fischerMerit(errormeassure, bodies));
 			//System.out.println("iteration " + iterations +", delta_new=" + delta_new +", alpha=" +alpha +", beta=" + beta);
 
 		} //CG iterations
@@ -189,9 +189,9 @@ public class ConjugateGradients implements Solver {
 			//System.out.println("iterations: " + iterations +" best is "+ delta_best);
 		
 		
-		//System.out.println("delta_best="+delta_best+ "iterations "+iterations);
+			System.out.println("delta_best="+delta_best+ "iterations "+iterations);
 		
-		return delta_best;
+		return (iterations+1);
 	}
 
 }

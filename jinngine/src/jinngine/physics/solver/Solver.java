@@ -44,9 +44,10 @@ public interface Solver {
 	/**
 	 * Given a list of constraints, solve the corresponding NCP 
 	 * @param constraints List of constraints
+	 * @param epsilon TODO
 	 * @return error
 	 */
-	public double solve(List<constraint> constraints, List<Body> bodies );
+	public double solve(List<constraint> constraints, List<Body> bodies, double epsilon );
 	
 	/**
 	 * Set an upper limit on the number of (usually outer) iterations, 
@@ -54,22 +55,6 @@ public interface Solver {
 	 * @param n
 	 */
 	public void setMaximumIterations( int n );
-	
-	/**
-	 * Set the damping coefficient, so the A matrix of the solved system
-	 * becomes (A + I damping ) 
-	 * @param damping
-	 */
-	public void setDamping(double damping);
-	
-	
-	
-	
-	
-	
-	
-	
-	
 	
 	/**
 	 * A constraint definition involving a pair of bodies. A list of Solver.constraint 

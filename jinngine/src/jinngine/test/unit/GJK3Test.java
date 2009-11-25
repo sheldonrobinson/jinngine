@@ -1,6 +1,6 @@
 package jinngine.test.unit;
 
-import jinngine.collision.GJK3;
+import jinngine.collision.GJK;
 import jinngine.geometry.Sphere;
 import jinngine.geometry.SupportMap3;
 import jinngine.math.Vector3;
@@ -13,7 +13,7 @@ public class GJK3Test extends TestCase {
 	 * Sphere 1 is at (0,3,0), Sphere 2 is at (0,0,0)
 	 */
 	public void testSphereSphere1() {
-		GJK3 gjk = new GJK3();
+		GJK gjk = new GJK();
 		
 		//set up geometries
 		Sphere s1 = new Sphere(1);
@@ -44,7 +44,7 @@ public class GJK3Test extends TestCase {
 	 * be 2a, within the error tolerance
 	 */
 	public void testSphereSphere2() {
-		GJK3 gjk = new GJK3();
+		GJK gjk = new GJK();
 
 		//small number
 		double a = 1e-10;

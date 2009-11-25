@@ -1,10 +1,12 @@
-package jinngine.physics.solver;
+package jinngine.physics.solver.experimental;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import jinngine.math.Vector3;
 import jinngine.physics.Body;
+import jinngine.physics.solver.Solver.constraint;
+import jinngine.physics.solver.Solver;
 
 /**
  * An experimental Newton based NCP solver, based on a so called Fischer function reformulation. This solver was developed
@@ -54,13 +56,13 @@ public class FischerNewtonConjugateGradients implements Solver {
 	private int imax = 25;
 	private int cgmax = 25;
 	private double frictiondamp = 0;
-	private double epsilon = 1e-4;
+	private double epsilon = 1e-29;
 	 double damper =0.000000;
 	
 	List<constraint> normals = new ArrayList<constraint>();
 	
     @Override
-	public double solve(List<constraint> constraints, List<Body> bodies) {
+	public double solve(List<constraint> constraints, List<Body> bodies, double epsilon) {
     	normals.clear();
     	for (constraint ci: constraints) 
     		if (ci.coupling == null)
@@ -71,9 +73,10 @@ public class FischerNewtonConjugateGradients implements Solver {
 		solveInternal(normals, bodies);
     	
   //  	linemax = 15;
-		damper = 0.000001;
+		damper = 0.000000;
 		
 		solveInternal(constraints, bodies);
+		
 		return 0;
 	}
 	
@@ -95,13 +98,14 @@ public class FischerNewtonConjugateGradients implements Solver {
 		for (constraint ci: constraints) {
 			//velocity
 			double w = ci.j1.dot(ci.body1.deltaVCm) + ci.j2.dot(ci.body1.deltaOmegaCm)
-			+ ci.j3.dot(ci.body2.deltaVCm) + ci.j4.dot(ci.body2.deltaOmegaCm) + (-ci.b) + damper*ci.lambda;
+			+ ci.j3.dot(ci.body2.deltaVCm) + ci.j4.dot(ci.body2.deltaOmegaCm) + (ci.b) + damper*ci.lambda;
 
 			//fisher
-			if (ci.coupling == null) ci.fischer =  Math.sqrt( w*w+ci.lambda*ci.lambda )-w-ci.lambda;
-			else  {
-				//apply friction damping
-				//w += frictiondamp*ci.lambda;
+			if ( ci.lower == Double.NEGATIVE_INFINITY && ci.upper == Double.POSITIVE_INFINITY) {
+				ci.fischer = w;
+			} else if (ci.coupling == null) {
+				ci.fischer =  Math.sqrt( w*w+ci.lambda*ci.lambda )-w-ci.lambda;
+			} else  {
 				
 				//recompute friction limits
 				double limit = Math.abs(ci.coupling.lambda)*mu; ci.lower = -limit; ci.upper = limit;
@@ -121,7 +125,7 @@ public class FischerNewtonConjugateGradients implements Solver {
 			//System.out.println("error="+error);
 			//termination condition
 			if (error<epsilon || i>imax ) {
-				//System.out.println("e="+error+", i = "+i+" imax="+imax);		
+				System.out.println("e="+error+", i = "+i+" imax="+imax);		
 				
 				if (besterror < error) {
 					//copy best solution to delta velocities
@@ -199,19 +203,21 @@ public class FischerNewtonConjugateGradients implements Solver {
 					+ ci.j2.dot(ci.body1.deltaOmegaCm.add(ci.body1.auxDeltaOmega))
 					+ ci.j3.dot(ci.body2.deltaVCm.add(ci.body2.auxDeltav)) 
 					+ ci.j4.dot(ci.body2.deltaOmegaCm.add(ci.body2.auxDeltaOmega)) 
-					+ (-ci.b) +damper*lambda;
+					+ (ci.b) +damper*lambda;
 
 					//fisher
-					if (ci.coupling == null) 
+					if (ci.lower == Double.NEGATIVE_INFINITY && ci.upper == Double.POSITIVE_INFINITY) {
+						q[j] = (w-ci.fischer)/h;
+					} else if (ci.coupling == null) {
 						q[j] = ((Math.sqrt( w*w+lambda*lambda)-w-lambda) - ci.fischer)/h;
-					else {
+					} else {
 						//friction damping
 						//w += ci.lambda;
 
 						//recompute friction limits *)
-						//double limit = Math.abs(ci.coupling.lambda)*mu;
-						//ci.lower = -limit; 
-						//ci.upper = limit;
+						double limit = Math.abs(ci.coupling.lambda)*mu;
+						ci.lower = -limit; 
+						ci.upper = limit;
 
 						//if (Math.abs(w)<truncatevelocity ) {w=0;}
 
@@ -289,24 +295,26 @@ public class FischerNewtonConjugateGradients implements Solver {
 				j=0; for (constraint ci: constraints) {				
 					//velocity
 					double w = ci.j1.dot(ci.body1.deltaVCm) + ci.j2.dot(ci.body1.deltaOmegaCm)
-					+ ci.j3.dot(ci.body2.deltaVCm) + ci.j4.dot(ci.body2.deltaOmegaCm) + (-ci.b)
+					+ ci.j3.dot(ci.body2.deltaVCm) + ci.j4.dot(ci.body2.deltaOmegaCm) + (ci.b)
 					+ damper*ci.lambda;
 
 					if (k>0)
 						ci.lambda += -step*dk[j];
 					//fisher
-					if (ci.coupling == null) 
+					if (ci.lower == Double.NEGATIVE_INFINITY && ci.upper == Double.POSITIVE_INFINITY) {
+						ci.fischer = w;
+					} else if (ci.coupling == null) {
 						ci.fischer = Math.sqrt( w*w+ci.lambda*ci.lambda )-w-ci.lambda;
-					else {
+					} else {
 						//friction damping
 						//w += frictiondamp*ci.lambda;
 
 						
 						//compute limits
-//						double limit = Math.abs(ci.coupling.lambda)*mu; ci.lower = -limit; ci.upper = limit;
-//						if (Math.abs(w)<truncatevelocity ) {
-//							w=0;
-//						}
+						double limit = Math.abs(ci.coupling.lambda)*mu; ci.lower = -limit; ci.upper = limit;
+						if (Math.abs(w)<truncatevelocity ) {
+							w=0;
+						}
 
 						
 						ci.fischer =  fisher( ci.lambda-ci.lower, fisher(ci.upper-ci.lambda, -w));
@@ -400,14 +408,29 @@ public class FischerNewtonConjugateGradients implements Solver {
 	public static double fischerMerit( List<constraint> constraints, List<Body> bodies) {
 		double phi = 0;
 		for (constraint ci: constraints) {
+//			if (ci.coupling==null) //only friction
+//				continue;
 			//calculate (Ax+b)_i 
 			double w =  ci.j1.dot(ci.body1.deltaVCm) 
 			+ ci.j2.dot(ci.body1.deltaOmegaCm)
 			+  ci.j3.dot(ci.body2.deltaVCm) 
-			+ ci.j4.dot(ci.body2.deltaOmegaCm) + (-ci.b) + ci.lambda*ci.damper;
+			+ ci.j4.dot(ci.body2.deltaOmegaCm) + (ci.b) + ci.lambda*ci.damper;
 			
-            // (-oo,oo)
-			if (ci.lower == Double.NEGATIVE_INFINITY && ci.upper == Double.POSITIVE_INFINITY) {
+//            double upper = ci.upper;
+//            double lower = ci.lower;
+//            
+//            if (ci.coupling!=null) {
+//            	if (ci.upper > ci.coupling.lambda*ci.coupling.mu && Math.abs(w)<1e-7) {
+//            		ci.upper = ci.coupling.lambda*ci.coupling.mu;
+//            	}
+//            	if (ci.lower < -ci.coupling.lambda*ci.coupling.mu && Math.abs(w)<1e-7) {
+//            		ci.lower = -ci.coupling.lambda*ci.coupling.mu;
+//            	}
+//
+//            }
+			
+			// (-oo,oo)
+			if (ci.lower == Double.NEGATIVE_INFINITY && ci.upper == Double.POSITIVE_INFINITY ) {
 				phi += w*w;
 			// (-oo,u]
 			} else if ( ci.lower == Double.NEGATIVE_INFINITY) {
@@ -434,7 +457,7 @@ public class FischerNewtonConjugateGradients implements Solver {
 			double w =  ci.j1.dot(ci.body1.deltaVCm) 
 			+ ci.j2.dot(ci.body1.deltaOmegaCm)
 			+  ci.j3.dot(ci.body2.deltaVCm) 
-			+ ci.j4.dot(ci.body2.deltaOmegaCm) + (-ci.b) + ci.lambda*ci.damper;
+			+ ci.j4.dot(ci.body2.deltaOmegaCm) + (ci.b) + ci.lambda*ci.damper;
 			
             // (-oo,oo)
 			if (ci.lower == Double.NEGATIVE_INFINITY && ci.upper == Double.POSITIVE_INFINITY) {

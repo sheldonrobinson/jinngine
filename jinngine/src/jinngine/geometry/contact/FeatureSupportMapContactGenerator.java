@@ -5,7 +5,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 import jinngine.collision.ExpandingPolytope;
-import jinngine.collision.GJK3;
+import jinngine.collision.GJK;
 import jinngine.math.*;
 import jinngine.physics.*;
 import jinngine.geometry.*;
@@ -26,7 +26,7 @@ public class FeatureSupportMapContactGenerator implements ContactGenerator {
 	private static double shell = envelope*0.75;
 	private final SupportMap3 Sa;
 	private final SupportMap3 Sb;
-	private final GJK3 closest = new GJK3();
+	private final GJK closest = new GJK();
 	public final Body bodyA, bodyB;
 	private final List<ContactPoint> contacts = new LinkedList<ContactPoint>();
 	private final List<Vector3> faceA = new ArrayList<Vector3>();
@@ -87,7 +87,7 @@ public class FeatureSupportMapContactGenerator implements ContactGenerator {
 		//Sa.supportPoint(Vector3.j).print();
 		
 		//penetration
-		if (closest.getState().simplexSize > 3 ) {
+		if (closest.getState().simplexSize > 3  ) {
 			//System.out.println("penetrating");
 			//run EPA
 			ExpandingPolytope epa = new ExpandingPolytope();
@@ -100,8 +100,9 @@ public class FeatureSupportMapContactGenerator implements ContactGenerator {
 			double depth = d+shell;
 			
 			generate(a,b,principalNormal,depth, true);
-			principalNormal.print();
+			//principalNormal.print();
 			
+			//System.out.println("depth="+depth);
 			
 			return true;
 		}

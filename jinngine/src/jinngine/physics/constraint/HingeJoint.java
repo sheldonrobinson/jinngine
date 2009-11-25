@@ -14,13 +14,13 @@ import jinngine.physics.solver.Solver.constraint;
  */
 public final class HingeJoint implements Constraint {
 	// members
-	private final Body b1,b2;
-	private final Vector3 pi,pj,ni,nj,t2i,t2j, t3i;
+	public final Body b1,b2;
+	public final Vector3 pi,pj,ni,nj,t2i,t2j, t3i;
 	private final JointAxisController controler;
-	
+		
 	// settings for the joint axis
-	private double upperLimit = Double.POSITIVE_INFINITY;
-	private double lowerLimit = Double.NEGATIVE_INFINITY;
+	public double upperLimit = Double.POSITIVE_INFINITY;
+	public double lowerLimit = Double.NEGATIVE_INFINITY;
 	private double motor  = 0;
 	private double theta = 0;
 	private double velocity = 0;
@@ -34,6 +34,9 @@ public final class HingeJoint implements Constraint {
 	private constraint angular1 = new constraint();
 	private constraint angular2 = new constraint();
 	private constraint angular3 = new constraint();
+	
+	//TODO remove
+	public boolean hinge = true;
 		
 	/**
 	 * Get the axis controller for the hinge joint. Use this controller to adjust joint limits, motor and friction
@@ -108,6 +111,54 @@ public final class HingeJoint implements Constraint {
 		
 	}
 
+	//hack, TODO remove
+	public HingeJoint(Body b1, Body b2, Vector3 pi, Vector3 ni, Vector3 t2i, Vector3 t3i, Vector3 pj, Vector3 nj, Vector3 t2j, double lower, double upper) {
+		this.b1 = b1;
+		this.b2 = b2;		
+		//anchor points on bodies
+		this.pi = pi;
+		this.ni = ni;
+		this.pj = pj;
+		this.nj = nj;
+		this.upperLimit = upper;
+		this.lowerLimit = lower;
+		this.t2i = t2i;
+		this.t3i = t3i;
+		this.t2j = t2j;
+				
+		// create the controller
+		this.controler = new JointAxisController() {
+			@Override
+			public double getPosition() {
+				return theta;
+			}
+
+			@Override
+			public void setLimits(double thetaMin, double thetaMax) {
+				upperLimit = thetaMax;
+				lowerLimit = thetaMin;
+			}
+
+			@Override
+			public double getVelocity() {
+				return velocity;
+			}
+
+			@Override
+			public void setFrictionMagnitude(double magnitude) {
+				friction = magnitude;
+				
+			}
+
+			@Override
+			public void setMotorForce(double force) {
+				motor = force;
+			}		
+		};
+		
+	}
+
+	
 	public final void applyConstraints(ListIterator<constraint> iterator, double dt) {
 		//transform points
 		Vector3 ri = Matrix3.multiply(b1.state.rotation, pi, new Vector3());
@@ -218,7 +269,7 @@ public final class HingeJoint implements Constraint {
 		}
 		
 		//not at limits (motor is working)
-		else if (motor!=0){
+		else if (motor!=0 ){
 			high = motorHigh;
 			low = motorLow;
 
@@ -275,9 +326,12 @@ public final class HingeJoint implements Constraint {
 		iterator.add(linear1);
 		iterator.add(linear2);
 		iterator.add(linear3);
-		iterator.add(angular1);
-		iterator.add(angular2);
-		iterator.add(angular3);
+		if (hinge) {
+			//iterator.add(angular1);
+
+			iterator.add(angular2);
+			iterator.add(angular3);
+		}
 	}
 
 

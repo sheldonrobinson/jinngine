@@ -76,7 +76,7 @@ public class ExpandingPolytope {
 		public final double d;
 	}
 	
-	public void run( SupportMap3 Sa, SupportMap3 Sb, Vector3 pa, Vector3 pb, GJK3.State tetrahedron) {
+	public void run( SupportMap3 Sa, SupportMap3 Sb, Vector3 pa, Vector3 pb, GJK.State tetrahedron) {
 		//System.out.println("*) EPA Run");
 		Vector3 s1 = tetrahedron.simplices[0][0].copy();
 		Vector3 s2 = tetrahedron.simplices[1][0].copy();
@@ -116,7 +116,7 @@ public class ExpandingPolytope {
 			}
 			
 			//stop if no improvement
-			if (Math.abs(t.d-d) < 1e-7) {
+			if (Math.abs(t.d-d) < 1e-9) {
 				pa.assign(t.a);
 				pb.assign(t.b);
 				break;

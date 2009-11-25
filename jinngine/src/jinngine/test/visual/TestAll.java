@@ -5,7 +5,6 @@ import java.awt.event.KeyListener;
 import java.util.LinkedList;
 import java.util.Queue;
 import jinngine.physics.Engine;
-import jinngine.physics.solver.SubspaceMinimization;
 
 public class TestAll implements KeyListener {
 
@@ -121,9 +120,6 @@ public class TestAll implements KeyListener {
 		tests.add(new RoundWall(2, 0.12));
 		tests.add(new RoundWall(4, 0.12));
 		tests.add(new RoundWall(7, 0.12));
-		
-
-		model.setSolver(new SubspaceMinimization());
 		
 		//install first test
 		currentTest = tests.poll();

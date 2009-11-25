@@ -26,7 +26,7 @@ public class RayCast {
 			final Vector3 point, 
 			final Vector3 direction) 
 	{
-		final GJK3 gjk = new GJK3();
+		final GJK gjk = new GJK();
 		final double epsilon = 1e-7;		
 		double lambda=0;
 		final Vector3 x = point.copy();

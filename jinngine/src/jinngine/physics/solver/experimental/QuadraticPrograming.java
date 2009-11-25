@@ -1,10 +1,9 @@
-package jinngine.physics.solver;
+package jinngine.physics.solver.experimental;
 
 import java.util.ArrayList;
 import java.util.List;
-
 import jinngine.physics.Body;
-import jinngine.physics.solver.Solver.constraint;
+import jinngine.physics.solver.*;
 
 public class QuadraticPrograming implements Solver {
 
@@ -18,7 +17,7 @@ public class QuadraticPrograming implements Solver {
 	}
 
 	@Override
-	public double solve(List<constraint> constraints, List<Body> bodies) {
+	public double solve(List<constraint> constraints, List<Body> bodies, double epsilon) {
 	   	normals.clear();
     	for (constraint ci: constraints) 
     		if (ci.coupling == null) {
@@ -27,14 +26,7 @@ public class QuadraticPrograming implements Solver {
     		}
 
 	
-    	cg.solve(normals, bodies);	
+    	cg.solve(normals, bodies, 0.0);	
     	return 0;
 	}
-
-	@Override
-	public void setDamping(double damping) {
-		// TODO Auto-generated method stub
-		
-	}
-
 }

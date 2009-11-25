@@ -6,7 +6,7 @@ import java.util.List;
 import jinngine.math.Vector3;
 import jinngine.physics.Body;
 import jinngine.physics.solver.ConjugateGradients;
-import jinngine.physics.solver.FischerNewtonConjugateGradients;
+import jinngine.physics.solver.experimental.FischerNewtonConjugateGradients;
 import jinngine.physics.solver.ProjectedGaussSeidel;
 import jinngine.physics.solver.Solver;
 import jinngine.physics.solver.Solver.constraint;
@@ -36,10 +36,10 @@ public class ConjugateGradientTest extends TestCase {
 		
 		//This is the system
 		//
-		// [ 1 0 0  0 0 0  -1 0 0  0 0 0] [1 0 0  0 0 0  -1 0 0  0 0 0 ]^T x = 1  =>
-		// 2 x = 1  
+		// [ 1 0 0  0 0 0  -1 0 0  0 0 0] [1 0 0  0 0 0  -1 0 0  0 0 0 ]^T x + 1= 0  =>
+		// 2 x + 1 = 0  
 		//
-		// with the solution x = 1/2 
+		// with the solution x = -1/2 
 		
 		//list of bodies and constraints
 		List<Body> bodies = new ArrayList<Body>();
@@ -47,12 +47,12 @@ public class ConjugateGradientTest extends TestCase {
 		bodies.add(b1); bodies.add(b2); constraints.add(c1);
 
 		//run the solver
-		s.solve(constraints, bodies);
+		s.solve(constraints, bodies, 0.0);
 		
-		System.out.println(""+c1.lambda);
+		System.out.println("cg test="+c1.lambda);
 		
 		//expect solution 1/2
-		assertTrue( Math.abs(c1.lambda - 0.5) < epsilon );	
+		assertTrue( Math.abs(-0.5 - c1.lambda) < epsilon );	
 	}
 	
 	/**
@@ -84,13 +84,13 @@ public class ConjugateGradientTest extends TestCase {
 		
 		//This is the system
 		//
-		// [ 1 0 0  0 0 0  -1 0 0  0 0 0] [1 0 0  0 0 0  -1 0 0  0 0 0 ]^T x = 1  
+		// [ 1 0 0  0 0 0  -1 0 0  0 0 0] [1 0 0  0 0 0  -1 0 0  0 0 0 ]^T x + 1 = 0  
 		// [ 1 0 0  0 0 0  -1 0 0  0 0 0] [1 0 0  0 0 0  -1 0 0  0 0 0 ]           =>
 		//
-		// 2  2 x1 = 1  
-		// 2  2 x2 = 1
+		// 2  2 x1 + 1 = 0  
+		// 2  2 x2 + 1 = 0
 		//
-		// with a least squares solution solution x1 = 1/4 and x2 = 1/4 
+		// with a least squares solution solution x1 = -1/4 and x2 = -1/4 
 		
 		//list of bodies and constraints
 		List<Body> bodies = new ArrayList<Body>();
@@ -98,13 +98,13 @@ public class ConjugateGradientTest extends TestCase {
 		bodies.add(b1); bodies.add(b2); constraints.add(c1); constraints.add(c2);
 
 		//run the solver
-		s.solve(constraints, bodies);
+		s.solve(constraints, bodies, 0.0);
 		
 		System.out.println("("+c1.lambda+","+c2.lambda+")");
 		
 		//expect solution (1/4,1/4)
-		assertTrue( Math.abs(c1.lambda - 0.25) < epsilon );	
-		assertTrue( Math.abs(c2.lambda - 0.25) < epsilon );	
+		assertTrue( Math.abs(-0.25 - c1.lambda) < epsilon );	
+		assertTrue( Math.abs(-0.25 - c2.lambda) < epsilon );	
 	}
 
 }

@@ -8,7 +8,7 @@ import jinngine.math.Vector3;
  * between convex objects and/or closest points. This implementation is based on the theory presented in [Bergen 2003]
  * @author Silcowitz
  */
-public class GJK3 implements ClosestPointsAlgorithm<SupportMap3,SupportMap3> {
+public class GJK implements ClosestPointsAlgorithm<SupportMap3,SupportMap3> {
 	//private Map<Pair<Body>,GJK3.State> cachedStates = new HashMap<Pair<Body>,GJK3.State>();
 
 	/**
@@ -143,7 +143,7 @@ public class GJK3 implements ClosestPointsAlgorithm<SupportMap3,SupportMap3> {
 	 *  to meet the termination condition for the next time frame. For example, this is would often be the case 
 	 *  for resting contacts. Thus all subsequent GJK iterations is avoided.
 	 */
-	private final void updateSimplex(GJK3.State state, SupportMap3 Sa, SupportMap3 Sb) {
+	private final void updateSimplex(GJK.State state, SupportMap3 Sa, SupportMap3 Sb) {
 
 		for (int i = 0; i<state.simplexSize; i++) {
 			//add w to the simplices
