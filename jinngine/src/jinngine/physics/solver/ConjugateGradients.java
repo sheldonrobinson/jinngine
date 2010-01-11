@@ -189,7 +189,7 @@ public class ConjugateGradients implements Solver {
 			//System.out.println("iterations: " + iterations +" best is "+ delta_best);
 		
 		
-			System.out.println("delta_best="+delta_best+ "iterations "+iterations);
+			//System.out.println("delta_best="+delta_best+ "iterations "+iterations);
 		
 		return (iterations+1);
 	}
