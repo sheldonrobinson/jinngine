@@ -31,7 +31,7 @@ public class SubspaceMinimization implements Solver {
 	private final List<constraint> normals = new ArrayList<constraint>();
 	private final List<constraint> frictions = new ArrayList<constraint>();
 	
-	private final double epsilon = 1e-32;
+	private final double epsilon = 1e-6;
 	private  int pgsmin = 25;
 	private final ProjectedGaussSeidel pgs = new ProjectedGaussSeidel();
 	private double phi;
@@ -175,12 +175,21 @@ public class SubspaceMinimization implements Solver {
     	double[] best_lambda = new double[constraints.size()];
 
     	if (debug)
-    		stream.println(productcount+"  "+FischerNewtonConjugateGradients.fischerMerit(constraints, bodies));
+    		stream.println(productcount+"  "+FischerNewton.fischerMerit(constraints, bodies));
 
     	
-		phi = FischerNewtonConjugateGradients.fischerMerit(constraints, bodies);
-//		System.out.println(""+phi);
+		phi = FischerNewton.fischerMerit(constraints, bodies);
+		//System.out.println(""+phi);
 
+		//set damping
+		for (constraint ci: constraints) {
+			//System.out.println(ci.lower+"-"+ci.upper);
+
+			if (ci.coupling != null) 
+				ci.damper = 0.0;
+			else
+				ci.damper = 0.0*phi;
+		}
     	
     	//main iterations
 		int i=-1;
@@ -189,40 +198,19 @@ public class SubspaceMinimization implements Solver {
 			//run PGS 
 			//if (i==0) {
 			//Collections.shuffle(constraints);
-				pgsmin=15;
-				pgs.setMaximumIterations(pgsmin);
-				productcount += pgs.solve(constraints,bodies, 0.0);
-				//productcount += pgsmin;
-		//	} else {
-//				//update bounds
-//				for (constraint ci: constraints) {
-//					if (ci.coupling != null) {
-//						//if the constraint is coupled, allow only lambda <= coupled lambda
-////						ci.lower = -Math.abs(ci.coupling.lambda)*ci.coupling.mu;
-////						ci.upper =  Math.abs(ci.coupling.lambda)*ci.coupling.mu;
-//						 double lower = -Math.abs(ci.coupling.lambda)*ci.coupling.mu;					
-//							ci.lower = lower<ci.lower?lower:ci.lower;					
-//							double upper = Math.abs(ci.coupling.lambda)*ci.coupling.mu;
-//							ci.upper =  upper>ci.upper?upper:ci.upper;
-//
-//					} 
-//				}
-//
-//			}
-
+			pgsmin=15;
+			pgs.setMaximumIterations(pgsmin);
+			productcount += pgs.solve(constraints,bodies, 0.0);
 			
 			//find inactive set
 			inactive.clear();
-			//phi = 0;
 			for (constraint ci: constraints) {
 				
 				if ((ci.lower < ci.lambda && ci.lambda < ci.upper) ) { 
 					inactive.add(ci);
-				} else {
+				} 
 
-				}
-
-
+				//update friction bounds
 				if (ci.coupling != null && bounds) {
 //					ci.lower = -Math.abs(ci.coupling.lambda)*ci.coupling.mu;
 //					ci.upper =  Math.abs(ci.coupling.lambda)*ci.coupling.mu;
@@ -232,8 +220,14 @@ public class SubspaceMinimization implements Solver {
 					ci.lower = lower<ci.lower?lower:ci.lower;					
 					double upper = Math.abs(ci.coupling.lambda)*ci.coupling.mu;
 					ci.upper =  upper>ci.upper?upper:ci.upper;
+					
+					//if (ci.body1.isFixed() || ci.body2.isFixed())
+						//ci.damper = 0.001;
 
 				} 
+				
+				
+				
 			}
 						
 			
@@ -359,7 +353,7 @@ public class SubspaceMinimization implements Solver {
 				double p = projection.solve(inactive,bodies, 0.0);
 
 				if (debug)
-					stream.println(productcount+"  "+FischerNewtonConjugateGradients.fischerMerit(constraints, bodies)+";");
+					stream.println(productcount+"  "+FischerNewton.fischerMerit(constraints, bodies)+";");
 
 				
 				if (p == 0 ) {
@@ -388,7 +382,11 @@ public class SubspaceMinimization implements Solver {
 
 			
 			double prevphi = phi;
-			phi = FischerNewtonConjugateGradients.fischerMerit(constraints, bodies);
+			
+
+
+			
+			phi = FischerNewton.fischerMerit(constraints, bodies);
 	//		System.out.println(""+phi);
 
 //			if ( phi/prevphi > 0.8 && phi < 1e-3) {
@@ -396,12 +394,25 @@ public class SubspaceMinimization implements Solver {
 //				break;
 //			}
 			
-			if (phi<epsilon||i==60 || productcount>1200)
+			if (phi<epsilon||i==2 || productcount>1200)
 				break;
+			
+			//if here damp the frictions
+			//set damping
+			for (constraint ci: constraints) {
+				//System.out.println(ci.lower+"-"+ci.upper);
+
+				if (ci.coupling != null) 
+					ci.damper += 1*Math.abs(FischerNewton.fischer(ci));
+				
+				else
+					ci.damper = 0.0;
+			}
+
 		}
 		
 		//if (debug)
-			System.out.println("**) pgs-sm iteration "+i+" error="+phi );	
+			System.out.println("**) pgs-sm iteration "+i+" error="+phi +" pgs equivalent " + productcount);	
     
     
     
@@ -416,7 +427,7 @@ public class SubspaceMinimization implements Solver {
     			System.out.print("A:");
     		System.out.print(" lambda=" +ci.lambda);
     		
-    		System.out.println(" phi="+FischerNewtonConjugateGradients.fischer(ci));
+    		System.out.println(" phi="+FischerNewton.fischer(ci));
     	}
     	
     	
