@@ -3,18 +3,24 @@ import java.util.*;
 import jinngine.math.Vector3;
 import jinngine.physics.Body;
 import jinngine.physics.solver.Solver.constraint;
-import jinngine.physics.solver.experimental.FischerNewtonConjugateGradients;
+import jinngine.physics.solver.experimental.FischerNewton;
 
 /**
  * Implementation of the PGS solver. 
  */
 public class ProjectedGaussSeidel implements Solver {
-	private int maximumIterations = 20;
+	private int maximumIterations = 35;
 	private double deltaResidual = 0;	
 		
+	public ProjectedGaussSeidel() {}
+	
+	public ProjectedGaussSeidel(int n) {
+		maximumIterations = n;
+	}
+	
 	@Override
 	public void setMaximumIterations(int n) {
-		this.maximumIterations = n;
+		//this.maximumIterations = n;
 	}
 
 	@Override
@@ -36,6 +42,13 @@ public class ProjectedGaussSeidel implements Solver {
 
 				//Clamp the lambda[i] value to the constraints
 				if (ci.coupling != null) {
+					
+					//growing bounds
+//					double lower = -Math.abs(ci.coupling.lambda)*ci.coupling.mu;					
+//					ci.lower = lower<ci.lower?lower:ci.lower;					
+//					double upper = Math.abs(ci.coupling.lambda)*ci.coupling.mu;
+//					ci.upper =  upper>ci.upper?upper:ci.upper;
+
 					//if the constraint is coupled, allow only lambda <= coupled lambda
 					ci.lower = -Math.abs(ci.coupling.lambda)*ci.coupling.mu;
 					ci.upper =  Math.abs(ci.coupling.lambda)*ci.coupling.mu;

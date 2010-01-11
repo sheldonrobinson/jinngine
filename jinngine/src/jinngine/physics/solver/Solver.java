@@ -95,6 +95,8 @@ public interface Solver {
 		public double dlambda;
 		public double bestdlambda;
 		public double s;
+		public double u;
+		public double l;
 		
 		/**
 		 * Assign operator for a constraint
