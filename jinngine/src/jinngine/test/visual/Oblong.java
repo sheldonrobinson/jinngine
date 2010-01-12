@@ -7,7 +7,7 @@ import jinngine.geometry.Box;
 import jinngine.math.Vector3;
 import jinngine.physics.Body;
 import jinngine.physics.Engine;
-import jinngine.physics.Model;
+import jinngine.physics.PhysicsScene;
 import jinngine.physics.force.GravityForce;
 
 
@@ -25,7 +25,7 @@ public class Oblong implements Testcase {
 	
 	
 	@Override
-	public void deleteScene(Model model) {
+	public void deleteScene(PhysicsScene model) {
 		for (Body b:boxes) {
 			model.removeBody(b);
 		}
@@ -34,8 +34,8 @@ public class Oblong implements Testcase {
 	}
 
 	@Override
-	public void initScene(Model model) {
-		model.setDt(dt);
+	public void initScene(PhysicsScene model) {
+		//model.setDt(dt);
 
 		
 		Body seesaw =  new Body( new Box(30,2,8) );
@@ -59,10 +59,11 @@ public class Oblong implements Testcase {
 	}
 
 	public static void main(String arg[]) {
-		Model model = new Engine();
+		Engine model = new Engine();
 		Seesaw test = new Seesaw(0.02);
 		test.initScene(model);		
 		new BoxVisualisor(model, test.boxes).start();
 		
 	}
+
 }

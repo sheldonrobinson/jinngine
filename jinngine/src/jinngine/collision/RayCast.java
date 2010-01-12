@@ -71,7 +71,7 @@ public class RayCast {
 		}
 		
 		//System.out.println("RayCast: Hitpoint lambda=" + lambda);
-		n.print();
+		//n.print();
 		return lambda;
 	}
 }

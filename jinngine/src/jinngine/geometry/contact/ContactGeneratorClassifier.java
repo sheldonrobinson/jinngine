@@ -18,6 +18,6 @@ public interface ContactGeneratorClassifier {
 	 * @param b any sub-type of Geometry
 	 * @return a new {@link ContactGenerator} suited to handle given geometries
 	 */
-	public ContactGenerator createGeneratorFromGeometries( Geometry a, Geometry b);
+	public ContactGenerator getGenerator( Geometry a, Geometry b);
 	
 }

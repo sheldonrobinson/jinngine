@@ -28,7 +28,7 @@ import jinngine.physics.force.GravityForce;
 		
 		
 		@Override
-		public void deleteScene(Model model) {
+		public void deleteScene(PhysicsScene model) {
 			for (Body b:boxes) {
 				model.removeBody(b);
 			}
@@ -37,8 +37,8 @@ import jinngine.physics.force.GravityForce;
 		}
 
 		@Override
-		public void initScene(Model model) {
-			model.setDt(dt);
+		public void initScene(PhysicsScene model) {
+			//model.setDt(dt);
 			
 			Body table = new Body(new Box(120,1+40,120));
 			table.setPosition( new Vector3(0,-13-20,0));
@@ -71,7 +71,7 @@ import jinngine.physics.force.GravityForce;
 		}
 
 		public static void main(String arg[]) {
-			Model model = new Engine();
+			Engine model = new Engine();
 			RoundWall test = new RoundWall(7, 0.05);
 			test.initScene(model);
 			

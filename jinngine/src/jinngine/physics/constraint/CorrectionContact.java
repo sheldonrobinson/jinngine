@@ -9,6 +9,7 @@ import jinngine.physics.Body;
 import jinngine.physics.solver.*;
 import jinngine.physics.solver.Solver.constraint;
 import jinngine.util.GramSchmidt;
+import jinngine.util.Pair;
 
 
 public final class CorrectionContact implements ContactConstraint {	
@@ -332,11 +333,9 @@ public final class CorrectionContact implements ContactConstraint {
 		outConstraints.add(c3);
 	}
 
-//	public static double getCorrectionConstant() {
-//		return K;
-//	}
-//
-//	public static void setCorrectionConstant(double k) {
-//		K = k;
-//	}
+	@Override
+	public Pair<Body> getBodies() {
+		return new Pair<Body>(b1,b2);
+	}
+
 }

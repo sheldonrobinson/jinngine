@@ -1,10 +1,10 @@
 package jinngine.test.visual;
 
-import jinngine.physics.Model;
+import jinngine.physics.PhysicsScene;
 
 public interface Testcase {
 	
-	public void initScene(Model model);
-	public void deleteScene(Model model);
+	public void initScene(PhysicsScene model);
+	public void deleteScene(PhysicsScene model);
 
 }

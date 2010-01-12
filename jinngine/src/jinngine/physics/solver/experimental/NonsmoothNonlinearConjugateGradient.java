@@ -9,7 +9,7 @@ import jinngine.physics.solver.ProjectedGaussSeidel;
 import jinngine.physics.solver.Solver;
 import jinngine.physics.solver.Solver.constraint;
 
-public class NonsmoothNonlinearConjugateGradientSimple implements Solver {
+public class NonsmoothNonlinearConjugateGradient implements Solver {
 	int max = 10000;
 	
 	public double[] pgsiters = new double[max];
@@ -22,7 +22,7 @@ public class NonsmoothNonlinearConjugateGradientSimple implements Solver {
 
 	}
 	
-	public NonsmoothNonlinearConjugateGradientSimple(int n, boolean polakribiere) {
+	public NonsmoothNonlinearConjugateGradient(int n, boolean polakribiere) {
 		this.max = n;
 
 		pgsiters = new double[max];

@@ -5,6 +5,7 @@ import jinngine.math.Matrix3;
 import jinngine.math.Vector3;
 import jinngine.physics.Body;
 import jinngine.physics.solver.Solver.constraint;
+import jinngine.util.Pair;
 
 /**
  * Implementation of a hinge joint. This type of joint leaves only one degree of freedom left for the involved bodies, 
@@ -22,7 +23,7 @@ public final class HingeJoint implements Constraint {
 	private double motor  = 0;
 	private double theta = 0;
 	private double velocity = 0;
-	private double friction = 0;
+	private double friction = 0.0;
 	private final double shell = 0.05;
 	
 	// constraint entries
@@ -176,10 +177,10 @@ public final class HingeJoint implements Constraint {
 		Matrix3 MiInv = Matrix3.identity().multiply(1/b1.state.M);
 		Matrix3 MjInv = Matrix3.identity().multiply(1/b2.state.M);
 
-		Matrix3 Bi = MiInv.multiply(Ji.transpose());
-		Matrix3 Bj = MjInv.multiply(Jj.transpose());
-		Matrix3 Bangi = b1.state.Iinverse.multiply(Jangi.transpose());
-		Matrix3 Bangj = b2.state.Iinverse.multiply(Jangj.transpose());
+		Matrix3 Bi = b1.isFixed()? new Matrix3() : MiInv.multiply(Ji.transpose());
+		Matrix3 Bangi = b1.isFixed()? new Matrix3() : b1.state.Iinverse.multiply(Jangi.transpose());
+		Matrix3 Bj = b2.isFixed()? new Matrix3() : MjInv.multiply(Jj.transpose());
+		Matrix3 Bangj = b2.isFixed()? new Matrix3() : b2.state.Iinverse.multiply(Jangj.transpose());
 
 		double Kcor = 0.99;
 		
@@ -264,7 +265,7 @@ public final class HingeJoint implements Constraint {
 		
 		angular1.assign( 
 				b1,	b2, 
-				new Vector3(), b1.state.Iinverse.multiply(axis), new Vector3(), b2.state.Iinverse.multiply(axis.multiply(-1)), 
+				new Vector3(), b1.isFixed()? new Vector3():b1.state.Iinverse.multiply(axis), new Vector3(), b2.isFixed()? new Vector3() : b2.state.Iinverse.multiply(axis.multiply(-1)), 
 				new Vector3(), axis, new Vector3(), axis.multiply(-1), 
 				low,
 				high,
@@ -274,7 +275,7 @@ public final class HingeJoint implements Constraint {
 		//keep bodies aligned to the axis
 		angular2.assign( 
 				b1, b2, 
-				new Vector3(), b1.state.Iinverse.multiply(tt2i), new Vector3(), b2.state.Iinverse.multiply(tt2i.multiply(-1)), 
+				new Vector3(), b1.isFixed()? new Vector3() : b1.state.Iinverse.multiply(tt2i), new Vector3(), b2.isFixed()? new Vector3() : b2.state.Iinverse.multiply(tt2i.multiply(-1)), 
 				new Vector3(), tt2i, new Vector3(), tt2i.multiply(-1),
 				Double.NEGATIVE_INFINITY,
 				Double.POSITIVE_INFINITY,
@@ -284,7 +285,7 @@ public final class HingeJoint implements Constraint {
 		
 		angular3.assign( 
 				b1,	b2, 
-				new Vector3(), b1.state.Iinverse.multiply(tt3i), new Vector3(), b2.state.Iinverse.multiply(tt3i.multiply(-1)), 
+				new Vector3(), b1.isFixed()? new Vector3() : b1.state.Iinverse.multiply(tt3i), new Vector3(), b2.isFixed()? new Vector3() : b2.state.Iinverse.multiply(tt3i.multiply(-1)), 
 				new Vector3(), tt3i, new Vector3(), tt3i.multiply(-1),
 				Double.NEGATIVE_INFINITY,
 				Double.POSITIVE_INFINITY,
@@ -299,5 +300,10 @@ public final class HingeJoint implements Constraint {
 		iterator.add(angular1);
 		iterator.add(angular2);
 		iterator.add(angular3);
+	}
+
+	@Override
+	public Pair<Body> getBodies() {
+		return new Pair<Body>(b1,b2);
 	}
 }

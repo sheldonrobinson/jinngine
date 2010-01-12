@@ -32,10 +32,10 @@ public class BoxVisualisor extends Frame implements GLEventListener  {
 	private final Vector3 cameraTo = new Vector3(0,0,0);	
 	
 	// Physics
-	private final Model model;
+	private final PhysicsModel model;
 	private final List<Body> boxes;
 
-	public BoxVisualisor( Model model, List<Body> boxes) {
+	public BoxVisualisor( PhysicsModel model, List<Body> boxes) {
 		this.model = model;
 		this.boxes = boxes;
 	
@@ -50,7 +50,7 @@ public class BoxVisualisor extends Frame implements GLEventListener  {
 		setVisible(true);
 	}
 	
-	public BoxVisualisor( Model model, List<Body> boxes, int ratio)  {
+	public BoxVisualisor( PhysicsModel model, List<Body> boxes, int ratio)  {
 		this.model = model;
 		this.boxes = boxes;
 		//Setup exit function
@@ -167,17 +167,7 @@ public class BoxVisualisor extends Frame implements GLEventListener  {
 	static double spend = 0;
 
 	public void display(GLAutoDrawable drawable) {
-		double total = 0.12;//model.getDt();
-		// int ticks = (int)(1/model.getDt() *0.12);
- 		// Perform ratio time-steps on the model
-		do {
-			spend += model.getDt();
-			model.tick();
-//			model.tick();
-//			model.tick();			
-		} while ( spend < total);
-
-		spend = spend % total;
+		model.tick();
 		
 		// Clear buffer, etc.
 		GL gl = drawable.getGL();

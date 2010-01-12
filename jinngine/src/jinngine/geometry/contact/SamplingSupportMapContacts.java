@@ -45,9 +45,10 @@ public final class SamplingSupportMapContacts implements ContactGenerator {
 		
 		
 		
-		for (int n=0;n<25;n++) {
+		for (int n=0;n<5;n++) {
 			//Create sample direction and sample points
-			Vector3 v = (new Vector3(random.nextGaussian(),random.nextGaussian(), random.nextGaussian())).normalize();
+			//Vector3 v = (new Vector3(random.nextDouble(),random.nextDouble(), random.nextDouble())).normalize();
+			Vector3 v = Vector3.i;
 			Vector3 a = Sa.supportPoint(v.multiply(-1));
 			Vector3 b = Sb.supportPoint(v.multiply(1));
 			Vector3 w = a.minus(b);
@@ -75,7 +76,7 @@ public final class SamplingSupportMapContacts implements ContactGenerator {
 		//cp.normal.print();
 		
 		points.add(cp);
-		System.out.println(""+tdist);
+		//System.out.println(""+tdist);
 
 		return true;
 	}

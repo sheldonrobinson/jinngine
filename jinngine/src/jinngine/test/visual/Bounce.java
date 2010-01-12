@@ -22,8 +22,8 @@ public class Bounce implements Testcase {
 
 	
 	public static void main(String arg[]) {
-		Model model = new Engine();
-		model.setDt(0.02);
+		Engine model = new Engine();
+		model.setTimestep(0.02);
 
 		Body cube = new Body(new Box(6,6,6));
 		cube.setAngularVelocity(new Vector3(0.1,0,0.1));
@@ -45,7 +45,7 @@ public class Bounce implements Testcase {
 	}
 
 	@Override
-	public void deleteScene(Model model) {
+	public void deleteScene(PhysicsScene model) {
 		for (Body b:boxes) {
 			model.removeBody(b);
 		}
@@ -55,8 +55,8 @@ public class Bounce implements Testcase {
 
 
 	@Override
-	public void initScene(Model model) {
-		model.setDt(dt);
+	public void initScene(PhysicsScene model) {
+		//model.setDt(dt);
 
 		Body cube = new Body(new Box(24,24,5));
 		cube.setAngularVelocity(new Vector3(0.1,0,0.1));

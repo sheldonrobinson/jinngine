@@ -18,8 +18,8 @@ import jinngine.util.Pair;
  */
 public class AllPairsTest implements BroadfaseCollisionDetection {
 	
-	private final Set<Pair<Geometry>> existingPairs = new HashSet<Pair<Geometry>>();
-	private final Set<Pair<Geometry>> leavingPairs = new HashSet<Pair<Geometry>>();
+	private final Set<Pair<Geometry>> existingPairs = new LinkedHashSet<Pair<Geometry>>();
+	private final Set<Pair<Geometry>> leavingPairs = new LinkedHashSet<Pair<Geometry>>();
 	private final List<Geometry> geometries = new ArrayList<Geometry>();
 	private final List<BroadfaseCollisionDetection.Handler> handlers = new ArrayList<Handler>();
 
@@ -129,7 +129,7 @@ public class AllPairsTest implements BroadfaseCollisionDetection {
 
 	@Override
 	public Set<Pair<Geometry>> getOverlappingPairs() {
-		return new HashSet<Pair<Geometry>>(existingPairs);
+		return new LinkedHashSet<Pair<Geometry>>(existingPairs);
 	}
 	
 	

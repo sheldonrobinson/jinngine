@@ -418,5 +418,9 @@ public final class Body {
 	public void setSupportMap(SupportMap3 supportMap) {
 		this.supportMap = supportMap;
 	}
+
+	public void setMass(double massvalue) {
+		state.M = massvalue;
+	}
 }  
 

@@ -109,7 +109,7 @@ public final class Quaternion {
 
 
   public double norm() {
-    return (double)Math.sqrt( s*s + this.v.SquaredSum() );
+    return (double)Math.sqrt( s*s + this.v.squaredNorm() );
   }
 
   public Quaternion conjugate() {

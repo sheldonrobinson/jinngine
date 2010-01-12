@@ -7,7 +7,7 @@ import jinngine.geometry.Box;
 import jinngine.math.Vector3;
 import jinngine.physics.Body;
 import jinngine.physics.Engine;
-import jinngine.physics.Model;
+import jinngine.physics.PhysicsScene;
 import jinngine.physics.constraint.HingeJoint;
 import jinngine.physics.force.GravityForce;
 import jinngine.util.Pair;
@@ -27,7 +27,7 @@ public class Seesaw implements Testcase {
 	
 	
 	@Override
-	public void deleteScene(Model model) {
+	public void deleteScene(PhysicsScene model) {
 		for (Body b:boxes) {
 			model.removeBody(b);
 		}
@@ -36,8 +36,8 @@ public class Seesaw implements Testcase {
 	}
 
 	@Override
-	public void initScene(Model model) {
-		model.setDt(dt);
+	public void initScene(PhysicsScene model) {
+		//model.setDt(dt);
 
 		Body cube = new Body(new Box(8,4,8));
 		//cube.setMass(5);
@@ -54,7 +54,7 @@ public class Seesaw implements Testcase {
 		model.addBody(seesaw);
 		model.addForce( new GravityForce(seesaw));
 		
-		model.addConstraint(new Pair<Body>(cube,seesaw), new HingeJoint(cube,seesaw, new Vector3(0,-6,0), new Vector3(0,0,1)) );
+		model.addConstraint(new HingeJoint(cube,seesaw, new Vector3(0,-6,0), new Vector3(0,0,1)) );
 		
 		Body weight = new Body( new Box(4,4,4));
 		//weight.getBoxGeometry().setEnvelope(1);
@@ -93,7 +93,7 @@ public class Seesaw implements Testcase {
 	}
 
 	public static void main(String arg[]) {
-		Model model = new Engine();
+		Engine model = new Engine();
 		Seesaw test = new Seesaw(0.02);
 		test.initScene(model);		
 		new BoxVisualisor(model, test.boxes).start();

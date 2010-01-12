@@ -24,7 +24,7 @@ import jinngine.util.Pair;
  * @author mo
  *
  */
-public final class FrictionalContactConstraint implements ContactConstraint {	
+public final class SimplifiedContactConstraint implements ContactConstraint {	
 	private final Body b1, b2;                  //bodies in constraint
 	private final List<ContactGenerator> generators = new ArrayList<ContactGenerator>();
 	
@@ -34,7 +34,7 @@ public final class FrictionalContactConstraint implements ContactConstraint {
 	}
 
 	public static void setRestitution(double restitution) {
-		FrictionalContactConstraint.restitution = restitution;
+		SimplifiedContactConstraint.restitution = restitution;
 	}
 
 //	public static double getMu() {
@@ -55,7 +55,7 @@ public final class FrictionalContactConstraint implements ContactConstraint {
 	 * @param b2
 	 * @param generator
 	 */
-	public FrictionalContactConstraint(Body b1, Body b2, ContactGenerator generator) {
+	public SimplifiedContactConstraint(Body b1, Body b2, ContactGenerator generator) {
 		super();
 		this.b1 = b1;
 		this.b2 = b2;
@@ -94,16 +94,77 @@ public final class FrictionalContactConstraint implements ContactConstraint {
 		for ( ContactGenerator cg: generators) {
 			//run contact generator
 			cg.run(dt);
+			//cg.run(dt);
+
 			
-			//generate contacts
+			Vector3 axis = null;
+			
 			Iterator<ContactGenerator.ContactPoint> i = cg.getContacts();
 			while (i.hasNext()) {
 				ContactGenerator.ContactPoint cp = i.next();
 				
+				axis = cp.normal.copy();
 				createFrictionalContactConstraint(cp, b1, b2, cp.midpoint, cp.normal, cp.depth, dt, constraintIterator);				
 			}
+			
+			
+			
+			if (axis != null) {
+				Matrix3 basis = GramSchmidt.run(axis);
+				
+				Vector3 u = b1.state.vCm.minus(b2.state.vCm);
+				
+				constraint linear1 = new constraint();
+				linear1.assign( 
+						b1,	b2, 
+						basis.column(1).multiply(1/b1.state.M), Vector3.zero, basis.column(1).multiply(-1/b2.state.M), Vector3.zero, 
+						basis.column(1),                        Vector3.zero, basis.column(1).multiply(-1), Vector3.zero,
+						-50,
+						50,
+						null,
+						basis.column(1).dot(u) );
+
+				
+				constraint linear2 = new constraint();
+				linear2.assign( 
+						b1,	b2, 
+						basis.column(2).multiply(1/b1.state.M), Vector3.zero, basis.column(2).multiply(-1/b2.state.M), Vector3.zero, 
+						basis.column(2),                        Vector3.zero, basis.column(2).multiply(-1), Vector3.zero,
+						-50,
+						50,
+						null,
+						basis.column(2).dot(u) );
+
+//				constraint linear2 = new constraint();
+//				linear2.assign( 
+//						b1,	b2, 
+//						Bi.column(1), Bangi.column(1), Bj.column(1), Bangj.column(1), 
+//						Ji.row(1), Jangi.row(1), Jj.row(1), Jangj.row(1),
+//						Double.NEGATIVE_INFINITY,
+//						Double.POSITIVE_INFINITY,
+//						null,
+//						u.y );
+				
+				//create experimental friction constraint
+				constraint angular1 = new constraint();
+				angular1.assign( 
+						b1,	b2, 
+						new Vector3(), b1.state.Iinverse.multiply(axis), new Vector3(), b2.state.Iinverse.multiply(axis.multiply(-1)), 
+						new Vector3(), axis, new Vector3(), axis.multiply(-1), 
+						-50,
+						50,
+						null,
+						axis.dot(b1.state.omegaCm)-axis.dot(b2.state.omegaCm) );
+
+				constraintIterator.add(linear1);
+				constraintIterator.add(linear2);
+
+				constraintIterator.add(angular1);
+
+			}
+			
+			
 		}
-		
 	}
 
 	/**
@@ -214,7 +275,7 @@ public final class FrictionalContactConstraint implements ContactConstraint {
 		correction = depth*(1/dt)*0.8;
 		//System.out.println("dt calculated=" + dt);
 		
-		double limit = 1.0;
+		double limit = 5.5;
 		correction = correction< -limit? -limit:correction;
 		correction = correction>  limit?  limit:correction;
 		//correction = 0;
@@ -285,13 +346,24 @@ public final class FrictionalContactConstraint implements ContactConstraint {
 				-(ut2f-ut2i) 
 		);
 
+		//book-keep constraints in each body
+		//b1.constraints.add(c3);
+		//b2.constraints.add(c3);
 		outConstraints.add(c);
-		outConstraints.add(c2);
-		outConstraints.add(c3);
+		//outConstraints.add(c2);
+		//outConstraints.add(c3);
 	}
 
 	@Override
 	public Pair<Body> getBodies() {
 		return new Pair<Body>(b1,b2);
 	}
+
+//	public static double getCorrectionConstant() {
+//		return K;
+//	}
+//
+//	public static void setCorrectionConstant(double k) {
+//		K = k;
+//	}
 }

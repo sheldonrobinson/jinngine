@@ -23,7 +23,7 @@ import jinngine.physics.force.*;
 		}
 
 		@Override
-		public void deleteScene(Model model) {
+		public void deleteScene(PhysicsScene model) {
 			for (Body b:boxes) {
 				model.removeBody(b);
 			}
@@ -32,9 +32,9 @@ import jinngine.physics.force.*;
 		}
 
 		@Override
-		public void initScene(Model model) {
+		public void initScene(PhysicsScene model) {
 			//parameters
-			model.setDt(dt);
+			//model.setDt(dt);
 
 			Body table = new Body( new Box(220,1,120));
 			table.setPosition( new Vector3(0,-13,0));
@@ -62,7 +62,7 @@ import jinngine.physics.force.*;
 		}
 
 		public static void main(String arg[]) {
-			Model model = new Engine();
+			Engine model = new Engine();
 			ThinWall test = new ThinWall(7, 0.05);
 			test.initScene(model);			
 			new BoxVisualisor(model, test.boxes, 1).start();

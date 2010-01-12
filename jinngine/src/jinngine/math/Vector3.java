@@ -172,7 +172,7 @@ public final class  Vector3 {
   }
 
   
-  public double SquaredSum() {
+  public double squaredNorm() {
     return x*x+y*y+z*z;
   }
 
