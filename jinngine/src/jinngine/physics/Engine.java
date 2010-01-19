@@ -170,8 +170,8 @@ public final class Engine implements PhysicsModel, PhysicsScene {
 //	private BroadfaseCollisionDetection broadfase = new AllPairsTest(handler);
 
 	//Create a linear complementarity problem solver
-//	private Solver solver = new ProjectedGaussSeidel(100);
-	private Solver solver = new NonsmoothNonlinearConjugateGradient(100, false);
+	private Solver solver = new ProjectedGaussSeidel(35);
+//	private Solver solver = new NonsmoothNonlinearConjugateGradient(100, false);
 //	private Solver solver = new SubspaceMinimization(false,null);
 	//time-step size
 	private double dt = 0.05; 
@@ -262,7 +262,7 @@ public final class Engine implements PhysicsModel, PhysicsScene {
 //		solver.solve( constraintList, bodies, 0.0 );
 		
 		//		
-		System.out.println(" constraints " + constraintList.size() + " psi(x) = " +FischerNewton.fischerMerit(constraintList, bodies) );
+//		System.out.println(" constraints " + constraintList.size() + " psi(x) = " +FischerNewton.fischerMerit(constraintList, bodies) );
 
 		
 		// Apply delta velocities and integrate positions forward
