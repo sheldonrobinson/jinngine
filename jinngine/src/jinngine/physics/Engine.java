@@ -1,17 +1,18 @@
 package jinngine.physics;
-import java.io.PrintStream;
 import java.util.*;
 
+import jinngine.physics.constraint.*;
+import jinngine.physics.constraint.contact.*;	
 import jinngine.physics.solver.*;
 import jinngine.physics.solver.Solver.constraint;
 import jinngine.physics.solver.experimental.FischerNewton;
 import jinngine.physics.solver.experimental.NonsmoothNonlinearConjugateGradient;
+import jinngine.physics.solver.experimental.SubspaceMinimization;
 import jinngine.geometry.contact.*;
 import jinngine.collision.*;
 import jinngine.geometry.*;
 import jinngine.math.*;
 import jinngine.physics.force.*;
-import jinngine.physics.constraint.*;
 import jinngine.util.*;
 import jinngine.util.ComponentGraph.Component;
 
@@ -169,8 +170,9 @@ public final class Engine implements PhysicsModel, PhysicsScene {
 //	private BroadfaseCollisionDetection broadfase = new AllPairsTest(handler);
 
 	//Create a linear complementarity problem solver
-	private Solver solver = new ProjectedGaussSeidel(100);
-//	private Solver solver = new NonsmoothNonlinearConjugateGradientSimple(50, false);
+//	private Solver solver = new ProjectedGaussSeidel(100);
+	private Solver solver = new NonsmoothNonlinearConjugateGradient(100, false);
+//	private Solver solver = new SubspaceMinimization(false,null);
 	//time-step size
 	private double dt = 0.05; 
 
@@ -211,8 +213,8 @@ public final class Engine implements PhysicsModel, PhysicsScene {
 		// Clear acting forces and auxillary variables
 		for (Body c:bodies) {
 			c.clearForces();
-			c.deltaVCm.assign(Vector3.zero);
-			c.deltaOmegaCm.assign(Vector3.zero);
+			c.deltavelocity.assign(Vector3.zero);
+			c.deltaomega.assign(Vector3.zero);
 		}
 
         // Apply all forces	
@@ -264,17 +266,13 @@ public final class Engine implements PhysicsModel, PhysicsScene {
 
 		
 		// Apply delta velocities and integrate positions forward
-		for (Body c : bodies ) {
-			//don't process inactive bodies
-			if (c.ignore)
-				continue;
-						
+		for (Body c : bodies ) {						
 			// Apply computed forces to bodies
 			if ( !c.isFixed() ) {
-				c.state.vCm.assign( c.state.vCm.add( c.deltaVCm));
-				c.state.omegaCm.assign( c.state.omegaCm.add( c.deltaOmegaCm));	
-				Matrix3.multiply(c.state.I, c.state.omegaCm, c.state.L);
-				c.state.P.assign(c.state.vCm.multiply(c.state.M));
+				c.state.velocity.assign( c.state.velocity.add( c.deltavelocity));
+				c.state.omega.assign( c.state.omega.add( c.deltaomega));	
+				Matrix3.multiply(c.state.inertia, c.state.omega, c.state.L);
+				c.state.P.assign(c.state.velocity.multiply(c.state.mass));
 			}
 
 			//integrate forward on positions

@@ -59,7 +59,7 @@ import jinngine.physics.force.GravityForce;
 						cu.setPosition( new Vector3( /*0.60*j+(0.3*(i%2))*/ diameter*(double)Math.sin(theta + (i%2)*0.5f*delta_theta ),  (height*1.05f)*i-9.4500f, -5.3f-0.65f*k+diameter*(double)Math.cos(theta + (i%2)*delta_theta*0.5f ) ));
 						cu.setVelocity( new Vector3( 0.000f, 0.000f, 0.0000f ));
 						model.addForce(new GravityForce(cu));
-						cu.state.q.assign(Quaternion.rotation( theta+(i%2)*0.5f*delta_theta, new Vector3(0,1,0) ));
+						cu.state.orientation.assign(Quaternion.rotation( theta+(i%2)*0.5f*delta_theta, new Vector3(0,1,0) ));
 						model.addBody(cu);
 						boxes.add(cu);
 	

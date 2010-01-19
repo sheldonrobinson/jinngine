@@ -65,7 +65,7 @@ public class InertiaMatrix extends Matrix3 {
 	/**
 	 * Rotate the inertia matrix given a rotation matrix
 	 * @param M
-	 * @param q
+	 * @param orientation
 	 * @return Rotated inertia matrix
 	 */
 	public static InertiaMatrix rotate(InertiaMatrix M, Matrix3 R) {

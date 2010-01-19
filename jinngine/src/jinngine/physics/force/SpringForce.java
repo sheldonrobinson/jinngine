@@ -79,14 +79,14 @@ public class SpringForce implements Force {
 		//point on b
 		Vector3 prb = b.toWorldNoTranslation(pb);
 		
-		Vector3 paw = pra.add(a.state.rCm);
-		Vector3 pbw = prb.add(b.state.rCm);
+		Vector3 paw = pra.add(a.state.position);
+		Vector3 pbw = prb.add(b.state.position);
 		
 		//Vector3 p2 = toWorldNoTranslation(new Vector3(0,-1,0));
 		Vector3 x = pbw.minus(paw);
 
-		Vector3 upa = a.state.vCm.add(a.state.omegaCm.cross(pra));
-		Vector3 upb = b.state.vCm.add(b.state.omegaCm.cross(prb));
+		Vector3 upa = a.state.velocity.add(a.state.omega.cross(pra));
+		Vector3 upb = b.state.velocity.add(b.state.omega.cross(prb));
 		
 		
 		Vector3 n;

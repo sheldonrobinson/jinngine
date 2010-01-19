@@ -32,10 +32,10 @@ public class ProjectedGaussSeidel implements Solver {
 			deltaResidual = 0;
 			for (constraint ci: constraints) {
 				//calculate (Ax+b)_i 
-				double w =  ci.j1.dot(ci.body1.deltaVCm) 
-				+ ci.j2.dot(ci.body1.deltaOmegaCm)
-				+  ci.j3.dot(ci.body2.deltaVCm) 
-				+ ci.j4.dot(ci.body2.deltaOmegaCm) + ci.lambda*ci.damper;
+				double w =  ci.j1.dot(ci.body1.deltavelocity) 
+				+ ci.j2.dot(ci.body1.deltaomega)
+				+  ci.j3.dot(ci.body2.deltavelocity) 
+				+ ci.j4.dot(ci.body2.deltaomega) + ci.lambda*ci.damper;
 
 				double deltaLambda = (-ci.b-w)/(ci.diagonal + ci.damper );
 				double lambda0 = ci.lambda;
@@ -65,10 +65,10 @@ public class ProjectedGaussSeidel implements Solver {
 				deltaResidual += deltaLambda*deltaLambda;
 
 				//Apply to delta velocities
-				Vector3.add( ci.body1.deltaVCm,     ci.b1.multiply(deltaLambda) );
-				Vector3.add( ci.body1.deltaOmegaCm, ci.b2.multiply(deltaLambda) );
-				Vector3.add( ci.body2.deltaVCm,     ci.b3.multiply(deltaLambda));
-				Vector3.add( ci.body2.deltaOmegaCm, ci.b4.multiply(deltaLambda));
+				Vector3.add( ci.body1.deltavelocity,     ci.b1.multiply(deltaLambda) );
+				Vector3.add( ci.body1.deltaomega, ci.b2.multiply(deltaLambda) );
+				Vector3.add( ci.body2.deltavelocity,     ci.b3.multiply(deltaLambda));
+				Vector3.add( ci.body2.deltaomega, ci.b4.multiply(deltaLambda));
 				
 			} //for constraints	
 			iterations +=1;

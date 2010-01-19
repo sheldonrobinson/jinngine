@@ -30,10 +30,10 @@ public class Projection implements Solver {
 				projected = true;
 
 			//Apply to delta velocities
-			Vector3.add( ci.body1.deltaVCm,     ci.b1.multiply(deltaLambda) );
-			Vector3.add( ci.body1.deltaOmegaCm, ci.b2.multiply(deltaLambda) );
-			Vector3.add( ci.body2.deltaVCm,     ci.b3.multiply(deltaLambda));
-			Vector3.add( ci.body2.deltaOmegaCm, ci.b4.multiply(deltaLambda));
+			Vector3.add( ci.body1.deltavelocity,     ci.b1.multiply(deltaLambda) );
+			Vector3.add( ci.body1.deltaomega, ci.b2.multiply(deltaLambda) );
+			Vector3.add( ci.body2.deltavelocity,     ci.b3.multiply(deltaLambda));
+			Vector3.add( ci.body2.deltaomega, ci.b4.multiply(deltaLambda));
 		} //for constraints
 		return projected?1:0;
 	}

@@ -13,17 +13,17 @@ import jinngine.math.Vector3;
 public final class State  {
 	//generalized position
 	/** Position relative to center of mass */
-	final public Vector3             rCm       = new Vector3(0,0,0);
+	final public Vector3             position       = new Vector3(0,0,0);
 	/** Quaternion describing orientation */
-	public final Quaternion          q         = Quaternion.rotation(0.0f, new Vector3(1,0,0));  
+	public final Quaternion          orientation         = Quaternion.rotation(0.0f, new Vector3(1,0,0));  
 
 	//Angular inertia
 	/** Moment of inertia */
-	public final InertiaMatrix       I         = new InertiaMatrix();
+	public final InertiaMatrix       inertia         = new InertiaMatrix();
 	/** Moment of inertia inverse */
-	public final Matrix3             Iinverse  = new Matrix3();
+	public final Matrix3             inverseinertia  = new Matrix3();
 	/** Total mass */
-	public double                    M         = 1;                                         
+	public double                    mass         = 1;                                         
 
 	/** Angular momentum */
 	public final Vector3             L       = new Vector3(0,0,0);
@@ -32,29 +32,19 @@ public final class State  {
 
 	//Time derivatives
 	/** Center of mass velocity */
-	public final Vector3             vCm       = new Vector3(0,0,0);
+	public final Vector3             velocity       = new Vector3(0,0,0);
 	/** Angular Velocity ( Radians per time unit around each axis) */
-	public final Vector3             omegaCm   = new Vector3(0.0f,0.0f,0.0f);
+	public final Vector3             omega   = new Vector3(0.0f,0.0f,0.0f);
 	/** Quaternion first order time derivative  */
-	public final Quaternion          Dq        = new Quaternion( 0.0f, new Vector3(0,0,0));   
-	/** Quaternion second order time derivative  */
-	public final Quaternion          D2q       = new Quaternion( 0.0f, new Vector3(0,0,0)); // Quaternion time double derivative dq/dt = (1/2)*omega_cm*q
+	public final Quaternion          orientationderivative        = new Quaternion( 0.0f, new Vector3(0,0,0));   
 	/** Linear acceleration */
-	final public Vector3             aCm       = new Vector3(0,0,0);                          // Linear acceleration
+	final public Vector3             acceleration       = new Vector3(0,0,0);                          // Linear acceleration
 	/** Angular acceleration */
 	public final Vector3             alpha     = new Vector3(0,0,0);                          // Angular acceleration 
 	/** total torque, dL/dt, change in angular momentum */
-	public final Vector3             tauCm     = new Vector3(0,0,0);                          // total torque, dL/dt change in angular momentum
+	public final Vector3             torque     = new Vector3(0,0,0);                          // total torque, dL/dt change in angular momentum
 	/** total force, change in linear momentum dP/dt */
-	public final Vector3             FCm       = new Vector3(0,0,0);                          // total force, change in linear momentum dP/dt
-
-	//Auxiliary
-	/**
-	 * Auxiliary fields
-	 */
-	public double                    rMax;
-	public final Vector3             deltaVCm     = new Vector3(0,0,0);
-	public final Vector3             deltaOmegaCm = new Vector3(0,0,0);
+	public final Vector3             force       = new Vector3(0,0,0);                          // total force, change in linear momentum dP/dt
 
 	//transforms
 	/** Transformation matrix, how to get from object space to world */
@@ -62,7 +52,7 @@ public final class State  {
 	/** Rotation matrix, how to get from object orientation into world orientation */
 	public final Matrix3             rotation        = Matrix3.identity();
 	/** Inverse rotation matrix */	
-	public final Matrix3             rotationInverse = Matrix3.identity();
+	public final Matrix3             inverserotation = Matrix3.identity();
 
 	/**
 	 * Assign this state the fields in the State t
@@ -70,24 +60,24 @@ public final class State  {
 	 */
 	public void  assign( State t) {
 		State s = this;
-		s.rCm.assign(t.rCm);
-		s.q.assign(t.q);
-		s.omegaCm.assign(t.omegaCm);
-		Matrix3.set(t.I, s.I);
-		Matrix3.set(t.Iinverse, s.Iinverse);
+		s.position.assign(t.position);
+		s.orientation.assign(t.orientation);
+		s.omega.assign(t.omega);
+		Matrix3.set(t.inertia, s.inertia);
+		Matrix3.set(t.inverseinertia, s.inverseinertia);
 		s.L.assign(t.L);
 		s.P.assign(t.P);
-		s.M = t.M;
+		s.mass = t.mass;
 
-		s.vCm.assign(t.vCm);
-		s.aCm.assign(t.aCm);
+		s.velocity.assign(t.velocity);
+		s.acceleration.assign(t.acceleration);
 		s.alpha.assign(t.alpha);
-		s.tauCm.assign(t.tauCm);
-		s.FCm.assign(t.FCm);
+		s.torque.assign(t.torque);
+		s.force.assign(t.force);
 		
 		Matrix4.set(t.transform, s.transform);
 		Matrix3.set(t.rotation, s.rotation);
-		Matrix3.set(t.rotationInverse, s.rotationInverse);
+		Matrix3.set(t.inverserotation, s.inverserotation);
 	}
 }
 

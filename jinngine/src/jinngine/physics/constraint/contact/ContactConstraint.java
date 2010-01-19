@@ -1,14 +1,8 @@
-package jinngine.physics.constraint;
+package jinngine.physics.constraint.contact;
 
-import java.util.*;
 
+import jinngine.physics.constraint.*;
 import jinngine.geometry.contact.*;
-import jinngine.math.Matrix3;
-import jinngine.math.Vector3;
-import jinngine.physics.Body;
-import jinngine.physics.solver.*;
-import jinngine.util.GramSchmidt;
-
 
 /**
  * A constraint the models contact region forces, acting between two bodies. A ContactConstraint acts 

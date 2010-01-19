@@ -8,7 +8,7 @@ import jinngine.math.Vector3;
 import jinngine.physics.Body;
 import jinngine.physics.Engine;
 import jinngine.physics.PhysicsScene;
-import jinngine.physics.constraint.HingeJoint;
+import jinngine.physics.constraint.joint.HingeJoint;
 import jinngine.physics.force.GravityForce;
 import jinngine.util.Pair;
 

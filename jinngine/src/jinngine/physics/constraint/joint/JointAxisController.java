@@ -1,4 +1,4 @@
-package jinngine.physics.constraint;
+package jinngine.physics.constraint.joint;
 
 /**
  * This interface should be retrieved from invoking methods on joint constraints. The interface can then be 

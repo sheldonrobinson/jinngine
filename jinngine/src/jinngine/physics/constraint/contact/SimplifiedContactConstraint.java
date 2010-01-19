@@ -1,4 +1,4 @@
-package jinngine.physics.constraint;
+package jinngine.physics.constraint.contact;
 
 import java.util.*;
 
@@ -112,15 +112,15 @@ public final class SimplifiedContactConstraint implements ContactConstraint {
 			if (axis != null) {
 				Matrix3 basis = GramSchmidt.run(axis);
 				
-				Vector3 u = b1.state.vCm.minus(b2.state.vCm);
+				Vector3 u = b1.state.velocity.minus(b2.state.velocity);
 				
 				constraint linear1 = new constraint();
 				linear1.assign( 
 						b1,	b2, 
-						basis.column(1).multiply(1/b1.state.M), Vector3.zero, basis.column(1).multiply(-1/b2.state.M), Vector3.zero, 
+						basis.column(1).multiply(1/b1.state.mass), Vector3.zero, basis.column(1).multiply(-1/b2.state.mass), Vector3.zero, 
 						basis.column(1),                        Vector3.zero, basis.column(1).multiply(-1), Vector3.zero,
-						-50,
-						50,
+						-5,
+						5,
 						null,
 						basis.column(1).dot(u) );
 
@@ -128,10 +128,10 @@ public final class SimplifiedContactConstraint implements ContactConstraint {
 				constraint linear2 = new constraint();
 				linear2.assign( 
 						b1,	b2, 
-						basis.column(2).multiply(1/b1.state.M), Vector3.zero, basis.column(2).multiply(-1/b2.state.M), Vector3.zero, 
+						basis.column(2).multiply(1/b1.state.mass), Vector3.zero, basis.column(2).multiply(-1/b2.state.mass), Vector3.zero, 
 						basis.column(2),                        Vector3.zero, basis.column(2).multiply(-1), Vector3.zero,
-						-50,
-						50,
+						-5,
+						5,
 						null,
 						basis.column(2).dot(u) );
 
@@ -149,12 +149,12 @@ public final class SimplifiedContactConstraint implements ContactConstraint {
 				constraint angular1 = new constraint();
 				angular1.assign( 
 						b1,	b2, 
-						new Vector3(), b1.state.Iinverse.multiply(axis), new Vector3(), b2.state.Iinverse.multiply(axis.multiply(-1)), 
+						new Vector3(), b1.state.inverseinertia.multiply(axis), new Vector3(), b2.state.inverseinertia.multiply(axis.multiply(-1)), 
 						new Vector3(), axis, new Vector3(), axis.multiply(-1), 
-						-50,
-						50,
+						-5,
+						5,
 						null,
-						axis.dot(b1.state.omegaCm)-axis.dot(b2.state.omegaCm) );
+						axis.dot(b1.state.omega)-axis.dot(b2.state.omega) );
 
 				constraintIterator.add(linear1);
 				constraintIterator.add(linear2);
@@ -204,12 +204,12 @@ public final class SimplifiedContactConstraint implements ContactConstraint {
 		Vector3 pdotb2 = new Vector3();
 		Vector3 u = new Vector3();
 
-		Vector3.sub( p, b1.state.rCm, rb1 );
-		Vector3.sub( p, b2.state.rCm, rb2 );
-		Vector3.crossProduct( b1.state.omegaCm, rb1, pdotb1 );
-		Vector3.add( pdotb1, b1.state.vCm );
-		Vector3.crossProduct( b2.state.omegaCm, rb2, pdotb2 );
-		Vector3.add( pdotb2, b2.state.vCm );
+		Vector3.sub( p, b1.state.position, rb1 );
+		Vector3.sub( p, b2.state.position, rb2 );
+		Vector3.crossProduct( b1.state.omega, rb1, pdotb1 );
+		Vector3.add( pdotb1, b1.state.velocity );
+		Vector3.crossProduct( b2.state.omega, rb2, pdotb2 );
+		Vector3.add( pdotb2, b2.state.velocity );
 		Vector3.sub( pdotb1, pdotb2, u );
 
 		return Vector3.dot( n, u );
@@ -233,8 +233,8 @@ public final class SimplifiedContactConstraint implements ContactConstraint {
 		//truncate small collision
 		//unf = unf < 0.1? 0: unf;
 		
-		Vector3 r1 = p.minus(b1.state.rCm);
-		Vector3 r2 = p.minus(b2.state.rCm);
+		Vector3 r1 = p.minus(b1.state.position);
+		Vector3 r2 = p.minus(b2.state.position);
 		Vector3 J1 = n.multiply(1);
 		Vector3 J2 = r1.cross(n).multiply(1);
 		Vector3 J3 = n.multiply(-1);
@@ -243,14 +243,14 @@ public final class SimplifiedContactConstraint implements ContactConstraint {
 		//First off, create the constraint in the normal direction
 		double e = cp.restitution; //coeficient of restitution
 		//double uni = relativeVelocity(b1,b2,p,n);
-		double uni = J1.dot(b1.state.vCm) + J2.dot(b1.state.omegaCm) + J3.dot(b2.state.vCm) + J4.dot(b2.state.omegaCm);
+		double uni = J1.dot(b1.state.velocity) + J2.dot(b1.state.omega) + J3.dot(b2.state.velocity) + J4.dot(b2.state.omega);
 		double unf = uni<0 ? -e*uni: 0;		
 		
 		//compute B vector
-		Matrix3 I1 = b1.state.Iinverse;
-		double m1 = b1.state.M;
-		Matrix3 I2 = b2.state.Iinverse;
-		double m2 = b2.state.M;
+		Matrix3 I1 = b1.state.inverseinertia;
+		double m1 = b1.state.mass;
+		Matrix3 I2 = b2.state.inverseinertia;
+		double m2 = b2.state.mass;
 
 		//		B = new Vector(n.multiply(-1/m1))
 		//		.concatenateHorizontal( new Vector(I1.multiply(r1.cross(n).multiply(-1))) )
@@ -266,7 +266,7 @@ public final class SimplifiedContactConstraint implements ContactConstraint {
 		if (b2.isFixed() ) { B3.assign( B4.assign(Vector3.zero)); }
 
 		//external forces acing at contact
-		double Fext = B1.dot(b1.state.FCm) + B2.dot(b1.state.tauCm) + B3.dot(b2.state.FCm) + B4.dot(b2.state.tauCm);
+		double Fext = B1.dot(b1.state.force) + B2.dot(b1.state.torque) + B3.dot(b2.state.force) + B4.dot(b2.state.torque);
 		//double cv = cp.penetrating?0.5:0.50; //max. correction velocity
 		//depth = depth > 0? 0:depth;
 		double correction = 0;

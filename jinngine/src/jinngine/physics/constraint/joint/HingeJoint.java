@@ -1,6 +1,7 @@
-package jinngine.physics.constraint;
+package jinngine.physics.constraint.joint;
 
 import java.util.*;
+import jinngine.physics.constraint.*;
 import jinngine.math.Matrix3;
 import jinngine.math.Vector3;
 import jinngine.physics.Body;
@@ -174,18 +175,18 @@ public final class HingeJoint implements Constraint {
 		Matrix3 Jj = Matrix3.identity().multiply(-1);
 		Matrix3 Jangj = rj.crossProductMatrix3().multiply(1);
 
-		Matrix3 MiInv = Matrix3.identity().multiply(1/b1.state.M);
-		Matrix3 MjInv = Matrix3.identity().multiply(1/b2.state.M);
+		Matrix3 MiInv = Matrix3.identity().multiply(1/b1.state.mass);
+		Matrix3 MjInv = Matrix3.identity().multiply(1/b2.state.mass);
 
 		Matrix3 Bi = b1.isFixed()? new Matrix3() : MiInv.multiply(Ji.transpose());
-		Matrix3 Bangi = b1.isFixed()? new Matrix3() : b1.state.Iinverse.multiply(Jangi.transpose());
+		Matrix3 Bangi = b1.isFixed()? new Matrix3() : b1.state.inverseinertia.multiply(Jangi.transpose());
 		Matrix3 Bj = b2.isFixed()? new Matrix3() : MjInv.multiply(Jj.transpose());
-		Matrix3 Bangj = b2.isFixed()? new Matrix3() : b2.state.Iinverse.multiply(Jangj.transpose());
+		Matrix3 Bangj = b2.isFixed()? new Matrix3() : b2.state.inverseinertia.multiply(Jangj.transpose());
 
 		double Kcor = 0.99;
 		
-		Vector3 u = b1.state.vCm.minus( ri.cross(b1.state.omegaCm)).minus(b2.state.vCm).add(rj.cross(b2.state.omegaCm));
-		Vector3 posError = b1.state.rCm.add(ri).minus(b2.state.rCm).minus(rj).multiply(1/dt);
+		Vector3 u = b1.state.velocity.minus( ri.cross(b1.state.omega)).minus(b2.state.velocity).add(rj.cross(b2.state.omega));
+		Vector3 posError = b1.state.position.add(ri).minus(b2.state.position).minus(rj).multiply(1/dt);
 		//error in transformed normal
 		Vector3 nerror = tn1.cross(tn2);
 		u.assign( u.add(posError.multiply(Kcor)));
@@ -232,7 +233,7 @@ public final class HingeJoint implements Constraint {
 		double motorLow = motor<0?motor:0;
 		
 		//angular velocity along axis 
-		velocity = axis.dot(b1.state.omegaCm)-axis.dot(b2.state.omegaCm);
+		velocity = axis.dot(b1.state.omega)-axis.dot(b2.state.omega);
 		double bvalue = 0;
 		double e = 0;
 		
@@ -265,7 +266,7 @@ public final class HingeJoint implements Constraint {
 		
 		angular1.assign( 
 				b1,	b2, 
-				new Vector3(), b1.isFixed()? new Vector3():b1.state.Iinverse.multiply(axis), new Vector3(), b2.isFixed()? new Vector3() : b2.state.Iinverse.multiply(axis.multiply(-1)), 
+				new Vector3(), b1.isFixed()? new Vector3():b1.state.inverseinertia.multiply(axis), new Vector3(), b2.isFixed()? new Vector3() : b2.state.inverseinertia.multiply(axis.multiply(-1)), 
 				new Vector3(), axis, new Vector3(), axis.multiply(-1), 
 				low,
 				high,
@@ -275,22 +276,22 @@ public final class HingeJoint implements Constraint {
 		//keep bodies aligned to the axis
 		angular2.assign( 
 				b1, b2, 
-				new Vector3(), b1.isFixed()? new Vector3() : b1.state.Iinverse.multiply(tt2i), new Vector3(), b2.isFixed()? new Vector3() : b2.state.Iinverse.multiply(tt2i.multiply(-1)), 
+				new Vector3(), b1.isFixed()? new Vector3() : b1.state.inverseinertia.multiply(tt2i), new Vector3(), b2.isFixed()? new Vector3() : b2.state.inverseinertia.multiply(tt2i.multiply(-1)), 
 				new Vector3(), tt2i, new Vector3(), tt2i.multiply(-1),
 				Double.NEGATIVE_INFINITY,
 				Double.POSITIVE_INFINITY,
 				null,
-				tt2i.dot(b1.state.omegaCm)-tt2i.dot(b2.state.omegaCm) - Kcor*tt2i.dot(nerror)*(1/dt)  );	
+				tt2i.dot(b1.state.omega)-tt2i.dot(b2.state.omega) - Kcor*tt2i.dot(nerror)*(1/dt)  );	
 
 		
 		angular3.assign( 
 				b1,	b2, 
-				new Vector3(), b1.isFixed()? new Vector3() : b1.state.Iinverse.multiply(tt3i), new Vector3(), b2.isFixed()? new Vector3() : b2.state.Iinverse.multiply(tt3i.multiply(-1)), 
+				new Vector3(), b1.isFixed()? new Vector3() : b1.state.inverseinertia.multiply(tt3i), new Vector3(), b2.isFixed()? new Vector3() : b2.state.inverseinertia.multiply(tt3i.multiply(-1)), 
 				new Vector3(), tt3i, new Vector3(), tt3i.multiply(-1),
 				Double.NEGATIVE_INFINITY,
 				Double.POSITIVE_INFINITY,
 				null,
-				tt3i.dot(b1.state.omegaCm)-tt3i.dot(b2.state.omegaCm) - Kcor*tt3i.dot(nerror)*(1/dt)  );		
+				tt3i.dot(b1.state.omega)-tt3i.dot(b2.state.omega) - Kcor*tt3i.dot(nerror)*(1/dt)  );		
 
 
 		//add constraints to return list

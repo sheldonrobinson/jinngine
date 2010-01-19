@@ -48,7 +48,7 @@ public class Sphere implements SupportMap3, Geometry, Material {
 	@Override
 	public Vector3 supportPoint(Vector3 direction) {
 		//sphere is invariant under rotation
-		return direction.normalize().multiply(radius).add(body.state.rCm).add(Matrix3.multiply(body.state.rotation, displacement, new Vector3()) );
+		return direction.normalize().multiply(radius).add(body.state.position).add(Matrix3.multiply(body.state.rotation, displacement, new Vector3()) );
 	}
 
 	@Override
@@ -64,14 +64,14 @@ public class Sphere implements SupportMap3, Geometry, Material {
 	@Override
 	public Vector3 getMaxBounds() {
 		//return new Vector3(radius+envelope,radius+envelope,radius+envelope).add(Matrix3.multiply(body.state.rotation, displacement, new Vector3())).add(body.state.rCm);
-		return body.state.rCm.add( Matrix3.multiply(body.state.rotation, displacement, new Vector3())).add( new Vector3(radius+envelope,radius+envelope,radius+envelope));
+		return body.state.position.add( Matrix3.multiply(body.state.rotation, displacement, new Vector3())).add( new Vector3(radius+envelope,radius+envelope,radius+envelope));
 		
 	}
 
 	@Override
 	public Vector3 getMinBounds() {
 		//return  new Vector3(-radius-envelope,-radius-envelope,-radius-envelope).add(Matrix3.multiply(body.state.rotation, displacement, new Vector3())).add(body.state.rCm);	
-		return body.state.rCm.add( Matrix3.multiply(body.state.rotation, displacement, new Vector3())).add( new Vector3(-radius-envelope,-radius-envelope,-radius-envelope));
+		return body.state.position.add( Matrix3.multiply(body.state.rotation, displacement, new Vector3())).add( new Vector3(-radius-envelope,-radius-envelope,-radius-envelope));
 
 	}
 	
@@ -116,7 +116,7 @@ public class Sphere implements SupportMap3, Geometry, Material {
 	@Override
 	public void supportFeature(Vector3 d, double epsilon, List<Vector3> ret) {
 		//sphere is invariant under rotation
-		ret.add(d.normalize().multiply(radius).add(body.state.rCm).add(Matrix3.multiply(body.state.rotation, displacement, new Vector3()) ));
+		ret.add(d.normalize().multiply(radius).add(body.state.position).add(Matrix3.multiply(body.state.rotation, displacement, new Vector3()) ));
 	}
 
 	//Material getters and setters

@@ -1,4 +1,4 @@
-package jinngine.physics.constraint;
+package jinngine.physics.constraint.contact;
 
 import java.util.*;
 
@@ -6,7 +6,6 @@ import jinngine.geometry.contact.*;
 import jinngine.math.Matrix3;
 import jinngine.math.Vector3;
 import jinngine.physics.Body;
-import jinngine.physics.solver.*;
 import jinngine.physics.solver.Solver.constraint;
 import jinngine.util.GramSchmidt;
 import jinngine.util.Pair;
@@ -143,12 +142,12 @@ public final class FrictionalContactConstraint implements ContactConstraint {
 		Vector3 pdotb2 = new Vector3();
 		Vector3 u = new Vector3();
 
-		Vector3.sub( p, b1.state.rCm, rb1 );
-		Vector3.sub( p, b2.state.rCm, rb2 );
-		Vector3.crossProduct( b1.state.omegaCm, rb1, pdotb1 );
-		Vector3.add( pdotb1, b1.state.vCm );
-		Vector3.crossProduct( b2.state.omegaCm, rb2, pdotb2 );
-		Vector3.add( pdotb2, b2.state.vCm );
+		Vector3.sub( p, b1.state.position, rb1 );
+		Vector3.sub( p, b2.state.position, rb2 );
+		Vector3.crossProduct( b1.state.omega, rb1, pdotb1 );
+		Vector3.add( pdotb1, b1.state.velocity );
+		Vector3.crossProduct( b2.state.omega, rb2, pdotb2 );
+		Vector3.add( pdotb2, b2.state.velocity );
 		Vector3.sub( pdotb1, pdotb2, u );
 
 		return Vector3.dot( n, u );
@@ -172,8 +171,8 @@ public final class FrictionalContactConstraint implements ContactConstraint {
 		//truncate small collision
 		//unf = unf < 0.1? 0: unf;
 		
-		Vector3 r1 = p.minus(b1.state.rCm);
-		Vector3 r2 = p.minus(b2.state.rCm);
+		Vector3 r1 = p.minus(b1.state.position);
+		Vector3 r2 = p.minus(b2.state.position);
 		Vector3 J1 = n.multiply(1);
 		Vector3 J2 = r1.cross(n).multiply(1);
 		Vector3 J3 = n.multiply(-1);
@@ -182,14 +181,14 @@ public final class FrictionalContactConstraint implements ContactConstraint {
 		//First off, create the constraint in the normal direction
 		double e = cp.restitution; //coeficient of restitution
 		//double uni = relativeVelocity(b1,b2,p,n);
-		double uni = J1.dot(b1.state.vCm) + J2.dot(b1.state.omegaCm) + J3.dot(b2.state.vCm) + J4.dot(b2.state.omegaCm);
+		double uni = J1.dot(b1.state.velocity) + J2.dot(b1.state.omega) + J3.dot(b2.state.velocity) + J4.dot(b2.state.omega);
 		double unf = uni<0 ? -e*uni: 0;		
 		
 		//compute B vector
-		Matrix3 I1 = b1.state.Iinverse;
-		double m1 = b1.state.M;
-		Matrix3 I2 = b2.state.Iinverse;
-		double m2 = b2.state.M;
+		Matrix3 I1 = b1.state.inverseinertia;
+		double m1 = b1.state.mass;
+		Matrix3 I2 = b2.state.inverseinertia;
+		double m2 = b2.state.mass;
 
 		//		B = new Vector(n.multiply(-1/m1))
 		//		.concatenateHorizontal( new Vector(I1.multiply(r1.cross(n).multiply(-1))) )
@@ -205,7 +204,7 @@ public final class FrictionalContactConstraint implements ContactConstraint {
 		if (b2.isFixed() ) { B3.assign( B4.assign(Vector3.zero)); }
 
 		//external forces acing at contact
-		double Fext = B1.dot(b1.state.FCm) + B2.dot(b1.state.tauCm) + B3.dot(b2.state.FCm) + B4.dot(b2.state.tauCm);
+		double Fext = B1.dot(b1.state.force) + B2.dot(b1.state.torque) + B3.dot(b2.state.force) + B4.dot(b2.state.torque);
 		//double cv = cp.penetrating?0.5:0.50; //max. correction velocity
 		//depth = depth > 0? 0:depth;
 		double correction = 0;

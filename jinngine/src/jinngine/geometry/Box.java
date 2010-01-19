@@ -55,7 +55,7 @@ public class Box implements SupportMap3, Geometry, Material {
 		double sv2 = v.y<0?-0.5:0.5;
 		double sv3 = v.z<0?-0.5:0.5;
 		//return Matrix4.multiply(transform4, new Vector3(sv1, sv2, sv3), new Vector3());
-		return body.state.rotation.multiply(localtransform.multiply(new Vector3(sv1, sv2, sv3)).add(localdisplacement)).add(body.state.rCm);
+		return body.state.rotation.multiply(localtransform.multiply(new Vector3(sv1, sv2, sv3)).add(localdisplacement)).add(body.state.position);
 	}
 
 	@Override
@@ -109,14 +109,14 @@ public class Box implements SupportMap3, Geometry, Material {
 	public Vector3 getMaxBounds() {
 		Vector3 displacement = new Vector3();	
 		displacement.assign(Matrix3.multiply(body.state.rotation, localdisplacement, new Vector3()));
-		return bounds.add(displacement).add(body.state.rCm);
+		return bounds.add(displacement).add(body.state.position);
 	}
 
 	@Override
 	public Vector3 getMinBounds() {
 		Vector3 displacement = new Vector3();
 		displacement.assign(Matrix3.multiply(body.state.rotation, localdisplacement, new Vector3()));
-		return bounds.multiply(-1).add(displacement).add(body.state.rCm);
+		return bounds.multiply(-1).add(displacement).add(body.state.position);
 	}
 
 	@Override
@@ -155,7 +155,7 @@ public class Box implements SupportMap3, Geometry, Material {
 			double sv2 = v.y<0?-0.5:0.5;
 			double sv3 = v.z<0?-0.5:0.5;
 			//return Matrix4.multiply(transform4, new Vector3(sv1, sv2, sv3), new Vector3());
-			featureList.add( body.state.rotation.multiply(localtransform.multiply(new Vector3(sv1, sv2, sv3)).add(localdisplacement)).add(body.state.rCm) );
+			featureList.add( body.state.rotation.multiply(localtransform.multiply(new Vector3(sv1, sv2, sv3)).add(localdisplacement)).add(body.state.position) );
 		}
 
 		else if (numberOfZeroAxis == 1) {
@@ -167,8 +167,8 @@ public class Box implements SupportMap3, Geometry, Material {
 			p1.set( zeroAxisIndices[0], 0.5);
 			p2.set( zeroAxisIndices[0], -0.5);
 			
-			featureList.add( body.state.rotation.multiply(localtransform.multiply(p1).add(localdisplacement)).add(body.state.rCm) );
-			featureList.add( body.state.rotation.multiply(localtransform.multiply(p2).add(localdisplacement)).add(body.state.rCm) );
+			featureList.add( body.state.rotation.multiply(localtransform.multiply(p1).add(localdisplacement)).add(body.state.position) );
+			featureList.add( body.state.rotation.multiply(localtransform.multiply(p2).add(localdisplacement)).add(body.state.position) );
 		}
 
 		else if (numberOfZeroAxis == 2) {
@@ -211,10 +211,10 @@ public class Box implements SupportMap3, Geometry, Material {
 				
 			
 			//return transformed vertices
-			featureList.add( body.state.rotation.multiply(localtransform.multiply(p1).add(localdisplacement)).add(body.state.rCm) );
-			featureList.add( body.state.rotation.multiply(localtransform.multiply(p2).add(localdisplacement)).add(body.state.rCm) );
-			featureList.add( body.state.rotation.multiply(localtransform.multiply(p3).add(localdisplacement)).add(body.state.rCm) );
-			featureList.add( body.state.rotation.multiply(localtransform.multiply(p4).add(localdisplacement)).add(body.state.rCm) );			
+			featureList.add( body.state.rotation.multiply(localtransform.multiply(p1).add(localdisplacement)).add(body.state.position) );
+			featureList.add( body.state.rotation.multiply(localtransform.multiply(p2).add(localdisplacement)).add(body.state.position) );
+			featureList.add( body.state.rotation.multiply(localtransform.multiply(p3).add(localdisplacement)).add(body.state.position) );
+			featureList.add( body.state.rotation.multiply(localtransform.multiply(p4).add(localdisplacement)).add(body.state.position) );			
 		}
 
 		else if (numberOfZeroAxis == 3) {

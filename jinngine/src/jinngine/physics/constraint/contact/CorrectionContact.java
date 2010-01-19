@@ -1,4 +1,4 @@
-package jinngine.physics.constraint;
+package jinngine.physics.constraint.contact;
 
 import java.util.*;
 
@@ -83,8 +83,8 @@ public final class CorrectionContact implements ContactConstraint {
 
 				//investigate sticking
 				if (co.t1.body1 != null) {
-					double prev = co.t1.j1.dot(co.t1.body1.state.vCm) + co.t1.j2.dot(co.t1.body1.state.omegaCm)
-					+ co.t1.j3.dot(co.t1.body2.state.vCm) + co.t1.j4.dot(co.t1.body2.state.omegaCm);
+					double prev = co.t1.j1.dot(co.t1.body1.state.velocity) + co.t1.j2.dot(co.t1.body1.state.omega)
+					+ co.t1.j3.dot(co.t1.body2.state.velocity) + co.t1.j4.dot(co.t1.body2.state.omega);
 					
 //					System.out.println("t1:prev v="+prev+ "  force="+co.t1.lambda+" ["+(co.t1.coupledMax.lambda*co.t1.coupledMax.mu)+"]");
 
@@ -147,12 +147,12 @@ public final class CorrectionContact implements ContactConstraint {
 		Vector3 pdotb2 = new Vector3();
 		Vector3 u = new Vector3();
 
-		Vector3.sub( p, b1.state.rCm, rb1 );
-		Vector3.sub( p, b2.state.rCm, rb2 );
-		Vector3.crossProduct( b1.state.omegaCm, rb1, pdotb1 );
-		Vector3.add( pdotb1, b1.state.vCm );
-		Vector3.crossProduct( b2.state.omegaCm, rb2, pdotb2 );
-		Vector3.add( pdotb2, b2.state.vCm );
+		Vector3.sub( p, b1.state.position, rb1 );
+		Vector3.sub( p, b2.state.position, rb2 );
+		Vector3.crossProduct( b1.state.omega, rb1, pdotb1 );
+		Vector3.add( pdotb1, b1.state.velocity );
+		Vector3.crossProduct( b2.state.omega, rb2, pdotb2 );
+		Vector3.add( pdotb2, b2.state.velocity );
 		Vector3.sub( pdotb1, pdotb2, u );
 
 		return Vector3.dot( n, u );
@@ -179,18 +179,18 @@ public final class CorrectionContact implements ContactConstraint {
 		//truncate small collision
 		//unf = unf < 0.1? 0: unf;
 		
-		Vector3 r1 = p.minus(b1.state.rCm);
-		Vector3 r2 = p.minus(b2.state.rCm);
+		Vector3 r1 = p.minus(b1.state.position);
+		Vector3 r2 = p.minus(b2.state.position);
 		Vector3 J1 = n.multiply(-1);
 		Vector3 J2 = r1.cross(n).multiply(-1);
 		Vector3 J3 = n;
 		Vector3 J4 = r2.cross(n).multiply(1);
 
 		//compute B vector
-		Matrix3 I1 = b1.state.Iinverse;
-		double m1 = b1.state.M;
-		Matrix3 I2 = b2.state.Iinverse;
-		double m2 = b2.state.M;
+		Matrix3 I1 = b1.state.inverseinertia;
+		double m1 = b1.state.mass;
+		Matrix3 I2 = b2.state.inverseinertia;
+		double m2 = b2.state.mass;
 
 		//		B = new Vector(n.multiply(-1/m1))
 		//		.concatenateHorizontal( new Vector(I1.multiply(r1.cross(n).multiply(-1))) )
@@ -206,7 +206,7 @@ public final class CorrectionContact implements ContactConstraint {
 		if (b2.isFixed() ) { B3.assign( B4.assign(Vector3.zero)); }
 
 		//external forces acing at contact
-		double Fext = B1.dot(b1.state.FCm) + B2.dot(b1.state.tauCm) + B3.dot(b2.state.FCm) + B4.dot(b2.state.tauCm);
+		double Fext = B1.dot(b1.state.force) + B2.dot(b1.state.torque) + B3.dot(b2.state.force) + B4.dot(b2.state.torque);
 		//double cv = cp.penetrating?0.5:0.50; //max. correction velocity
 		//depth = depth > 0? 0:depth;
 		double correction = 0;
@@ -280,7 +280,7 @@ public final class CorrectionContact implements ContactConstraint {
 		Vector3 t2B2 = I1.multiply(r1.cross(t2).multiply(-1));
 		Vector3 t2B3 = t2.multiply(1/m2);				
 		Vector3 t2B4 = I2.multiply(r2.cross(t2));
-		double t2Fext = t2B1.dot(b1.state.FCm) + t2B2.dot(b1.state.tauCm) + t2B3.dot(b2.state.FCm) + t2B4.dot(b2.state.tauCm);
+		double t2Fext = t2B1.dot(b1.state.force) + t2B2.dot(b1.state.torque) + t2B3.dot(b2.state.force) + t2B4.dot(b2.state.torque);
 		constraint c2 = co.t1;
 		c2.assign(b1,b2,
 				t2B1,
@@ -308,7 +308,7 @@ public final class CorrectionContact implements ContactConstraint {
 		Vector3 t3B2 = I1.multiply(r1.cross(t3).multiply(-1));
 		Vector3 t3B3 = t3.multiply(1/m2);				
 		Vector3 t3B4 = I2.multiply(r2.cross(t3));
-		double t3Fext = t3B1.dot(b1.state.FCm) + t3B2.dot(b1.state.tauCm) + t3B3.dot(b2.state.FCm) + t3B4.dot(b2.state.tauCm);
+		double t3Fext = t3B1.dot(b1.state.force) + t3B2.dot(b1.state.torque) + t3B3.dot(b2.state.force) + t3B4.dot(b2.state.torque);
 		constraint c3 = co.t2;
 		c3.assign(b1,b2,
 				t3B1,

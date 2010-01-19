@@ -2,7 +2,7 @@ package jinngine.geometry.contact;
 
 import jinngine.geometry.*;
 import jinngine.geometry.contact.ContactGenerator;
-import jinngine.physics.constraint.ContactConstraint;
+import jinngine.physics.constraint.contact.ContactConstraint;
 
 /**
  * A {@link ContactGeneratorClassifier} is used by the model to map between pairs of interfering geometries, 
