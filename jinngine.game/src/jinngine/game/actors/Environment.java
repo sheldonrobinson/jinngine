@@ -6,7 +6,7 @@ import com.ardor3d.math.Vector3;
 import com.ardor3d.scenegraph.Node;
 import com.ardor3d.scenegraph.shape.Box;
 
-import jinngine.game.Actor;
+import jinngine.game.actors.Actor;
 import jinngine.game.*;
 import jinngine.physics.Body;
 import jinngine.physics.PhysicsScene;

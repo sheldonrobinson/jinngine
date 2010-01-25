@@ -12,15 +12,16 @@ import com.ardor3d.scenegraph.Node;
 import com.ardor3d.scenegraph.Spatial;
 import com.ardor3d.scenegraph.controller.SpatialController;
 
-import jinngine.game.Actor;
 import jinngine.game.Game;
+import jinngine.game.actors.PhysicalActor;
 import jinngine.physics.Body;
 import jinngine.physics.PhysicsScene;
 import jinngine.physics.force.GravityForce;
 
-public class Platform1 implements Actor {
+public class Platform1 implements PhysicalActor {
 
 	public Body platformbox1body;
+	private Node platformbox1;
 	private static jinngine.math.Vector3 pos = new jinngine.math.Vector3();
 	
 	public Platform1(jinngine.math.Vector3 pos) {
@@ -41,10 +42,9 @@ public class Platform1 implements Actor {
 		
 		final ColladaImporter colladaImporter = new ColladaImporter();
         final ColladaStorage storage = colladaImporter.readColladaFile("platformbox1.dae");
-        final Node platformbox1 = storage.getScene();
-        platformbox1.setScale(0.75);
+        platformbox1 = storage.getScene();
         platformbox1.setTranslation(new Vector3(0,-25,0));
-        platformbox1.setScale(0.5);
+        platformbox1.setScale(1);
         rootnode.attachChild(platformbox1);
         
         // define some light
@@ -60,12 +60,15 @@ public class Platform1 implements Actor {
         ls.attach(light);
         ls.setEnabled(true);
         platformbox1.setRenderState(ls);
+
+        // connect the node with this actor
+        platformbox1.setUserData(this);
         
-        platformbox1body = new Body(new jinngine.geometry.Box(0.5,0.5,0.5));
+        platformbox1body = new Body(new jinngine.geometry.Box(2,2,2));
         physics.addBody(platformbox1body);
         physics.addForce(new GravityForce(platformbox1body));
         platformbox1body.setPosition(pos);
-        platformbox1body.setAngularVelocity(new jinngine.math.Vector3(0,0.25,0));
+        platformbox1body.setAngularVelocity(new jinngine.math.Vector3(0,0,0));
                
         platformbox1.addController(new SpatialController<Spatial>() {
             public void update(final double time, final Spatial caller) {
@@ -84,6 +87,14 @@ public class Platform1 implements Actor {
 	public void stop( Game game ) {
 		// TODO Auto-generated method stub
 
+	}
+
+	@Override
+	public Body getBodyFromNode(Node node) {
+		if (node == platformbox1)
+			return platformbox1body;
+		else
+			return null;
 	}
 
 }

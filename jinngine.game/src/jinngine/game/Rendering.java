@@ -25,6 +25,8 @@ import com.ardor3d.input.logical.LogicalLayer;
 import com.ardor3d.input.logical.TriggerAction;
 import com.ardor3d.input.logical.TwoInputStates;
 import com.ardor3d.intersection.PickResults;
+import com.ardor3d.intersection.PickingUtil;
+import com.ardor3d.intersection.PrimitivePickResults;
 import com.ardor3d.light.DirectionalLight;
 import com.ardor3d.math.ColorRGBA;
 import com.ardor3d.math.Ray3;
@@ -160,8 +162,11 @@ public final class Rendering implements Scene {
 
 	@Override
 	public PickResults doPick(Ray3 pickRay) {
-		// TODO Auto-generated method stub
-		return null;
+        final PrimitivePickResults pickResults = new PrimitivePickResults();
+        pickResults.setCheckDistance(true);
+        PickingUtil.findPick(root, pickRay, pickResults);
+        //processPicks(pickResults);
+        return pickResults;
 	}
 
 	@Override

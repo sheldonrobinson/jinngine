@@ -1,6 +1,8 @@
 package jinngine.game.actors.bear;
 
 import java.io.IOException;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 import com.ardor3d.extension.effect.water.WaterNode;
 import com.ardor3d.extension.model.collada.jdom.ColladaImporter;
@@ -20,15 +22,16 @@ import com.ardor3d.util.geom.SceneCopier;
 import com.ardor3d.util.geom.SharedCopyLogic;
 
 import jinngine.game.*;
-import jinngine.game.Actor;
+import jinngine.game.actors.PhysicalActor;
 import jinngine.math.*;
 import jinngine.physics.Body;
 import jinngine.physics.PhysicsScene;
 import jinngine.physics.constraint.joint.HingeJoint;
 import jinngine.physics.force.GravityForce;
 
-public class Bear implements Actor {
+public class Bear implements PhysicalActor {
 
+	private final Map<Node,Body> nodebodymap = new LinkedHashMap<Node, Body>(); 
 	public  Body bodyhead;
 	
 	@Override
@@ -40,7 +43,6 @@ public class Bear implements Actor {
 	public void start( Game game) {
 		final PhysicsScene physics = game.getPhysics();
 		final Node rootnode = game.getRendering().getRootNode();
-
 		final GLSLShaderObjectsState shader = new GLSLShaderObjectsState();
 
 		// head
@@ -60,12 +62,13 @@ public class Bear implements Actor {
                 Format.GuessNoCompression, true),1);
         head.setRenderState(headts);
 
-
+        // create the physics for the head
         bodyhead = new Body(new jinngine.geometry.Box(1,1,1));
         physics.addBody(bodyhead);
         physics.addForce(new GravityForce(bodyhead));
         bodyhead.setPosition(new jinngine.math.Vector3(2,3.5-25,2));
         
+        // connect position update for head
         head.addController(new SpatialController<Spatial>() {
             public void update(final double time, final Spatial caller) {
             	caller.setTranslation(bodyhead.state.position.x, bodyhead.state.position.y, bodyhead.state.position.z);
@@ -76,6 +79,12 @@ public class Bear implements Actor {
             	caller.setRotation(mat);
             }
         });
+        
+        // register Node - Body connection in map
+        nodebodymap.put( head, bodyhead );
+        
+        // register this actor in the head node
+        head.setUserData(this);
 
         // body
         final ColladaStorage ballstorage = colladaImporter.readColladaFile("ball.dae");
@@ -172,6 +181,8 @@ public class Bear implements Actor {
       shader.setUniform("normalmap", 1);
       
       head.setRenderState(shader);
+      body.setRenderState(shader);
+      righthand.setRenderState(shader);
         
 	}
 
@@ -179,6 +190,11 @@ public class Bear implements Actor {
 	public void stop(Game game) {
 		// TODO Auto-generated method stub
 
+	}
+
+	@Override
+	public Body getBodyFromNode(Node node) {
+	 return nodebodymap.get(node);
 	}
 
 }
