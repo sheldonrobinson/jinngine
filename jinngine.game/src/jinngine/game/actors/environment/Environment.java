@@ -1,4 +1,4 @@
-package jinngine.game.actors;
+package jinngine.game.actors.environment;
 
 import com.ardor3d.bounding.BoundingBox;
 import com.ardor3d.math.ColorRGBA;

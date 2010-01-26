@@ -1,18 +1,12 @@
 package jinngine.game.actors.interaction;
 
 import com.ardor3d.framework.Canvas;
-import com.ardor3d.input.Key;
-import com.ardor3d.input.KeyboardState;
-import com.ardor3d.input.MouseButton;
 import com.ardor3d.input.logical.InputTrigger;
-import com.ardor3d.input.logical.KeyPressedCondition;
-import com.ardor3d.input.logical.MouseButtonClickedCondition;
 import com.ardor3d.input.logical.MouseMovedCondition;
 import com.ardor3d.input.logical.TriggerAction;
 import com.ardor3d.input.logical.TwoInputStates;
 import com.ardor3d.math.Ray3;
 import com.ardor3d.math.Vector2;
-import com.ardor3d.scenegraph.Node;
 import jinngine.game.actors.Actor;
 import jinngine.game.Game;
 import jinngine.math.Vector3;
@@ -20,7 +14,6 @@ import jinngine.physics.Body;
 import jinngine.physics.PhysicsScene;
 import jinngine.physics.constraint.Constraint;
 import jinngine.physics.constraint.joint.BallInSocketJoint;
-import jinngine.physics.force.SpringForce;
 
 public class BodyPlacement implements Actor {
 
@@ -64,6 +57,7 @@ public class BodyPlacement implements Actor {
 //
 		controller.setPosition(p1.add(d.multiply(u)));//.add(pickdisplacement));
 //		System.out.println(""+screenpos);
+		
 	}
 
 	@Override

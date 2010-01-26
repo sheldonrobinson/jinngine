@@ -2,9 +2,8 @@ package jinngine.game;
 
 import java.util.*;
 
-import jinngine.game.actors.interaction.ObjectSelection;
-import jinngine.game.actors.interaction.BodyPlacement;
-import jinngine.game.actors.Environment;
+import jinngine.game.actors.interaction.HUDActor;
+import jinngine.game.actors.environment.Environment;
 import jinngine.game.actors.Actor;
 import jinngine.game.actors.bear.Bear;
 import jinngine.game.actors.platform1.Platform1;
@@ -47,7 +46,7 @@ public class Game {
 //		placer.start(this);
 //		actors.add(placer);
 //		
-		addActor( new ObjectSelection() );
+		addActor( new HUDActor() );
 
 		//run forever
 		while(true) {

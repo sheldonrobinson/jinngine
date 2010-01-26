@@ -10,6 +10,7 @@ import com.ardor3d.extension.model.collada.jdom.data.ColladaStorage;
 import com.ardor3d.image.Texture;
 import com.ardor3d.image.Image.Format;
 import com.ardor3d.math.Matrix3;
+import com.ardor3d.math.Vector2;
 import com.ardor3d.math.Vector3;
 import com.ardor3d.math.type.ReadOnlyMatrix3;
 import com.ardor3d.renderer.state.GLSLShaderObjectsState;
@@ -22,21 +23,30 @@ import com.ardor3d.util.geom.SceneCopier;
 import com.ardor3d.util.geom.SharedCopyLogic;
 
 import jinngine.game.*;
+import jinngine.game.actors.Actor;
+import jinngine.game.actors.CommandableActor;
 import jinngine.game.actors.PhysicalActor;
+import jinngine.game.actors.SelectableActor;
+import jinngine.game.actors.interaction.BodyPlacement;
 import jinngine.math.*;
 import jinngine.physics.Body;
 import jinngine.physics.PhysicsScene;
 import jinngine.physics.constraint.joint.HingeJoint;
 import jinngine.physics.force.GravityForce;
+import jinngine.physics.force.SpringForce;
 
-public class Bear implements PhysicalActor {
+public class Bear implements CommandableActor, SelectableActor {
 
 	private final Map<Node,Body> nodebodymap = new LinkedHashMap<Node, Body>(); 
+	private final jinngine.math.Vector3 targetpos = new jinngine.math.Vector3();
+	private Node head;
 	public  Body bodyhead;
+	
+	private final Body gotocontroller = new Body();
 	
 	@Override
 	public void act( Game game ) {
-		// TODO Auto-generated method stub
+		gotocontroller.setPosition(targetpos);
 	}
 
 	@Override
@@ -48,7 +58,7 @@ public class Bear implements PhysicalActor {
 		// head
 		final ColladaImporter colladaImporter = new ColladaImporter();
         final ColladaStorage storage = colladaImporter.readColladaFile("bearface.dae");
-        final Node head = storage.getScene();
+        head = storage.getScene();
         head.setScale(0.75);
 
         // textures for bear head
@@ -183,6 +193,10 @@ public class Bear implements PhysicalActor {
       head.setRenderState(shader);
       body.setRenderState(shader);
       righthand.setRenderState(shader);
+      
+      //add a primitive goto force
+      gotocontroller.setFixed(true);
+      game.getPhysics().addForce( new SpringForce(bodyhead, new jinngine.math.Vector3(), gotocontroller, new jinngine.math.Vector3(), 0));
         
 	}
 
@@ -195,6 +209,40 @@ public class Bear implements PhysicalActor {
 	@Override
 	public Body getBodyFromNode(Node node) {
 	 return nodebodymap.get(node);
+	}
+
+	@Override
+	public void moveToPosition(jinngine.math.Vector3 pos) {
+		targetpos.assign(pos);
+	}
+
+	@Override
+	public Actor provideActionActor(Actor target, Node node,
+			jinngine.math.Vector3 pickpoint, Vector2 screenpos ) {
+		
+		System.out.println("Bear: got an actor "+ target);
+		
+		// spawn a BodyPlacement actor if possible
+		if (target instanceof PhysicalActor) {
+			PhysicalActor physactor = (PhysicalActor)target;
+			Body body = physactor.getBodyFromNode(node);
+		
+			if (body != null)
+				return new BodyPlacement(body,pickpoint,screenpos);
+		}
+		
+		
+		return null;
+	}
+
+	@Override
+	public void setSelected(boolean selected) {
+		if ( selected) 
+			head.setScale(1.0);
+		else
+			head.setScale(0.75);
+
+		
 	}
 
 }
