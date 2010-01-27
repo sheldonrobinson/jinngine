@@ -3,6 +3,7 @@ package jinngine.test.unit;
 import jinngine.collision.GJK;
 import jinngine.geometry.Sphere;
 import jinngine.geometry.SupportMap3;
+import jinngine.math.Matrix3;
 import jinngine.math.Vector3;
 import jinngine.physics.Body;
 import junit.framework.TestCase;
@@ -30,9 +31,11 @@ public class GJK3Test extends TestCase {
 		//error tolerance
 		double epsilon = 1e-14;
 		
-		gjk.run(s1,s2,p1,p2,epsilon);
+		gjk.run(s1,s2,p1,p2,Double.POSITIVE_INFINITY);
 		
 		double d = p1.minus(p2).norm();
+		
+		System.out.println( "d="+d);
 		
 		assertTrue( Math.abs(d-1) < epsilon );
 	}
@@ -47,7 +50,7 @@ public class GJK3Test extends TestCase {
 		GJK gjk = new GJK();
 
 		//small number
-		double a = 1e-10;
+		double a = 1e-6;
 		
 		//error tolerance
 		double epsilon = 1e-14;
@@ -64,9 +67,10 @@ public class GJK3Test extends TestCase {
 		Vector3 p1 = new Vector3();
 		Vector3 p2 = new Vector3();
 				
-		gjk.run(s1,s2,p1,p2,epsilon);
+		gjk.run(s1,s2,p1,p2,Double.POSITIVE_INFINITY);
 		
 		double d = p1.minus(p2).norm();
+		System.out.println("d="+d);
 		
 		assertTrue( (Math.abs(d-2*a) < epsilon) );
 	}

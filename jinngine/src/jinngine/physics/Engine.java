@@ -45,7 +45,7 @@ public final class Engine implements PhysicsModel, PhysicsScene {
 	};
 	
 	// Create the contact graph using the classifier above
-	private final HashMapComponentGraph<Body,Constraint> contactGraph = new HashMapComponentGraph<Body,Constraint>(classifier);
+	private final ComponentGraph<Body,Constraint> contactGraph = new HashMapComponentGraph<Body,Constraint>(classifier);
 
 	// Set of maintained contact constraints and generators
 	private final Map<Pair<Body>,ContactConstraint> contactConstraints = new HashMap<Pair<Body>,ContactConstraint>();
@@ -170,8 +170,8 @@ public final class Engine implements PhysicsModel, PhysicsScene {
 //	private BroadfaseCollisionDetection broadfase = new AllPairsTest(handler);
 
 	//Create a linear complementarity problem solver
-	private Solver solver = new ProjectedGaussSeidel(35);
-//	private Solver solver = new NonsmoothNonlinearConjugateGradient(100, false);
+//	private Solver solver = new ProjectedGaussSeidel(35);
+	private Solver solver = new NonsmoothNonlinearConjugateGradient(35, false);
 //	private Solver solver = new SubspaceMinimization(false,null);
 	//time-step size
 	private double dt = 0.05; 
@@ -191,6 +191,28 @@ public final class Engine implements PhysicsModel, PhysicsScene {
 				return null;	
 			}
 		});
+		
+		//The sphere-supportmap classifier
+		geometryClassifiers.add(new ContactGeneratorClassifier() {
+			@Override
+			public ContactGenerator getGenerator(Geometry a,
+					Geometry b) {
+				if ( a instanceof jinngine.geometry.SupportMap3 && b instanceof jinngine.geometry.Sphere) {
+					return new SupportMapSphereContactGenerator(a.getBody(), (jinngine.geometry.SupportMap3)a, b.getBody(), (jinngine.geometry.Sphere)b);
+					//return new SamplingSupportMapContacts(a.getBody(),b.getBody(), (SupportMap3)a, (SupportMap3)b);
+				}
+				if ( a instanceof jinngine.geometry.Sphere && b instanceof jinngine.geometry.SupportMap3) {
+					return new SupportMapSphereContactGenerator(a.getBody(), (jinngine.geometry.Sphere)a, b.getBody(), (jinngine.geometry.SupportMap3)b);
+					//return new SamplingSupportMapContacts(a.getBody(),b.getBody(), (SupportMap3)a, (SupportMap3)b);
+				}
+
+				
+				
+				//not recognised
+				return null;	
+			}
+		});
+		
 		
 		//General convex support maps
 		geometryClassifiers.add(new ContactGeneratorClassifier() {
@@ -328,7 +350,11 @@ public final class Engine implements PhysicsModel, PhysicsScene {
 	}
 	
 	public final void removeConstraint(Constraint c) {
-		contactGraph.removeEdge(c.getBodies());
+		if (c!=null) {
+			contactGraph.removeEdge(c.getBodies());
+		} else {
+			System.out.println("Engine: attempt to remove null constraint");
+		}
 	}
 
 	@Override

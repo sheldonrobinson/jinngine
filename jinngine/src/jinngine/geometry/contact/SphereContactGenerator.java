@@ -25,7 +25,6 @@ public class SphereContactGenerator implements ContactGenerator {
 	private final double restitution;
 	private final double friction;
 
-	
 	public SphereContactGenerator(Sphere a, Sphere b) {
 		this.s1 = a; 
 		this.s2 = b;
@@ -83,42 +82,42 @@ public class SphereContactGenerator implements ContactGenerator {
 
 	@Override
 	public boolean run(double dt) {
-		//sphere centres in world space
+		// sphere centres in world space
 		Vector3 caw = s1.getTransform().multiply(Vector3.zero);
 		Vector3 cbw = s2.getTransform().multiply(Vector3.zero);
 
-		//contact normal
+		// contact normal
 		Vector3 normal = caw.minus(cbw).normalize();
 		cp.normal.assign(normal);
 
-		//find closest points in world space
+		// find closest points in world space
 		cp.paw.assign( normal.multiply(-s1.getRadius()).add(caw));
 		cp.pbw.assign(normal.multiply(s2.getRadius()).add(cbw));
 		
-		//closest points in body frames
+		// closest points in body frames
 		cp.pa.assign(b1.toModel(cp.paw));
 		cp.pb.assign(b2.toModel(cp.pbw));
 				
-		//world space interaction point
+		// world space interaction point
 		cp.midpoint.assign(cp.paw.add(cp.pbw).multiply(0.5));
 
-		//distance between closest points
+		// distance between closest points
 		double d = caw.minus(cbw).norm() - (s1.getRadius()+s2.getRadius());  
 				
 
-		//contact within envelope
+		// contact within envelope
 		if ( d >= 0  && d < envelope ) {
 			cp.depth = shell-d;
 			//cp.depth = depth-(envelope/2.0) > 0 ? depth-(envelope/2.0):0;
 			incontact = true;
 			return true;
-		//penetration
+		// penetration
 		} else if ( d < 0){
 			cp.depth = shell-d;
 			//cp.depth = 0;
 			incontact = true;
 			return true;
-		//Separation
+		// separation
 		} else {
 			cp.depth = 0;
 			incontact = false;

@@ -17,7 +17,7 @@ public class GJK implements ClosestPointsAlgorithm<SupportMap3,SupportMap3> {
 	 * @author Silcowitz
 	 */
 	public final class State {
-		public final Vector3 v = new Vector3(0,1,0);
+		public final Vector3 v = new Vector3(1,1,1);
 		public final Vector3 p = new Vector3();
 		public final Vector3 q = new Vector3();
 		public final  Vector3[][] simplices = new Vector3[4][4]; //contains 3 simplices for A-B, Sa, Sb
@@ -39,7 +39,7 @@ public class GJK implements ClosestPointsAlgorithm<SupportMap3,SupportMap3> {
 	
 	public void run( SupportMap3 Sa, SupportMap3 Sb, Vector3 va, Vector3 vb, double envelope ) {		    	
     	//Working variables
-		final double epsilon = 1e-6f;
+		final double epsilon = 1e-6;
 		int iterations = 0;
 		
 //		if (!state.initialized) {
@@ -52,7 +52,6 @@ public class GJK implements ClosestPointsAlgorithm<SupportMap3,SupportMap3> {
 		Vector3 w = new Vector3();
 		Vector3 sa = new Vector3();
 		Vector3 sb = new Vector3();
-		
     	
 		sa.assign( Sa.supportPoint(state.v.multiply(-1)));
 		sb.assign( Sb.supportPoint(state.v.multiply(1)));	    							
@@ -92,7 +91,7 @@ public class GJK implements ClosestPointsAlgorithm<SupportMap3,SupportMap3> {
 			
 			//separating axis test (distance is at least more than the envelope)
 			if ( v.normalize().dot(w) > envelope ) {
-				//System.out.println("sep axis, envelope="+envelope+" v.w ="+v.normalize().dot(w)+ " iteration " + iterations);
+//				System.out.println("sep axis, envelope="+envelope+" v.w ="+v.normalize().dot(w)+ " iteration " + iterations);
 				break;
 			} 
 						
@@ -106,7 +105,7 @@ public class GJK implements ClosestPointsAlgorithm<SupportMap3,SupportMap3> {
 			
 			if ( !reduceSimplex( state ) ) {
 				//latest w vector was rejected, we consequently terminate (simplex cannot chance from here on)
-				//System.out.println("reject");
+//				System.out.println("reject");
 				break;
 			}
 									
@@ -118,6 +117,7 @@ public class GJK implements ClosestPointsAlgorithm<SupportMap3,SupportMap3> {
 
 			//Check for a penetrating state
 			if ( v.cutOff().equals(Vector3.zero) || state.simplexSize > 3 ) {
+//				System.out.println("penetration");
 				break;				
 			}
 		} //while true
@@ -546,7 +546,7 @@ public class GJK implements ClosestPointsAlgorithm<SupportMap3,SupportMap3> {
 				//GJK penetrating state
 
 				//check for the accuracy, v should be the zero vector
-				if( y1.multiply(d1234_1/d1234).add(y2.multiply(d1234_2/d1234)).add(y3.multiply(d1234_3/d1234)).add(y4.multiply(d1234_4/d1234)).norm() > 1 ) {
+				if(  y1.multiply(d1234_1/d1234).add(y2.multiply(d1234_2/d1234)).add(y3.multiply(d1234_3/d1234)).add(y4.multiply(d1234_4/d1234)).norm() > 1 ) {
 					//System.out.println("wrong penetration");
 					//result is bad, terminate with last good subset {y1,y2,y3}
 					state.simplexSize = 3;
@@ -568,6 +568,8 @@ public class GJK implements ClosestPointsAlgorithm<SupportMap3,SupportMap3> {
 				return false;
 			}
 		}
+
+		System.out.println("GJK: impossible ending!");
 
 		//Ending up here is actually not possible :)
 		return false;

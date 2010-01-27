@@ -249,7 +249,7 @@ public class Matrix4 {
 		  double[][] M = new double[4][4];
 		  M = Matrix4.pack2(S);
 
-		  //code borrowed from OpenTissue
+		  //code borrowed from OpenTissue (thanks kenny :)
 		  double a00 = M[0][0]; double a01 = M[0][1]; double a02 = M[0][2]; double a03 = M[0][3];
 		  double a10 = M[1][0]; double a11 = M[1][1]; double a12 = M[1][2]; double a13 = M[1][3];
 		  double a20 = M[2][0]; double a21 = M[2][1]; double a22 = M[2][2]; double a23 = M[2][3];

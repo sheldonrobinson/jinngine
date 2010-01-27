@@ -217,6 +217,15 @@ public final class Body {
 		state.position.assign(r);
 		updateTransformations();
 	}
+	
+	/**
+	 * Get reference point of this body. This will be the centre of mass 
+	 * of the body, unless manual modifications has been made
+	 * @return reference position
+	 */
+	public final Vector3 getPosition() {
+		return new Vector3(state.position);
+	}
 
 	/**
 	 * Recalculate the transformation matrices rotation (3 by 3) and transform (4 by 4) from 
@@ -276,13 +285,16 @@ public final class Body {
 	 * @param dt
 	 */
 	public final void applyForce( Vector3 point, Vector3 F, double dt ) {
-		Vector3.add(this.state.torque, point.cross(F));
-		Vector3.add(this.state.force, F );	  
-		Vector3.multiply(this.state.force, 1.0/this.state.mass, this.state.acceleration );
-		
-		//apply directly to delta velocities
-		Vector3.add(this.deltavelocity, F.multiply(dt/this.state.mass));
-		Vector3.add(this.deltaomega, state.inverseinertia.multiply(point.cross(F)).multiply(dt));
+		// fixed bodies are unaffected by external forces
+		if (!isFixed()) { 
+			Vector3.add(this.state.torque, point.cross(F));
+			Vector3.add(this.state.force, F );	  
+			Vector3.multiply(this.state.force, 1.0/this.state.mass, this.state.acceleration );
+
+			//apply directly to delta velocities
+			Vector3.add(this.deltavelocity, F.multiply(dt/this.state.mass));
+			Vector3.add(this.deltaomega, state.inverseinertia.multiply(point.cross(F)).multiply(dt));
+		}
 	}
 
 	/**

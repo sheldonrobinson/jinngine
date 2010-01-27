@@ -22,7 +22,7 @@ import jinngine.geometry.*;
  */
 public class FeatureSupportMapContactGenerator implements ContactGenerator {
 	//final double envelopeMin = 2.75;
-    private static double envelope = 0.125;
+    private static double envelope = 0.125*0.5;
 	private static double shell = envelope*0.75;
 	private final SupportMap3 Sa;
 	private final SupportMap3 Sb;
@@ -83,12 +83,12 @@ public class FeatureSupportMapContactGenerator implements ContactGenerator {
 		Vector3 v = a.minus(b);
 		principalNormal.assign(v.normalize());
 		double  d = v.norm();
-
+//		v.print();
 		//Sa.supportPoint(Vector3.j).print();
 		
 		//penetration
 		if (closest.getState().simplexSize > 3  ) {
-			//System.out.println("penetrating");
+//			System.out.println("penetrating");
 			//run EPA
 			ExpandingPolytope epa = new ExpandingPolytope();
 			epa.run(Sa, Sb, a, b, closest.getState());
@@ -122,7 +122,7 @@ public class FeatureSupportMapContactGenerator implements ContactGenerator {
 			return true;
 			
 		} else {
-			//System.out.println("minimum distance is out of envelope, d="+d);
+//			System.out.println("minimum distance is out of envelope, d="+d);
 			//no contact
 			contacts.clear();
 			return false;	

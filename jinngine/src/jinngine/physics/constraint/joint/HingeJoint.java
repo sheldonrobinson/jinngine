@@ -301,6 +301,9 @@ public final class HingeJoint implements Constraint {
 		iterator.add(angular1);
 		iterator.add(angular2);
 		iterator.add(angular3);
+		
+//		linear1.damper = linear2.damper = linear3.damper = 
+//		angular1.damper = angular2.damper = angular3.damper = 20;
 	}
 
 	@Override
