@@ -32,7 +32,7 @@ public class Platform1 implements PhysicalActor {
 	public void act( Game game ) {
 		// TODO Auto-generated method stub
 
-	}
+	} 
 
 	@Override
 	public void start( Game game ) {
@@ -44,7 +44,7 @@ public class Platform1 implements PhysicalActor {
         final ColladaStorage storage = colladaImporter.readColladaFile("platformbox1.dae");
         platformbox1 = storage.getScene();
         platformbox1.setTranslation(new Vector3(0,-25,0));
-        platformbox1.setScale(1);
+        platformbox1.setScale(0.5);
         rootnode.attachChild(platformbox1);
         
         // define some light
@@ -64,7 +64,7 @@ public class Platform1 implements PhysicalActor {
         // connect the node with this actor
         platformbox1.setUserData(this);
         
-        platformbox1body = new Body(new jinngine.geometry.Box(2,2,2));
+        platformbox1body = new Body(new jinngine.geometry.Box(1,1,1));
         physics.addBody(platformbox1body);
         physics.addForce(new GravityForce(platformbox1body));
         platformbox1body.setPosition(pos);

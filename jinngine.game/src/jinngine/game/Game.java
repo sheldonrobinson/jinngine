@@ -38,18 +38,17 @@ public class Game {
 		platformbox1.start(this);
 		runningactors.add(platformbox1);
 
-		Platform1 platformbox2 = new Platform1(new jinngine.math.Vector3(-2.7,-25+3.5,0));
+		Platform1 platformbox2 = new Platform1(new jinngine.math.Vector3(-3,-25+3.5,0));
 		platformbox2.start(this);
 		runningactors.add(platformbox2);
 
-//		Actor placer = new BodyPlacement( bear.bodyhead);
-//		placer.start(this);
-//		actors.add(placer);
-//		
 		addActor( new HUDActor() );
+		
+		addActor( new jinngine.game.actors.player.Player() );
+		addActor( new jinngine.game.actors.player.Player() );
 
 		//run forever
-		while(true) {
+		while(true) { 	
 			
 			jinngine.tick();
 	

@@ -238,7 +238,7 @@ public class Bear implements CommandableActor, SelectableActor {
 	@Override
 	public void setSelected(boolean selected) {
 		if ( selected) 
-			head.setScale(1.0);
+			head.setScale(0.85);
 		else
 			head.setScale(0.75);
 

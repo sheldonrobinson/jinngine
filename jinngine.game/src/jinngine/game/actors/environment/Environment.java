@@ -28,7 +28,7 @@ public class Environment implements Actor {
 		Node rootnode = game.getRendering().getRootNode();
 		
 		// make the floor box 
-		floorbox = new Box("Box", new Vector3(0,-25-5,0), 120, 4.8, 120);
+		floorbox = new Box("Box", new Vector3(0,-25-5,0), 120, 5, 120);
 		floorbox.setSolidColor(new ColorRGBA(1,1,1,1));
 		floorbox.setModelBound(new BoundingBox());
 		rootnode.attachChild(floorbox); //dont draw floor
