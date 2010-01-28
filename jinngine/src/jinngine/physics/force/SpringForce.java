@@ -4,7 +4,7 @@ import jinngine.math.Vector3;
 import jinngine.physics.Body;
 
 /**
- * Models a spring mounted between two bodies, at point pa and pb. The initial distance between pa and pb will be the 
+ * Models a spring mounted between two bodies, at points pa and pb. The initial distance between pa and pb will be the 
  * equilibrium length of the spring (where the acting force will be zero). The SpringForce models the two classical 
  * parameters for a spring force, the force and damping coefficients. The spring force equation is 
  * <p>

@@ -27,40 +27,20 @@ import jinngine.util.Pair;
 public final class SimplifiedContactConstraint implements ContactConstraint {	
 	private final Body b1, b2;                  //bodies in constraint
 	private final List<ContactGenerator> generators = new ArrayList<ContactGenerator>();
+	private final ContactConstraintCreator creator;
 	
-	private static double restitution = 0.7;
-	public static double getRestitution() {
-		return restitution;
-	}
-
-	public static void setRestitution(double restitution) {
-		SimplifiedContactConstraint.restitution = restitution;
-	}
-
-//	public static double getMu() {
-//		return mu;
-//	}
-//
-//	public static void setMu(double mu) {
-//		ContactConstraint.mu = mu;
-//	}
-
-
-//	private static double mu = 0.7;
-//	private static double K = 0.8;
-
 	/**
 	 * Create a new ContactConstraint, using one initial ContactGenerator
 	 * @param b1
 	 * @param b2
 	 * @param generator
 	 */
-	public SimplifiedContactConstraint(Body b1, Body b2, ContactGenerator generator) {
+	public SimplifiedContactConstraint(Body b1, Body b2, ContactGenerator generator, ContactConstraintCreator creator ) {
 		super();
 		this.b1 = b1;
 		this.b2 = b2;
 		this.generators.add(generator);
-		
+		this.creator = creator;
 		
 	}
 
@@ -359,11 +339,9 @@ public final class SimplifiedContactConstraint implements ContactConstraint {
 		return new Pair<Body>(b1,b2);
 	}
 
-//	public static double getCorrectionConstant() {
-//		return K;
-//	}
-//
-//	public static void setCorrectionConstant(double k) {
-//		K = k;
-//	}
+	@Override
+	public ContactConstraintCreator whoCreatedThis() {
+		return creator;
+	}
+
 }

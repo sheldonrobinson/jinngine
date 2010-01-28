@@ -26,43 +26,36 @@ import jinngine.util.Pair;
 public final class FrictionalContactConstraint implements ContactConstraint {	
 	private final Body b1, b2;                  //bodies in constraint
 	private final List<ContactGenerator> generators = new ArrayList<ContactGenerator>();
+	private final ContactConstraintCreator creator;
+	private double frictionBoundMagnitude = Double.POSITIVE_INFINITY;
 	
-	private static double restitution = 0.7;
-	public static double getRestitution() {
-		return restitution;
-	}
-
-	public static void setRestitution(double restitution) {
-		FrictionalContactConstraint.restitution = restitution;
-	}
-
-//	public static double getMu() {
-//		return mu;
-//	}
-//
-//	public static void setMu(double mu) {
-//		ContactConstraint.mu = mu;
-//	}
-
-
-//	private static double mu = 0.7;
-//	private static double K = 0.8;
-
+	private boolean enableCoupling = true;
+	
 	/**
 	 * Create a new ContactConstraint, using one initial ContactGenerator
 	 * @param b1
 	 * @param b2
 	 * @param generator
 	 */
-	public FrictionalContactConstraint(Body b1, Body b2, ContactGenerator generator) {
+	public FrictionalContactConstraint(Body b1, Body b2, ContactGenerator generator, ContactConstraintCreator creator) {
 		super();
 		this.b1 = b1;
 		this.b2 = b2;
 		this.generators.add(generator);
-		
-		
+		this.creator = creator;
 	}
 
+	// some experimental methods
+	private double xvel = 0;
+	public void setTangentialVelocityX( double x) {
+		this.xvel = x;
+	}
+
+	private double yvel = 0;
+	public void setTangentialVelocityY( double y) {
+		this.yvel=y;
+	}
+	
 	/**
 	 * Add a new ContactGenerator for generating contact points and normal vectors
 	 * @param g a new ContactGenerator
@@ -165,12 +158,8 @@ public final class FrictionalContactConstraint implements ContactConstraint {
 		Vector3 t1 = new Vector3(), t2 = new Vector3(), t3 = new Vector3();
 		Matrix3 B  = GramSchmidt.run(n);
 		B.getColumnVectors(t1, t2, t3);
-		
-		
-		
-		//truncate small collision
-		//unf = unf < 0.1? 0: unf;
-		
+
+		// interaction points and jacobian for normal constraint
 		Vector3 r1 = p.minus(b1.state.position);
 		Vector3 r2 = p.minus(b2.state.position);
 		Vector3 J1 = n.multiply(1);
@@ -189,12 +178,6 @@ public final class FrictionalContactConstraint implements ContactConstraint {
 		double m1 = b1.state.mass;
 		Matrix3 I2 = b2.state.inverseinertia;
 		double m2 = b2.state.mass;
-
-		//		B = new Vector(n.multiply(-1/m1))
-		//		.concatenateHorizontal( new Vector(I1.multiply(r1.cross(n).multiply(-1))) )
-		//		.concatenateHorizontal(new Vector(n.multiply(1/m2)))
-		//		.concatenateHorizontal(new Vector(I2.multiply(r2.cross(n).multiply(1))));
-
 		Vector3 B1 = n.multiply(1/m1);
 		Vector3 B2 = I1.multiply(r1.cross(n));
 		Vector3 B3 = n.multiply(-1/m2);
@@ -203,22 +186,18 @@ public final class FrictionalContactConstraint implements ContactConstraint {
 		if (b1.isFixed() ) { B1.assign( B2.assign(Vector3.zero)); }
 		if (b2.isFixed() ) { B3.assign( B4.assign(Vector3.zero)); }
 
-		//external forces acing at contact
-		double Fext = B1.dot(b1.state.force) + B2.dot(b1.state.torque) + B3.dot(b2.state.force) + B4.dot(b2.state.torque);
-		//double cv = cp.penetrating?0.5:0.50; //max. correction velocity
-		//depth = depth > 0? 0:depth;
-		double correction = 0;
+		//external forces acing at contact (obsolete, external forces are modelled using the delta velocities)
+		//double Fext = B1.dot(b1.state.force) + B2.dot(b1.state.torque) + B3.dot(b2.state.force) + B4.dot(b2.state.torque);
+		double correction = depth*(1/dt)*0.8;
 		double lowerNormalLimit = 0;
-
-		correction = depth*(1/dt)*0.8;
-		//System.out.println("dt calculated=" + dt);
-		
 		double limit = 1.0;
-		correction = correction< -limit? -limit:correction;
+
+		// limit the correction velocity
+		correction = correction< -limit? -limit:correction;  
 		correction = correction>  limit?  limit:correction;
 		//correction = 0;
 		
-		//truncate correction if already covered by repulsive velocity
+		//truncate correction velocity if already covered by repulsive velocity
 		if (correction > 0) {
 			if (unf > correction ) {
 				correction = 0;
@@ -227,24 +206,22 @@ public final class FrictionalContactConstraint implements ContactConstraint {
 			}
 		}
 		
-		//un-comment to disable correction
-		//correction = 0;
-		
+		// the normal constraint
 		constraint c = new constraint();
 		c.assign(b1,b2,
 				B1, B2, B3, B4,
 				J1, J2, J3, J4,
 				lowerNormalLimit, Double.POSITIVE_INFINITY,
 				null,
-			     -(unf-uni) - Fext*dt*0 -correction ) ;
+			     -(unf-uni)  -correction ) ;
+
+		//normal-friction coupling 
+		final constraint coupling = enableCoupling?c:null;
 		
 		//set the correct friction setting for this contact
 		c.mu = cp.friction;
 				
-//		if ( uni >=0 && uni < 1e-1)
-//			c.lambda = cp.cachedNormalForce;
-
-		//then the tantential friction constraints (totaly sticking in all cases, since lambda is unbounded)
+		//then the tangential friction constraints 
 		double ut1i = relativeVelocity(b1,b2,p,t2);
 		double ut2i = relativeVelocity(b1,b2,p,t3);
 		double ut1f = 0; 
@@ -260,16 +237,11 @@ public final class FrictionalContactConstraint implements ContactConstraint {
 		c2.assign(b1,b2,
 				t2B1, t2B2,	t2B3, t2B4,				
 				t2, r1.cross(t2), t2.multiply(-1),	r2.cross(t2).multiply(-1),
-				Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY,
-				c,
-				-(ut1f-ut1i) //+ t2Fext*dt*0
+				-frictionBoundMagnitude, frictionBoundMagnitude,
+				coupling,
+				-(ut1f-ut1i) + yvel //+ t2Fext*dt*0
 		);
 		
-		//book-keep constraints in each body
-		//b1.constraints.add(c2);
-		//b2.constraints.add(c2);
-
-
 		//second tangent
 		Vector3 t3B1 = t3.multiply(1/m1);
 		Vector3 t3B2 = I1.multiply(r1.cross(t3));
@@ -279,9 +251,9 @@ public final class FrictionalContactConstraint implements ContactConstraint {
 		c3.assign(b1,b2,
 				t3B1, t3B2,	t3B3, t3B4,
 				t3, r1.cross(t3), t3.multiply(-1), r2.cross(t3).multiply(-1),
-				Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY,
-				c,
-				-(ut2f-ut2i) 
+				-frictionBoundMagnitude, frictionBoundMagnitude,
+				coupling,
+				-(ut2f-ut2i) + xvel 
 		);
 
 		outConstraints.add(c);
@@ -292,5 +264,23 @@ public final class FrictionalContactConstraint implements ContactConstraint {
 	@Override
 	public Pair<Body> getBodies() {
 		return new Pair<Body>(b1,b2);
+	}
+
+	@Override
+	public ContactConstraintCreator whoCreatedThis() {
+		return creator;
+	}
+
+	/**
+	 * Specify whether a normal force magnitude coupling should be used on the friction force bounds.
+	 * If not enabled, the bounds will be fixed.
+	 * @param coupling
+	 */
+	public final void setCouplingEnabled( boolean coupling ) {
+		this.enableCoupling = coupling;
+	}
+	
+	public final void setFixedFrictionBoundsMagnitude( double magnitude) {
+		this.frictionBoundMagnitude  = magnitude;
 	}
 }

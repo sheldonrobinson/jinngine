@@ -30,7 +30,21 @@ public final class Engine implements PhysicsModel, PhysicsScene {
 	
 	// List of geometry classifiers
 	private final List<ContactGeneratorClassifier> geometryClassifiers = new ArrayList<ContactGeneratorClassifier>();
+	
+	// list of contact constraint creators
+	private final List<ContactConstraintCreator> contactConstraintCreators = new ArrayList<ContactConstraintCreator>();
 
+	// the default contact constraint creator
+	private final ContactConstraintCreator defaultcreator = new ContactConstraintCreator() {
+		public final ContactConstraint createContactConstraint(Body b1, Body b2, ContactGenerator g) {
+			return new FrictionalContactConstraint(b1,b2,g,this);
+		}
+		@Override
+		public void removeContactConstraint(ContactConstraint constraint) {
+			// do nothing	
+		}
+	};
+	
 	// Constraints, joints and forces
 	private final List<constraint> constraintList = new LinkedList<constraint>();  
 	private final List<Force> forces = new LinkedList<Force>(); 
@@ -85,7 +99,7 @@ public final class Engine implements PhysicsModel, PhysicsScene {
 				}
 				
 				
-				ContactConstraint contactConstraint;
+				ContactConstraint contactConstraint = null;
 
 				//a contact constraint already exists 
 				if (contactConstraints.containsKey(bpair)) {
@@ -105,10 +119,20 @@ public final class Engine implements PhysicsModel, PhysicsScene {
 						ContactGenerator generator = getContactGenerator(gpair);
 						
 						//create a new contact constraint
-						contactConstraint = new FrictionalContactConstraint(bpair.getFirst(),bpair.getSecond(),generator);
+//						contactConstraint = new FrictionalContactConstraint(bpair.getFirst(),bpair.getSecond(),generator);
 //						contactConstraint = new SimplifiedContactConstraint(bpair.getFirst(),bpair.getSecond(),generator);
 
-//						constraint = new CorrectionContact(a,b,generator);
+						// try custom contact constraint generators
+						for ( ContactConstraintCreator c : contactConstraintCreators) {
+							contactConstraint = c.createContactConstraint(bpair.getFirst(), bpair.getSecond(), generator);
+							if (contactConstraint != null)
+								break;
+						}
+						
+						// if no contact constraint was obtained, use the default creator
+						if ( contactConstraint == null) {
+							contactConstraint = defaultcreator.createContactConstraint(bpair.getFirst(), bpair.getSecond(), generator);
+						}
 								
 						//insert into data structures
 						contactConstraints.put(bpair, contactConstraint);
@@ -151,6 +175,11 @@ public final class Engine implements PhysicsModel, PhysicsScene {
 							contactConstraints.remove(bpair);
 							contactGraph.removeEdge(bpair);	
 						}
+						
+						// if made by a constraint creator, notify the creator
+						if (constraint.whoCreatedThis()!=null)
+							constraint.whoCreatedThis().removeContactConstraint(constraint);
+						
 					} else {
 						//this is not good, report an error
 						System.out.println("missing contact generator");
@@ -176,12 +205,12 @@ public final class Engine implements PhysicsModel, PhysicsScene {
 	//time-step size
 	private double dt = 0.05; 
 
-	public Engine() {
-		//create some initial ContactGeneratorClassifiers
-		//The sphere-sphere classifier
+	public Engine() {		
+		// create some initial ContactGeneratorClassifiers
+		// The Sphere - Sphere classifier
 		geometryClassifiers.add(new ContactGeneratorClassifier() {
 			@Override
-			public ContactGenerator getGenerator(Geometry a,
+			public final ContactGenerator getGenerator(Geometry a,
 					Geometry b) {
 				if ( a instanceof jinngine.geometry.Sphere && b instanceof jinngine.geometry.Sphere) {
 					return new SphereContactGenerator((jinngine.geometry.Sphere)a, (jinngine.geometry.Sphere)b);
@@ -192,10 +221,10 @@ public final class Engine implements PhysicsModel, PhysicsScene {
 			}
 		});
 		
-		//The sphere-supportmap classifier
+		// The Sphere - SupportMap classifier
 		geometryClassifiers.add(new ContactGeneratorClassifier() {
 			@Override
-			public ContactGenerator getGenerator(Geometry a,
+			public final ContactGenerator getGenerator(Geometry a,
 					Geometry b) {
 				if ( a instanceof jinngine.geometry.SupportMap3 && b instanceof jinngine.geometry.Sphere) {
 					return new SupportMapSphereContactGenerator(a.getBody(), (jinngine.geometry.SupportMap3)a, b.getBody(), (jinngine.geometry.Sphere)b);
@@ -214,14 +243,13 @@ public final class Engine implements PhysicsModel, PhysicsScene {
 		});
 		
 		
-		//General convex support maps
+		// General convex support maps
 		geometryClassifiers.add(new ContactGeneratorClassifier() {
 			@Override
-			public ContactGenerator getGenerator(Geometry a,
+			public final ContactGenerator getGenerator(Geometry a,
 					Geometry b) {
 				if ( a instanceof SupportMap3 && b instanceof SupportMap3) {
 					return new FeatureSupportMapContactGenerator((SupportMap3)a, a,  (SupportMap3)b, b);
-					//return new BulletPersistentManifold(a,b);
 
 				}
 				//not recognised
@@ -379,6 +407,21 @@ public final class Engine implements PhysicsModel, PhysicsScene {
 //		geometryClassifiers.add(classifier);
 //		
 //	}
+	
+	/**
+	 * Add a new ContactConstraintCreator
+	 */
+	public final void addContactConstraintCreator( ContactConstraintCreator c) {
+		contactConstraintCreators.add(c);
+	}
+
+	/**
+	 * Remove an existing contact constraint creator
+	 * @param c
+	 */
+	public final void removeContactConstraintCreator( ContactConstraintCreator c) {
+		contactConstraintCreators.remove(c);
+	}
 
 	@Override
 	public final void removeBody(Body body) {

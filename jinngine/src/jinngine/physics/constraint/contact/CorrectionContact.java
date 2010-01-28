@@ -16,7 +16,7 @@ public final class CorrectionContact implements ContactConstraint {
 	private final Body b1, b2;                  //bodies in constraint
 	private final List<ContactGenerator> generators = new ArrayList<ContactGenerator>();
 	private final Map<ContactGenerator,List<contactpoint>> contacts = new HashMap<ContactGenerator,List<contactpoint>>();
-	
+	private final ContactConstraintCreator creator;
 	private final double nfactor = 1;	
 	private final double cfactor = 1;
 	
@@ -32,11 +32,12 @@ public final class CorrectionContact implements ContactConstraint {
 	
 	
 
-	public CorrectionContact(Body b1, Body b2, ContactGenerator generator) {
+	public CorrectionContact(Body b1, Body b2, ContactGenerator generator, ContactConstraintCreator creator) {
 		super();
 		this.b1 = b1;
 		this.b2 = b2;
 		addGenerator(generator);
+		this.creator = creator;
 	}
 
 	public void addGenerator(ContactGenerator g) {
@@ -336,6 +337,11 @@ public final class CorrectionContact implements ContactConstraint {
 	@Override
 	public Pair<Body> getBodies() {
 		return new Pair<Body>(b1,b2);
+	}
+
+	@Override
+	public ContactConstraintCreator whoCreatedThis() {
+		return creator;
 	}
 
 }
