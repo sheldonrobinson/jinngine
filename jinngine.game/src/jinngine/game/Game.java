@@ -37,14 +37,12 @@ public class Game {
 		Actor platformbox1 = new Platform1(new jinngine.math.Vector3(-3,-25+2,0));
 		platformbox1.start(this);
 		runningactors.add(platformbox1);
-
+//
 		Platform1 platformbox2 = new Platform1(new jinngine.math.Vector3(-3,-25+3.5,0));
 		platformbox2.start(this);
 		runningactors.add(platformbox2);
 
 		addActor( new HUDActor() );
-		
-		addActor( new jinngine.game.actors.player.Player() );
 		addActor( new jinngine.game.actors.player.Player() );
 
 		//run forever
@@ -86,7 +84,7 @@ public class Game {
 		return rendering;
 	}
 	
-	public final PhysicsScene getPhysics() {
+	public final Engine getPhysics() {
 		return jinngine;
 	}
 	
