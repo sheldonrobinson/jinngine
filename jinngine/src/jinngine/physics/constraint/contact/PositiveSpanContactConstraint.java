@@ -23,7 +23,7 @@ import jinngine.util.Pair;
  * @author mo
  *
  */
-public final class FrictionalContactConstraint implements ContactConstraint {	
+public final class PositiveSpanContactConstraint implements ContactConstraint {	
 	private final Body b1, b2;                  //bodies in constraint
 	private final List<ContactGenerator> generators = new ArrayList<ContactGenerator>();
 	private final ContactConstraintCreator creator;
@@ -37,7 +37,7 @@ public final class FrictionalContactConstraint implements ContactConstraint {
 	 * @param b2
 	 * @param generator
 	 */
-	public FrictionalContactConstraint(Body b1, Body b2, ContactGenerator generator, ContactConstraintCreator creator) {
+	public PositiveSpanContactConstraint(Body b1, Body b2, ContactGenerator generator, ContactConstraintCreator creator) {
 		super();
 		this.b1 = b1;
 		this.b2 = b2;
@@ -242,10 +242,20 @@ public final class FrictionalContactConstraint implements ContactConstraint {
 		c2.assign(b1,b2,
 				t2B1, t2B2,	t2B3, t2B4,				
 				t2, r1.cross(t2), t2.multiply(-1),	r2.cross(t2).multiply(-1),
-				-frictionBoundMagnitude, frictionBoundMagnitude,
+				0, frictionBoundMagnitude,
 				coupling,
 				-(ut1f-ut1i)  //+ t2Fext*dt*0
 		);
+		
+		constraint c2i = new constraint();
+		c2i.assign(b1,b2,
+				t2B1.multiply(-1), t2B2.multiply(-1),	t2B3.multiply(-1), t2B4.multiply(-1),				
+				t2.multiply(-1), r1.cross(t2).multiply(-1), t2.multiply(-1).multiply(-1),	r2.cross(t2).multiply(-1).multiply(-1),
+				0, frictionBoundMagnitude,
+				coupling,
+				-(-(ut1f-ut1i))  //+ t2Fext*dt*0
+		);
+
 		
 		//second tangent
 		Vector3 t3B1 = t3.multiply(1/m1);
@@ -261,9 +271,22 @@ public final class FrictionalContactConstraint implements ContactConstraint {
 				-(ut2f-ut2i)  
 		);
 
+		constraint c3i = new constraint();
+		c3i.assign(b1,b2,
+				t3B1.multiply(-1), t3B2.multiply(-1),	t3B3.multiply(-1), t3B4.multiply(-1),
+				t3.multiply(-1), r1.cross(t3).multiply(-1), t3.multiply(-1).multiply(-1), r2.cross(t3).multiply(-1).multiply(-1),
+				0, frictionBoundMagnitude,
+				coupling,
+				-(-(ut2f-ut2i))  
+		);
+
+		
 		outConstraints.add(c);
 		outConstraints.add(c2);
+		outConstraints.add(c2i);
 		outConstraints.add(c3);
+		outConstraints.add(c3i);
+
 	}
 
 	@Override

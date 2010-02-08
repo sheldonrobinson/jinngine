@@ -488,7 +488,7 @@ public class FischerNewton implements Solver {
 			System.out.println("");
 
 			//v[i] = -ci.b;
-			double ai[] = new double[1000];
+			double ai[] = new double[10000];
 
 			//velocity pass
 			int j=0;

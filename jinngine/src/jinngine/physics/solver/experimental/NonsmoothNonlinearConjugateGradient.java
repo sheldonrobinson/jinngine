@@ -124,7 +124,7 @@ public class NonsmoothNonlinearConjugateGradient implements Solver {
 				}
 				if ( Math.abs(rold-rnew) < 1e-6 ) {
 //					System.out.println(""+iter);
-//					break;
+					break;
 				}
 
 			}
@@ -133,6 +133,7 @@ public class NonsmoothNonlinearConjugateGradient implements Solver {
 			beta = rnew/rold;
 //			double cond = Math.abs(restart)/rnew;
 //			System.out.println("cond="+cond);
+//			System.out.println(""+rnew);
 
 			if ( beta > 1 )  {
 //			if (cond > 0.5) {

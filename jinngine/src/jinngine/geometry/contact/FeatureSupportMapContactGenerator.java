@@ -22,7 +22,7 @@ import jinngine.geometry.*;
  */
 public class FeatureSupportMapContactGenerator implements ContactGenerator {
 	//final double envelopeMin = 2.75;
-    private static double envelope = 0.125*0.5;
+    private static double envelope = 0.125*1.0;
 	private static double shell = envelope*0.75;
 	private final SupportMap3 Sa;
 	private final SupportMap3 Sb;

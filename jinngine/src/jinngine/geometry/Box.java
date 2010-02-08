@@ -32,9 +32,9 @@ public class Box implements SupportMap3, Geometry, Material {
 	
 	/**
 	 * Create a box with the given side lengths
-	 * @param x
-	 * @param y
-	 * @param z
+	 * @param x Box x-axis extend
+	 * @param y Box y-axis extend
+	 * @param z Box z-axis extend
 	 */
 	public Box(double x, double y, double z) {
 		this.xl = x; this.yl = y; this.zl = z;
@@ -43,6 +43,24 @@ public class Box implements SupportMap3, Geometry, Material {
 		//set the local transform
 		setLocalTransform( Matrix3.identity(), new Vector3() );
 	}
+
+	/**
+	 * Create a new box with the given side lengths and a local translation
+	 * @param x Box x-axis extend
+	 * @param y Box y-axis extend
+	 * @param z Box z-axis extend
+	 * @param posx Box local x-axis translation
+	 * @param posy Box local y-axis translation
+	 * @param posz Box local z-axis translation
+	 */
+	public Box(double x, double y, double z, double posx, double posy, double posz) {
+		this.xl = x; this.yl = y; this.zl = z;
+		mass = xl*yl*zl;
+		
+		//set the local transform
+		setLocalTransform( Matrix3.identity(), new Vector3(posx,posy,posz) );
+	}
+
 	
 	// user auxiliary methods
 	public Object getAuxiliary() { return auxiliary; }
