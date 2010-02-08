@@ -1,0 +1,430 @@
+<?xml version="1.0" encoding="utf-8"?>
+<COLLADA version="1.4.0" xmlns="http://www.collada.org/2005/11/COLLADASchema">
+	<asset>
+		<contributor>
+			<author>Illusoft Collada 1.4.0 plugin for Blender - http://colladablender.illusoft.com</author>
+			<authoring_tool>Blender v:248 - Illusoft Collada Exporter v:0.3.160</authoring_tool>
+			<comments></comments>
+			<copyright></copyright>
+			<source_data>file:///home/mo/workspace/jinngine.game/doorframe.blend</source_data>
+		</contributor>
+		<created>2010-02-08T17:57:04.983594</created>
+		<modified>2010-02-08T17:57:04.983637</modified>
+		<unit meter="0.01" name="centimeter"/>
+		<up_axis>Z_UP</up_axis>
+	</asset>
+	<library_cameras>
+		<camera id="Camera-Camera" name="Camera-Camera">
+			<optics>
+				<technique_common>
+					<perspective>
+						<yfov>49.13434</yfov>
+						<znear>0.1</znear>
+						<zfar>100.0</zfar>
+					</perspective>
+				</technique_common>
+			</optics>
+		</camera>
+	</library_cameras>
+	<library_effects>
+		<effect id="doortex_tga-fx" name="doortex_tga-fx">
+			<profile_COMMON>
+				<newparam sid="doortex_tga-surface">
+					<surface type="2D">
+						<init_from>doortex_tga-img</init_from>
+						<format>A8R8G8B8</format>
+					</surface>
+				</newparam>
+				<newparam sid="doortex_tga-sampler">
+					<sampler2D>
+						<source>doortex_tga-surface</source>
+						<minfilter>LINEAR_MIPMAP_LINEAR</minfilter>
+						<magfilter>LINEAR</magfilter>
+					</sampler2D>
+				</newparam>
+				<technique sid="blender">
+					<lambert>
+						<diffuse>
+							<texture texcoord="CHANNEL1" texture="doortex_tga-sampler"/>
+						</diffuse>
+					</lambert>
+				</technique>
+			</profile_COMMON>
+		</effect>
+		<effect id="OutlineMaterial-fx" name="OutlineMaterial-fx">
+			<profile_COMMON>
+				<newparam sid="doorframetex_tga">
+					<surface type="2D">
+						<init_from>doorframetex_tga-img</init_from>
+						<format>A8R8G8B8</format>
+					</surface>
+				</newparam>
+				<newparam sid="doorframetex_tga-sampler">
+					<sampler2D>
+						<source>doorframetex_tga</source>
+						<minfilter>LINEAR_MIPMAP_LINEAR</minfilter>
+						<magfilter>LINEAR</magfilter>
+					</sampler2D>
+				</newparam>
+				<technique sid="blender">
+					<phong>
+						<emission>
+							<color>0.00000 0.00000 0.00000 1</color>
+						</emission>
+						<ambient>
+							<color>0.40000 0.40000 0.40000 1</color>
+						</ambient>
+						<diffuse>
+							<texture texcoord="CHANNEL1" texture="doorframetex_tga-sampler"/>
+						</diffuse>
+						<specular>
+							<color>0.50000 0.50000 0.50000 1</color>
+						</specular>
+						<shininess>
+							<float>12.5</float>
+						</shininess>
+						<reflective>
+							<color>1.00000 1.00000 1.00000 1</color>
+						</reflective>
+						<reflectivity>
+							<float>0.0</float>
+						</reflectivity>
+						<transparent>
+							<color>1 1 1 1</color>
+						</transparent>
+						<transparency>
+							<float>0.0</float>
+						</transparency>
+					</phong>
+				</technique>
+			</profile_COMMON>
+		</effect>
+		<effect id="Material-fx" name="Material-fx">
+			<profile_COMMON>
+				<newparam sid="doorframetex_tga-surface">
+					<surface type="2D">
+						<init_from>doorframetex_tga-img</init_from>
+						<format>A8R8G8B8</format>
+					</surface>
+				</newparam>
+				<newparam sid="doorframetex_tga-sampler001">
+					<sampler2D>
+						<source>doorframetex_tga-surface</source>
+						<minfilter>LINEAR_MIPMAP_LINEAR</minfilter>
+						<magfilter>LINEAR</magfilter>
+					</sampler2D>
+				</newparam>
+				<technique sid="blender">
+					<phong>
+						<emission>
+							<color>0.00000 0.00000 0.00000 1</color>
+						</emission>
+						<ambient>
+							<color>0.42500 0.42500 0.42500 1</color>
+						</ambient>
+						<diffuse>
+							<texture texcoord="CHANNEL1" texture="doorframetex_tga-sampler001"/>
+						</diffuse>
+						<specular>
+							<color>0.50000 0.50000 0.50000 1</color>
+						</specular>
+						<shininess>
+							<float>12.5</float>
+						</shininess>
+						<reflective>
+							<color>1.00000 1.00000 1.00000 1</color>
+						</reflective>
+						<reflectivity>
+							<float>0.0</float>
+						</reflectivity>
+						<transparent>
+							<color>1 1 1 1</color>
+						</transparent>
+						<transparency>
+							<float>0.0</float>
+						</transparency>
+					</phong>
+				</technique>
+			</profile_COMMON>
+		</effect>
+	</library_effects>
+	<library_images>
+		<image id="doortex_tga-img" name="doortex_tga-img">
+			<init_from>/home/mo/workspace/jinngine.game/doortex.tga</init_from>
+		</image>
+		<image id="doorframetex_tga-img" name="doorframetex_tga-img">
+			<init_from>/home/mo/workspace/jinngine.game/doorframetex.tga</init_from>
+		</image>
+		<image id="doorframetex_tga-img" name="doorframetex_tga-img">
+			<init_from>/home/mo/workspace/jinngine.game/doorframetex.tga</init_from>
+		</image>
+	</library_images>
+	<library_lights>
+		<light id="Spot" name="Spot">
+			<technique_common>
+				<point>
+					<color>1.00000 1.00000 1.00000</color>
+					<constant_attenuation>1.0</constant_attenuation>
+					<linear_attenuation>0.0</linear_attenuation>
+					<quadratic_attenuation>0.0</quadratic_attenuation>
+				</point>
+			</technique_common>
+		</light>
+	</library_lights>
+	<library_materials>
+		<material id="doortex_tga" name="doortex_tga">
+			<instance_effect url="#doortex_tga-fx"/>
+		</material>
+		<material id="OutlineMaterial" name="OutlineMaterial">
+			<instance_effect url="#OutlineMaterial-fx"/>
+		</material>
+		<material id="Material" name="Material">
+			<instance_effect url="#Material-fx"/>
+		</material>
+	</library_materials>
+	<library_geometries>
+		<geometry id="DoorOutline-Geometry" name="DoorOutline-Geometry">
+			<mesh>
+				<source id="DoorOutline-Geometry-Position">
+					<float_array count="24" id="DoorOutline-Geometry-Position-array">0.65563 0.95502 -0.05709 0.65563 -0.95502 -0.05709 -0.65563 -0.95502 -0.05709 -0.65563 0.95502 -0.05709 0.65563 0.95501 0.05709 0.65563 -0.95502 0.05709 -0.65563 -0.95501 0.05709 -0.65563 0.95502 0.05709</float_array>
+					<technique_common>
+						<accessor count="8" source="#DoorOutline-Geometry-Position-array" stride="3">
+							<param type="float" name="X"></param>
+							<param type="float" name="Y"></param>
+							<param type="float" name="Z"></param>
+						</accessor>
+					</technique_common>
+				</source>
+				<source id="DoorOutline-Geometry-Normals">
+					<float_array count="0" id="DoorOutline-Geometry-Normals-array"/>
+					<technique_common>
+						<accessor count="0" source="#DoorOutline-Geometry-Normals-array" stride="3">
+							<param type="float" name="X"></param>
+							<param type="float" name="Y"></param>
+							<param type="float" name="Z"></param>
+						</accessor>
+					</technique_common>
+				</source>
+				<vertices id="DoorOutline-Geometry-Vertex">
+					<input semantic="POSITION" source="#DoorOutline-Geometry-Position"/>
+				</vertices>
+				<lines count="12">
+					<input offset="0" semantic="VERTEX" source="#DoorOutline-Geometry-Vertex"/>
+					<p>1 2 0 1 0 3 2 3 4 5 5 6 6 7 4 7 1 5 0 4 2 6 3 7</p>
+				</lines>
+			</mesh>
+		</geometry>
+		<geometry id="Door-Geometry" name="Door-Geometry">
+			<mesh>
+				<source id="Door-Geometry-Position">
+					<float_array count="24" id="Door-Geometry-Position-array">0.65563 0.95502 -0.05709 0.65563 -0.95502 -0.05709 -0.65563 -0.95502 -0.05709 -0.65563 0.95502 -0.05709 0.65563 0.95501 0.05709 0.65563 -0.95502 0.05709 -0.65563 -0.95501 0.05709 -0.65563 0.95502 0.05709</float_array>
+					<technique_common>
+						<accessor count="8" source="#Door-Geometry-Position-array" stride="3">
+							<param type="float" name="X"></param>
+							<param type="float" name="Y"></param>
+							<param type="float" name="Z"></param>
+						</accessor>
+					</technique_common>
+				</source>
+				<source id="Door-Geometry-Normals">
+					<float_array count="18" id="Door-Geometry-Normals-array">0.00000 0.00000 -1.00000 0.00000 -0.00000 1.00000 1.00000 -0.00000 0.00000 -0.00000 -1.00000 -0.00000 -1.00000 0.00000 -0.00000 0.00000 1.00000 0.00000</float_array>
+					<technique_common>
+						<accessor count="6" source="#Door-Geometry-Normals-array" stride="3">
+							<param type="float" name="X"></param>
+							<param type="float" name="Y"></param>
+							<param type="float" name="Z"></param>
+						</accessor>
+					</technique_common>
+				</source>
+				<source id="Door-Geometry-UV">
+					<float_array count="72" id="Door-Geometry-UV-array">0.00196 0.72965 0.00000 0.00153 0.43818 0.00000 0.43818 0.00000 0.44014 0.72812 0.00196 0.72965 0.44210 0.00000 0.88028 0.00153 0.87832 0.72965 0.87832 0.72965 0.44014 0.72812 0.44210 0.00000 0.92039 0.00013 0.95854 0.00000 0.96050 0.72812 0.96050 0.72812 0.92235 0.72825 0.92039 0.00013 0.96050 0.50013 0.99866 0.50000 1.00000 0.99987 1.00000 0.99987 0.96185 1.00000 0.96050 0.50013 0.88028 0.00013 0.91843 0.00000 0.92039 0.72812 0.92039 0.72812 0.88223 0.72825 0.88028 0.00013 0.99866 0.50000 0.96050 0.49987 0.96185 0.00000 0.96185 0.00000 1.00000 0.00013 0.99866 0.50000</float_array>
+					<technique_common>
+						<accessor count="36" source="#Door-Geometry-UV-array" stride="2">
+							<param type="float" name="S"></param>
+							<param type="float" name="T"></param>
+						</accessor>
+					</technique_common>
+				</source>
+				<vertices id="Door-Geometry-Vertex">
+					<input semantic="POSITION" source="#Door-Geometry-Position"/>
+				</vertices>
+				<triangles count="12" material="doortex_tga">
+					<input offset="0" semantic="VERTEX" source="#Door-Geometry-Vertex"/>
+					<input offset="1" semantic="NORMAL" source="#Door-Geometry-Normals"/>
+					<input offset="2" semantic="TEXCOORD" source="#Door-Geometry-UV"/>
+					<p>0 0 0 1 0 1 2 0 2 2 0 3 3 0 4 0 0 5 4 1 6 7 1 7 6 1 8 6 1 9 5 1 10 4 1 11 0 2 12 4 2 13 5 2 14 5 2 15 1 2 16 0 2 17 1 3 18 5 3 19 6 3 20 6 3 21 2 3 22 1 3 23 2 4 24 6 4 25 7 4 26 7 4 27 3 4 28 2 4 29 4 5 30 0 5 31 3 5 32 3 5 33 7 5 34 4 5 35</p>
+				</triangles>
+			</mesh>
+		</geometry>
+		<geometry id="Outline" name="Outline">
+			<mesh>
+				<source id="Outline-Position">
+					<float_array count="54" id="Outline-Position-array">0.71748 -0.81765 0.15610 0.71748 -0.81765 0.11003 0.71748 -0.81765 0.10675 0.71748 -0.81765 -0.15610 0.99991 -0.81767 -0.15610 0.71765 1.19321 -0.15610 -1.00009 -0.81754 -0.15610 -1.00009 -0.81754 0.15610 -0.99991 1.44945 0.15610 -0.99991 1.44945 -0.15610 1.00009 1.44932 0.15610 1.00009 1.44932 -0.15610 0.99991 -0.81767 0.15610 -0.70951 1.19331 -0.15610 0.71765 1.19321 0.15610 -0.70968 -0.81756 -0.15610 -0.70968 -0.81756 0.15610 -0.70951 1.19331 0.15610</float_array>
+					<technique_common>
+						<accessor count="18" source="#Outline-Position-array" stride="3">
+							<param type="float" name="X"></param>
+							<param type="float" name="Y"></param>
+							<param type="float" name="Z"></param>
+						</accessor>
+					</technique_common>
+				</source>
+				<source id="Outline-Normals">
+					<float_array count="0" id="Outline-Normals-array"/>
+					<technique_common>
+						<accessor count="0" source="#Outline-Normals-array" stride="3">
+							<param type="float" name="X"></param>
+							<param type="float" name="Y"></param>
+							<param type="float" name="Z"></param>
+						</accessor>
+					</technique_common>
+				</source>
+				<vertices id="Outline-Vertex">
+					<input semantic="POSITION" source="#Outline-Position"/>
+				</vertices>
+				<lines count="26">
+					<input offset="0" semantic="VERTEX" source="#Outline-Vertex"/>
+					<p>14 17 8 9 3 5 6 15 5 13 9 11 6 9 0 14 7 16 3 4 15 16 1 2 5 14 13 15 8 10 10 12 13 17 0 12 10 11 4 12 6 7 7 8 4 11 0 1 16 17 2 3</p>
+				</lines>
+			</mesh>
+		</geometry>
+		<geometry id="Doorfaces" name="Doorfaces">
+			<mesh>
+				<source id="Doorfaces-Position">
+					<float_array count="69" id="Doorfaces-Position-array">0.71748 -0.81765 0.15610 0.71748 -0.81765 0.11003 0.71748 -0.81765 0.10675 0.71748 -0.81765 -0.10452 0.71748 -0.81765 -0.15610 0.99991 -0.81767 -0.15610 0.71765 1.19321 -0.15610 -1.00009 -0.81754 -0.15610 -1.00009 -0.81754 0.15610 -0.99991 1.44945 0.15610 -0.99991 1.44945 -0.15610 1.00009 1.44932 0.15610 1.00009 1.44932 -0.15610 0.99991 -0.81767 0.15610 -0.70951 1.19331 -0.15610 0.71765 1.19321 0.15610 -0.70968 -0.81756 -0.15610 -0.70968 -0.81756 0.15610 -0.70951 1.19331 0.15610 0.71775 1.19184 -0.00501 0.71775 -0.80816 -0.00501 -0.71895 -0.80816 -0.00501 -0.71895 1.19184 -0.00501</float_array>
+					<technique_common>
+						<accessor count="23" source="#Doorfaces-Position-array" stride="3">
+							<param type="float" name="X"></param>
+							<param type="float" name="Y"></param>
+							<param type="float" name="Z"></param>
+						</accessor>
+					</technique_common>
+				</source>
+				<source id="Doorfaces-Normals">
+					<float_array count="60" id="Doorfaces-Normals-array">-1.00000 0.00000 0.00000 -0.00006 -1.00000 0.00000 -1.00000 0.00008 0.00000 0.99519 0.09800 0.00000 -1.00000 0.00008 -0.00000 -1.00000 0.00008 -0.00000 0.00006 1.00000 -0.00000 1.00000 -0.00008 0.00000 0.00000 0.00000 -1.00000 0.00000 0.00000 1.00000 -0.00006 -1.00000 -0.00000 0.00000 -0.00000 -1.00000 -0.00000 -0.00000 -1.00000 -0.00000 0.00000 1.00000 0.00000 0.00000 1.00000 -0.00006 -1.00000 0.00000 1.00000 -0.00008 0.00000 -0.00006 -1.00000 0.00000 -1.00000 0.00008 -0.00000 0.00000 0.00000 1.00000</float_array>
+					<technique_common>
+						<accessor count="20" source="#Doorfaces-Normals-array" stride="3">
+							<param type="float" name="X"></param>
+							<param type="float" name="Y"></param>
+							<param type="float" name="Z"></param>
+						</accessor>
+					</technique_common>
+				</source>
+				<source id="Doorfaces-UV">
+					<float_array count="210" id="Doorfaces-UV-array">0.93803 0.99929 0.93786 0.95021 0.93785 0.94671 0.94573 0.05574 0.94554 0.00080 0.99884 0.00065 0.93786 0.95021 0.67501 0.66743 0.93785 0.94671 0.08227 0.61358 0.08130 0.33359 0.08149 0.38853 0.67501 0.66743 0.93687 0.66672 0.93785 0.94671 0.67385 0.33336 0.67501 0.66593 0.37980 0.66673 0.37980 0.66673 0.37864 0.33416 0.67385 0.33336 0.00000 0.33257 0.00116 0.00000 0.37864 0.00102 0.37864 0.00102 0.37748 0.33359 0.00000 0.33257 0.37980 0.33336 0.37864 0.00080 0.67385 0.00000 0.67385 0.00000 0.67501 0.33257 0.37980 0.33336 0.37864 0.66615 0.34513 0.61928 0.34430 0.38197 0.34430 0.38197 0.37748 0.33359 0.37864 0.66615 0.93787 0.38103 0.67601 0.38033 0.67617 0.33336 0.67617 0.33336 0.97138 0.33415 0.93787 0.38103 0.94669 0.33336 0.94573 0.05574 0.99884 0.00065 0.99884 0.00065 1.00000 0.33322 0.94669 0.33336 0.08343 0.66694 0.08327 0.61998 0.34513 0.61928 0.34513 0.61928 0.37864 0.66615 0.08343 0.66694 0.34430 0.38197 0.08244 0.38267 0.08227 0.33438 0.08227 0.33438 0.37748 0.33359 0.34430 0.38197 0.67518 0.61764 0.93704 0.61834 0.97022 0.66672 0.97022 0.66672 0.67501 0.66593 0.67518 0.61764 0.97022 0.66672 0.93704 0.61834 0.93787 0.38103 0.93787 0.38103 0.97138 0.33415 0.97022 0.66672 0.00000 0.33373 0.05481 0.33359 0.05597 0.66615 0.05597 0.66615 0.00116 0.66630 0.00000 0.33373 0.67501 0.66743 0.67385 1.00000 0.41200 0.99929 0.41200 0.99929 0.41315 0.66673 0.67501 0.66743 0.94554 0.33264 0.67617 0.33336 0.67501 0.00080 0.67501 0.00080 0.94438 0.00007 0.94554 0.33264 0.93803 0.99929 0.67617 0.99999 0.67501 0.66743 0.67501 0.66743 0.93786 0.95021 0.93803 0.99929 0.37782 0.66694 0.37864 0.90584 0.11820 0.90652 0.11820 0.90652 0.11738 0.66763 0.37782 0.66694</float_array>
+					<technique_common>
+						<accessor count="105" source="#Doorfaces-UV-array" stride="2">
+							<param type="float" name="S"></param>
+							<param type="float" name="T"></param>
+						</accessor>
+					</technique_common>
+				</source>
+				<source id="Doorfaces-color">
+					<float_array count="420" id="Doorfaces-color-array">0.84706 0.84706 0.84706 1.00000 0.84706 0.84706 0.84706 1.00000 0.84706 0.84706 0.84706 1.00000 0.84706 0.84706 0.84706 1.00000 0.84706 0.84706 0.84706 1.00000 0.84706 0.84706 0.84706 1.00000 0.84706 0.84706 0.84706 1.00000 0.84706 0.84706 0.84706 1.00000 0.84706 0.84706 0.84706 1.00000 0.84706 0.84706 0.84706 1.00000 0.84706 0.84706 0.84706 1.00000 0.84706 0.84706 0.84706 1.00000 0.84706 0.84706 0.84706 1.00000 0.84706 0.84706 0.84706 1.00000 0.84706 0.84706 0.84706 1.00000 0.84706 0.84706 0.84706 1.00000 0.84706 0.84706 0.84706 1.00000 0.84706 0.84706 0.84706 1.00000 0.84706 0.84706 0.84706 1.00000 0.84706 0.84706 0.84706 1.00000 0.84706 0.84706 0.84706 1.00000 0.84706 0.84706 0.84706 1.00000 0.84706 0.84706 0.84706 1.00000 0.84706 0.84706 0.84706 1.00000 0.84706 0.84706 0.84706 1.00000 0.84706 0.84706 0.84706 1.00000 0.84706 0.84706 0.84706 1.00000 0.84706 0.84706 0.84706 1.00000 0.84706 0.84706 0.84706 1.00000 0.84706 0.84706 0.84706 1.00000 0.84706 0.84706 0.84706 1.00000 0.84706 0.84706 0.84706 1.00000 0.84706 0.84706 0.84706 1.00000 0.84706 0.84706 0.84706 1.00000 0.84706 0.84706 0.84706 1.00000 0.84706 0.84706 0.84706 1.00000 0.84706 0.84706 0.84706 1.00000 0.84706 0.84706 0.84706 1.00000 0.84706 0.84706 0.84706 1.00000 0.84706 0.84706 0.84706 1.00000 0.84706 0.84706 0.84706 1.00000 0.84706 0.84706 0.84706 1.00000 0.84706 0.84706 0.84706 1.00000 0.84706 0.84706 0.84706 1.00000 0.84706 0.84706 0.84706 1.00000 0.84706 0.84706 0.84706 1.00000 0.84706 0.84706 0.84706 1.00000 0.84706 0.84706 0.84706 1.00000 0.84706 0.84706 0.84706 1.00000 0.84706 0.84706 0.84706 1.00000 0.84706 0.84706 0.84706 1.00000 0.84706 0.84706 0.84706 1.00000 0.84706 0.84706 0.84706 1.00000 0.84706 0.84706 0.84706 1.00000 0.84706 0.84706 0.84706 1.00000 0.84706 0.84706 0.84706 1.00000 0.84706 0.84706 0.84706 1.00000 0.84706 0.84706 0.84706 1.00000 0.84706 0.84706 0.84706 1.00000 0.84706 0.84706 0.84706 1.00000 0.84706 0.84706 0.84706 1.00000 0.84706 0.84706 0.84706 1.00000 0.84706 0.84706 0.84706 1.00000 0.84706 0.84706 0.84706 1.00000 0.84706 0.84706 0.84706 1.00000 0.84706 0.84706 0.84706 1.00000 0.84706 0.84706 0.84706 1.00000 0.84706 0.84706 0.84706 1.00000 0.84706 0.84706 0.84706 1.00000 0.84706 0.84706 0.84706 1.00000 0.84706 0.84706 0.84706 1.00000 0.84706 0.84706 0.84706 1.00000 0.84706 0.84706 0.84706 1.00000 0.84706 0.84706 0.84706 1.00000 0.84706 0.84706 0.84706 1.00000 0.84706 0.84706 0.84706 1.00000 0.84706 0.84706 0.84706 1.00000 0.84706 0.84706 0.84706 1.00000 0.84706 0.84706 0.84706 1.00000 0.84706 0.84706 0.84706 1.00000 0.84706 0.84706 0.84706 1.00000 0.84706 0.84706 0.84706 1.00000 0.84706 0.84706 0.84706 1.00000 0.84706 0.84706 0.84706 1.00000 0.84706 0.84706 0.84706 1.00000 0.84706 0.84706 0.84706 1.00000 0.84706 0.84706 0.84706 1.00000 0.84706 0.84706 0.84706 1.00000 0.84706 0.84706 0.84706 1.00000 0.84706 0.84706 0.84706 1.00000 0.84706 0.84706 0.84706 1.00000 0.84706 0.84706 0.84706 1.00000 0.84706 0.84706 0.84706 1.00000 0.84706 0.84706 0.84706 1.00000 0.84706 0.84706 0.84706 1.00000 0.84706 0.84706 0.84706 1.00000 0.84706 0.84706 0.84706 1.00000 0.84706 0.84706 0.84706 1.00000 0.84706 0.84706 0.84706 1.00000 1.00000 1.00000 1.00000 1.00000 1.00000 1.00000 1.00000 1.00000 1.00000 1.00000 1.00000 1.00000 1.00000 1.00000 1.00000 1.00000 1.00000 1.00000 1.00000 1.00000 1.00000 1.00000 1.00000 1.00000</float_array>
+					<technique_common>
+						<accessor count="105" source="#Doorfaces-color-array" stride="4">
+							<param type="float" name="R"></param>
+							<param type="float" name="G"></param>
+							<param type="float" name="B"></param>
+							<param type="float" name="A"></param>
+						</accessor>
+					</technique_common>
+				</source>
+				<vertices id="Doorfaces-Vertex">
+					<input semantic="POSITION" source="#Doorfaces-Position"/>
+				</vertices>
+				<triangles count="35" material="Material">
+					<input offset="0" semantic="VERTEX" source="#Doorfaces-Vertex"/>
+					<input offset="1" semantic="NORMAL" source="#Doorfaces-Normals"/>
+					<input offset="2" semantic="TEXCOORD" source="#Doorfaces-UV"/>
+					<input offset="3" semantic="COLOR" source="#Doorfaces-color"/>
+					<p>0 0 0 0 1 0 1 1 2 0 2 2 3 1 3 3 4 1 4 4 5 1 5 5 1 2 6 6 6 2 7 7 2 2 8 8 2 3 9 9 4 3 10 10 3 3 11 11 6 4 12 12 4 4 13 13 2 4 14 14 7 5 15 15 8 5 16 16 9 5 17 17 9 5 18 18 10 5 19 19 7 5 20 20 10 6 21 21 9 6 22 22 11 6 23 23 11 6 24 24 12 6 25 25 10 6 26 26 13 7 27 27 5 7 28 28 12 7 29 29 12 7 30 30 11 7 31 31 13 7 32 32 12 8 33 33 6 8 34 34 14 8 35 35 14 8 36 36 10 8 37 37 12 8 38 38 15 9 39 39 0 9 40 40 13 9 41 41 13 9 42 42 11 9 43 43 15 9 44 44 0 10 45 45 3 10 46 46 5 10 47 47 5 10 48 48 13 10 49 49 0 10 50 50 5 11 51 51 4 11 52 52 6 11 53 53 6 11 54 54 12 11 55 55 5 11 56 56 14 12 57 57 16 12 58 58 7 12 59 59 7 12 60 60 10 12 61 61 14 12 62 62 17 13 63 63 18 13 64 64 9 13 65 65 9 13 66 66 8 13 67 67 17 13 68 68 9 14 69 69 18 14 70 70 15 14 71 71 15 14 72 72 11 14 73 73 9 14 74 74 7 15 75 75 16 15 76 76 17 15 77 77 17 15 78 78 8 15 79 79 7 15 80 80 17 16 81 81 16 16 82 82 14 16 83 83 14 16 84 84 18 16 85 85 17 16 86 86 15 17 87 87 18 17 88 88 14 17 89 89 14 17 90 90 6 17 91 91 15 17 92 92 0 18 93 93 15 18 94 94 6 18 95 95 6 18 96 96 1 18 97 97 0 18 98 98 21 19 99 99 20 19 100 100 19 19 101 101 19 19 102 102 22 19 103 103 21 19 104 104</p>
+				</triangles>
+			</mesh>
+		</geometry>
+	</library_geometries>
+	<library_visual_scenes>
+		<visual_scene id="Scene" name="Scene">
+			<node layer="L1" id="DoorOutline" name="DoorOutline">
+				<matrix>
+					1.0 0.0 0.0 0.0 
+					0.0 1.0 0.0 0.18228 
+					0.0 0.0 1.0 0.0 
+					0.0 0.0 0.0 1.0 
+				</matrix>
+				<instance_geometry url="#DoorOutline-Geometry"/>
+			</node>
+			<node layer="L1" id="Door" name="Door">
+				<matrix>
+					1.0 0.0 0.0 0.0 
+					0.0 1.0 0.0 0.18653 
+					0.0 0.0 1.0 0.0 
+					0.0 0.0 0.0 1.0 
+				</matrix>
+				<instance_geometry url="#Door-Geometry">
+					<bind_material>
+						<technique_common>
+							<instance_material symbol="doortex_tga" target="#doortex_tga">
+								<bind_vertex_input input_semantic="TEXCOORD" input_set="1" semantic="CHANNEL1"/>
+							</instance_material>
+						</technique_common>
+					</bind_material>
+				</instance_geometry>
+			</node>
+			<node layer="L1" id="DoorframeOutline" name="DoorframeOutline">
+				<matrix>
+					1.0 0.0 0.0 0.0 
+					0.0 1.0 0.0 0.0 
+					0.0 0.0 1.0 0.0 
+					0.0 0.0 0.0 1.0 
+				</matrix>
+				<instance_geometry url="#Outline">
+					<bind_material>
+						<technique_common>
+							<instance_material symbol="OutlineMaterial" target="#OutlineMaterial">
+								<bind_vertex_input input_semantic="TEXCOORD" input_set="1" semantic="CHANNEL1"/>
+							</instance_material>
+						</technique_common>
+					</bind_material>
+				</instance_geometry>
+			</node>
+			<node layer="L1" id="DoorframeFaces" name="DoorframeFaces">
+				<matrix>
+					1.0 0.0 0.0 0.0 
+					0.0 1.0 0.0 0.0 
+					0.0 0.0 1.0 0.0 
+					0.0 0.0 0.0 1.0 
+				</matrix>
+				<instance_geometry url="#Doorfaces">
+					<bind_material>
+						<technique_common>
+							<instance_material symbol="Material" target="#Material">
+								<bind_vertex_input input_semantic="TEXCOORD" input_set="1" semantic="CHANNEL1"/>
+							</instance_material>
+						</technique_common>
+					</bind_material>
+				</instance_geometry>
+			</node>
+			<node layer="L1" id="Lamp" name="Lamp">
+				<matrix>
+					-0.29086 -0.7711 0.56639 4.07625 
+					0.95517 -0.19988 0.21839 1.00545 
+					-0.05519 0.60452 0.79467 5.90386 
+					0.0 0.0 0.0 1.0 
+				</matrix>
+				<instance_light url="#Spot"/>
+			</node>
+			<node layer="L1" id="Camera" name="Camera">
+				<matrix>
+					0.68588 -0.31737 0.65486 7.48113 
+					0.72763 0.31247 -0.61067 -6.50764 
+					-0.01082 0.89534 0.44525 5.34367 
+					0.0 0.0 0.0 1.0 
+				</matrix>
+				<instance_camera url="#Camera-Camera"/>
+			</node>
+		</visual_scene>
+	</library_visual_scenes>
+	<scene>
+		<instance_visual_scene url="#Scene"/>
+	</scene>
+</COLLADA>

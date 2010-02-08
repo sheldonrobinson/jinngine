@@ -3,6 +3,7 @@ package jinngine.game;
 import java.util.*;
 
 import jinngine.game.actors.interaction.HUDActor;
+import jinngine.game.actors.door.Door;
 import jinngine.game.actors.environment.Environment;
 import jinngine.game.actors.Actor;
 import jinngine.game.actors.bear.Bear;
@@ -34,14 +35,20 @@ public class Game {
 		bear.start(this);
 		runningactors.add(bear);
 		
-		Actor platformbox1 = new Platform1(new jinngine.math.Vector3(-3,-25+2,0));
+		Actor platformbox1 = new Platform1(new jinngine.math.Vector3(-3,-25+2,0), true, 0.5, 0.7);
 		platformbox1.start(this);
 		runningactors.add(platformbox1);
 //
-		Platform1 platformbox2 = new Platform1(new jinngine.math.Vector3(-3,-25+3.5,0));
+		Platform1 platformbox2 = new Platform1(new jinngine.math.Vector3(-3,-25+3.5,0), true, 1.0, 0.9);
 		platformbox2.start(this);
 		runningactors.add(platformbox2);
 
+		Platform1 platformbox3 = new Platform1(new jinngine.math.Vector3(-3,-25+3.5,0), false, 1, 0.7);
+		platformbox3.start(this);
+		runningactors.add(platformbox3);
+
+		addActor( new Door(new jinngine.math.Vector3(0,-25+3.5,0), false, 1, 0.7) );
+		
 		addActor( new HUDActor() );
 		addActor( new jinngine.game.actors.player.Player() );
 

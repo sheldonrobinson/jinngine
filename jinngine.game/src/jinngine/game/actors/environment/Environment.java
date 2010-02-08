@@ -29,15 +29,18 @@ public class Environment implements Actor {
 		
 		// make the floor box 
 		floorbox = new Box("Box", new Vector3(0,-25-5,0), 120, 5, 120);
-		floorbox.setSolidColor(new ColorRGBA(1,1,1,1));
+		floorbox.setSolidColor(new ColorRGBA(0.7f,0.7f,0.7f,1));
 		floorbox.setModelBound(new BoundingBox());
 		rootnode.attachChild(floorbox); //dont draw floor
+		//shadowing
+		game.getRendering().getPssmPass().add(floorbox);
 
 		// make physics box
 		Body floor = new Body(new jinngine.geometry.Box(120,10,120));
 		floor.setPosition(new jinngine.math.Vector3(0,-25 -5,0));
 		floor.setFixed(true);
 		physics.addBody(floor);
+		
 	}
 
 	@Override

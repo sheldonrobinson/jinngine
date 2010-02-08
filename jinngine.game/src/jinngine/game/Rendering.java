@@ -28,6 +28,7 @@ import com.ardor3d.intersection.PickResults;
 import com.ardor3d.intersection.PickingUtil;
 import com.ardor3d.intersection.PrimitivePickResults;
 import com.ardor3d.light.DirectionalLight;
+import com.ardor3d.light.PointLight;
 import com.ardor3d.math.ColorRGBA;
 import com.ardor3d.math.Ray3;
 import com.ardor3d.math.Vector3;
@@ -38,9 +39,12 @@ import com.ardor3d.renderer.jogl.JoglTextureRendererProvider;
 import com.ardor3d.renderer.pass.BasicPassManager;
 import com.ardor3d.renderer.pass.OutlinePass;
 import com.ardor3d.renderer.pass.RenderPass;
+import com.ardor3d.renderer.state.BlendState;
 import com.ardor3d.renderer.state.CullState;
 import com.ardor3d.renderer.state.GLSLShaderObjectsState;
 import com.ardor3d.renderer.state.ZBufferState;
+import com.ardor3d.renderer.state.BlendState.DestinationFunction;
+import com.ardor3d.renderer.state.BlendState.SourceFunction;
 import com.ardor3d.renderer.state.CullState.Face;
 import com.ardor3d.scenegraph.Node;
 import com.ardor3d.util.Timer;
@@ -59,6 +63,7 @@ public final class Rendering implements Scene {
     private final BasicPassManager passes = new BasicPassManager();
     private boolean exit = false;
     private final LogicalLayer logicallayer = new LogicalLayer(); 
+    private final ParallelSplitShadowMapPass pssm;
     
 	public Rendering() {
         final JoglCanvasRenderer canvasRenderer = new JoglCanvasRenderer(this);
@@ -67,7 +72,7 @@ public final class Rendering implements Scene {
         canvas =  new JoglCanvas(canvasRenderer, settings);
         canvas.init();        
         canvas.setTitle("Rendering");
-        canvas.getCanvasRenderer().getCamera().setLocation(0, -25+5, -10);
+        canvas.getCanvasRenderer().getCamera().setLocation(0, -25+7, -20);
         canvas.getCanvasRenderer().getCamera().setFrustumPerspective(25, 16.0/9.0, 1, 1500);
         canvas.getCanvasRenderer().getCamera().lookAt(0, -25, 0, Vector3.UNIT_Y);
         canvas.getCanvasRenderer().getRenderer().setBackgroundColor(new ColorRGBA(1,1,1,1));
@@ -100,9 +105,16 @@ public final class Rendering implements Scene {
         buf.setFunction(ZBufferState.TestFunction.LessThanOrEqualTo);
         root.setRenderState(buf);
         
+        //blending
+        BlendState bs = new BlendState();
+        bs.setBlendEnabled(true);
+        bs.setSourceFunction(SourceFunction.SourceAlpha);
+        bs.setDestinationFunctionAlpha(DestinationFunction.OneMinusSourceAlpha);
+        root.setRenderState(bs);
+        
         // define some light
         final DirectionalLight light = new DirectionalLight();
-        light.setDirection(0.5, 1, 0);
+        light.setDirection(0.1, 0.1, -0.1);
         light.setDiffuse(new ColorRGBA(0.0f, 0.0f, 0.0f, 1.0f));
         light.setAmbient(new ColorRGBA(0.0f, 0.0f, 0.0f, 1.0f));
         light.setSpecular(new ColorRGBA(1.0f, 1.0f, 1.0f, 1.0f));
@@ -114,21 +126,17 @@ public final class Rendering implements Scene {
         passes.add(defaultpass);
         
         // shadow pass
-        final ParallelSplitShadowMapPass pssm = new ParallelSplitShadowMapPass(light, 1024, 4);
-        pssm.add(root);
-        pssm.addOccluder(root);
-        pssm.setShadowColor(new ColorRGBA(0f,0f,0f,0.125f));
-        passes.add(pssm);   
+        this.pssm = new ParallelSplitShadowMapPass(light, 1024, 4);
+        //pssm.add(root);
+        //pssm.addOccluder(root);
+        this.pssm.setShadowColor(new ColorRGBA(0f,0f,0f,0.125f));
+        passes.add(this.pssm);   
         
         // outline pass
 //        final OutlinePass outline = new OutlinePass(true);
 //        outline.add(root);
 //        outline.setEnabled(true);
 //        passes.add(outline);
-        
-
-
-  
 	}
 	
 	/**
@@ -136,6 +144,10 @@ public final class Rendering implements Scene {
 	 */
 	public final Camera getCamera() {
 		return canvas.getCanvasRenderer().getCamera();
+	}
+	
+	public final ParallelSplitShadowMapPass getPssmPass() {
+		return pssm;
 	}
 
 	/**

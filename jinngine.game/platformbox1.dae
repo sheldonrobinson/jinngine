@@ -3,32 +3,19 @@
 	<asset>
 		<contributor>
 			<author>Illusoft Collada 1.4.0 plugin for Blender - http://colladablender.illusoft.com</author>
-			<authoring_tool>Blender v:246 - Illusoft Collada Exporter v:0.3.159</authoring_tool>
+			<authoring_tool>Blender v:248 - Illusoft Collada Exporter v:0.3.160</authoring_tool>
 			<comments></comments>
 			<copyright></copyright>
 			<source_data>file:///home/mo/workspace/jinngine.game/platformbox1.blend</source_data>
 		</contributor>
-		<created>2010-01-23T18:52:50.663940</created>
-		<modified>2010-01-23T18:52:50.663996</modified>
+		<created>2010-01-31T18:04:31.206711</created>
+		<modified>2010-01-31T18:04:31.206730</modified>
 		<unit meter="0.01" name="centimeter"/>
 		<up_axis>Z_UP</up_axis>
 	</asset>
 	<library_effects>
 		<effect id="Material-fx" name="Material-fx">
 			<profile_COMMON>
-				<newparam sid="platformbox1tex_tga-surface">
-					<surface type="2D">
-						<init_from>platformbox1tex_tga-img</init_from>
-						<format>A8R8G8B8</format>
-					</surface>
-				</newparam>
-				<newparam sid="platformbox1tex_tga-sampler">
-					<sampler2D>
-						<source>platformbox1tex_tga-surface</source>
-						<minfilter>LINEAR_MIPMAP_LINEAR</minfilter>
-						<maxfilter>LINEAR</maxfilter>
-					</sampler2D>
-				</newparam>
 				<technique sid="blender">
 					<phong>
 						<emission>
@@ -38,7 +25,7 @@
 							<color>0.40000 0.40000 0.40000 1</color>
 						</ambient>
 						<diffuse>
-							<texture texcoord="CHANNEL1" texture="platformbox1tex_tga-sampler"/>
+							<color>0.80000 0.80000 0.80000 1</color>
 						</diffuse>
 						<specular>
 							<color>0.50000 0.50000 0.50000 1</color>
@@ -63,11 +50,6 @@
 			</profile_COMMON>
 		</effect>
 	</library_effects>
-	<library_images>
-		<image id="platformbox1tex_tga-img" name="platformbox1tex_tga-img">
-			<init_from>/home/mo/workspace/jinngine.game/platformbox1tex.tga</init_from>
-		</image>
-	</library_images>
 	<library_materials>
 		<material id="Material" name="Material">
 			<instance_effect url="#Material-fx"/>

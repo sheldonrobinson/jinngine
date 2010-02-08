@@ -85,6 +85,7 @@ public class HUDActor implements Actor {
 			Node node = null;
 			if (results.getNumber()>0) {
 				node = results.getPickData(0).getTargetMesh().getParent();
+				System.out.println(""+node);
 				// walk upwards in the scenegraph to find a SelectableActor
 				while (node != null) {
 					if (node.getUserData() != null) {
