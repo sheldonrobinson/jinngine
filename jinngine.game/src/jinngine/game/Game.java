@@ -1,6 +1,13 @@
 package jinngine.game;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.*;
+
+import com.ardor3d.scenegraph.Node;
+import com.ardor3d.scenegraph.Spatial;
+import com.ardor3d.util.export.xml.XMLExporter;
+import com.ardor3d.util.export.xml.XMLImporter;
 
 import jinngine.game.actors.interaction.HUDActor;
 import jinngine.game.actors.door.Door;
@@ -23,35 +30,73 @@ public class Game {
 	private final Engine jinngine = new Engine();
 
 	public Game() {
-		jinngine.setTimestep(0.04);
+		jinngine.setTimestep(0.01);
 		
 		
 		//setup some actors
-		Actor actor = new Environment();
-		actor.start(this);
-		runningactors.add(actor);
-		
-		Bear bear = new Bear();
-		bear.start(this);
-		runningactors.add(bear);
-		
-		Actor platformbox1 = new Platform1(new jinngine.math.Vector3(-3,-25+2,0), true, 0.5, 0.7);
-		platformbox1.start(this);
-		runningactors.add(platformbox1);
+//		Actor actor = new Environment();
+//		actor.create(this);
+//		actor.start(this);
+//		runningactors.add(actor);
+//		
+//		Bear bear = new Bear();
+//		bear.start(this);
+//		runningactors.add(bear);
+//		
+//		Actor platformbox1 = new Platform1(new jinngine.math.Vector3(-3,-25+2,0), 0.7);
+//		platformbox1.create(this);
+//		platformbox1.start(this);
+//		runningactors.add(platformbox1);
 //
-		Platform1 platformbox2 = new Platform1(new jinngine.math.Vector3(-3,-25+3.5,0), true, 1.0, 0.9);
-		platformbox2.start(this);
-		runningactors.add(platformbox2);
+//		Platform1 platformbox2 = new Platform1(new jinngine.math.Vector3(-3,-25+3.5,0), 0.9);
+//		platformbox2.create(this);
+//		platformbox2.start(this);
+//		runningactors.add(platformbox2);
+//
+//		Platform1 platformbox3 = new Platform1(new jinngine.math.Vector3(-3,-25+3.5,0), 0.7);
+//		platformbox3.create(this);
+//		platformbox3.start(this);
+//		runningactors.add(platformbox3);
+//
+//		Actor p = new jinngine.game.actors.player.Player();
+//		p.create(this);
+//		addActor(p);
+//
+//		
+//		Actor door = new Door();
+//		door.create(this);
+//		addActor(door);
+//		
+//		
+//		addActor( new HUDActor() );
 
-		Platform1 platformbox3 = new Platform1(new jinngine.math.Vector3(-3,-25+3.5,0), false, 1, 0.7);
-		platformbox3.start(this);
-		runningactors.add(platformbox3);
-
-		addActor( new Door(new jinngine.math.Vector3(0,-25+3.5,0), false, 1, 0.7) );
 		
-		addActor( new HUDActor() );
-		addActor( new jinngine.game.actors.player.Player() );
 
+		
+		//go through the scene graph depth first, and get the actors
+		final ArrayList<Actor> foundactors = new ArrayList<Actor>();
+		final class traverse {
+			public void find(Node node) {
+				if (node instanceof Actor)
+					foundactors.add((Actor)node);
+				for (Spatial sub : node.getChildren()) {
+					if (sub instanceof Node) {
+						find((Node)sub);
+					}
+				}
+				
+			}
+		}
+//		 run traversal
+		new traverse().find(getRendering().getRootNode());
+
+		//add all actors
+		for (Actor a: foundactors)  {
+			addActor(a);
+			System.out.println(""+a);
+		}
+
+		
 		//run forever
 		while(true) { 	
 			

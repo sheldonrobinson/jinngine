@@ -1,6 +1,7 @@
 package jinngine.game.actors.player;
 
 import java.util.*;
+import java.io.File;
 import java.io.IOException;
 
 import com.ardor3d.extension.effect.water.WaterNode;
@@ -17,16 +18,24 @@ import com.ardor3d.input.logical.TriggerAction;
 import com.ardor3d.input.logical.TwoInputStates;
 import com.ardor3d.math.Matrix3;
 import com.ardor3d.math.type.ReadOnlyMatrix3;
+import com.ardor3d.math.type.ReadOnlyQuaternion;
+import com.ardor3d.math.type.ReadOnlyTransform;
+import com.ardor3d.math.type.ReadOnlyVector3;
 import com.ardor3d.renderer.state.GLSLShaderObjectsState;
 import com.ardor3d.renderer.state.TextureState;
 import com.ardor3d.scenegraph.Node;
+import com.ardor3d.scenegraph.Renderable;
 import com.ardor3d.scenegraph.Spatial;
 import com.ardor3d.scenegraph.controller.SpatialController;
 import com.ardor3d.util.TextureManager;
+import com.ardor3d.util.export.Ardor3DExporter;
+import com.ardor3d.util.export.binary.BinaryExporter;
+import com.ardor3d.util.export.xml.XMLExporter;
 import com.ardor3d.util.geom.SceneCopier;
 import com.ardor3d.util.geom.SharedCopyLogic;
 
 import jinngine.game.Game;
+import jinngine.game.Toolbox;
 import jinngine.game.actors.Actor;
 import jinngine.game.actors.PhysicalActor;
 import jinngine.geometry.contact.ContactGenerator;
@@ -41,46 +50,31 @@ import jinngine.physics.force.Force;
 import jinngine.physics.force.GravityForce;
 import jinngine.physics.force.ImpulseForce;
 
-public class Player implements PhysicalActor {
+public class Player extends Node implements PhysicalActor {
 
 	private Body playerbody;
 	private final List<FrictionalContactConstraint> constraints = new ArrayList<FrictionalContactConstraint>();
-	
 	private boolean keywstate = false;
 	private double movespeed = 1.5;
 	private double tangentforce = 5;
 	
 	@Override
-	public void act(Game game) {
+	public void write(Ardor3DExporter e) throws IOException {
 		// TODO Auto-generated method stub
-
+		super.write(e);
+		e.getCapsule(this);				
 	}
-
+	
+	
 	@Override
-	public void start(final Game game) {
-		PhysicsScene physics = game.getPhysics();
-		
-		// Graphics		
-        // body
-//		final ColladaImporter colladaImporter = new ColladaImporter();
-//        final ColladaStorage ballstorage = colladaImporter.readColladaFile("ball.dae");
-//        final Node body = ballstorage.getScene();
-//
-//        // textures for ball
-//        TextureState ts = new TextureState();
-//        ts.setEnabled(true);
-//        ts.setTexture(TextureManager.load("balllowtex.tga", Texture.MinificationFilter.Trilinear,
-//                Format.GuessNoCompression, true),0);
-//
-//        ts.setTexture(TextureManager.load("balllownormalmap.tga", Texture.MinificationFilter.BilinearNoMipMaps,
-//                Format.GuessNoCompression, true),1);
-//        body.setRenderState(ts);
-//        body.setScale(0.5);
-               
+	public void create(Game game) {
+		this.setName("Actor:Player");
+
 		final ColladaImporter colladaImporter = new ColladaImporter();
         final ColladaStorage storage = colladaImporter.readColladaFile("bearface.dae");
         final Node body = storage.getScene();
-        body.setScale(0.75);
+        body.setScale(1);
+        body.setName("playermainbody");
         TextureState headts = new TextureState();
         headts.setEnabled(true);
         headts.setTexture(TextureManager.load("bearlowtex.tga", 
@@ -91,6 +85,41 @@ public class Player implements PhysicalActor {
                 Format.GuessNoCompression, true),1);
         body.setRenderState(headts);
         
+
+        final GLSLShaderObjectsState shader = new GLSLShaderObjectsState();
+        //load shaders
+        try {
+          shader.setVertexShader(WaterNode.class.getClassLoader().getResourceAsStream("jinngine/game/resources/bumbshader.vert"));
+          shader.setFragmentShader(WaterNode.class.getClassLoader().getResourceAsStream("jinngine/game/resources/bumbshader.frag"));
+      } catch (final IOException e) {
+//  	  logger.log(Level.WARNING, "Error loading shader", e);
+    	  e.printStackTrace();
+          return;
+      }
+      shader.setUniform("texture0", 0);
+      shader.setUniform("normalmap", 1);      
+      body.setRenderState(shader);
+      
+      // attach the node
+      attachChild(body);
+      
+      body.setTranslation(body.getTranslation().add(0,-20,0,null));
+      
+      // attach to root
+      game.getRendering().getRootNode().attachChild(this);
+	}
+
+	@Override
+	public void act(Game game) {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public void start(final Game game) {
+		PhysicsScene physics = game.getPhysics();
+		
+        Node body = (Node)getChild("playermainbody");
         
         body.addController(new SpatialController<Spatial>() {
             public void update(final double time, final Spatial caller) {
@@ -104,26 +133,10 @@ public class Player implements PhysicalActor {
             }
         });
         
+        
         //connect actor to mesh
         body.setUserData(this);
         
-        final GLSLShaderObjectsState shader = new GLSLShaderObjectsState();
-        //load shaders
-        try {
-          shader.setVertexShader(WaterNode.class.getClassLoader()
-                  .getResourceAsStream("jinngine/game/resources/bumbshader.vert"));
-          shader.setFragmentShader(WaterNode.class.getClassLoader()
-        		  .getResourceAsStream("jinngine/game/resources/bumbshader.frag"));
-      } catch (final IOException e) {
-//  	  logger.log(Level.WARNING, "Error loading shader", e);
-    	  e.printStackTrace();
-          return;
-      }
-      shader.setUniform("texture0", 0);
-      shader.setUniform("normalmap", 1);      
-      body.setRenderState(shader);
-        
-        game.getRendering().getRootNode().attachChild(body);
         
         // setup shadows
         game.getRendering().getPssmPass().add(body);
@@ -132,9 +145,9 @@ public class Player implements PhysicalActor {
         // Physics      
         jinngine.geometry.Box box = new jinngine.geometry.Box(1,1,1);
         box.setRestitution(0.20);
-        box.setFrictionCoefficient(999);
+        box.setFrictionCoefficient(1);
         playerbody = new Body(box);
-        playerbody.setPosition(new jinngine.math.Vector3(2.5,2-25,2));
+        Toolbox.setTransformFromNode(body, playerbody);
         physics.addBody(playerbody);
         physics.addForce(new GravityForce(playerbody));
         
@@ -144,7 +157,10 @@ public class Player implements PhysicalActor {
         // tangential movement vectors
         final Vector3 movementx = new Vector3(0,0,1);
         final Vector3 movementy = new Vector3(-1,0,0);
-        
+
+        //debug mesh
+        Toolbox.addJinngineDebugMesh("playerdebugmesh", body, playerbody);
+
         
         // create a contact constraint creator, to book-keep the contact constraints
         // generated by the base body. 
@@ -181,13 +197,13 @@ public class Player implements PhysicalActor {
         // install creator
         game.getPhysics().addContactConstraintCreator(creator);
        
-        //install some key controlls
+        //install some key controls
         game.getRendering().getLogicalLayer()
         .registerTrigger( new InputTrigger( new KeyPressedCondition(Key.SPACE), new TriggerAction() {
         	@Override
         	public void perform(Canvas source, TwoInputStates inputState, double tpf) {
         		System.out.println("space pressed");
-        		impulse.setMagnitude(3520);
+        		impulse.setMagnitude(6.520);
         		
         	}
         }));
@@ -323,6 +339,25 @@ public class Player implements PhysicalActor {
         		
         		keywstate = false;
         		
+        	}
+        }));
+        
+        
+        
+        
+        game.getRendering().getLogicalLayer()
+        .registerTrigger( new InputTrigger( new KeyPressedCondition(Key.RETURN), new TriggerAction() {
+        	@Override
+        	public void perform(Canvas source, TwoInputStates inputState, double tpf) {
+        		System.out.println("Writing scene graph");
+        		
+                try {
+                	BinaryExporter.getInstance().save( game.getRendering().getRootNode(), new File("testgraph.xml"));
+        		} catch (IOException e) {
+        			// TODO Auto-generated catch block
+        			e.printStackTrace();
+        		}
+        	
         	}
         }));
 

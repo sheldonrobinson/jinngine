@@ -44,6 +44,13 @@ public class Bear implements CommandableActor, SelectableActor {
 	
 	private final Body gotocontroller = new Body();
 	
+	
+	@Override
+	public void create(Game game) {
+		// TODO Auto-generated method stub
+		
+	}
+	
 	@Override
 	public void act( Game game ) {
 		gotocontroller.setPosition(targetpos);

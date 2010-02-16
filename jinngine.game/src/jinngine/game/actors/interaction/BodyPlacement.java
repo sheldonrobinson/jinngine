@@ -35,6 +35,12 @@ public class BodyPlacement implements Actor {
 		this.screenpos.set(screenpos);
 	}
 	
+	@Override
+	public void create(Game game) {
+		// TODO Auto-generated method stub
+		
+	}
+	
 	public final void act( Game game ) {
 		// intersect in pick-plane
 		// L , t1 t2 

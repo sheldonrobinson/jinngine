@@ -1,5 +1,6 @@
 package jinngine.game;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -48,6 +49,9 @@ import com.ardor3d.renderer.state.BlendState.SourceFunction;
 import com.ardor3d.renderer.state.CullState.Face;
 import com.ardor3d.scenegraph.Node;
 import com.ardor3d.util.Timer;
+import com.ardor3d.util.export.binary.BinaryImporter;
+import com.ardor3d.util.export.xml.XMLExporter;
+import com.ardor3d.util.export.xml.XMLImporter;
 import com.ardor3d.util.resource.ResourceLocatorTool;
 import com.ardor3d.util.resource.SimpleResourceLocator;
 
@@ -59,7 +63,7 @@ public final class Rendering implements Scene {
     // ardor3d members
     private final JoglCanvas canvas;
     private final Timer timer = new Timer();
-    private final Node root = new Node();
+    private Node root = new Node();
     private final BasicPassManager passes = new BasicPassManager();
     private boolean exit = false;
     private final LogicalLayer logicallayer = new LogicalLayer(); 
@@ -92,6 +96,15 @@ public final class Rendering implements Scene {
         } catch (final URISyntaxException ex) {
             ex.printStackTrace(); 
         }
+        
+        try {
+			root = (Node)BinaryImporter.getInstance().load( new File("testgraph.xml"));
+
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}	
+        
         
         // default back face culling
         CullState culling = new CullState();
@@ -137,6 +150,8 @@ public final class Rendering implements Scene {
 //        outline.add(root);
 //        outline.setEnabled(true);
 //        passes.add(outline);
+        
+
 	}
 	
 	/**

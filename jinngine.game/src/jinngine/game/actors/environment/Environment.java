@@ -14,9 +14,22 @@ import jinngine.physics.PhysicsScene;
 /**
  * Floors, background etc
  */
-public class Environment implements Actor {
+public class Environment extends Node implements Actor {	
 
 	private Box floorbox;
+
+	@Override
+	public void create(Game game) {
+		Node rootnode = game.getRendering().getRootNode();
+
+		// make the floor box 
+		floorbox = new Box("Box", new Vector3(0,-25-5,0), 120, 5, 120);
+		floorbox.setSolidColor(new ColorRGBA(0.7f,0.7f,0.7f,1));
+		floorbox.setModelBound(new BoundingBox());
+		floorbox.setName("myfloorboxnode");
+		this.attachChild(floorbox); //dont draw floor
+		rootnode.attachChild(this);		
+	}
 	
 	@Override
 	public void act( Game game ) {
@@ -25,13 +38,8 @@ public class Environment implements Actor {
 	@Override
 	public void start( Game game) {
 		PhysicsScene physics = game.getPhysics();
-		Node rootnode = game.getRendering().getRootNode();
+		floorbox = (Box)getChild("myfloorboxnode");
 		
-		// make the floor box 
-		floorbox = new Box("Box", new Vector3(0,-25-5,0), 120, 5, 120);
-		floorbox.setSolidColor(new ColorRGBA(0.7f,0.7f,0.7f,1));
-		floorbox.setModelBound(new BoundingBox());
-		rootnode.attachChild(floorbox); //dont draw floor
 		//shadowing
 		game.getRendering().getPssmPass().add(floorbox);
 
@@ -39,8 +47,7 @@ public class Environment implements Actor {
 		Body floor = new Body(new jinngine.geometry.Box(120,10,120));
 		floor.setPosition(new jinngine.math.Vector3(0,-25 -5,0));
 		floor.setFixed(true);
-		physics.addBody(floor);
-		
+		physics.addBody(floor);		
 	}
 
 	@Override

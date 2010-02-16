@@ -6,6 +6,12 @@ import jinngine.game.Game;
 public interface Actor {	
 	
 	/**
+	 * Create an actor from scratch. This means loading textures and creating nodes etc 
+	 * @param game
+	 */
+	public void create( Game game );	
+	
+	/**
 	 * Do stuff when the actor comes into play
 	 */
 	public void start( Game game );

@@ -66,6 +66,12 @@ public class HUDActor implements Actor {
         });
 
 	}
+	
+	@Override
+	public void create(Game game) {
+		// TODO Auto-generated method stub
+		
+	}
 
 	@Override
 	public void act(Game game) {			
