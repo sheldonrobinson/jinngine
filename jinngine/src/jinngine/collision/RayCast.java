@@ -1,3 +1,11 @@
+/**
+ * Copyright (c) 2008-2010  Morten Silcowitz.
+ *
+ * This file is part of the Jinngine physics library
+ *
+ * Jinngine is published under the GPL license, available 
+ * at http://www.gnu.org/copyleft/gpl.html. 
+ */
 package jinngine.collision;
 
 import java.util.List;
@@ -49,9 +57,9 @@ public class RayCast {
 			public final void supportFeature(Vector3 d, double epsilon, List<Vector3> returnList) {}
 		};
 
+		// vectors from the GJK internal state (pretty ugly but it works) 
 		final Vector3 v = gjkstate.v;
 		final Vector3 w = gjkstate.w;
-//		System.out.println("ray: " +gjk.getState().iterations);
 		
 		while (true) {
 			iterations++;
@@ -61,13 +69,15 @@ public class RayCast {
 			//termination
 			if (v.norm() < envelope  || iterations > 31 )
 				break;
-			
+			// ray miss?
 			if ( v.normalize().dot(direction) >= 0) {
 				return Double.POSITIVE_INFINITY;
 			} else {
+				// move forward as much as possible 
+				// TODO in theory we could hit the boundary and go degenerate. Maybe we could
+				// limit the advance so it can never go through the envelope?
 				lambda = lambda - v.dot(w) / v.dot(direction);
 				x.assign(point.add(direction.multiply(lambda)));
-//				System.out.println("lambda="+lambda+" update="+(-v.dot(w) / v.dot(direction)));
 			}			
 		}
 		//System.out.println("RayCast: Hitpoint lambda=" + lambda);

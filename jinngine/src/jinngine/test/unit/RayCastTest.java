@@ -1,6 +1,16 @@
+/**
+ * Copyright (c) 2008-2010  Morten Silcowitz.
+ *
+ * This file is part of the Jinngine physics library
+ *
+ * Jinngine is published under the GPL license, available 
+ * at http://www.gnu.org/copyleft/gpl.html. 
+ */
+
 package jinngine.test.unit;
 
 import jinngine.collision.RayCast;
+import jinngine.geometry.Box;
 import jinngine.geometry.Sphere;
 import jinngine.math.Vector3;
 import jinngine.physics.Body;
@@ -85,7 +95,7 @@ public class RayCastTest extends TestCase {
 	public void testRay3() {
 		RayCast raycast = new RayCast();
 		
-		// setup cube geometry
+		// setup sphere geometry
 		Sphere s1 = new Sphere(1);
 		Body b1 = new Body(s1);
 
@@ -112,6 +122,63 @@ public class RayCastTest extends TestCase {
 		assertTrue( lambda == Double.POSITIVE_INFINITY);
 		
 	}
+	
+	
+	/**
+	 * A ray against box test
+	 */
+	public void testRay4() {
+		RayCast raycast = new RayCast();
+		
+		// setup cube geometry
+		Box box = new Box(1,1,1);
+		Body b1 = new Body(box);
+
+		// select a point (5,1,0) and the raydirection (-1,0,0)
+		Vector3 point = new Vector3(0, 5, 0);
+		Vector3 direction = new Vector3(0,-1,0);
+		
+		// do the raycast
+		double lambda = raycast.run(box, point, direction, envelope, epsilon );
+		
+		// calculate the  point 
+		Vector3 p = point.add(direction.multiply(lambda));
+		
+		// expected point
+		Vector3 e = new Vector3(0,0.5,0);
+		
+		// the hitpoint must be within the envelope
+		assertTrue( p.minus(e).norm() < envelope+epsilon);		
+	}
+
+	/**
+	 * A ray against box corner test
+	 */
+	public void testRay5() {
+		RayCast raycast = new RayCast();
+		
+		// setup cube geometry
+		Box box = new Box(1,1,1);
+		Body b1 = new Body(box);
+
+		// select a point (5,1,0) and the raydirection (-1,0,0)
+		Vector3 point = new Vector3(2, 5, 9);
+		Vector3 direction = new Vector3(0.5,0.5,0.5).minus(point);
+		
+		// do the raycast
+		double lambda = raycast.run(box, point, direction, envelope, epsilon );
+		
+		// calculate the  point 
+		Vector3 p = point.add(direction.multiply(lambda));
+		
+		// expected point
+		Vector3 e = new Vector3(0.5,0.5,0.5);
+		
+		// the hitpoint must be within the envelope
+		assertTrue( p.minus(e).norm() < envelope+epsilon);		
+	}
+
+	
 
 
 }

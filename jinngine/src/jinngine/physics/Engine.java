@@ -1,3 +1,11 @@
+/**
+ * Copyright (c) 2008-2010  Morten Silcowitz.
+ *
+ * This file is part of the Jinngine physics library
+ *
+ * Jinngine is published under the GPL license, available 
+ * at http://www.gnu.org/copyleft/gpl.html. 
+ */
 package jinngine.physics;
 import java.util.*;
 
@@ -203,7 +211,7 @@ public final class Engine implements PhysicsModel, PhysicsScene {
 	private Solver solver = new NonsmoothNonlinearConjugateGradient(35, false);
 //	private Solver solver = new SubspaceMinimization(false,null);
 	//time-step size
-	private double dt = 0.05; 
+	private double dt = 0.01; 
 
 	public Engine() {		
 		// create some initial ContactGeneratorClassifiers

@@ -1,3 +1,11 @@
+/**
+ * Copyright (c) 2008-2010  Morten Silcowitz.
+ *
+ * This file is part of the Jinngine physics library
+ *
+ * Jinngine is published under the GPL license, available 
+ * at http://www.gnu.org/copyleft/gpl.html. 
+ */
 package jinngine.geometry.contact;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -87,7 +95,7 @@ public class FeatureSupportMapContactGenerator implements ContactGenerator {
 		//Sa.supportPoint(Vector3.j).print();
 		
 		//penetration
-		if (closest.getState().simplexSize > 3  ) {
+		if (closest.getState().simplexSize > 3  || d<1e-6) {
 //			System.out.println("penetrating");
 			//run EPA
 			ExpandingPolytope epa = new ExpandingPolytope();
