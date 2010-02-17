@@ -140,8 +140,14 @@ public final class  Vector3 {
     return new Vector3( x/l, y/l, z/l);
   }
   
-
-  public Vector3 assign( Vector3 v ) {
+  public final Vector3 assign( double t1, double t2, double t3 ) {
+	  x = t1;
+	  y = t2;
+	  z = t3;
+	  return this;
+  }
+  
+  public final Vector3 assign( Vector3 v ) {
     double t1 =v.x;
     double t2 =v.y;
     double t3 =v.z;
@@ -151,7 +157,7 @@ public final class  Vector3 {
     return this;
   }
   
-  public Vector3 assignZero() {
+  public final Vector3 assignZero() {
 	    x = 0;
 	    y = 0;
 	    z = 0;
@@ -159,24 +165,24 @@ public final class  Vector3 {
 	  }
 
   
-  public boolean equals( Vector3 v ) {
+  public final boolean equals( Vector3 v ) {
     return (x==v.x && y==v.y && z==v.z );
   }
 
-  public double norm() {
+  public final double norm() {
     return (double)Math.sqrt( x*x + y*y + z*z );
   }
 
-  public double infnorm() {
+  public final double infnorm() {
 	    return Math.abs( x>y?x>z?x:z:y>z?y:z); 
   }
 
   
-  public double squaredNorm() {
+  public final double squaredNorm() {
     return x*x+y*y+z*z;
   }
 
-  public double[][] crossProductMatrix() {
+  public final double[][] crossProductMatrix() {
     double [][] m = new double[3][3];
     
     m[0][0] =   0;  m[0][1]= -z;  m[0][2]=  y;
@@ -186,7 +192,7 @@ public final class  Vector3 {
     return m;
   }
 
-  public Matrix3 crossProductMatrix(Matrix3 A) {
+  public final Matrix3 crossProductMatrix(Matrix3 A) {
     Matrix3.set( A,  0,-z,  y,
                     z,  0, -x,
                    -y, x,   0 );
@@ -194,7 +200,7 @@ public final class  Vector3 {
     return A;
   }
   
-  public Matrix3 crossProductMatrix3() {
+  public final Matrix3 crossProductMatrix3() {
 	  Matrix3 A = new Matrix3();
 	  
 	    Matrix3.set( A,  0,-z,  y,
@@ -204,7 +210,7 @@ public final class  Vector3 {
 	    return A;
 	  }
 
-  public double[][] transposeMatrix() {
+  public final double[][] transposeMatrix() {
     double [][] m = new double[3][1];
     
     m[0][0] = x;
@@ -214,7 +220,7 @@ public final class  Vector3 {
     return m;
   }
   
-  public double[][] Matrix() {
+  public final double[][] Matrix() {
     double [][] m = new double[1][3];
     
     m[0][0] = x;  m[0][1]= y;  m[0][2]= z;
@@ -222,16 +228,16 @@ public final class  Vector3 {
     return m;
   }
   
-  public boolean lessThan(Vector3 v) {
+  public final boolean lessThan(Vector3 v) {
     return (x<v.x)&&(y<v.y)&&(z<v.z);
   }
 
-  public boolean weaklyLessThan(Vector3 v) {
+  public final boolean weaklyLessThan(Vector3 v) {
 	    return (x<=v.x)&&(y<=v.y)&&(z<=v.z);
 	  }
 
   
-  public boolean isZero() {
+  public final boolean isZero() {
 	  return x==0&&y==0&&z==0;
   }
   
@@ -239,23 +245,30 @@ public final class  Vector3 {
 	  return x>=0&&y>=0&&z>=0;
   }
   
-  public Vector3 abs() {
+  public final Vector3 abs() {
     return new Vector3( (double)Math.abs(x), (double)Math.abs(y), (double)Math.abs(z) );
   }
   
-  public void print() {
+  public final void print() {
     System.out.println( "[" + x + "," +y+ "," +z + "]" );
   }
   
- public Vector3 cutOff() {
-	 double b1=Math.abs(x)<1e-6?0:x;
-	 double b2=Math.abs(y)<1e-6?0:y;
-	 double b3=Math.abs(z)<1e-6?0:z;
+ public final Vector3 cutOff(double epsilon) {
+	 double b1=Math.abs(x)<epsilon?0:x;
+	 double b2=Math.abs(y)<epsilon?0:y;
+	 double b3=Math.abs(z)<epsilon?0:z;
 	 return new Vector3(b1,b2,b3);
  }
  
- public double[] pack() {
+ public final double[] pack() {
 	 return new double[]{x,y,z};
  }
+
+ @Override
+ public final String toString() {
+	 return  "[" + x + "," +y+ "," +z + "]"+ super.toString();
+ }
+ 
+ 
  
 }

@@ -44,7 +44,7 @@ public class BulletPersistentManifold implements ContactGenerator {
 		Vector3 pa = new Vector3(); 
 		Vector3 pb = new Vector3();
 		
-		gjk.run(s1,s2,pa,pb,1e-10);
+		gjk.run(s1,s2,pa,pb,1e-10, 1e-6, 31);
 
 		if (pa.minus(pb).norm()>envelope) {
 			points.clear();

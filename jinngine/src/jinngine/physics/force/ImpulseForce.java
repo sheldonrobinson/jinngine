@@ -28,7 +28,7 @@ public final class ImpulseForce implements Force {
 	
 	@Override
 	public final void apply(double dt) {
-		body.applyForce(point, direction.multiply(magnitude*dt), dt);
+		body.applyForce(point, direction.multiply(magnitude/dt), dt);
 		this.magnitude = 0.0;
 	}
 

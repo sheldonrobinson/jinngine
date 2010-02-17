@@ -53,6 +53,8 @@ public final class State  {
 	public final Matrix3             rotation        = Matrix3.identity();
 	/** Inverse rotation matrix */	
 	public final Matrix3             inverserotation = Matrix3.identity();
+	/** The centre of mass displacement found by finalize() **/
+	public final Vector3             centreofmass    = new Vector3();
 
 	/**
 	 * Assign this state the fields in the State t

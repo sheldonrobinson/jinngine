@@ -9,6 +9,11 @@ import jinngine.physics.Body;
 import junit.framework.TestCase;
 
 public class GJK3Test extends TestCase {
+	
+	//error tolerance
+	double epsilon = 1e-10;
+
+	
 	/*
 	 * Two spheres of radius 1 having a distance of 1.
 	 * Sphere 1 is at (0,3,0), Sphere 2 is at (0,0,0)
@@ -27,16 +32,14 @@ public class GJK3Test extends TestCase {
 		//closest point vectors
 		Vector3 p1 = new Vector3();
 		Vector3 p2 = new Vector3();
-		
-		//error tolerance
-		double epsilon = 1e-14;
-		
-		gjk.run(s1,s2,p1,p2,Double.POSITIVE_INFINITY);
+				
+		gjk.run(s1,s2,p1,p2,Double.POSITIVE_INFINITY, epsilon, 31);
 		
 		double d = p1.minus(p2).norm();
 		
 		System.out.println( "d="+d);
 		
+		// expect distance to be one
 		assertTrue( Math.abs(d-1) < epsilon );
 	}
 
@@ -50,11 +53,8 @@ public class GJK3Test extends TestCase {
 		GJK gjk = new GJK();
 
 		//small number
-		double a = 1e-6;
-		
-		//error tolerance
-		double epsilon = 1e-14;
-		
+		double a = 1e-3;
+				
 		//set up geometries
 		Sphere s1 = new Sphere(1);
 		Body b1 = new Body(s1);
@@ -67,12 +67,79 @@ public class GJK3Test extends TestCase {
 		Vector3 p1 = new Vector3();
 		Vector3 p2 = new Vector3();
 				
-		gjk.run(s1,s2,p1,p2,Double.POSITIVE_INFINITY);
+		gjk.run(s1,s2,p1,p2,Double.POSITIVE_INFINITY, epsilon, 31);
 		
 		double d = p1.minus(p2).norm();
 		System.out.println("d="+d);
 		
+		// distance should be 2a within precision
 		assertTrue( (Math.abs(d-2*a) < epsilon) );
 	}
+	
+	/**
+	 * Two spheres excactly overlapping each other
+	 */
+	public void testOverlapSphere1() {
+		GJK gjk = new GJK();
+		
+		//set up two spheres, occupying the exact same space
+		Sphere s1 = new Sphere(1);
+		Body b1 = new Body(s1);
+		b1.setPosition(new Vector3(0,0,0));
+		Sphere s2 = new Sphere(1);
+		Body b2 = new Body(s2);
+		b2.setPosition(new Vector3(0,0,0));
+		
+		//closest point vectors
+		Vector3 p1 = new Vector3();
+		Vector3 p2 = new Vector3();
+				
+		gjk.run(s1,s2,p1,p2,Double.POSITIVE_INFINITY, epsilon, 31);
+		
+		// we expect closest points to be the same
+		assertTrue( p1.minus(p2).norm() < epsilon );
+	}
+	
+	/*
+	 * Two spheres initially overlapping. One of the spheres is gradually moved
+	 * out of the other sphere. At all times, we expect the calculated distance to 
+	 * be within epsilon precision.
+	 */
+	public void testOverlapSphere2() {
+		
+		//set up two spheres, occupying the exact same space
+		Sphere s1 = new Sphere(1);
+		Body b1 = new Body(s1);
+		b1.setPosition(new Vector3(0,0,0));
+		Sphere s2 = new Sphere(1);
+		Body b2 = new Body(s2);
+		b2.setPosition(new Vector3(0,0,0));
+		
+		int N = 1024*2;
+		Vector3 displacement = new Vector3(-4,1,-2);
+		for (int i=0; i<N; i++) {
+			// displace geometry and find the expected distance
+			b1.setPosition(displacement.multiply((double)i/N));
+			double length = displacement.multiply((double)i/N).norm();
+			double expected = length>2?length-2:0;
+
+			//closest point vectors
+			Vector3 p1 = new Vector3();
+			Vector3 p2 = new Vector3();
+
+			// create a new gjk every time, to avoid the frame coherence 
+			// heuristic inside GJK
+			GJK gjk = new GJK();
+			
+			// when the distance between objects becomes close to zero, 
+			// the gjk algorithm gegenerates and produces less acurate results.
+			// therefore we use more iterations here
+			gjk.run(s1,s2,p1,p2,Double.POSITIVE_INFINITY, epsilon, 2256);
+			
+			// we want the expected distance 
+			assertTrue( Math.abs( p1.minus(p2).norm() - expected ) < epsilon );
+		}
+	}
+
 
 }

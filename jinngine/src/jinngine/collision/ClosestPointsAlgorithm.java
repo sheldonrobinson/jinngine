@@ -20,8 +20,10 @@ public interface ClosestPointsAlgorithm<T,U> {
 	 * @param pb The returning point on B
 	 * @param envelope A hinting value, saying that the algorithm should not bother computing points that
 	 * are further from each other than the envelope value
+	 * @param epsilon TODO
+	 * @param maxiter TODO
 	 */
-  public void run( T geoa, U geob, Vector3 pa, Vector3 pb, double envelope );
+  public void run( T geoa, U geob, Vector3 pa, Vector3 pb, double envelope, double epsilon, int maxiter );
   
 }
 

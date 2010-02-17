@@ -22,7 +22,7 @@ import jinngine.geometry.*;
  */
 public class FeatureSupportMapContactGenerator implements ContactGenerator {
 	//final double envelopeMin = 2.75;
-    private static double envelope = 0.125*1.0;
+    private static double envelope = 0.125*0.5;
 	private static double shell = envelope*0.75;
 	private final SupportMap3 Sa;
 	private final SupportMap3 Sb;
@@ -79,7 +79,7 @@ public class FeatureSupportMapContactGenerator implements ContactGenerator {
 		//shell = envelope*0.25;
 		//run the closest points algorithm
 		Vector3 a = new Vector3(); Vector3 b = new Vector3();
-		closest.run(Sa, Sb, a, b, envelope); 
+		closest.run(Sa, Sb, a, b, envelope, 1e-6, 31); 
 		Vector3 v = a.minus(b);
 		principalNormal.assign(v.normalize());
 		double  d = v.norm();

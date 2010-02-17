@@ -55,10 +55,19 @@ public final class HingeJoint implements Constraint {
 		pj = b2.toModel(p);
 		nj = b2.toModelNoTranslation(n);
 		
+		System.out.println("hingejoint constructor");
+		
+		pi.print();
+		ni.print();
+		pj.print();
+		nj.print();
+		
 		//Use a Gram-Schmidt process to create a orthonormal basis for the impact space
 		Vector3 v1 = n.normalize(); Vector3 v2 = Vector3.i; Vector3 v3 = Vector3.k;    
 		Vector3 t1 = v1.normalize(); 
 		t2i = v2.minus( t1.multiply(t1.dot(v2)) );
+		
+		t2i.print();
 		
 		//in case v1 and v2 are parallel
 		if ( t2i.abs().lessThan( Vector3.epsilon ) ) {
@@ -71,6 +80,8 @@ public final class HingeJoint implements Constraint {
 		//tangent 2 in j body space
 		t2j = b2.toModelNoTranslation(b1.toWorldNoTranslation(t2i));
 		
+		t2j.print();
+		
 		//v1 parallel with v3
 		if( v1.cross(v3).abs().lessThan( Vector3.epsilon ) ) {
 			v3 = Vector3.j;
@@ -78,6 +89,8 @@ public final class HingeJoint implements Constraint {
 		//finally calculate t3
 		t3i = v3.minus( t1.multiply(t1.dot(v3)).minus( t2i.multiply(t2i.dot(v3)) )).normalize();
 		
+		
+		t3i.print();
 		
 		// create the controller
 		this.controler = new JointAxisController() {
@@ -183,9 +196,11 @@ public final class HingeJoint implements Constraint {
 		Matrix3 Bj = b2.isFixed()? new Matrix3() : MjInv.multiply(Jj.transpose());
 		Matrix3 Bangj = b2.isFixed()? new Matrix3() : b2.state.inverseinertia.multiply(Jangj.transpose());
 
-		double Kcor = 0.99;
+		double Kcor = 1.0;
 		
-		Vector3 u = b1.state.velocity.minus( ri.cross(b1.state.omega)).minus(b2.state.velocity).add(rj.cross(b2.state.omega));
+//		Vector3 u = b1.state.velocity.minus( ri.cross(b1.state.omega)).minus(b2.state.velocity).add(rj.cross(b2.state.omega));
+		Vector3 u = b1.state.velocity.add( b1.state.omega.cross(ri)).minus(b2.state.velocity.add(b2.state.omega.cross(rj)));
+
 		Vector3 posError = b1.state.position.add(ri).minus(b2.state.position).minus(rj).multiply(1/dt);
 		//error in transformed normal
 		Vector3 nerror = tn1.cross(tn2);

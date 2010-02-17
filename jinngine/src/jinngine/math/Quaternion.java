@@ -49,6 +49,16 @@ public final class Quaternion {
 	  this.s = q1.s;
 	  this.v.assign(q1.v);
   }
+  
+  
+  public final void assign(Matrix3 m) {
+	  //TODO needs testing
+		this.s = Math.sqrt(1.0 + m.a11 + m.a22 + m.a33) / 2.0;
+		double w4 = (4.0 * this.s);
+		this.v.x = (m.a32 - m.a23) / w4 ;
+		this.v.y = (m.a13 - m.a31) / w4 ;
+		this.v.z = (m.a21 - m.a12) / w4 ;
+	}
 
   
   //returns a new instance representing the rotated Vector v

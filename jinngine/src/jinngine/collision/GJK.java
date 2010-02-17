@@ -18,16 +18,18 @@ public class GJK implements ClosestPointsAlgorithm<SupportMap3,SupportMap3> {
 	 */
 	public final class State {
 		public final Vector3 v = new Vector3(1,1,1);
+		public final Vector3 w = new Vector3();
 		public final Vector3 p = new Vector3();
 		public final Vector3 q = new Vector3();
 		public final  Vector3[][] simplices = new Vector3[4][4]; //contains 3 simplices for A-B, Sa, Sb
 		public final double[] lambda = new double[] {1,0,0,0};
 		public final int[] permutation = new int[] {0,1,2,3};
 		public int simplexSize;	
+		public int iterations = 0;
 		//public boolean initialized = false;
 	}
 
-	private State state = new State();
+	private final State state = new State();
 	
 	/**
 	 * Get the internal state of the GJK algorithm
@@ -36,20 +38,16 @@ public class GJK implements ClosestPointsAlgorithm<SupportMap3,SupportMap3> {
 	public State getState() {
 		return state;
 	}
-	
-	public void run( SupportMap3 Sa, SupportMap3 Sb, Vector3 va, Vector3 vb, double envelope ) {		    	
-    	//Working variables
-		final double epsilon = 1e-6;
-		int iterations = 0;
 		
-//		if (!state.initialized) {
-//			state.v.assign( Sa.supportPoint(Vector3.j.multiply(-1)).minus( Sb.supportPoint(Vector3.j)) );
-//			//state.v.assign( Sa.supportPoint(state.v.multiply(-1)).minus( Sb.supportPoint(state.v)) );
-//			state.initialized = true;
-//		}
-		
+	public void run( SupportMap3 Sa, SupportMap3 Sb, Vector3 va, Vector3 vb, double envelope, double epsilon, int maxiter ) {		
+		// if v has become too small, reset it TODO check this
+		if (state.v.norm()<envelope) {
+			state.v.assign(1,1,1);
+		}
+
+		state.iterations = 0;
     	Vector3 v = state.v;
-		Vector3 w = new Vector3();
+		Vector3 w = state.w;
 		Vector3 sa = new Vector3();
 		Vector3 sb = new Vector3();
     	
@@ -62,6 +60,8 @@ public class GJK implements ClosestPointsAlgorithm<SupportMap3,SupportMap3> {
 			//return support points as approximations of closest points
 			va.assign(sa);
 			vb.assign(sb);
+			//v.assign(sa.minus(sb));
+//			System.out.println("GJK: early termination, vlaue "+v.normalize().dot(w));
 			return;
 		} 
 		
@@ -71,7 +71,7 @@ public class GJK implements ClosestPointsAlgorithm<SupportMap3,SupportMap3> {
     	
     	//main loop
 		while ( true  ) {
-			iterations++;
+			state.iterations++;
 		
 //		    System.out.println("gjk iteration" + " " + v.norm()+ "  : " + state.simplexSize);
 //			v.print();
@@ -86,7 +86,7 @@ public class GJK implements ClosestPointsAlgorithm<SupportMap3,SupportMap3> {
 
 			//Termination condition
 			// ||v||2 -v.w is an upper bound for ||vk-v(A-B)||2 which converges towards zero as k goes large
-			if (  Math.abs(v.dot(v)-v.dot(w)) < epsilon*epsilon  || iterations>31 || state.simplexSize > 3 ) 
+			if (  Math.abs(v.dot(v)-v.dot(w)) < epsilon*epsilon  || state.iterations>maxiter || state.simplexSize > 3 ) 
 				break;
 			
 			//separating axis test (distance is at least more than the envelope)
@@ -110,21 +110,22 @@ public class GJK implements ClosestPointsAlgorithm<SupportMap3,SupportMap3> {
 			}
 									
 			//Calculate the vector v using lambda values
-			v.assign(Vector3.zero);
+			v.assignZero();
 			for (int i=0; i<state.simplexSize;i++) {
 				Vector3.add(v, state.simplices[state.permutation[i]][0].multiply( state.lambda[state.permutation[i]]));
 			}
 
 			//Check for a penetrating state
-			if ( v.cutOff().equals(Vector3.zero) || state.simplexSize > 3 ) {
+			if ( v.cutOff(epsilon).equals(Vector3.zero) || state.simplexSize > 3 ) {
 //				System.out.println("penetration");
 				break;				
 			}
 		} //while true
 		
-		//Computing p and q, closest points of A and B
-		state.p.assign(Vector3.zero); state.q.assign(Vector3.zero);
+		//Computing v, p, and q, closest points of A and B
+		state.v.assignZero(); state.p.assignZero(); state.q.assignZero(); 
 		for (int i=0; i<state.simplexSize;i++) {
+			Vector3.add(state.v, state.simplices[state.permutation[i]][0].multiply(state.lambda[state.permutation[i]]));			
 			Vector3.add(state.p, state.simplices[state.permutation[i]][1].multiply(state.lambda[state.permutation[i]]));
 			Vector3.add(state.q, state.simplices[state.permutation[i]][2].multiply(state.lambda[state.permutation[i]]));				
 		}
@@ -133,6 +134,7 @@ public class GJK implements ClosestPointsAlgorithm<SupportMap3,SupportMap3> {
 		va.assign(state.p);
 		vb.assign(state.q);
 	}
+	
 	
 	/**
 	 *  updateSimplex() uses the cached information in GJK3.State to update the current simplex. More specifically,
@@ -150,8 +152,8 @@ public class GJK implements ClosestPointsAlgorithm<SupportMap3,SupportMap3> {
 			Vector3[] row = state.simplices[state.permutation[i]];
 
 			//store points of convex objects a and b, and A-B (in A space)
-			/*if (!a.isFixed())*/ row[1] = Sa.supportPoint(state.simplices[i][3].multiply(-1));
-			/*if (!b.isFixed())*/ row[2] = Sb.supportPoint(state.simplices[i][3].multiply(1));	    							
+			row[1] = Sa.supportPoint(state.simplices[i][3].multiply(-1));
+			row[2] = Sb.supportPoint(state.simplices[i][3].multiply(1));	    							
 			row[0] = row[1].minus(row[2]);
 			//row[4] = v.copy(); not needed
 			//state.simplexSize = ++state.permutation[4];
@@ -159,8 +161,7 @@ public class GJK implements ClosestPointsAlgorithm<SupportMap3,SupportMap3> {
 
 		//recompute the simplex and lambda values
 		reduceSimplex( state );
-
-		
+	
 		//Calculate the vector v
 		state.v.assign(Vector3.zero);
 		for (int i=0; i<state.simplexSize;i++) 
@@ -212,9 +213,9 @@ public class GJK implements ClosestPointsAlgorithm<SupportMap3,SupportMap3> {
 		// permutation is              | ...      |
 		//  {size,p1,p2,p3,p4}         | y4 a4 b4 |
 		//		
-		Vector3[][] matrix = state.simplices;
-		double[] lambda = state.lambda;
-		int[] perm = state.permutation;
+		final Vector3[][] matrix = state.simplices;
+		final double[] lambda = state.lambda;
+		final int[] perm = state.permutation;
 		final double epsilon = 1e-15;
 		
 		//trivial case
@@ -227,20 +228,20 @@ public class GJK implements ClosestPointsAlgorithm<SupportMap3,SupportMap3> {
 		if (state.simplexSize == 2) {
 			// 1 12
 			// 2
-			Vector3[] row0 = matrix[perm[0]];
-			Vector3[] row1 = matrix[perm[1]];
-			Vector3 y1 = row0[0]; 
-			Vector3 y2 = row1[0]; 
+			final Vector3[] row0 = matrix[perm[0]];
+			final Vector3[] row1 = matrix[perm[1]];
+			final Vector3 y1 = row0[0]; 
+			final Vector3 y2 = row1[0]; 
 
-			double d12_1 = y2.minus(y1).dot(y2); 
-			double d12_2 = y1.minus(y2).dot(y1);
+			final double d12_1 = y2.minus(y1).dot(y2); 
+			final double d12_2 = y1.minus(y2).dot(y1);
 			
 			//y1 (no permutation needed)
 			if ( d12_2 <= 0 ) {                  lambda[perm[0]] = 1;  state.simplexSize = 1; return false;}
 			//y2 ( (2,1)
 			if ( d12_1 <= 0 ) { swap(1,0, perm); lambda[perm[0]] = 1;  state.simplexSize = 1; return true; }
 
-			double d12 = d12_1 + d12_2;
+			final double d12 = d12_1 + d12_2;
 			//terminate on affinely dependent points in the set (if d12 is zero, we can never use point y2)
 			if ( Math.abs(d12) <= epsilon ) {
 				System.out.println("Affinely dependent set in case d12");
@@ -263,34 +264,34 @@ public class GJK implements ClosestPointsAlgorithm<SupportMap3,SupportMap3> {
 			// 2 13
 			// 3 23
 			
-			Vector3[] row0 = matrix[perm[0]];
-			Vector3[] row1 = matrix[perm[1]];
-			Vector3[] row2 = matrix[perm[2]];			
-			Vector3 y1 = row0[0]; 
-			Vector3 y2 = row1[0];
-			Vector3 y3 = row2[0];
+			final Vector3[] row0 = matrix[perm[0]];
+			final Vector3[] row1 = matrix[perm[1]];
+			final Vector3[] row2 = matrix[perm[2]];			
+			final Vector3 y1 = row0[0]; 
+			final Vector3 y2 = row1[0];
+			final Vector3 y3 = row2[0];
 			
 			//y1, (no permutation)
-			double d13_3 = y1.minus(y3).dot(y1);// d13_3 = Math.abs(d13_3)<epsilon?0:d13_3;
-			double d12_2 = y1.minus(y2).dot(y1);// d12_2 = Math.abs(d12_2)<epsilon?0:d12_2;
+			final double d13_3 = y1.minus(y3).dot(y1);// d13_3 = Math.abs(d13_3)<epsilon?0:d13_3;
+			final double d12_2 = y1.minus(y2).dot(y1);// d12_2 = Math.abs(d12_2)<epsilon?0:d12_2;
 			if ( d12_2 <= 0 && d13_3 <=0 ) /*{Vector3.set(v,y1); return new Vector3[] {y1};}*/ 
 			{                 lambda[perm[0]]=1; state.simplexSize=1; return true; }
 
 			//y2 (2,1)
-			double d12_1 = y2.minus(y1).dot(y2); //d12_1 = Math.abs(d12_1)<epsilon?0:d12_1;
-			double d23_3 = y2.minus(y3).dot(y2); //d23_3 = Math.abs(d23_3)<epsilon?0:d23_3;
+			final double d12_1 = y2.minus(y1).dot(y2); //d12_1 = Math.abs(d12_1)<epsilon?0:d12_1;
+			final double d23_3 = y2.minus(y3).dot(y2); //d23_3 = Math.abs(d23_3)<epsilon?0:d23_3;
 			if ( d12_1 <= 0 && d23_3 <=0 ) //{Vector3.set(v,y2); return new Vector3[] {y2}; }
 			{ swap(1,0,perm); lambda[perm[0]]=1; state.simplexSize=1; return true; }
 				
 			//y3 (3,1)
-			double d13_1 = y3.minus(y1).dot(y3); //d13_1 = Math.abs(d13_1)<epsilon?0:d13_1;
-			double d23_2 = y3.minus(y2).dot(y3); //d23_2 = Math.abs(d23_2)<epsilon?0:d23_2;
+			final double d13_1 = y3.minus(y1).dot(y3); //d13_1 = Math.abs(d13_1)<epsilon?0:d13_1;
+			final double d23_2 = y3.minus(y2).dot(y3); //d23_2 = Math.abs(d23_2)<epsilon?0:d23_2;
 			if ( d23_2 <= 0 && d13_1 <=0 ) //{Vector3.set(v,y3); return new Vector3[] {y3}; }
 			{ swap(2,0,perm); lambda[perm[0]]=1; state.simplexSize=1; return true; }
 			
-			double d23 = d23_2 + d23_3;
-			double d13 = d13_1 + d13_3;
-			double d12 = d12_1 + d12_2;
+			final double d23 = d23_2 + d23_3;
+			final double d13 = d13_1 + d13_3;
+			final double d12 = d12_1 + d12_2;
 
 			//terminate on affinely dependent points in the set
 //			if ( Math.abs(d13)<=epsilon ||
@@ -307,22 +308,22 @@ public class GJK implements ClosestPointsAlgorithm<SupportMap3,SupportMap3> {
 			
 
 			//y2,y3 (2,1) (3,2)
-			double d123_1 = d23_2 * y2.minus(y1).dot(y2) + d23_3 * y2.minus(y1).dot(y3); //d123_1 = Math.abs(d123_1)<epsilon?0:d123_1;
+			final double d123_1 = d23_2 * y2.minus(y1).dot(y2) + d23_3 * y2.minus(y1).dot(y3); //d123_1 = Math.abs(d123_1)<epsilon?0:d123_1;
 			if (d123_1 <= 0 && d23_2 > 0 && d23_3 > 0) //{Vector3.set(v,y2.multiply(d23_2/d23).Add(y3.multiply(d23_3/d23))); return new Vector3[] {y2,y3};}
 			{ swap(1,0,perm); swap(2,1,perm); lambda[perm[0]]=d23_2/d23; lambda[perm[1]]=d23_3/d23; state.simplexSize=2; return true; }
 			
 			//y1,y3 (3,2)
-			double d123_2 = d13_1 * y1.minus(y2).dot(y1) + d13_3 * y1.minus(y2).dot(y3); //d123_2 = Math.abs(d123_2)<epsilon?0:d123_2;
+			final double d123_2 = d13_1 * y1.minus(y2).dot(y1) + d13_3 * y1.minus(y2).dot(y3); //d123_2 = Math.abs(d123_2)<epsilon?0:d123_2;
 			if (d123_2 <= 0 && d13_1 > 0 && d13_3 > 0) //{ Vector3.set(v,y1.multiply(d13_1/d13).Add(y3.multiply(d13_3/d13))); return new Vector3[] {y1,y3};}
 			{                 swap(2,1,perm); lambda[perm[0]]=d13_1/d13; lambda[perm[1]]=d13_3/d13; state.simplexSize=2; return true; }
 
 			//y1,y2 (no permutation)
-			double d123_3 = d12_1 * y1.minus(y3).dot(y1) + d12_2 * y1.minus(y3).dot(y2); //d123_3 = Math.abs(d123_3)<epsilon?0:d123_3;
+			final double d123_3 = d12_1 * y1.minus(y3).dot(y1) + d12_2 * y1.minus(y3).dot(y2); //d123_3 = Math.abs(d123_3)<epsilon?0:d123_3;
 			if (d123_3 <= 0 && d12_1 > 0 && d12_2 > 0) //{ /*Vector3.set(v,y1.multiply(d12_1/d12).Add(y2.multiply(d12_2/d12)));*/ return null;  /*return new Vector3[] {y1,y2};*/ }
 			{                                 lambda[perm[0]]=d12_1/d12; lambda[perm[1]]=d12_2/d12; state.simplexSize=2; return false; }
 
 			//y1, y2, y3 (no permutation)	
-			double d123 = d123_1 + d123_2 + d123_3;
+			final double d123 = d123_1 + d123_2 + d123_3;
 			//System.out.println("d123 = "+d123);
 
 			if ( d123_1 > 0 && d123_2 > 0 && d123_3 > 0)
@@ -344,49 +345,49 @@ public class GJK implements ClosestPointsAlgorithm<SupportMap3,SupportMap3> {
             //	 24
 			//   34
 			
-			Vector3[] row0 = matrix[perm[0]];
-			Vector3[] row1 = matrix[perm[1]];
-			Vector3[] row2 = matrix[perm[2]];			
-			Vector3[] row3 = matrix[perm[3]];			
-			Vector3 y1 = row0[0]; 
-			Vector3 y2 = row1[0];
-			Vector3 y3 = row2[0];
-			Vector3 y4 = row3[0];
+			final Vector3[] row0 = matrix[perm[0]];
+			final Vector3[] row1 = matrix[perm[1]];
+			final Vector3[] row2 = matrix[perm[2]];			
+			final Vector3[] row3 = matrix[perm[3]];			
+			final Vector3 y1 = row0[0]; 
+			final Vector3 y2 = row1[0];
+			final Vector3 y3 = row2[0];
+			final Vector3 y4 = row3[0];
 			
 			//y1 (no permutation)
-			double d13_3 = y1.minus(y3).dot(y1); //d13_3= Math.abs(d13_3)<epsilon?0:d13_3;
-			double d12_2 = y1.minus(y2).dot(y1); //d12_2= Math.abs(d12_2)<epsilon?0:d12_2;
-			double d14_4 = y1.minus(y4).dot(y1); //d14_4= Math.abs(d14_4)<epsilon?0:d14_4;
+			final double d13_3 = y1.minus(y3).dot(y1); //d13_3= Math.abs(d13_3)<epsilon?0:d13_3;
+			final double d12_2 = y1.minus(y2).dot(y1); //d12_2= Math.abs(d12_2)<epsilon?0:d12_2;
+			final double d14_4 = y1.minus(y4).dot(y1); //d14_4= Math.abs(d14_4)<epsilon?0:d14_4;
 			if ( d12_2 <= 0 && d13_3 <=0 && d14_4 <=0 ) //{Vector3.set(v, y1); return new Vector3[] {y1}; }
 			{                lambda[perm[0]] = 1; state.simplexSize=1; return true; }
 			
 			//y2 (2,1)
-			double d12_1 = y2.minus(y1).dot(y2); //d12_1= Math.abs(d12_1)<epsilon?0:d12_1;
-			double d23_3 = y2.minus(y3).dot(y2); //d23_3= Math.abs(d23_3)<epsilon?0:d23_3;
-			double d24_4 = y2.minus(y4).dot(y2); //d24_4= Math.abs(d24_4)<epsilon?0:d24_4;
+			final double d12_1 = y2.minus(y1).dot(y2); //d12_1= Math.abs(d12_1)<epsilon?0:d12_1;
+			final double d23_3 = y2.minus(y3).dot(y2); //d23_3= Math.abs(d23_3)<epsilon?0:d23_3;
+			final double d24_4 = y2.minus(y4).dot(y2); //d24_4= Math.abs(d24_4)<epsilon?0:d24_4;
 			if ( d12_1 <= 0 && d23_3 <=0 && d24_4 <= 0) //{Vector3.set(v, y2); return new Vector3[] {y2}; }
 			{ swap(1,0,perm); lambda[perm[0]] = 1; state.simplexSize=1; return true; }
 
 			//y3 (3,1)
-			double d13_1 = y3.minus(y1).dot(y3); //d13_1= Math.abs(d13_1)<epsilon?0:d13_1;
-			double d23_2 = y3.minus(y2).dot(y3); //d23_2= Math.abs(d23_2)<epsilon?0:d23_2;
-			double d34_4 = y3.minus(y4).dot(y3); //d34_4= Math.abs(d34_4)<epsilon?0:d34_4;
+			final double d13_1 = y3.minus(y1).dot(y3); //d13_1= Math.abs(d13_1)<epsilon?0:d13_1;
+			final double d23_2 = y3.minus(y2).dot(y3); //d23_2= Math.abs(d23_2)<epsilon?0:d23_2;
+			final double d34_4 = y3.minus(y4).dot(y3); //d34_4= Math.abs(d34_4)<epsilon?0:d34_4;
 			if ( d23_2 <= 0 && d13_1 <=0 && d34_4 <=0 ) //{Vector3.set(v, y3); return new Vector3[] {y3}; }
 			{ swap(2,0,perm); lambda[perm[0]] = 1; state.simplexSize=1; return true; }
 
 			//y4 (4,1)
-			double d14_1 = y4.minus(y1).dot(y4); //d14_1= Math.abs(d14_1)<epsilon?0:d14_1;
-			double d24_2 = y4.minus(y2).dot(y4); //d24_2= Math.abs(d24_2)<epsilon?0:d24_2;
-			double d34_3 = y4.minus(y3).dot(y4); //d34_3= Math.abs(d34_3)<epsilon?0:d34_3;
+			final double d14_1 = y4.minus(y1).dot(y4); //d14_1= Math.abs(d14_1)<epsilon?0:d14_1;
+			final double d24_2 = y4.minus(y2).dot(y4); //d24_2= Math.abs(d24_2)<epsilon?0:d24_2;
+			final double d34_3 = y4.minus(y3).dot(y4); //d34_3= Math.abs(d34_3)<epsilon?0:d34_3;
 			if ( d14_1 <= 0 && d24_2 <=0 && d34_3 <=0 ) //{Vector3.set(v, y4); return new Vector3[] {y4}; }
 			{ swap(3,0,perm); lambda[perm[0]] = 1; state.simplexSize=1; return true; }
 
-			double d12 = d12_1 + d12_2;
-			double d13 = d13_1 + d13_3;
-			double d14 = d14_1 + d14_4;
-			double d23 = d23_2 + d23_3;
-			double d24 = d24_2 + d24_4;
-			double d34 = d34_3 + d34_4;
+			final double d12 = d12_1 + d12_2;
+			final double d13 = d13_1 + d13_3;
+			final double d14 = d14_1 + d14_4;
+			final double d23 = d23_2 + d23_3;
+			final double d24 = d24_2 + d24_4;
+			final double d34 = d34_3 + d34_4;
 			
 			//terminate on affinely dependent points in the set
 //			if ( (d12)<=epsilon || (d13)<=epsilon || (d14)<=epsilon ||
@@ -397,8 +398,8 @@ public class GJK implements ClosestPointsAlgorithm<SupportMap3,SupportMap3> {
 //			}
 
 			//y1,y2 (no permutation)
-			double d123_3 = d12_1 * y1.minus(y3).dot(y1) + d12_2 * y1.minus(y3).dot(y2); //d123_3= Math.abs(d123_3)<epsilon?0:d123_3;
-			double d124_4 = d12_1 * y1.minus(y4).dot(y1) + d12_2 * y1.minus(y4).dot(y2); //d124_4= Math.abs(d124_4)<epsilon?0:d124_4;
+			final double d123_3 = d12_1 * y1.minus(y3).dot(y1) + d12_2 * y1.minus(y3).dot(y2); //d123_3= Math.abs(d123_3)<epsilon?0:d123_3;
+			final double d124_4 = d12_1 * y1.minus(y4).dot(y1) + d12_2 * y1.minus(y4).dot(y2); //d124_4= Math.abs(d124_4)<epsilon?0:d124_4;
 			//System.out.println("d123_3: " + d123_3 + " d124_4: " + d124_4);
 			if( d12_1 > 0 && d12_2 > 0 && d123_3 <=0 && d124_4 <=0) {
 //				Vector3.set(v, y1.multiply(d12_1/d12).Add(y2.multiply(d12_2/d12)));
@@ -409,8 +410,8 @@ public class GJK implements ClosestPointsAlgorithm<SupportMap3,SupportMap3> {
 			}
 
 			//y1, y3 (3,2)
-			double d123_2 = d13_1 * y1.minus(y2).dot(y1) + d13_3 * y1.minus(y2).dot(y3); //d123_2= Math.abs(d123_2)<epsilon?0:d123_2;
-			double d134_4 = d13_1 * y1.minus(y4).dot(y1) + d13_3 * y1.minus(y4).dot(y3); //d134_4= Math.abs(d134_4)<epsilon?0:d134_4;
+			final double d123_2 = d13_1 * y1.minus(y2).dot(y1) + d13_3 * y1.minus(y2).dot(y3); //d123_2= Math.abs(d123_2)<epsilon?0:d123_2;
+			final double d134_4 = d13_1 * y1.minus(y4).dot(y1) + d13_3 * y1.minus(y4).dot(y3); //d134_4= Math.abs(d134_4)<epsilon?0:d134_4;
 			//System.out.println("d123_2: " + d123_2 + " d134_4: " + d134_4);
 			if( d13_1 > 0 && d13_3 > 0 && d123_2 <=0 && d134_4 <=0) {				
 //				Vector3.set(v, y1.multiply(d13_1/d13).Add(y3.multiply(d13_3/d13)));
@@ -423,8 +424,8 @@ public class GJK implements ClosestPointsAlgorithm<SupportMap3,SupportMap3> {
 			}
 
 			//y1, y4 (4,2)
-			double d124_2 = d14_1 * y1.minus(y2).dot(y1) + d14_4 * y1.minus(y2).dot(y4); //d124_2= Math.abs(d124_2)<epsilon?0:d124_2;
-			double d134_3 = d14_1 * y1.minus(y3).dot(y1) + d14_4 * y1.minus(y3).dot(y4); //d134_3= Math.abs(d134_3)<epsilon?0:d134_3;
+			final double d124_2 = d14_1 * y1.minus(y2).dot(y1) + d14_4 * y1.minus(y2).dot(y4); //d124_2= Math.abs(d124_2)<epsilon?0:d124_2;
+			final double d134_3 = d14_1 * y1.minus(y3).dot(y1) + d14_4 * y1.minus(y3).dot(y4); //d134_3= Math.abs(d134_3)<epsilon?0:d134_3;
 			//System.out.println("d124_2: " + d124_2 + " d134_3: " + d134_3);
 			if( d14_1 > 0 && d14_4 > 0 && d124_2 <=0 && d134_3 <=0) {
 //				Vector3.set(v, y1.multiply(d14_1/d14).Add(y4.multiply(d14_4/d14)));
@@ -437,8 +438,8 @@ public class GJK implements ClosestPointsAlgorithm<SupportMap3,SupportMap3> {
 			}
 
 			//y2,y3 (2,1) (3,2)
-			double d123_1 = d23_2 * y2.minus(y1).dot(y2) + d23_3 * y2.minus(y1).dot(y3); //d123_1= Math.abs(d123_1)<epsilon?0:d123_1;
-			double d234_4 = d23_2 * y2.minus(y4).dot(y2) + d23_3 * y2.minus(y4).dot(y3); //d234_4= Math.abs(d234_4)<epsilon?0:d234_4;
+			final double d123_1 = d23_2 * y2.minus(y1).dot(y2) + d23_3 * y2.minus(y1).dot(y3); //d123_1= Math.abs(d123_1)<epsilon?0:d123_1;
+			final double d234_4 = d23_2 * y2.minus(y4).dot(y2) + d23_3 * y2.minus(y4).dot(y3); //d234_4= Math.abs(d234_4)<epsilon?0:d234_4;
 			//System.out.println("d123_1: " + d123_1 + " d234_4: " + d234_4);
 			if( d23_2 > 0 && d23_3 > 0 && d123_1 <=0 && d234_4 <=0) {
 //				Vector3.set(v, y2.multiply(d23_2/d23).Add(y3.multiply(d23_3/d23)));
@@ -451,8 +452,8 @@ public class GJK implements ClosestPointsAlgorithm<SupportMap3,SupportMap3> {
 			}
 
 			//y2,y4 (2,1) (4,2)
-			double d124_1 = d24_2 * y2.minus(y1).dot(y2) + d24_4 * y2.minus(y1).dot(y4); //d124_1= Math.abs(d124_1)<epsilon?0:d124_1;
-			double d234_3 = d24_2 * y2.minus(y3).dot(y2) + d24_4 * y2.minus(y3).dot(y4); //d234_3= Math.abs(d234_3)<epsilon?0:d234_3;
+			final double d124_1 = d24_2 * y2.minus(y1).dot(y2) + d24_4 * y2.minus(y1).dot(y4); //d124_1= Math.abs(d124_1)<epsilon?0:d124_1;
+			final double d234_3 = d24_2 * y2.minus(y3).dot(y2) + d24_4 * y2.minus(y3).dot(y4); //d234_3= Math.abs(d234_3)<epsilon?0:d234_3;
 			//System.out.println("d124_1: " + d124_1 + " d234_3: " + d234_3);
 			if( d24_2 > 0 && d24_4 > 0 && d124_1 <=0 && d234_3 <=0) {
 //				Vector3.set(v, y2.multiply(d24_2/d24).Add(y4.multiply(d24_4/d24)));
@@ -465,8 +466,8 @@ public class GJK implements ClosestPointsAlgorithm<SupportMap3,SupportMap3> {
 			}
 
 			//y3,y4 (3,1) (2,4)
-			double d134_1 = d34_3 * y3.minus(y1).dot(y3) + d34_4 * y3.minus(y1).dot(y4); //d134_1= Math.abs(d134_1)<epsilon?0:d134_1;
-			double d234_2 = d34_3 * y3.minus(y2).dot(y3) + d34_4 * y3.minus(y2).dot(y4); //d234_2= Math.abs(d234_2)<epsilon?0:d234_2;
+			final double d134_1 = d34_3 * y3.minus(y1).dot(y3) + d34_4 * y3.minus(y1).dot(y4); //d134_1= Math.abs(d134_1)<epsilon?0:d134_1;
+			final double d234_2 = d34_3 * y3.minus(y2).dot(y3) + d34_4 * y3.minus(y2).dot(y4); //d234_2= Math.abs(d234_2)<epsilon?0:d234_2;
 			//System.out.println("d134_1: " + d134_1 + " d234_2: " + d234_2);
 			if( d34_3 > 0 && d34_4 > 0 && d134_1 <=0 && d234_2 <=0) {
 //				Vector3.set(v, y3.multiply(d34_3/d34).Add(y4.multiply(d34_4/d34)));
@@ -479,10 +480,10 @@ public class GJK implements ClosestPointsAlgorithm<SupportMap3,SupportMap3> {
 			}
 
 			//y1,y2,y3 (no permutation)
-			double d1234_4 = d123_1 * (y1.minus(y4).dot(y1)) + d123_2 * (y1.minus(y4).dot(y2) ) + d123_3 * (y1.minus(y4).dot(y3));
+			final double d1234_4 = d123_1 * (y1.minus(y4).dot(y1)) + d123_2 * (y1.minus(y4).dot(y2) ) + d123_3 * (y1.minus(y4).dot(y3));
 			//d1234_4 = Math.abs(d1234_4)<epsilon?0:d1234_4;
 			if ( d123_1 > 0 && d123_2 > 0 && d123_3 > 0 && d1234_4 <= 0) {
-				double d123 = d123_1 + d123_2 + d123_3;
+				final double d123 = d123_1 + d123_2 + d123_3;
 				lambda[perm[0]]= d123_1/d123; lambda[perm[1]]= d123_2/d123; lambda[perm[2]] = d123_3/d123;
 				state.simplexSize = 3;
 				
@@ -493,10 +494,10 @@ public class GJK implements ClosestPointsAlgorithm<SupportMap3,SupportMap3> {
 			}
 
 			//y1,y2,y4 (4,3)
-			double d1234_3 = d124_1 * (y1.minus(y3).dot(y1)) + d124_2 * (y1.minus(y3).dot(y2) ) + d124_4 * (y1.minus(y3).dot(y4));
+			final double d1234_3 = d124_1 * (y1.minus(y3).dot(y1)) + d124_2 * (y1.minus(y3).dot(y2) ) + d124_4 * (y1.minus(y3).dot(y4));
 			//d1234_3 = Math.abs(d1234_3)<epsilon?0:d1234_3;
 			if ( d124_1 > 0 && d124_2 > 0 && d124_4 > 0 && d1234_3 <= 0) { 
-				double d124 = d124_1 + d124_2 + d124_4;
+				final double d124 = d124_1 + d124_2 + d124_4;
 //				Vector3.set(v, y1.multiply(d124_1/d124).Add(y2.multiply(d124_2/d124)).Add(y4.multiply(d124_4/d124)));
 //				return new Vector3[] {y1,y2,y4};
 				swap(3,2,perm);
@@ -507,10 +508,10 @@ public class GJK implements ClosestPointsAlgorithm<SupportMap3,SupportMap3> {
 			}
 
 			//y1,y3,y4 (3,2) (4,3)
-			double d1234_2 = d134_1 * (y1.minus(y2).dot(y1)) + d134_3 * (y1.minus(y2).dot(y3) ) + d134_4 * (y1.minus(y2).dot(y4));
+			final double d1234_2 = d134_1 * (y1.minus(y2).dot(y1)) + d134_3 * (y1.minus(y2).dot(y3) ) + d134_4 * (y1.minus(y2).dot(y4));
 			//d1234_2 = Math.abs(d1234_2)<epsilon?0:d1234_2;
 			if ( d134_1 > 0 && d134_3 > 0 && d134_4 > 0 && d1234_2 <= 0) { 
-				double d134 = d134_1 + d134_3 + d134_4;
+				final double d134 = d134_1 + d134_3 + d134_4;
 //				Vector3.set(v, y1.multiply(d134_1/d134).Add(y3.multiply(d134_3/d134)).Add(y4.multiply(d134_4/d134)));
 //				return new Vector3[] {y1,y3,y4};
 				swap(2,1,perm); swap(3,2,perm);
@@ -521,10 +522,10 @@ public class GJK implements ClosestPointsAlgorithm<SupportMap3,SupportMap3> {
 			}
 
 			//y2,y3,y4 (2,1)(3,2)(4,3)
-			double d1234_1 = d234_2 * (y2.minus(y1).dot(y2)) + d234_3 * (y2.minus(y1).dot(y3) ) + d234_4 * (y2.minus(y1).dot(y4));
+			final double d1234_1 = d234_2 * (y2.minus(y1).dot(y2)) + d234_3 * (y2.minus(y1).dot(y3) ) + d234_4 * (y2.minus(y1).dot(y4));
 			//d1234_1 = Math.abs(d1234_1)<epsilon?0:d1234_1;
 			if ( d234_2 > 0 && d234_3 > 0 && d234_4 > 0 && d1234_1 <= 0) {
-				double d234 = d234_2 + d234_3 + d234_4;
+				final double d234 = d234_2 + d234_3 + d234_4;
 //				Vector3.set(v, y2.multiply(d234_2/d234).Add(y3.multiply(d234_3/d234)).Add(y4.multiply(d234_4/d234)));
 //				return new Vector3[] {y2,y3,y4};
 				swap(1,0,perm); swap(2,1,perm); swap(3,2,perm);
@@ -534,7 +535,7 @@ public class GJK implements ClosestPointsAlgorithm<SupportMap3,SupportMap3> {
 			}
 
 			//y1,y2,y3,y4 (no permute)
-			double d1234 = d1234_1 + d1234_2 + d1234_3 + d1234_4;
+			final double d1234 = d1234_1 + d1234_2 + d1234_3 + d1234_4;
 			//System.out.println("d1234 = "+d1234);
 
 			//System.out.println("d1234:" + d1234 + "," + d1234_1 +","+d1234_2 + ","+d1234_3+","+d1234_4 + "sum = " + (d1234_1+d1234_2+d1234_3+d1234_4)/d1234 );
@@ -559,7 +560,7 @@ public class GJK implements ClosestPointsAlgorithm<SupportMap3,SupportMap3> {
 			} else {
 				//System.out.println("unable to determine smallest X");
 				//The algorithm was unable to determine the subset. return the last best known subset:
-				double d123 = d123_1 + d123_2 + d123_3;
+				final double d123 = d123_1 + d123_2 + d123_3;
 				lambda[perm[0]]= d123_1/d123; lambda[perm[1]]= d123_2/d123; lambda[perm[2]] = d123_3/d123;
 				state.simplexSize = 3;				
 

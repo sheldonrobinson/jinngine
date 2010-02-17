@@ -99,7 +99,7 @@ public final class Body {
 	 * reflect those changes in the Body state. Some of the constructors call finalize() automatically. 
 	 */
 	public final void finalize() {
-		final Vector3 cm = new Vector3();
+		final Vector3 cm = state.centreofmass;
 		
 		//reset body properties
 		this.state.mass=0;
@@ -215,6 +215,18 @@ public final class Body {
 
 	public final void setPosition( Vector3 r ) {
 		state.position.assign(r);
+		updateTransformations();
+	}
+	
+	public final void setPosition( double x, double y, double z) {
+		state.position.x = x;
+		state.position.y = y;
+		state.position.z = z;
+		updateTransformations();
+	}
+	
+	public final void setOrientation( Matrix3 orientation) {
+		state.orientation.assign(orientation);
 		updateTransformations();
 	}
 	

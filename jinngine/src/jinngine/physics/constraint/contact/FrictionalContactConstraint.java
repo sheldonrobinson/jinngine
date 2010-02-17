@@ -196,6 +196,8 @@ public final class FrictionalContactConstraint implements ContactConstraint {
 		double correction = depth*(1/dt)*0.8;
 		double lowerNormalLimit = 0;
 		double limit = 1.5;
+		
+		//correction = 0;
 
 		// limit the correction velocity
 		correction = correction< -limit? -limit:correction;  

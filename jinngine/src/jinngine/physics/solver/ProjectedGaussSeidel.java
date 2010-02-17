@@ -30,12 +30,13 @@ public class ProjectedGaussSeidel implements Solver {
 		//perform iterations
 		for (int m=0; m<maximumIterations; m++) {
 			deltaResidual = 0;
-			for (constraint ci: constraints) {
+			for (constraint ci: constraints) {				
 				//calculate (Ax+b)_i 
 				double w =  ci.j1.dot(ci.body1.deltavelocity) 
-				+ ci.j2.dot(ci.body1.deltaomega)
-				+  ci.j3.dot(ci.body2.deltavelocity) 
+			   	+ ci.j2.dot(ci.body1.deltaomega)
+				+ ci.j3.dot(ci.body2.deltavelocity) 
 				+ ci.j4.dot(ci.body2.deltaomega) + ci.lambda*ci.damper;
+				
 
 				double deltaLambda = (-ci.b-w)/(ci.diagonal + ci.damper );
 				double lambda0 = ci.lambda;
@@ -52,12 +53,16 @@ public class ProjectedGaussSeidel implements Solver {
 					//if the constraint is coupled, allow only lambda <= coupled lambda
 					ci.lower = -Math.abs(ci.coupling.lambda)*ci.coupling.mu;
 					ci.upper =  Math.abs(ci.coupling.lambda)*ci.coupling.mu;
+										
 				} 
 
 				//do projection
 				ci.lambda =
 					Math.max(ci.lower, Math.min(lambda0 + deltaLambda,ci.upper ));
-				
+
+				// no projection
+				//ci.lambda = lambda0 + deltaLambda;
+							
 				//update the V vector
 				deltaLambda = ci.lambda - lambda0;
 				

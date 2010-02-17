@@ -39,19 +39,33 @@ public class BallInSocketJoint implements Constraint {
 		Matrix3 Jj = Matrix3.identity().multiply(-1);
 		Matrix3 Jangj = rj.crossProductMatrix3().multiply(1);
 
+		
 		Matrix3 MiInv = Matrix3.identity().multiply(1/b1.state.mass);
-		Matrix3 MjInv = Matrix3.identity().multiply(1/b2.state.mass);
-
 		Matrix3 Bi = MiInv.multiply(Ji.transpose());
-		Matrix3 Bj = MjInv.multiply(Jj.transpose());
 		Matrix3 Bangi = b1.state.inverseinertia.multiply(Jangi.transpose());
+
+		if (b1.isFixed()) {
+			Bi.assign(new Matrix3());
+			Bangi.assign(new Matrix3());
+		}
+		
+		Matrix3 MjInv = Matrix3.identity().multiply(1/b2.state.mass);
+		Matrix3 Bj = MjInv.multiply(Jj.transpose());
 		Matrix3 Bangj = b2.state.inverseinertia.multiply(Jangj.transpose());
 
-		Vector3 u = b1.state.velocity.minus( ri.cross(b1.state.omega)).minus(b2.state.velocity).add(rj.cross(b2.state.omega));
-		double Kcor = 0.9;
+		if (b2.isFixed()) {
+			Bj.assign(new Matrix3());
+			Bangj.assign(new Matrix3());
+		}		
+
+//		Vector3 u = b1.state.velocity.add( b1.state.omega.cross(ri)).minus(b2.state.velocity).add(b2.state.omega.cross(rj));
+		Vector3 u = b1.state.velocity.add( b1.state.omega.cross(ri)).minus(b2.state.velocity.add(b2.state.omega.cross(rj)));
+
+		double Kcor = 0.8;
 //		Vector3 posError = b1.state.rCm.add(b1.state.q.rotate(p1)).minus(b2.state.rCm).minus(b2.state.q.rotate(p2)).multiply(Kcor);
 		Vector3 posError = b1.state.position.add(ri).minus(b2.state.position).minus(rj).multiply(Kcor*(1.0/dt));
 		u.assign( u.add(posError));
+		
 		
 		//go through matrices and create rows in the final A matrix to be solved
 		c1.assign( 
@@ -78,6 +92,7 @@ public class BallInSocketJoint implements Constraint {
 				Double.POSITIVE_INFINITY,
 				null, 
 				u.z );
+		
 		
 		//apply constraints
 		iterator.add(c1);

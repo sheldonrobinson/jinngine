@@ -116,7 +116,7 @@ public final class SupportMapSphereContactGenerator implements ContactGenerator 
 
 		// run gjk
 		Vector3 v = new Vector3();
-		closest.run(convex, pointmap, cp.paw, cp.pbw, sphere.getRadius()+envelope); //notice the envelope size
+		closest.run(convex, pointmap, cp.paw, cp.pbw, sphere.getRadius()+envelope, 1e-6, 31); //notice the envelope size
 				
 		// penetration
 		if (closest.getState().simplexSize > 3  || cp.paw.minus(cp.pbw).norm() < 1e-10 ) {
