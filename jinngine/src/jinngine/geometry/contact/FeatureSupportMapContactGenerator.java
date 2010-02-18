@@ -95,7 +95,7 @@ public class FeatureSupportMapContactGenerator implements ContactGenerator {
 		//Sa.supportPoint(Vector3.j).print();
 		
 		//penetration
-		if (closest.getState().simplexSize > 3  || d<1e-6) {
+		if (closest.getState().simplexSize > 3 ) {
 //			System.out.println("penetrating");
 			//run EPA
 			ExpandingPolytope epa = new ExpandingPolytope();

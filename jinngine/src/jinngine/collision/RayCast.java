@@ -20,7 +20,7 @@ import jinngine.math.Vector3;
  * @author mo
  *
  */
-public class RayCast {
+public final class RayCast {
 	final GJK gjk = new GJK();
 	GJK.State gjkstate = gjk.getState();
 	
@@ -34,7 +34,7 @@ public class RayCast {
 	 * @return t such that c = direction t + point, where c is the point of collision. If the ray does not intersect the 
 	 * convex shape for any positive t, then positive infinity is returned
 	 */
-	public double run( 
+	public final double run( 
 			final SupportMap3 Sb, 
 			final Vector3 point, 
 			final Vector3 direction, 
