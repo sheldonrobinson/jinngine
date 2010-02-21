@@ -15,17 +15,19 @@ import com.ardor3d.math.Vector2;
 import com.ardor3d.scenegraph.Node;
 import com.ardor3d.scenegraph.Spatial;
 
+import jinngine.game.actors.ActionActor;
 import jinngine.game.actors.Actor;
+import jinngine.game.actors.ActorOwner;
 import jinngine.game.actors.PhysicalActor;
 import jinngine.game.actors.SelectableActor;
 import jinngine.game.Game;
 import jinngine.math.Vector3;
 import jinngine.physics.Body;
 
-public class HUDActor implements Actor {
+public class HUDActor implements Actor, ActorOwner {
 
 	private SelectableActor selectedactor = null;
-	private Actor actionactor = null;
+	private ActionActor actionactor = null;
 	
 	private final InputTrigger mousetrigger;
 	private final InputTrigger mousetrigger2;
@@ -117,7 +119,7 @@ public class HUDActor implements Actor {
 
 				if (newselection == selectedactor) {
 					// deselect
-					selectedactor.setSelected(false);
+					selectedactor.setSelected(game,false);
 					selectedactor = null;
 					System.out.println("Deselected " + newselection);
 
@@ -126,7 +128,7 @@ public class HUDActor implements Actor {
 
 				} else if ( selectedactor == null ) {
 					// whole new selection
-					newselection.setSelected(true);
+					newselection.setSelected(game,true);
 					selectedactor = newselection;								
 					System.out.println("Selected " + newselection);
 
@@ -148,7 +150,7 @@ public class HUDActor implements Actor {
 				);
 				
 				// get a new action actor from the selected actor
-				Actor newactor = selectedactor.provideActionActor(pressedactor, node,  pickpoint.copy(), mouseposition);
+				ActionActor newactor = selectedactor.provideActionActor(this, pressedactor, node,  pickpoint.copy(), mouseposition);
 								
 				// if any, add the new actor
 				if (newactor!=null) {
@@ -156,6 +158,13 @@ public class HUDActor implements Actor {
 					game.addActor(newactor);
 				}
 			}
+			
+			
+			// if any action actor present, relay pressed event
+			if (actionactor!=null) {
+				actionactor.mousePressed(game);
+			}
+			
 		} // if pressed ...
 		
 		// if released
@@ -163,10 +172,9 @@ public class HUDActor implements Actor {
 			released = false;			
 			
 			System.out.println("released");
-			// if there is an action actor working, remove it
+			// if there is an action actor working, signal the release
 			if (actionactor != null) {
-				game.removeActor(actionactor); 
-				actionactor = null;
+				actionactor.mouseReleased(game);
 			}
 				
 		}
@@ -188,5 +196,15 @@ public class HUDActor implements Actor {
 		game.getRendering().getLogicalLayer().deregisterTrigger(this.mousetrigger2);		
 		game.getRendering().getLogicalLayer().deregisterTrigger(this.clickedtrigger);		
 
+	}
+
+	@Override
+	public void finished(Game game, ActionActor actor) {
+		// if there is an action actor working, remove it
+		if (actionactor == actor) {
+			game.removeActor(actionactor); 
+			actionactor = null;
+		}
+		
 	}
 }

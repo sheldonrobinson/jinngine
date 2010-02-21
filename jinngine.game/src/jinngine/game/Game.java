@@ -14,6 +14,8 @@ import jinngine.game.actors.door.Door;
 import jinngine.game.actors.environment.Environment;
 import jinngine.game.actors.Actor;
 import jinngine.game.actors.bear.Bear;
+import jinngine.game.actors.button.Button;
+import jinngine.game.actors.button.PlacementButton;
 import jinngine.game.actors.platform1.Platform1;
 import jinngine.physics.Engine;
 import jinngine.physics.PhysicsScene;
@@ -30,7 +32,7 @@ public class Game {
 	private final Engine jinngine = new Engine();
 
 	public Game() {
-		jinngine.setTimestep(0.01);
+		jinngine.setTimestep(0.05);
 		
 		
 		//setup some actors
@@ -57,6 +59,10 @@ public class Game {
 //		platformbox3.create(this);
 //		platformbox3.start(this);
 //		runningactors.add(platformbox3);
+//		
+//		Button button = new Button();
+//		button.create(this);
+//		addActor(button);
 //
 //		Actor p = new jinngine.game.actors.player.Player();
 //		p.create(this);
@@ -66,11 +72,18 @@ public class Game {
 //		Actor door = new Door();
 //		door.create(this);
 //		addActor(door);
-//		
-//		
-//		addActor( new HUDActor() );
 
 		
+//		Button button = new Button();
+//		button.create(this);
+//		addActor(button);
+		
+		PlacementButton button = new PlacementButton();
+		button.create(this);
+		addActor(button);
+
+		
+		addActor( new HUDActor() );
 
 		
 		//go through the scene graph depth first, and get the actors

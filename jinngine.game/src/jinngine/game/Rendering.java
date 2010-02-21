@@ -9,11 +9,15 @@ import jinngine.physics.PhysicsScene;
 
 import com.ardor3d.extension.effect.water.WaterNode;
 import com.ardor3d.extension.shadow.map.ParallelSplitShadowMapPass;
+import com.ardor3d.extension.ui.UIComponent;
+import com.ardor3d.extension.ui.UIHud;
 import com.ardor3d.framework.Canvas;
 import com.ardor3d.framework.DisplaySettings;
+import com.ardor3d.framework.NativeCanvas;
 import com.ardor3d.framework.Scene;
 import com.ardor3d.framework.jogl.JoglCanvas;
 import com.ardor3d.framework.jogl.JoglCanvasRenderer;
+import com.ardor3d.image.util.AWTImageLoader;
 import com.ardor3d.input.Key;
 import com.ardor3d.input.PhysicalLayer;
 import com.ardor3d.input.awt.AwtFocusWrapper;
@@ -48,6 +52,7 @@ import com.ardor3d.renderer.state.BlendState.DestinationFunction;
 import com.ardor3d.renderer.state.BlendState.SourceFunction;
 import com.ardor3d.renderer.state.CullState.Face;
 import com.ardor3d.scenegraph.Node;
+import com.ardor3d.scenegraph.shape.Pyramid;
 import com.ardor3d.util.Timer;
 import com.ardor3d.util.export.binary.BinaryImporter;
 import com.ardor3d.util.export.xml.XMLExporter;
@@ -68,6 +73,8 @@ public final class Rendering implements Scene {
     private boolean exit = false;
     private final LogicalLayer logicallayer = new LogicalLayer(); 
     private final ParallelSplitShadowMapPass pssm;
+    private final PhysicalLayer physicallayer; 
+    private final UIHud hud;
     
 	public Rendering() {
         final JoglCanvasRenderer canvasRenderer = new JoglCanvasRenderer(this);
@@ -82,7 +89,7 @@ public final class Rendering implements Scene {
         canvas.getCanvasRenderer().getRenderer().setBackgroundColor(new ColorRGBA(1,1,1,1));
 
         // do some ardor3d stuff to make the user interface stuff work
-        final PhysicalLayer physicallayer = new PhysicalLayer(new AwtKeyboardWrapper(canvas), 
+        physicallayer = new PhysicalLayer(new AwtKeyboardWrapper(canvas), 
     			 new AwtMouseWrapper(canvas, new AwtMouseManager(canvas)),
                  new AwtFocusWrapper(canvas));
         logicallayer.registerInput(canvas, physicallayer);
@@ -96,6 +103,8 @@ public final class Rendering implements Scene {
         } catch (final URISyntaxException ex) {
             ex.printStackTrace(); 
         }
+        
+        AWTImageLoader.registerLoader();
         
         try {
 			root = (Node)BinaryImporter.getInstance().load( new File("testgraph.xml"));
@@ -151,7 +160,10 @@ public final class Rendering implements Scene {
 //        outline.setEnabled(true);
 //        passes.add(outline);
         
-
+        // setup for ui components
+        UIComponent.setUseTransparency(true);
+        hud = new UIHud();
+        hud.setupInput(canvas, physicallayer, logicallayer); 
 	}
 	
 	/**
@@ -171,8 +183,12 @@ public final class Rendering implements Scene {
 	public final void draw() {
         // Update controllers/render states/transforms/bounds for rootNode.
         timer.update();
+		hud.getLogicalLayer().checkTriggers(timer.getTimePerFrame());
+		hud.updateGeometricState(timer.getTimePerFrame());
+
 		root.updateGeometricState(timer.getTimePerFrame(), true);
 		logicallayer.checkTriggers(timer.getTimePerFrame());
+
 		canvas.draw(null);
 	}
 	
@@ -186,7 +202,19 @@ public final class Rendering implements Scene {
 	public final LogicalLayer getLogicalLayer() {
 		return logicallayer;
 	}
+	
+	public final PhysicalLayer getPhysicalLayer() {
+		return physicallayer;
+	}
+	
+	public final NativeCanvas getCanvas() {
+		return canvas;
+	}
 
+	public final UIHud getHud() {
+		return hud;
+	}
+	
 	@Override
 	public PickResults doPick(Ray3 pickRay) {
         final PrimitivePickResults pickResults = new PrimitivePickResults();
@@ -199,7 +227,7 @@ public final class Rendering implements Scene {
 	@Override
 	public boolean renderUnto(Renderer renderer) {
 		passes.renderPasses(renderer);
-		//root.draw(renderer);
+		renderer.draw(hud);
 		return true;
 	}
 }

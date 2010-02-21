@@ -1,16 +1,31 @@
 package jinngine.game.actors.door;
 
+import java.io.IOException;
+
 import com.ardor3d.extension.model.collada.jdom.ColladaImporter;
 import com.ardor3d.extension.model.collada.jdom.data.ColladaStorage;
+import com.ardor3d.extension.ui.UIButton;
+import com.ardor3d.extension.ui.UICheckBox;
+import com.ardor3d.extension.ui.UIFrame;
+import com.ardor3d.extension.ui.UIPanel;
+import com.ardor3d.extension.ui.event.ActionEvent;
+import com.ardor3d.extension.ui.event.ActionListener;
+import com.ardor3d.extension.ui.layout.BorderLayout;
+import com.ardor3d.extension.ui.layout.BorderLayoutData;
+import com.ardor3d.extension.ui.layout.RowLayout;
 import com.ardor3d.light.DirectionalLight;
 import com.ardor3d.math.ColorRGBA;
 import com.ardor3d.renderer.state.LightState;
 import com.ardor3d.scenegraph.Line;
 import com.ardor3d.scenegraph.Node;
 import com.ardor3d.scenegraph.Spatial;
+import com.ardor3d.scenegraph.shape.Box;
+import com.ardor3d.util.export.Ardor3DExporter;
+import com.ardor3d.util.export.Ardor3DImporter;
 
 import jinngine.game.Game;
 import jinngine.game.Toolbox;
+import jinngine.game.actors.ConfigurableActor;
 import jinngine.game.actors.PhysicalActor;
 
 import jinngine.math.Matrix3;
@@ -22,15 +37,30 @@ import jinngine.physics.constraint.joint.HingeJoint;
 import jinngine.physics.force.GravityForce;
 
 
-public class Door extends Node implements PhysicalActor {
+public class Door extends Node implements PhysicalActor, ConfigurableActor {
 
 	private Body doorbody;
 	private Body doorframebody;
 	private Node doornode;
 	private Node doorframenode;
+
+	private boolean fixedframe = false;
 	
 	public Door(){
 		
+	}
+	
+	@Override
+	public void write(Ardor3DExporter e) throws IOException {
+		super.write(e);
+		
+		e.getCapsule(this).write( fixedframe,"fixedframe", false);
+	}
+	
+	@Override
+	public void read(Ardor3DImporter e) throws IOException {
+		super.read(e);
+		fixedframe = e.getCapsule(this).readBoolean( "fixedframe", false);
 	}
 	
 	@Override
@@ -99,7 +129,7 @@ public class Door extends Node implements PhysicalActor {
 		Toolbox.getNodeTransform(this, translation, orientation);
 		
 		//set old
-		double xext=0.66666, yext=1, zext=0.1;
+		double xext=0.66666, yext=0.9, zext=0.2;
 		
 
 		doornode = (Node)getChild("mydoornode");
@@ -111,7 +141,9 @@ public class Door extends Node implements PhysicalActor {
         //game.getRendering().getPssmPass().addOccluder(doorfaces);
        
         // door
-        doorbody = new Body(new jinngine.geometry.Box(xext*2,yext*2,zext*2));
+        jinngine.geometry.Box doorbox = new jinngine.geometry.Box(xext*2,yext*2,zext*2);
+        doorbox.setFrictionCoefficient(0);
+        doorbody = new Body(doorbox);
         physics.addBody(doorbody);
         physics.addForce(new GravityForce(doorbody));
         //doorbody.setPosition(doorbody.getPosition().add(new jinngine.math.Vector3(0,-0.125,0)));
@@ -130,6 +162,7 @@ public class Door extends Node implements PhysicalActor {
         jinngine.geometry.Box box2 = new jinngine.geometry.Box(0.35,2.3,0.35, 0.85,0,0);
         doorframebody.addGeometry(box2);        
         doorframebody.finalize();
+        doorframebody.setFixed(fixedframe);
         physics.addBody(doorframebody);
         physics.addForce(new GravityForce(doorframebody));
         Toolbox.setTransformFromNode(doorframenode, doorframebody);
@@ -171,6 +204,51 @@ public class Door extends Node implements PhysicalActor {
 			return doorframebody;
 		else
 			return null;
+	}
+	
+	@Override
+	public void configure(final Game game) {
+		final UIFrame frame;
+		final UIPanel panel = new UIPanel();
+		panel.setForegroundColor(ColorRGBA.DARK_GRAY);
+		panel.setLayout(new BorderLayout());
+
+		final RowLayout rowLay = new RowLayout(false, false, false);
+		final UIPanel centerPanel = new UIPanel(rowLay);
+		centerPanel.setLayoutData(BorderLayoutData.CENTER);
+		panel.add(centerPanel);
+		
+
+		final UICheckBox fixedsetting = new UICheckBox("fixed door frame");
+		fixedsetting.setSelected(fixedframe);
+		fixedsetting.setEnabled(true);
+		centerPanel.add(fixedsetting);
+		fixedsetting.addActionListener(new ActionListener() {
+			public void actionPerformed(final ActionEvent event) {
+				boolean state = ((UICheckBox)event.getSource()).isSelected();
+				//remove velocity from body
+				doorframebody.setVelocity(0,0,0);
+				doorframebody.setAngularVelocity(0, 0, 0);
+				game.getPhysics().fixBody(doorframebody, state);
+				fixedframe = state;				
+				System.out.println("setting state " + state);
+			}
+		});
+
+		frame = new UIFrame("Door properties");
+		frame.setContentPanel(panel);
+		frame.updateMinimumSizeFromContents();
+		frame.layout();
+		frame.pack();
+		frame.setUseStandin(false);
+		frame.setOpacity(0.75f);
+		frame.setLocationRelativeTo(game.getRendering().getCamera());
+		frame.setName("sample");
+
+		game.getRendering().getHud().add(frame);
+		
+//		game.getRendering().getHud().remove(frame);
+	
 	}
 
 }

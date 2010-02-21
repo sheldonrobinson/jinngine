@@ -7,7 +7,10 @@ import com.ardor3d.input.logical.TriggerAction;
 import com.ardor3d.input.logical.TwoInputStates;
 import com.ardor3d.math.Ray3;
 import com.ardor3d.math.Vector2;
+
+import jinngine.game.actors.ActionActor;
 import jinngine.game.actors.Actor;
+import jinngine.game.actors.ActorOwner;
 import jinngine.game.Game;
 import jinngine.math.Vector3;
 import jinngine.physics.Body;
@@ -15,24 +18,26 @@ import jinngine.physics.PhysicsScene;
 import jinngine.physics.constraint.Constraint;
 import jinngine.physics.constraint.joint.BallInSocketJoint;
 
-public class BodyPlacement implements Actor {
+public class BodyPlacement implements ActionActor {
 
 	private final Body target;
 	private final Body controller;
 //	private SpringForce force;
-	private Constraint force;
+	private BallInSocketJoint force;
 	private final com.ardor3d.math.Vector2 screenpos = new com.ardor3d.math.Vector2();
 	private final Vector3 pickpoint = new Vector3();
 	private final Vector3 pickdisplacement = new Vector3();
 	private InputTrigger tracktrigger;
+	private final ActorOwner owner;
 	
-	public BodyPlacement(Body target, Vector3 pickpoint, Vector2 screenpos) {
+	public BodyPlacement(ActorOwner owner, Body target, Vector3 pickpoint, Vector2 screenpos) {
 		this.target = target;
 		this.controller = new Body();
 		this.controller.state.mass = 1; // hope to prevent bugs
 		this.controller.setFixed(true);
 		this.pickpoint.assign(pickpoint);
 		this.screenpos.set(screenpos);
+		this.owner = owner;
 	}
 	
 	@Override
@@ -83,6 +88,7 @@ public class BodyPlacement implements Actor {
 		
 //		this.force = new SpringForce(target, new Vector3(), controller, new Vector3(), 122, 16 ); 
 		this.force = new BallInSocketJoint(target, controller, controller.getPosition(), new Vector3(0,1,0));
+		this.force.setForceLimit(10);
 
 		// insert the acting stuff into the physics world
 		physics.addBody(controller);
@@ -117,6 +123,18 @@ public class BodyPlacement implements Actor {
 		
 		//remove mouse tracker
 		game.getRendering().getLogicalLayer().deregisterTrigger(this.tracktrigger);
+	}
+
+	@Override
+	public void mousePressed(Game game) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void mouseReleased(Game game) {
+		// a release means that we are done
+		owner.finished(game, this);
 	}
 
 }

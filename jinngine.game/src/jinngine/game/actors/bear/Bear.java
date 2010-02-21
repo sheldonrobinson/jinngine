@@ -23,7 +23,9 @@ import com.ardor3d.util.geom.SceneCopier;
 import com.ardor3d.util.geom.SharedCopyLogic;
 
 import jinngine.game.*;
+import jinngine.game.actors.ActionActor;
 import jinngine.game.actors.Actor;
+import jinngine.game.actors.ActorOwner;
 import jinngine.game.actors.CommandableActor;
 import jinngine.game.actors.PhysicalActor;
 import jinngine.game.actors.SelectableActor;
@@ -224,7 +226,7 @@ public class Bear implements CommandableActor, SelectableActor {
 	}
 
 	@Override
-	public Actor provideActionActor(Actor target, Node node,
+	public ActionActor provideActionActor(ActorOwner owner, Actor target, Node node,
 			jinngine.math.Vector3 pickpoint, Vector2 screenpos ) {
 		
 		System.out.println("Bear: got an actor "+ target);
@@ -235,7 +237,7 @@ public class Bear implements CommandableActor, SelectableActor {
 			Body body = physactor.getBodyFromNode(node);
 		
 			if (body != null)
-				return new BodyPlacement(body,pickpoint,screenpos);
+				return new BodyPlacement(owner, body,pickpoint,screenpos);
 		}
 		
 		
@@ -243,7 +245,7 @@ public class Bear implements CommandableActor, SelectableActor {
 	}
 
 	@Override
-	public void setSelected(boolean selected) {
+	public void setSelected(Game game, boolean selected) {
 		if ( selected) 
 			head.setScale(0.85);
 		else
