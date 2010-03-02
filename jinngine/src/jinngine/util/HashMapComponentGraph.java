@@ -727,4 +727,22 @@ public class HashMapComponentGraph<T,U> implements ComponentGraph<T,U> {
 		return componentNodes.keySet().size();
 	}
 	
+	@Override
+	public Iterator<T> getConnectedNodes(final T node) {
+		// create a wrap iterator
+		return new Iterator<T>() {
+			Iterator<Node> i = edges.get(new Node(node)).iterator();
+			@Override
+			public boolean hasNext() {
+				return i.hasNext();
+			}
+			@Override
+			public T next() {
+				return i.next().element;
+			}
+			@Override
+			public void remove() {
+			}
+		};
+	}
 }

@@ -216,6 +216,12 @@ public final class Body {
 		//Recalculate linear momentum
 		state.P.assign( this.state.velocity.multiply(this.state.mass));
 	}
+	
+	public final void setVelocity( double x, double y, double z ) {
+		state.velocity.assign(x,y,z);
+		//Recalculate linear momentum
+		state.P.assign( this.state.velocity.multiply(this.state.mass));
+	}
 
 	public final Vector3 getVelocity() {
 		return new Vector3(state.velocity);
@@ -280,6 +286,14 @@ public final class Body {
 		Matrix3.multiply(state.inertia, state.omega, state.L);
 
 	}
+	
+	public final void setAngularVelocity( double x, double y, double z ) {
+		state.omega.assign(x,y,z);
+		//recalculate the angular momentum
+		Matrix3.multiply(state.inertia, state.omega, state.L);
+
+	}
+
 
 	public final Vector3 getAngularVelocity() {
 		return new Vector3(state.omega);

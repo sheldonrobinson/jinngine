@@ -50,6 +50,10 @@ public final class  Vector3 {
     return new Vector3( x+s, y+s, z+s );
   }
   
+  public final Vector3 negate() {
+	  return new Vector3(-x,-y,-z);
+  }
+  
   public double get( int i ) {
     return i>0?(i>1?z:y):x; 
   }

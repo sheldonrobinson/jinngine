@@ -40,7 +40,7 @@ public class RayCastTest extends TestCase {
 		Vector3 direction = point.multiply(-1);
 		
 		// do the raycast
-		double lambda = raycast.run(s1, point, direction, envelope, epsilon );
+		double lambda = raycast.run(s1, null, point, direction, new Vector3(), new Vector3(), 0, envelope, epsilon );
 		
 		// we know the exact intersection point
 		Vector3 expected = point.normalize();
@@ -69,7 +69,7 @@ public class RayCastTest extends TestCase {
 		Vector3 direction = b1.getPosition().minus(point);
 		
 		// do the raycast
-		double lambda = raycast.run(s1, point, direction, envelope, epsilon );
+		double lambda = raycast.run(s1, null, point, direction, new Vector3(), new Vector3(), 0, envelope, epsilon );
 		
 		// we know the exact intersection point ( go from the centre of the sphere
 		// to the boundary along the oposite ray direction )
@@ -104,7 +104,7 @@ public class RayCastTest extends TestCase {
 		Vector3 direction = new Vector3(-1,0,0);
 		
 		// do the raycast
-		double lambda = raycast.run(s1, point, direction, envelope, epsilon );
+		double lambda = raycast.run(s1, null, point, direction, new Vector3(), new Vector3(), 0, envelope, epsilon );
 		
 		// calculate the  point 
 		Vector3 p = point.add(direction.multiply(lambda));
@@ -115,7 +115,7 @@ public class RayCastTest extends TestCase {
 		b1.setPosition(0,-envelope-epsilon, 0);
 		
 		// do the raycast
-		lambda = raycast.run(s1, point, direction, envelope, epsilon );
+		lambda = raycast.run(s1, null, point, direction, new Vector3(), new Vector3(), 0, envelope, epsilon );
 		
 		System.out.println("returned lambda="+lambda);
 		
@@ -139,7 +139,7 @@ public class RayCastTest extends TestCase {
 		Vector3 direction = new Vector3(0,-1,0);
 		
 		// do the raycast
-		double lambda = raycast.run(box, point, direction, envelope, epsilon );
+		double lambda = raycast.run(box, null, point, direction, new Vector3(), new Vector3(), 0, envelope, epsilon );
 		
 		// calculate the  point 
 		Vector3 p = point.add(direction.multiply(lambda));
@@ -166,7 +166,7 @@ public class RayCastTest extends TestCase {
 		Vector3 direction = new Vector3(0.5,0.5,0.5).minus(point);
 		
 		// do the raycast
-		double lambda = raycast.run(box, point, direction, envelope, epsilon );
+		double lambda = raycast.run(box, null, point, direction, new Vector3(), new Vector3(), 0, envelope, epsilon );
 		
 		// calculate the  point 
 		Vector3 p = point.add(direction.multiply(lambda));

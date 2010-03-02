@@ -94,5 +94,11 @@ public interface ComponentGraph<T,U> {
 	 * Return the number of components in this graph
 	 */
 	public int getNumberOfComponents();
+	
+	/**
+	 * Get all nodes that is connected to the given node. The constructible pairs
+	 * Pair<T> can then be used to obtain the edge type U using getEdge(Pair<T>)
+	 */
+	public Iterator<T> getConnectedNodes(T node);
 
 }

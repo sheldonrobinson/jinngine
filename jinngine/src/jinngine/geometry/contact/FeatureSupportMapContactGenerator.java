@@ -137,7 +137,7 @@ public class FeatureSupportMapContactGenerator implements ContactGenerator {
 		}		
 	} 
 
-	private void generate(Vector3 a, Vector3 b, Vector3 v, double depth, boolean penetrating ) {
+	private void generate(Vector3 a, Vector3 b, Vector3 v, double depthr, boolean penetratingr ) {
 		contacts.clear(); faceA.clear(); faceB.clear();
 		Sa.supportFeature(v.multiply(-1), 0.09, faceA);
 		Sb.supportFeature(v.multiply(1), 0.09, faceB);

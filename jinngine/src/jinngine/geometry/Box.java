@@ -69,6 +69,19 @@ public class Box implements SupportMap3, Geometry, Material {
 		setLocalTransform( Matrix3.identity(), new Vector3(posx,posy,posz) );
 	}
 
+	/** 
+	 * Set new side lengths for this box. Keep in mind that altering geometry changes mass and 
+	 * inertia properties of bodies. This method automatically re-finalises the attached body, 
+	 * should this box be attached to one. This operation is relatively expensive.
+	 */
+	public final void setBoxSideLengths( double xl, double yl, double zl) {
+		this.xl = xl; this.yl = yl; this.zl = zl;
+		mass = xl*yl*zl;
+		
+		// re-finialize body if any present
+		if ( body != null)
+			body.finalize();
+	}
 	
 	// user auxiliary methods
 	public Object getAuxiliary() { return auxiliary; }
@@ -287,6 +300,12 @@ public class Box implements SupportMap3, Geometry, Material {
 	 */
 	public Vector3 getDimentions() {
 		return new Vector3(xl,yl,zl);
+	}
+
+	@Override
+	public void getLocalTranslation(Vector3 t) {
+		t.assign(localdisplacement);
+		
 	}
 
 }

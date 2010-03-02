@@ -65,6 +65,7 @@ public interface ContactGenerator {
 		
 		
 		public double distance;
+		public double envelope;
 		public double restitution;
 		public double friction;
 	}

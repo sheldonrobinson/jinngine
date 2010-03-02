@@ -48,6 +48,14 @@ public interface Geometry extends AxisAlignedBoundingBox {
 	 */
 	public void getLocalTransform( Matrix3 R, Vector3 b);
 	
+	
+	/**
+	 * Return the local translation of this geometry
+	 * @param t 
+	 */
+	public void getLocalTranslation( Vector3 t ) ;
+	
+	
 	/** 
 	 * Get the amount of mass for this geometry
 	 */

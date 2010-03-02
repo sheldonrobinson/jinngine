@@ -257,7 +257,8 @@ public final class Engine implements PhysicsModel, PhysicsScene {
 			public final ContactGenerator getGenerator(Geometry a,
 					Geometry b) {
 				if ( a instanceof SupportMap3 && b instanceof SupportMap3) {
-					return new FeatureSupportMapContactGenerator((SupportMap3)a, a,  (SupportMap3)b, b);
+//					return new FeatureSupportMapContactGenerator((SupportMap3)a, a,  (SupportMap3)b, b);
+					return new ExperimentalContactGenerator((SupportMap3)a, a,  (SupportMap3)b, b);
 
 				}
 				//not recognised
@@ -458,4 +459,32 @@ public final class Engine implements PhysicsModel, PhysicsScene {
 	public Iterator<Body> getBodies() {
 		return bodies.iterator();
 	}
+
+	@Override
+	public void fixBody(Body b, boolean fixed) {
+		// this may seem a bit drastic, but it is necessary. If one
+		// just changes the fixed setting directly on bodies during animation,
+		// really bad thing will happen, because the contact graph will become
+		// corrupted and will eventually crash jinngine
+		
+		//check if the body is in the animation
+		if (!bodies.contains(b))
+			return;
+		
+		// check if body is already the at the correct 
+		// fixed setting, in which case do nothing
+		if (b.isFixed() == fixed) 
+			return;
+		
+		// remove the body from simulation 
+		removeBody(b);
+
+		//change the fixed setting
+		b.setFixed(fixed);
+
+		// reinsert body
+		addBody(b);
+		
+	}
+
 }

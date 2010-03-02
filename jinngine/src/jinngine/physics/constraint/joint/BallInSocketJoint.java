@@ -26,6 +26,7 @@ public class BallInSocketJoint implements Constraint {
 	private final Solver.constraint c1 = new Solver.constraint();
 	private final Solver.constraint c2 = new Solver.constraint();
 	private final Solver.constraint c3 = new Solver.constraint();
+	private double forcelimit = Double.POSITIVE_INFINITY;
 	
 	public BallInSocketJoint(Body b1, Body b2, Vector3 p, Vector3 n) {
 		this.b1 = b1;
@@ -33,6 +34,14 @@ public class BallInSocketJoint implements Constraint {
 		//anchor points on bodies
 		p1 = b1.toModel(p);
 		p2 = b2.toModel(p);	
+	}
+	
+	/**
+	 * Set the maximal (boxed) applied at the joint axis
+	 * @param forcelimit
+	 */
+	public void setForceLimit( double forcelimit ) {
+		this.forcelimit = forcelimit;
 	}
 	
 	public void applyConstraints( ListIterator<Solver.constraint> iterator, double dt ) {
@@ -80,24 +89,24 @@ public class BallInSocketJoint implements Constraint {
 				b1, b2, 
 				Bi.column(0), Bangi.column(0), Bj.column(0), Bangj.column(0), 
 				Ji.row(0), Jangi.row(0), Jj.row(0), Jangj.row(0),
-				Double.NEGATIVE_INFINITY,
-				Double.POSITIVE_INFINITY,
+				-forcelimit,
+				forcelimit,
 				null, 
 				u.x );
 		c2.assign( 
 				b1, b2, 
 				Bi.column(1), Bangi.column(1), Bj.column(1), Bangj.column(1),
 				Ji.row(1), Jangi.row(1), Jj.row(1), Jangj.row(1),
-				Double.NEGATIVE_INFINITY,
-				Double.POSITIVE_INFINITY,
+				-forcelimit,
+				forcelimit,
 				null, 
 				u.y );
 		c3.assign( 
 				b1, b2, 
 				Bi.column(2), Bangi.column(2), Bj.column(2), Bangj.column(2), 
 				Ji.row(2), Jangi.row(2), Jj.row(2), Jangj.row(2),
-				Double.NEGATIVE_INFINITY,
-				Double.POSITIVE_INFINITY,
+				-forcelimit,
+				forcelimit,
 				null, 
 				u.z );
 		

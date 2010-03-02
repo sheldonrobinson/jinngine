@@ -110,6 +110,11 @@ public class Sphere implements SupportMap3, Geometry, Material {
 		Matrix4.set(Transforms.transformAndTranslate4(Matrix3.identity().multiply(radius), displacement), localtransform4);
 	}
 	
+	@Override
+	public void getLocalTranslation(Vector3 t) {
+		t.assign(displacement);
+	}
+	
 
 	@Override
 	public Matrix4 getTransform() {

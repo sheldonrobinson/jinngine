@@ -67,5 +67,10 @@ public interface PhysicsScene {
 	 * @param c
 	 */
 	public void removeConstraint( Constraint c );
-
+	
+	/** 
+	 * Make a body become fixed, during animation
+	 */
+	public void fixBody( Body b, boolean fixed );
+	
 }

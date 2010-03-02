@@ -201,25 +201,34 @@ public final class FrictionalContactConstraint implements ContactConstraint {
 
 		//external forces acing at contact (obsolete, external forces are modelled using the delta velocities)
 		//double Fext = B1.dot(b1.state.force) + B2.dot(b1.state.torque) + B3.dot(b2.state.force) + B4.dot(b2.state.torque);
-		double correction = depth*(1/dt)*0.8;
+		double correction = depth*(1/dt); //the true correction velocity. This velocity corrects the contact in the next timestep.
+		double escape = (cp.envelope-cp.distance)*(1/dt);
 		double lowerNormalLimit = 0;
-		double limit = 1.5;
+		double limit = 1;
 		
-		//correction = 0;
-
+		
+		// if the unf velocity will make the contact leave the envelope in the next timestep, 
+		// we ignore corrections
+		if (unf > escape) {
+			//System.out.println("escape");
+			correction = 0;
+		} else {
+			//even with unf, we stay inside the envelope
+			//truncate correction velocity if already covered by repulsive velocity
+			if (correction > 0) {
+				if (unf > correction ) {
+					correction = 0;
+				} else {
+					correction = correction - unf; // not sure this is smart TODO
+				}
+			}
+		}
+	
 		// limit the correction velocity
 		correction = correction< -limit? -limit:correction;  
 		correction = correction>  limit?  limit:correction;
 		//correction = 0;
-		
-		//truncate correction velocity if already covered by repulsive velocity
-		if (correction > 0) {
-			if (unf > correction ) {
-				correction = 0;
-			} else {
-				//correction = correction - unf; // not sure this is smart TODO
-			}
-		}
+
 		
 		// the normal constraint
 		constraint c = new constraint();
@@ -243,10 +252,10 @@ public final class FrictionalContactConstraint implements ContactConstraint {
 		double ut2f = t3.dot(xvel.add(yvel))*multiplier;
 		
 		//first tangent
-		Vector3 t2B1 = t2.multiply(1/m1);
-		Vector3 t2B2 = I1.multiply(r1.cross(t2) );
-		Vector3 t2B3 = t2.multiply(-1/m2);				
-		Vector3 t2B4 = I2.multiply(r2.cross(t2).multiply(-1));
+		Vector3 t2B1 = b1.isFixed()? Vector3.zero: t2.multiply(1/m1);
+		Vector3 t2B2 = b1.isFixed()? Vector3.zero: I1.multiply(r1.cross(t2) );
+		Vector3 t2B3 = b2.isFixed()? Vector3.zero: t2.multiply(-1/m2);				
+		Vector3 t2B4 = b2.isFixed()? Vector3.zero: I2.multiply(r2.cross(t2).multiply(-1));
 		//double t2Fext = t2B1.dot(b1.state.FCm) + t2B2.dot(b1.state.tauCm) + t2B3.dot(b2.state.FCm) + t2B4.dot(b2.state.tauCm);
 		constraint c2 = new constraint();
 		c2.assign(b1,b2,
@@ -258,10 +267,10 @@ public final class FrictionalContactConstraint implements ContactConstraint {
 		);
 		
 		//second tangent
-		Vector3 t3B1 = t3.multiply(1/m1);
-		Vector3 t3B2 = I1.multiply(r1.cross(t3));
-		Vector3 t3B3 = t3.multiply(-1/m2);				
-		Vector3 t3B4 = I2.multiply(r2.cross(t3).multiply(-1));
+		Vector3 t3B1 = b1.isFixed()? Vector3.zero: t3.multiply(1/m1);
+		Vector3 t3B2 = b1.isFixed()? Vector3.zero: I1.multiply(r1.cross(t3));
+		Vector3 t3B3 = b2.isFixed()? Vector3.zero: t3.multiply(-1/m2);				
+		Vector3 t3B4 = b2.isFixed()? Vector3.zero: I2.multiply(r2.cross(t3).multiply(-1));
 		constraint c3 = new constraint();
 		c3.assign(b1,b2,
 				t3B1, t3B2,	t3B3, t3B4,
