@@ -237,8 +237,9 @@ public final class FrictionalContactConstraint implements ContactConstraint {
 				J1, J2, J3, J4,
 				lowerNormalLimit, Double.POSITIVE_INFINITY,
 				null,
-			     -(unf-uni)  -correction ) ;
-
+			     -(unf-uni)-correction ) ;
+		// -(unf-uni)-c = -unf+uni-c = -(-emin(uni,0))+uni-c = emin(uni,0)+uni-c
+        // (uni-unf)-c
 		//normal-friction coupling 
 		final constraint coupling = enableCoupling?c:null;
 		
@@ -290,10 +291,6 @@ public final class FrictionalContactConstraint implements ContactConstraint {
 		return new Pair<Body>(b1,b2);
 	}
 
-	@Override
-	public ContactConstraintCreator whoCreatedThis() {
-		return creator;
-	}
 
 	/**
 	 * Specify whether a normal force magnitude coupling should be used on the friction force bounds.

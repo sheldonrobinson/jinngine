@@ -206,10 +206,15 @@ public class ExperimentalContactGenerator implements ContactGenerator {
 				}
 
 				if (inside) {
+//					System.out.println("face A - face B  case");
+
 					//generate point
 					ContactPoint cp = new ContactPoint();
 					cp.restitution = restitution;
 					cp.friction = friction;
+					cp.b1 = ga.getBody();
+					cp.b2 = gb.getBody();
+
 
 					//determine the true distance to the other face along the contact normal
 					// ((d t + paw) - pp) . facenormal = 0
@@ -228,8 +233,12 @@ public class ExperimentalContactGenerator implements ContactGenerator {
 						cp.envelope = envelope;
 						cp.paw.assign(paw);
 						cp.pbw.assign(pbw);
-//						cp.pa.assign(bodyA.toModel(paw));
-//						cp.pb.assign(bodyB.toModel(pbw));
+						
+//						cp.pa.assign(ga.getBody().toModel(paw));
+//						cp.pb.assign(gb.getBody().toModel(pbw));
+						cp.pa.assign(ga.getBody().toModel(pbw));
+						cp.pb.assign(gb.getBody().toModel(paw));
+
 						cp.midpoint.assign(S.multiply(p1tp).add(midpoint));
 						cp.normal.assign(direction);
 						contacts.add(cp);
@@ -277,10 +286,14 @@ public class ExperimentalContactGenerator implements ContactGenerator {
 				}
 
 				if (inside) {
+//					System.out.println("face B - face A  case");
+
 					//generate point
 					ContactPoint cp = new ContactPoint();
 					cp.restitution = restitution;
 					cp.friction = friction;
+					cp.b1 = ga.getBody();
+					cp.b2 = gb.getBody();
 
 					//determine the true distance to the other face along the contact normal
 					// ((d t + paw) - pp) . facenormal = 0
@@ -299,8 +312,8 @@ public class ExperimentalContactGenerator implements ContactGenerator {
 						cp.envelope = envelope;
 						cp.paw.assign(paw);
 						cp.pbw.assign(p1);
-//						cp.pa.assign(bodyA.toModel(paw));
-//						cp.pb.assign(bodyB.toModel(p1));
+						cp.pa.assign(ga.getBody().toModel(paw));
+						cp.pb.assign(gb.getBody().toModel(p1));
 						cp.midpoint.assign(S.multiply(p1tp).add(midpoint));
 						cp.normal.assign(direction);
 						contacts.add(cp);
@@ -351,7 +364,9 @@ public class ExperimentalContactGenerator implements ContactGenerator {
 							ContactPoint cp = new ContactPoint();
 							cp.restitution = restitution;
 							cp.friction = friction;
-							
+							cp.b1 = ga.getBody();
+							cp.b2 = gb.getBody();
+
 							//find points on bodies
 							Vector3 paw = p1p.add(d1.multiply(alpha));
 							Vector3 pbw = p2p.add(d2.multiply(beta));
@@ -368,8 +383,8 @@ public class ExperimentalContactGenerator implements ContactGenerator {
 								cp.envelope = envelope;
 								cp.paw.assign(paw);
 								cp.pbw.assign(pbw);
-//								cp.pa.assign(bodyA.toModel(paw));
-//								cp.pb.assign(bodyB.toModel(pbw));
+								cp.pa.assign(ga.getBody().toModel(paw));
+								cp.pb.assign(gb.getBody().toModel(pbw));
 								
 								cp.midpoint.assign(S.multiply(p1pt.add(d1t.multiply(alpha))).add(midpoint)  );
 								cp.normal.assign(direction);

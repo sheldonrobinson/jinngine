@@ -14,6 +14,7 @@ import jinngine.geometry.contact.*;
 import jinngine.math.Matrix3;
 import jinngine.math.Vector3;
 import jinngine.physics.Body;
+import jinngine.physics.solver.Solver;
 import jinngine.physics.solver.Solver.constraint;
 import jinngine.util.GramSchmidt;
 import jinngine.util.Pair;
@@ -31,13 +32,22 @@ import jinngine.util.Pair;
  * @author mo
  *
  */
-public final class PositiveSpanContactConstraint implements ContactConstraint {	
-	private final Body b1, b2;                  //bodies in constraint
+public final class FrictionalContactConstraint2 implements ContactConstraint {	
+	private final Body b1, b2; //bodies in constraint
 	private final List<ContactGenerator> generators = new ArrayList<ContactGenerator>();
-	private final ContactConstraintCreator creator;
 	private double frictionBoundMagnitude = Double.POSITIVE_INFINITY;
-	
+	private boolean staticContact = false;
 	private boolean enableCoupling = true;
+	
+	private final class Contactpoint {
+		ContactGenerator.ContactPoint cp;
+		public final constraint n = new constraint();
+		public final constraint t1 = new constraint();
+		public final constraint t2 = new constraint();
+	}
+
+	private final List<Contactpoint> contacts = new ArrayList<Contactpoint>();
+
 	
 	/**
 	 * Create a new ContactConstraint, using one initial ContactGenerator
@@ -45,28 +55,11 @@ public final class PositiveSpanContactConstraint implements ContactConstraint {
 	 * @param b2
 	 * @param generator
 	 */
-	public PositiveSpanContactConstraint(Body b1, Body b2, ContactGenerator generator, ContactConstraintCreator creator) {
+	public FrictionalContactConstraint2(Body b1, Body b2, ContactGenerator generator, ContactConstraintCreator creator) {
 		super();
 		this.b1 = b1;
 		this.b2 = b2;
 		this.generators.add(generator);
-		this.creator = creator;
-	}
-
-	// some experimental methods
-	private Vector3 xvel = new Vector3();
-	public void setTangentialVelocityX( Vector3 x) {
-		this.xvel.assign(x);
-	}
-
-	private Vector3 yvel = new Vector3();
-	public void setTangentialVelocityY( Vector3 y) {
-		this.yvel.assign(y);
-	}
-	
-	private double multiplier = 1;
-	public final void setTangentialVelocityMultiplier( double multiplier) {	
-		this.multiplier = multiplier;
 	}
 	
 	/**
@@ -95,20 +88,69 @@ public final class PositiveSpanContactConstraint implements ContactConstraint {
 	
 	@Override
 	public final void applyConstraints(ListIterator<constraint> constraintIterator, double dt) {
-		//use ContactGenerators to create new contactpoints
-		for ( ContactGenerator cg: generators) {
-			//run contact generator
-			cg.run(dt);
+		staticContact = true;
+		// determine static or non-static contact. Examine each contact and classify it static or non-static
+		for (Contactpoint p: contacts) {
+			// look at the total relative movement in the contact point
+			Vector3 u = b1.state.velocity.add( b1.state.omega.cross(p.cp.pa)).minus(b2.state.velocity.add(b2.state.omega.cross(p.cp.pb)));
+			Vector3 a = b1.state.omega.minus(b2.state.omega);
 			
-			//generate contacts
-			Iterator<ContactGenerator.ContactPoint> i = cg.getContacts();
-			while (i.hasNext()) {
-				ContactGenerator.ContactPoint cp = i.next();
-				
-				createFrictionalContactConstraint(cp, b1, b2, cp.midpoint, cp.normal, cp.depth, dt, constraintIterator);				
+			if (u.norm() + a.norm()> 1e-1 ) {
+				staticContact = false;
 			}
-		}
+			
+		}//for
 		
+		if ( staticContact && contacts.size()>0 ) {
+			// go thru contacts and send them on 
+			for (Contactpoint p: contacts) {
+				// update geometry
+				Vector3 wa = p.cp.b1.toWorld(p.cp.pa);
+				Vector3 wb = p.cp.b2.toWorld(p.cp.pb);
+				p.cp.distance = p.cp.normal.dot( wa.minus(wb));
+				p.cp.depth = 0.125*0.5-p.cp.distance;
+//				System.out.println("p.cp.distance="+p.cp.distance);
+				p.cp.midpoint.assign(wa.add(wb).multiply(0.5));
+				
+//				System.out.println(""+p.cp.paw.minus(wa).norm());
+//				System.out.println(""+p.cp.pbw.minus(wb).norm());
+				
+				createFrictionalContactConstraint(p.cp, b1, b2, p.cp.midpoint, p.cp.normal, p.cp.depth, dt, wa, wb, p.n, p.t1, p.t2 );	
+				
+				// send constraints to caller
+				constraintIterator.add(p.n);
+				constraintIterator.add(p.t1);
+				constraintIterator.add(p.t2);			
+				
+			}//for
+			
+		} else {
+			staticContact = false;
+			contacts.clear();
+
+			// use ContactGenerators to create new contact points
+			for ( ContactGenerator cg: generators) {
+				//run contact generator
+				cg.run(dt);
+
+				//generate contacts
+				Iterator<ContactGenerator.ContactPoint> i = cg.getContacts();
+				while (i.hasNext()) {
+					ContactGenerator.ContactPoint cp = i.next();
+
+					// store contact with constraints
+					Contactpoint p = new Contactpoint();
+					p.cp = cp;
+					contacts.add(p);
+					createFrictionalContactConstraint(cp, b1, b2, cp.midpoint, cp.normal, cp.depth, dt, new Vector3(), new Vector3(), p.n, p.t1, p.t2 );	
+					
+					// send constraints to caller
+					constraintIterator.add(p.n);
+					constraintIterator.add(p.t1);
+					constraintIterator.add(p.t2);			
+				} // while
+			} // for
+		}
 	}
 
 	/**
@@ -161,10 +203,10 @@ public final class PositiveSpanContactConstraint implements ContactConstraint {
 
 
 	//Create a regular contact constraint including tangential friction
-	public final void createFrictionalContactConstraint( 
+	private final void createFrictionalContactConstraint( 
 			ContactGenerator.ContactPoint cp,
 			Body b1, Body b2, Vector3 p, Vector3 n, double depth, double dt,
-			ListIterator<constraint> outConstraints 
+			Vector3 wa, Vector3 wb, constraint c, constraint c2, constraint c3
 	) {
 
 		//Use a gram-schmidt process to create a orthonormal basis for the contact point ( normal and tangential directions)
@@ -201,33 +243,45 @@ public final class PositiveSpanContactConstraint implements ContactConstraint {
 
 		//external forces acing at contact (obsolete, external forces are modelled using the delta velocities)
 		//double Fext = B1.dot(b1.state.force) + B2.dot(b1.state.torque) + B3.dot(b2.state.force) + B4.dot(b2.state.torque);
-		double correction = depth*(1/dt)*0.8;
+		double correction = depth*(1/dt); //the true correction velocity. This velocity corrects the contact in the next timestep.
+		double escape = (cp.envelope-cp.distance)*(1/dt);
 		double lowerNormalLimit = 0;
-		double limit = 1.5;
-
+		double limit = 1;
+		
+		
+		// if the unf velocity will make the contact leave the envelope in the next timestep, 
+		// we ignore corrections
+		if (unf > escape) {
+			//System.out.println("escape");
+			correction = 0;
+		} else {
+			//even with unf, we stay inside the envelope
+			//truncate correction velocity if already covered by repulsive velocity
+			if (correction > 0) {
+				if (unf > correction ) {
+					correction = 0;
+				} else {
+					correction = correction - unf; // not sure this is smart TODO
+				}
+			}
+		}
+	
 		// limit the correction velocity
 		correction = correction< -limit? -limit:correction;  
 		correction = correction>  limit?  limit:correction;
 		//correction = 0;
-		
-		//truncate correction velocity if already covered by repulsive velocity
-		if (correction > 0) {
-			if (unf > correction ) {
-				correction = 0;
-			} else {
-				//correction = correction - unf; // not sure this is smart TODO
-			}
-		}
+
 		
 		// the normal constraint
-		constraint c = new constraint();
+//		constraint c = new constraint();
 		c.assign(b1,b2,
 				B1, B2, B3, B4,
 				J1, J2, J3, J4,
 				lowerNormalLimit, Double.POSITIVE_INFINITY,
 				null,
-			     -(unf-uni)  -correction ) ;
-
+			     -(unf-uni)-correction ) ;
+		// -(unf-uni)-c = -unf+uni-c = -(-emin(uni,0))+uni-c = emin(uni,0)+uni-c
+        // (uni-unf)-c
 		//normal-friction coupling 
 		final constraint coupling = enableCoupling?c:null;
 		
@@ -237,71 +291,57 @@ public final class PositiveSpanContactConstraint implements ContactConstraint {
 		//then the tangential friction constraints 
 		double ut1i = relativeVelocity(b1,b2,p,t2);
 		double ut2i = relativeVelocity(b1,b2,p,t3);
-		double ut1f = t2.dot(xvel.add(yvel))*multiplier; 
-		double ut2f = t3.dot(xvel.add(yvel))*multiplier;
+		double ut1f = 0; 
+		double ut2f = 0;
+		
+		// tangential correction
+		double t2d = t2.dot( wa.minus(wb))*1;
+		double t3d = t3.dot( wa.minus(wb))*1;
+		
+//		System.out.println("t2d="+t2d);
 		
 		//first tangent
-		Vector3 t2B1 = t2.multiply(1/m1);
-		Vector3 t2B2 = I1.multiply(r1.cross(t2) );
-		Vector3 t2B3 = t2.multiply(-1/m2);				
-		Vector3 t2B4 = I2.multiply(r2.cross(t2).multiply(-1));
+		Vector3 t2B1 = b1.isFixed()? Vector3.zero: t2.multiply(1/m1);
+		Vector3 t2B2 = b1.isFixed()? Vector3.zero: I1.multiply(r1.cross(t2) );
+		Vector3 t2B3 = b2.isFixed()? Vector3.zero: t2.multiply(-1/m2);				
+		Vector3 t2B4 = b2.isFixed()? Vector3.zero: I2.multiply(r2.cross(t2).multiply(-1));
 		//double t2Fext = t2B1.dot(b1.state.FCm) + t2B2.dot(b1.state.tauCm) + t2B3.dot(b2.state.FCm) + t2B4.dot(b2.state.tauCm);
-		constraint c2 = new constraint();
+//		constraint c2 = new constraint();
 		c2.assign(b1,b2,
 				t2B1, t2B2,	t2B3, t2B4,				
 				t2, r1.cross(t2), t2.multiply(-1),	r2.cross(t2).multiply(-1),
-				0, frictionBoundMagnitude,
+				-frictionBoundMagnitude, frictionBoundMagnitude,
 				coupling,
-				-(ut1f-ut1i)  //+ t2Fext*dt*0
+				-(ut1f-ut1i) +t2d //+ t2Fext*dt*0
 		);
-		
-		constraint c2i = new constraint();
-		c2i.assign(b1,b2,
-				t2B1.multiply(-1), t2B2.multiply(-1),	t2B3.multiply(-1), t2B4.multiply(-1),				
-				t2.multiply(-1), r1.cross(t2).multiply(-1), t2.multiply(-1).multiply(-1),	r2.cross(t2).multiply(-1).multiply(-1),
-				0, frictionBoundMagnitude,
-				coupling,
-				-(-(ut1f-ut1i))  //+ t2Fext*dt*0
-		);
-
 		
 		//second tangent
-		Vector3 t3B1 = t3.multiply(1/m1);
-		Vector3 t3B2 = I1.multiply(r1.cross(t3));
-		Vector3 t3B3 = t3.multiply(-1/m2);				
-		Vector3 t3B4 = I2.multiply(r2.cross(t3).multiply(-1));
-		constraint c3 = new constraint();
+		Vector3 t3B1 = b1.isFixed()? Vector3.zero: t3.multiply(1/m1);
+		Vector3 t3B2 = b1.isFixed()? Vector3.zero: I1.multiply(r1.cross(t3));
+		Vector3 t3B3 = b2.isFixed()? Vector3.zero: t3.multiply(-1/m2);				
+		Vector3 t3B4 = b2.isFixed()? Vector3.zero: I2.multiply(r2.cross(t3).multiply(-1));
+//		constraint c3 = new constraint();
 		c3.assign(b1,b2,
 				t3B1, t3B2,	t3B3, t3B4,
 				t3, r1.cross(t3), t3.multiply(-1), r2.cross(t3).multiply(-1),
 				-frictionBoundMagnitude, frictionBoundMagnitude,
 				coupling,
-				-(ut2f-ut2i)  
+				-(ut2f-ut2i) +t3d 
 		);
 
-		constraint c3i = new constraint();
-		c3i.assign(b1,b2,
-				t3B1.multiply(-1), t3B2.multiply(-1),	t3B3.multiply(-1), t3B4.multiply(-1),
-				t3.multiply(-1), r1.cross(t3).multiply(-1), t3.multiply(-1).multiply(-1), r2.cross(t3).multiply(-1).multiply(-1),
-				0, frictionBoundMagnitude,
-				coupling,
-				-(-(ut2f-ut2i))  
-		);
-
+//		outConstraints.add(c);
+//		outConstraints.add(c2);
+//		outConstraints.add(c3);
+//		constraints.add(c);
+//		constraints.add(c2);
+//		constraints.add(c3);
 		
-		outConstraints.add(c);
-		outConstraints.add(c2);
-		outConstraints.add(c2i);
-		outConstraints.add(c3);
-		outConstraints.add(c3i);
-
 	}
 
 	@Override
 	public Pair<Body> getBodies() {
 		return new Pair<Body>(b1,b2);
 	}
-
 
 	/**
 	 * Specify whether a normal force magnitude coupling should be used on the friction force bounds.

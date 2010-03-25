@@ -347,9 +347,4 @@ public final class CorrectionContact implements ContactConstraint {
 		return new Pair<Body>(b1,b2);
 	}
 
-	@Override
-	public ContactConstraintCreator whoCreatedThis() {
-		return creator;
-	}
-
 }

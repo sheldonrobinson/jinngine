@@ -303,6 +303,9 @@ public class FeatureSupportMapContactGenerator implements ContactGenerator {
 						cp.pbw.assign(p1);
 						cp.pa.assign(bodyA.toModel(paw));
 						cp.pb.assign(bodyB.toModel(p1));
+						
+						cp.pa.print();
+						
 						cp.midpoint.assign(S.multiply(p1tp).add(midpoint));
 						cp.normal.assign(direction);
 						contacts.add(cp);

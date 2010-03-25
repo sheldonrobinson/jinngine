@@ -44,10 +44,5 @@ public interface ContactConstraint extends Constraint {
 	 */
 	public double getNumberOfGenerators();	
 
-	/**
-	 * Return the ContactConstraintCreator that created this contact constraint
-	 * @return
-	 */
-	public ContactConstraintCreator whoCreatedThis();
 		
 }

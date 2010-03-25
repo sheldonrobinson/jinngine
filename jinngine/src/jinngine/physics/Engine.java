@@ -45,7 +45,9 @@ public final class Engine implements PhysicsModel, PhysicsScene {
 	// the default contact constraint creator
 	private final ContactConstraintCreator defaultcreator = new ContactConstraintCreator() {
 		public final ContactConstraint createContactConstraint(Body b1, Body b2, ContactGenerator g) {
-			return new FrictionalContactConstraint(b1,b2,g,this);
+			return new FrictionalContactConstraint2(b1,b2,g,this);
+//			return new SimplifiedContactConstraint(b1,b2,g,this);
+			
 		}
 		@Override
 		public void removeContactConstraint(ContactConstraint constraint) {
@@ -184,9 +186,6 @@ public final class Engine implements PhysicsModel, PhysicsScene {
 							contactGraph.removeEdge(bpair);	
 						}
 						
-						// if made by a constraint creator, notify the creator
-						if (constraint.whoCreatedThis()!=null)
-							constraint.whoCreatedThis().removeContactConstraint(constraint);
 						
 					} else {
 						//this is not good, report an error

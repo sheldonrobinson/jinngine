@@ -11,6 +11,7 @@ package jinngine.geometry.contact;
 import java.util.Iterator;
 
 import jinngine.math.Vector3;
+import jinngine.physics.Body;
 
 /**
  * A contact generator is used by the {@link ContactConstraint} to generate its contact information. ContactGenerator 
@@ -28,6 +29,16 @@ public interface ContactGenerator {
 	 * @author Moo
 	 */
 	public class ContactPoint {
+		/**
+		 * Body A
+		 */
+		public Body b1;
+		
+		/**
+		 * Body B
+		 */
+		public Body b2;
+		
 		/**
 		 * Point on body A in world space
 		 */
