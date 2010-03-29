@@ -28,6 +28,8 @@ public class ConvexHull implements SupportMap3, Geometry {
 	private final ArrayList<ArrayList<Integer>> adjacent;
 	private final ArrayList<Vector3> dualvertices = new ArrayList<Vector3>();
 	private final ArrayList<ArrayList<Integer>> dualadjacent;
+	private final Vector3 centreOfMass;
+	private final double referenceMass;
 	
 	/**
 	 * Computes vertex adjacency lists. Method simply runs through all faces, which are given as lists of vertex indices, and fills out 
@@ -147,8 +149,7 @@ public class ConvexHull implements SupportMap3, Geometry {
 		dualhull.build(dualvectors);
 		
 		// create an adjacency list for the dual hull
-		dualadjacent = adjacencyList(dualhull.getFaces(), dualvertices.size());	
-		
+		dualadjacent = adjacencyList(dualhull.getFaces(), dualvertices.size());			
 		
 		//search vertices to find bounds
 		Vector3 extremal = new Vector3();
@@ -165,16 +166,32 @@ public class ConvexHull implements SupportMap3, Geometry {
 		
 		System.out.println("Hull created");
 		System.out.println("faces " + faces.size()); 
-		body = new Body();
 		
-		new MassCalculation( this, 4);
-			
+		// perform mass calculations
+		MassCalculation masscalculation = new MassCalculation( this, 4);
+		
+		// set propperties
+		mass = referenceMass = masscalculation.getMass();
+		inertiamatrix = new InertiaMatrix();
+		Matrix3.set( masscalculation.getInertiaMatrix(), inertiamatrix );
+		centreOfMass = masscalculation.getCentreOfMass();
+		centreOfMass.print();
+		inertiamatrix.print(inertiamatrix);
+		// align all vertices and faces to centre of mass coordinates
+		for ( Vector3 p: vertices)
+			Vector3.add( p, centreOfMass.multiply(-1) );
+		
+		for ( Vector3[] f: faces) 
+			for (Vector3 p: f)
+				Vector3.add( p, centreOfMass.multiply(-1));
+		
 	}
-	
 
 	// SupportMap3
 	private Object auxiliary;
-	private Body body;
+	private Body body = new Body();
+	private double mass = 1;
+	private final InertiaMatrix inertiamatrix;
 	private double envelope =0;
 	private Matrix3 localtransform = Matrix3.identity(new Matrix3());
 	private Matrix4 localtransform4 = Matrix4.identity(new Matrix4());
@@ -250,23 +267,10 @@ public class ConvexHull implements SupportMap3, Geometry {
 
 	@Override
 	public InertiaMatrix getInertialMatrix() {
-		InertiaMatrix I = new InertiaMatrix();
-		//approximate the inertia matrix by the encapsulating box
-		double a,b,c;
-//		a=Math.abs(maxBounds.a1-minBounds.a1);
-//		b=Math.abs(maxBounds.a2-minBounds.a2);
-//		c=Math.abs(maxBounds.a3-minBounds.a3);
-//		a=b=c=3;
-		a=3;
-		b=3;
-		c=3;
-		//I
-		Matrix3.set( I,
-				(1.0f/12.0f)*mass*(b*b+c*c), 0.0f, 0.0f,
-				0.0f, (1.0f/12.0f)*mass*(a*a+c*c), 0.0f,
-				0.0f, 0.0f, (1.0f/12.0f)*mass*(b*b+a*a) );
-
-		return I;
+		// scale the inertia matrix in the specified mass and reference mass ratio
+		InertiaMatrix inertia = new InertiaMatrix();
+		Matrix3.set( inertiamatrix.multiply( mass / referenceMass ), inertia );
+		return inertia;
 	}
 
 		
@@ -323,7 +327,6 @@ public class ConvexHull implements SupportMap3, Geometry {
 		b.assign(this.localdisplacement);		
 	}
 
-	private double mass = 1;
 	@Override
 	public double getMass() {
 		return mass;
@@ -347,5 +350,8 @@ public class ConvexHull implements SupportMap3, Geometry {
 	public void setAuxiliary(Object auxiliary) {
 		this.auxiliary = auxiliary;
 	}
-
+	
+	public Vector3 getCentreOfMass() {
+		return centreOfMass.copy();
+	}
 }

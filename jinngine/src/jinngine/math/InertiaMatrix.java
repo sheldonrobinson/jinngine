@@ -26,8 +26,14 @@ public class InertiaMatrix extends Matrix3 {
 		return I;
 	}
 	
+	/**
+	 * Translate the inertia tensor M by the vector r. The mass of the object must be specified.
+	 * @param M
+	 * @param mass
+	 * @param r
+	 */
 	public static void translate(InertiaMatrix M, double mass, Vector3 r) {
-		//as described in [Erleben et. al 2001]
+		//as described in [Erleben et. al 2001]. This is based on the parallel axis theorem, see wiki for instance
 		//Ixx
 		double t11 = M.a11 + mass*(r.y*r.y + r.z*r.z);
 		//Iyy

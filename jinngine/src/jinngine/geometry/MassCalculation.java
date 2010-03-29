@@ -2,6 +2,8 @@ package jinngine.geometry;
 
 import java.util.List;
 import jinngine.collision.GJK;
+import jinngine.math.InertiaMatrix;
+import jinngine.math.Matrix3;
 import jinngine.math.Vector3;
 
 public class MassCalculation {
@@ -9,7 +11,9 @@ public class MassCalculation {
 	private final GJK gjk = new GJK();
 	private final int maxdepth;
 	private final SupportMap3 Sa;
-	private double mass = 0;
+	private double totalmass = 0;
+	private final Vector3 centreofmass = new Vector3();
+	private final InertiaMatrix inertia = new InertiaMatrix();
 	
 	public MassCalculation( SupportMap3 shape, int maxdepth ) {
 		this.Sa = shape;
@@ -19,8 +23,13 @@ public class MassCalculation {
 		divide( Sa.supportPoint(new Vector3(1,0,0)).x, Sa.supportPoint(new Vector3(-1,0,0)).x,
 				Sa.supportPoint(new Vector3(0,1,0)).y, Sa.supportPoint(new Vector3(0,-1,0)).y,     
 				Sa.supportPoint(new Vector3(0,0,1)).z, Sa.supportPoint(new Vector3(0,0,-1)).z, 0 );
-		System.out.println("calculated mass " + mass);
+		System.out.println("calculated mass " + totalmass);
 		
+		// finalise calculation of centre of mass
+		Vector3.multiply( centreofmass, (1/totalmass));
+		
+		// align inertia tensor to centre of mass
+		InertiaMatrix.translate( inertia, totalmass, centreofmass.multiply(-1));		
 	}
 	
 	private final void divide( 
@@ -29,7 +38,7 @@ public class MassCalculation {
 			final double zmax, final double zmin, 
 			int depth ) {
 		
-		boolean separated = false;
+		
 		// create a support map for this box
 		SupportMap3 Sb = new SupportMap3() {
 			@Override
@@ -43,7 +52,7 @@ public class MassCalculation {
 		};
 		
 		// find out if separated using gjk
-		Vector3 va = new Vector3(), vb = new Vector3();
+		Vector3 va = new Vector3(), vb = new Vector3(); boolean separated = false;
 		gjk.run(Sa, Sb, va, vb, Double.POSITIVE_INFINITY, 1e-7, 32);
 		separated = va.minus(vb).norm() > 1e-7; 
 				
@@ -54,10 +63,28 @@ public class MassCalculation {
 		} else if ( depth > maxdepth){
 			double xl = Math.abs(xmax-xmin);
 			double yl = Math.abs(ymax-ymin);
-			double zl = Math.abs(zmax-zmin);
+			double zl = Math.abs(zmax-zmin);			
 			
-			mass = mass + xl*yl*zl;
-//			System.out.println("added " +  xl*yl*zl );
+			double localmass = xl*yl*zl;
+			
+			totalmass = totalmass + localmass;
+			
+			// inertia matrix for this local box
+			InertiaMatrix localinertia = new InertiaMatrix();
+			Matrix3.set( localinertia,
+					(1.0f/12.0f)*localmass*(yl*yl+zl*zl), 0.0f, 0.0f,
+					0.0f, (1.0f/12.0f)*localmass*(xl*xl+zl*zl), 0.0f,
+					0.0f, 0.0f, (1.0f/12.0f)*localmass*(yl*yl+xl*xl) );
+			
+			// translate inertia matrix
+			Vector3 localcentre = new Vector3((xmax+xmin)*0.5, (ymax+ymin)*0.5, (zmax+zmin)*0.5);			
+			InertiaMatrix.translate(localinertia, localmass, localcentre);
+			
+			// add to final inertia matrix
+			Matrix3.add(inertia, localinertia, inertia);
+			
+			// update centre of mass vector
+			Vector3.add(centreofmass, localcentre.multiply(localmass));
 			
 			return;
 		} else {
@@ -73,6 +100,18 @@ public class MassCalculation {
 		}
 		
 	}
-			 
+			
+	public Vector3 getCentreOfMass() {
+		return centreofmass.copy();
+	}
+	
+	public double getMass() {
+		return totalmass;
+	}
+	
+	public Matrix3 getInertiaMatrix() {
+		return inertia.copy();
+	}
+	
 
 }
