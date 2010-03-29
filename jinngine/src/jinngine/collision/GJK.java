@@ -253,7 +253,7 @@ public class GJK implements ClosestPointsAlgorithm<SupportMap3,SupportMap3> {
 			final double d12 = d12_1 + d12_2;
 			//terminate on affinely dependent points in the set (if d12 is zero, we can never use point y2)
 			if ( Math.abs(d12) <= epsilon ) {
-				System.out.println("Affinely dependent set in case d12");
+//				System.out.println("Affinely dependent set in case d12");
 				state.simplexSize = 1;
 				return false;
 			}
@@ -263,7 +263,7 @@ public class GJK implements ClosestPointsAlgorithm<SupportMap3,SupportMap3> {
 				lambda[perm[0]] = d12_1/d12; lambda[perm[1]] = d12_2/d12;
 				return true;
 			} else {
-				System.out.println("Unable to determine smallest set, use y1");
+//				System.out.println("Unable to determine smallest set, use y1");
 				state.simplexSize = 1;
 				return false;
 			}
@@ -340,7 +340,7 @@ public class GJK implements ClosestPointsAlgorithm<SupportMap3,SupportMap3> {
 				lambda[perm[0]]=d123_1/d123; lambda[perm[1]]=d123_2/d123; lambda[perm[2]]=d123_3/d123; state.simplexSize=3; 
 				return true;
 			} else {
-				System.out.println("Unable to determine smallest set, use y1,y2");
+//				System.out.println("Unable to determine smallest set, use y1,y2");
 				//double d123_3 = d12_1 * y1.minus(y3).dot(y1) + d12_2 * y1.minus(y3).dot(y2); d123_3 = Math.abs(d123_3)<epsilon?0:d123_3;
 				lambda[perm[0]]=d12_1/d12; lambda[perm[1]]=d12_2/d12; state.simplexSize=2; return false; 
 				//System.exit(-1);
@@ -579,7 +579,7 @@ public class GJK implements ClosestPointsAlgorithm<SupportMap3,SupportMap3> {
 			}
 		}
 
-		System.out.println("GJK: impossible ending!");
+//		System.out.println("GJK: impossible ending!");
 
 		//Ending up here is actually not possible :)
 		return false;

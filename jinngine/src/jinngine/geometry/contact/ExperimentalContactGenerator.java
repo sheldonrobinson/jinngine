@@ -26,7 +26,7 @@ public class ExperimentalContactGenerator implements ContactGenerator {
 	
 	private final double epsilon = 1e-7;
 	private final double envelope = 0.125;
-	private final double shell = envelope/2;
+	private final double shell = envelope*0.5;
 	private final SupportMap3 Sa, Sb, sco;
 	private final Geometry ga,gb;
 	private final GJK gjk = new GJK();

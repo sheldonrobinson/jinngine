@@ -88,16 +88,24 @@ public final class FrictionalContactConstraint2 implements ContactConstraint {
 	
 	@Override
 	public final void applyConstraints(ListIterator<constraint> constraintIterator, double dt) {
-		staticContact = true;
+		staticContact = false;
 		// determine static or non-static contact. Examine each contact and classify it static or non-static
 		for (Contactpoint p: contacts) {
 			// look at the total relative movement in the contact point
 			Vector3 u = b1.state.velocity.add( b1.state.omega.cross(p.cp.pa)).minus(b2.state.velocity.add(b2.state.omega.cross(p.cp.pb)));
 			Vector3 a = b1.state.omega.minus(b2.state.omega);
 			
-			if (u.norm() + a.norm()> 1e-1 ) {
-				staticContact = false;
+//			if (u.norm() + a.norm()> 0.5 ) {
+//				staticContact = false;
+//			}
+			
+			if ( Math.abs(p.t1.lambda) - 0.5*p.t1.coupling.lambda > -1e-10 ) {
+				staticContact =false;			
 			}
+			if ( Math.abs(p.t2.lambda) - 0.5*p.t2.coupling.lambda > -1e-10  ) {
+				staticContact =false;			
+			}
+
 			
 		}//for
 		
