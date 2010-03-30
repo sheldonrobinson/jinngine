@@ -168,7 +168,7 @@ public class ConvexHull implements SupportMap3, Geometry {
 		System.out.println("faces " + faces.size()); 
 		
 		// perform mass calculations
-		MassCalculation masscalculation = new MassCalculation( this, 4);
+		MassProperties masscalculation = new MassProperties( this, 3);
 		
 		// set propperties
 		mass = referenceMass = masscalculation.getMass();

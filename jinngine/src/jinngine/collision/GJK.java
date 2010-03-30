@@ -50,7 +50,7 @@ public class GJK implements ClosestPointsAlgorithm<SupportMap3,SupportMap3> {
 		
 	public void run( SupportMap3 Sa, SupportMap3 Sb, Vector3 va, Vector3 vb, double envelope, double epsilon, int maxiter ) {		
 		// if v has become too small, reset it TODO check this
-		if (state.v.norm()<envelope) {
+		if (state.v.norm()<=envelope) {
 			state.v.assign(1,1,1);
 		}
 
@@ -70,7 +70,9 @@ public class GJK implements ClosestPointsAlgorithm<SupportMap3,SupportMap3> {
 			va.assign(sa);
 			vb.assign(sb);
 			//v.assign(sa.minus(sb));
-//			System.out.println("GJK: early termination, vlaue "+v.normalize().dot(w));
+			w.print();
+			v.print();
+			System.out.println("GJK: early termination, vlaue "+v.normalize().dot(w));
 			return;
 		} 
 		

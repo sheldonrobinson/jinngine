@@ -6,7 +6,7 @@ import jinngine.math.InertiaMatrix;
 import jinngine.math.Matrix3;
 import jinngine.math.Vector3;
 
-public class MassCalculation {
+public class MassProperties {
 	
 	private final GJK gjk = new GJK();
 	private final int maxdepth;
@@ -15,7 +15,7 @@ public class MassCalculation {
 	private final Vector3 centreofmass = new Vector3();
 	private final InertiaMatrix inertia = new InertiaMatrix();
 	
-	public MassCalculation( SupportMap3 shape, int maxdepth ) {
+	public MassProperties( SupportMap3 shape, int maxdepth ) {
 		this.Sa = shape;
 		this.maxdepth = maxdepth;
 		
@@ -45,27 +45,37 @@ public class MassCalculation {
 			public Vector3 supportPoint(Vector3 v) {
 				double sv1 = v.x<0?xmin:xmax;
 				double sv2 = v.y<0?ymin:ymax;
-				double sv3 = v.z<0?zmin:xmax;
+				double sv3 = v.z<0?zmin:zmax;
 				return new Vector3(sv1, sv2, sv3);
 			}
 			public void supportFeature(Vector3 d, double epsilon,List<Vector3> face) {}
 		};
+
+		
+		// side lengths and local mass of partition
+		double xl = Math.abs(xmax-xmin);
+		double yl = Math.abs(ymax-ymin);
+		double zl = Math.abs(zmax-zmin);	
+		double localmass = xl*yl*zl;
+		
+		System.out.println("localmass = " +localmass);
+		System.out.println(""+xmin+","+xmax+"\n"+
+				""+ymin+","+ymax+"\n"+
+				""+zmin+","+zmax+"\n");
+
 		
 		// find out if separated using gjk
 		Vector3 va = new Vector3(), vb = new Vector3(); boolean separated = false;
-		gjk.run(Sa, Sb, va, vb, Double.POSITIVE_INFINITY, 1e-7, 32);
+		gjk.run(Sa, Sb, va, vb, 0/*Double.POSITIVE_INFINITY*/, 1e-7, 32);
 		separated = va.minus(vb).norm() > 1e-7; 
-				
+//		va.minus(vb).print();
+
+		
 		// seperated?
 		if (separated) {
 //			System.out.println("seperated");
 			return;
-		} else if ( depth > maxdepth){
-			double xl = Math.abs(xmax-xmin);
-			double yl = Math.abs(ymax-ymin);
-			double zl = Math.abs(zmax-zmin);			
-			
-			double localmass = xl*yl*zl;
+		} else if ( localmass < 0.1 ){
 			
 			totalmass = totalmass + localmass;
 			
@@ -88,7 +98,7 @@ public class MassCalculation {
 			
 			return;
 		} else {
-			//subdivide this cell 
+			//subdivide this cell into 8 partitions
 			divide( (xmax+xmin)*0.5, xmin,           (ymax+ymin)*0.5,  ymin,            (zmax+zmin)*0.5, zmin,     depth+1);
 			divide( xmax,           (xmax+xmin)*0.5, (ymax+ymin)*0.5,  ymin,            (zmax+zmin)*0.5, zmin,     depth+1);
 			divide( (xmax+xmin)*0.5, xmin,            ymax,            (ymax+ymin)*0.5, (zmax+zmin)*0.5, zmin,     depth+1);
