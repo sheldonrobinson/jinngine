@@ -28,7 +28,7 @@ public class Box implements SupportMap3, Geometry, Material {
 	private double envelope = 0;
 	
 	//box properties
-	private double xl,yl,zl;
+	private double xs,ys,zs;
 	private double mass;
 	
 	// auxiliary user reference
@@ -45,8 +45,8 @@ public class Box implements SupportMap3, Geometry, Material {
 	 * @param z Box z-axis extend
 	 */
 	public Box(double x, double y, double z) {
-		this.xl = x; this.yl = y; this.zl = z;
-		mass = xl*yl*zl;
+		this.xs = x; this.ys = y; this.zs = z;
+		mass = xs*ys*zs;
 		
 		//set the local transform
 		setLocalTransform( Matrix3.identity(), new Vector3() );
@@ -62,8 +62,8 @@ public class Box implements SupportMap3, Geometry, Material {
 	 * @param posz Box local z-axis translation
 	 */
 	public Box(double x, double y, double z, double posx, double posy, double posz) {
-		this.xl = x; this.yl = y; this.zl = z;
-		mass = xl*yl*zl;
+		this.xs = x; this.ys = y; this.zs = z;
+		mass = xs*ys*zs;
 		
 		//set the local transform
 		setLocalTransform( Matrix3.identity(), new Vector3(posx,posy,posz) );
@@ -75,7 +75,7 @@ public class Box implements SupportMap3, Geometry, Material {
 	 * should this box be attached to one. This operation is relatively expensive.
 	 */
 	public final void setBoxSideLengths( double xl, double yl, double zl) {
-		this.xl = xl; this.yl = yl; this.zl = zl;
+		this.xs = xl; this.ys = yl; this.zs = zl;
 		mass = xl*yl*zl;
 		
 		// re-finialize body if any present
@@ -107,9 +107,9 @@ public class Box implements SupportMap3, Geometry, Material {
 		InertiaMatrix I = new InertiaMatrix();
 		
 		Matrix3.set( I,
-				(1.0f/12.0f)*mass*(yl*yl+zl*zl), 0.0f, 0.0f,
-				0.0f, (1.0f/12.0f)*mass*(xl*xl+zl*zl), 0.0f,
-				0.0f, 0.0f, (1.0f/12.0f)*mass*(yl*yl+xl*xl) );
+				(1.0f/12.0f)*mass*(ys*ys+zs*zs), 0.0f, 0.0f,
+				0.0f, (1.0f/12.0f)*mass*(xs*xs+zs*zs), 0.0f,
+				0.0f, 0.0f, (1.0f/12.0f)*mass*(ys*ys+xs*xs) );
 
 		return I;
 	}
@@ -130,7 +130,7 @@ public class Box implements SupportMap3, Geometry, Material {
 		this.localrotation.assign(rotation);
 
 		//set the local transform (including scaling)
-		localtransform.assign( localrotation.multiply(new Matrix3(new Vector3(xl,0,0), new Vector3(0,yl,0), new Vector3(0,0,zl))));
+		localtransform.assign( localrotation.multiply(new Matrix3(new Vector3(xs,0,0), new Vector3(0,ys,0), new Vector3(0,0,zs))));
 		
 		//extremal point on box
 		double max = Matrix3.multiply(localtransform, new Vector3(0.5,0.5,0.5), new Vector3()).norm();
@@ -146,16 +146,89 @@ public class Box implements SupportMap3, Geometry, Material {
 
 	@Override
 	public Vector3 getMaxBounds() {
-		Vector3 displacement = new Vector3();	
-		displacement.assign(Matrix3.multiply(body.state.rotation, localdisplacement, new Vector3()));
-		return bounds.add(displacement).add(body.state.position);
+//		Vector3 displacement = new Vector3();	
+//		displacement.assign(Matrix3.multiply(body.state.rotation, localdisplacement, new Vector3()));
+//		return bounds.add(displacement).add(body.state.position);
+		
+		Matrix3 T = body.state.rotation.multiply(localrotation).transpose();
+		Vector3 vx = new Vector3(), vy = new Vector3(), vz = new Vector3();
+		T.getColumnVectors(vx, vy, vz); 
+		
+		// support points in body space (with scaling)
+		Vector3 px = new Vector3( xs*(vx.x<0?-0.5:0.5), ys*(vx.y<0?-0.5:0.5), zs*(vx.z<0?-0.5:0.5) );
+		Vector3 py = new Vector3( xs*(vy.x<0?-0.5:0.5), ys*(vy.y<0?-0.5:0.5), zs*(vy.z<0?-0.5:0.5) );
+		Vector3 pz = new Vector3( xs*(vz.x<0?-0.5:0.5), ys*(vz.y<0?-0.5:0.5), zs*(vz.z<0?-0.5:0.5) );
+
+		// local rotation
+		Matrix3.multiply( localrotation, px, px);
+		Matrix3.multiply( localrotation, py, py);
+		Matrix3.multiply( localrotation, pz, pz);
+		
+		// add local displacement and scale
+		Vector3.add( px, localdisplacement);
+		Vector3.add( py, localdisplacement);
+		Vector3.add( pz, localdisplacement);
+
+		
+//		Vector3 wx = body.state.rotation.multiply(px).add(body.state.position);
+//		Vector3 wy = body.state.rotation.multiply(py).add(body.state.position);
+//		Vector3 wz = body.state.rotation.multiply(pz).add(body.state.position);	
+//		return new Vector3(wx.x,wy.y,wz.z);
+		
+		
+		// grab the row vectors of the body rotation (to save some matrix vector muls')
+		Matrix3 Tb = body.state.rotation;
+		Vector3 rx = new Vector3(), ry = new Vector3(), rz = new Vector3();
+		Tb.getRowVectors(rx, ry, rz);
+		
+//		return Matrix4.multiply(transform4, new Vector3(sv1, sv2, sv3), new Vector3());
+		return new Vector3(rx.dot(px)+0.5, ry.dot(py)+0.5, rz.dot(pz)+0.5).add(body.state.position);
+
 	}
 
 	@Override
 	public Vector3 getMinBounds() {
-		Vector3 displacement = new Vector3();
-		displacement.assign(Matrix3.multiply(body.state.rotation, localdisplacement, new Vector3()));
-		return bounds.multiply(-1).add(displacement).add(body.state.position);
+//		Vector3 displacement = new Vector3();
+//		displacement.assign(Matrix3.multiply(body.state.rotation, localdisplacement, new Vector3()));
+//		return bounds.multiply(-1).add(displacement).add(body.state.position);
+		
+		// get the column vectors of the transform
+		Matrix3 T = body.state.rotation.multiply(localrotation).transpose();
+		Vector3 vx = new Vector3(), vy = new Vector3(), vz = new Vector3();
+		T.getColumnVectors(vx, vy, vz);
+		
+		Vector3.multiply(vx, -1);
+		Vector3.multiply(vy, -1);
+		Vector3.multiply(vz, -1);
+		
+		// support points in body space (with scaling)
+		Vector3 px = new Vector3( xs*(vx.x<0?-0.5:0.5), ys*(vx.y<0?-0.5:0.5), zs*(vx.z<0?-0.5:0.5) );
+		Vector3 py = new Vector3( xs*(vy.x<0?-0.5:0.5), ys*(vy.y<0?-0.5:0.5), zs*(vy.z<0?-0.5:0.5) );
+		Vector3 pz = new Vector3( xs*(vz.x<0?-0.5:0.5), ys*(vz.y<0?-0.5:0.5), zs*(vz.z<0?-0.5:0.5) );
+
+		// local rotation
+		Matrix3.multiply( localrotation, px, px);
+		Matrix3.multiply( localrotation, py, py);
+		Matrix3.multiply( localrotation, pz, pz);
+		
+		// add local displacement and scale
+		Vector3.add( px, localdisplacement);
+		Vector3.add( py, localdisplacement);
+		Vector3.add( pz, localdisplacement);
+
+//		// grab the row vectors of the body rotation (to save some matrix vector muls')
+		Matrix3 Tb = body.state.rotation;
+		Vector3 rx = new Vector3(), ry = new Vector3(), rz = new Vector3();
+		Tb.getRowVectors(rx, ry, rz);
+		
+		//return Matrix4.multiply(transform4, new Vector3(sv1, sv2, sv3), new Vector3());
+		return new Vector3(rx.dot(px)-0.5, ry.dot(py)-0.5, rz.dot(pz)-0.5).add(body.state.position);
+		
+//		Vector3 wx = body.state.rotation.multiply(px).add(body.state.position);
+//		Vector3 wy = body.state.rotation.multiply(py).add(body.state.position);
+//		Vector3 wz = body.state.rotation.multiply(pz).add(body.state.position);	
+//		return new Vector3(wx.x,wy.y,wz.z);
+
 	}
 
 	@Override
@@ -299,7 +372,7 @@ public class Box implements SupportMap3, Geometry, Material {
 	 * @return
 	 */
 	public Vector3 getDimentions() {
-		return new Vector3(xl,yl,zl);
+		return new Vector3(xs,ys,zs);
 	}
 
 	@Override

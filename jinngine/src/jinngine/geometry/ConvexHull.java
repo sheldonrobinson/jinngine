@@ -30,6 +30,7 @@ public class ConvexHull implements SupportMap3, Geometry {
 	private final ArrayList<ArrayList<Integer>> dualadjacent;
 	private final Vector3 centreOfMass;
 	private final double referenceMass;
+	private final int numberOfVertices;
 	
 	/**
 	 * Computes vertex adjacency lists. Method simply runs through all faces, which are given as lists of vertex indices, and fills out 
@@ -109,8 +110,11 @@ public class ConvexHull implements SupportMap3, Geometry {
 		for ( Point3d p: points) 
 			vertices.add(new Vector3( p.x, p.y, p.z));
 	
+		// grab the number of vertices
+		numberOfVertices = vertices.size();
+		
 		// adjacency lists for hull
-		adjacent = adjacencyList(faceIndices, vertices.size() );
+		adjacent = adjacencyList(faceIndices, numberOfVertices );
 		
 		// go thru all faces to make the dual hull points
 		for (i=0; i< faceIndices.length; i++) { 	
@@ -163,20 +167,16 @@ public class ConvexHull implements SupportMap3, Geometry {
 		//assume identity local transform for now
 		minBoundsTransformed.assign(minBounds);
 		maxBoundsTransformed.assign(maxBounds);
-		
-		System.out.println("Hull created");
-		System.out.println("faces " + faces.size()); 
-		
-		// perform mass calculations
-		MassProperties masscalculation = new MassProperties( this, 3);
+				
+		// perform approximate mass calculation
+		MassProperties masscalculation = new MassProperties( this, 1000000 );
 		
 		// set propperties
 		mass = referenceMass = masscalculation.getMass();
 		inertiamatrix = new InertiaMatrix();
 		Matrix3.set( masscalculation.getInertiaMatrix(), inertiamatrix );
 		centreOfMass = masscalculation.getCentreOfMass();
-		centreOfMass.print();
-		inertiamatrix.print(inertiamatrix);
+
 		// align all vertices and faces to centre of mass coordinates
 		for ( Vector3 p: vertices)
 			Vector3.add( p, centreOfMass.multiply(-1) );
@@ -206,26 +206,43 @@ public class ConvexHull implements SupportMap3, Geometry {
 	public Vector3 supportPoint(Vector3 direction) {
 		Vector3 v = body.state.rotation.multiply(localtransform).transpose().multiply(direction);
 		
-		//hill climb along v
-		int index = 0;
-		double value = v.dot(vertices.get(index));
-		boolean better = true;
-		while (better) {
-			better = false;
-			//go through adjacency list and pick first improver (greedy)
-			for ( int i: adjacent.get(index)) {
-				double newvalue = v.dot(vertices.get(i));
-				if ( newvalue > value) {
-					value = newvalue;
-					index = i;
-					better = true;
-					break;
-				} 
+		// do hill climbing if the hull has a considerable number of vertices
+		if (numberOfVertices > 32) {
+			//hill climb along v
+			int index = 0;
+			double value = v.dot(vertices.get(index));
+			boolean better = true;
+			while (better) {
+				better = false;
+				//go through adjacency list and pick first improver (greedy)
+				for ( int i: adjacent.get(index)) {
+					double newvalue = v.dot(vertices.get(i));
+					if ( newvalue > value) {
+						value = newvalue;
+						index = i;
+						better = true;
+						break;
+					} 
+				}
 			}
+			
+			//return Matrix4.multiply(transform4, new Vector3(sv1, sv2, sv3), new Vector3());
+			return body.state.rotation.multiply(localtransform.multiply(vertices.get(index)).add(localdisplacement)).add(body.state.position);
+
+		} else {
+			// if not, just check each vertex
+			double value = Double.NEGATIVE_INFINITY;
+			Vector3 best = null;
+			for (Vector3 p: vertices) {
+				if (v.dot(p) > value || best == null) {
+					best = p;
+					value = v.dot(p);
+				}
+			}
+			
+			return body.state.rotation.multiply(localtransform.multiply(best).add(localdisplacement)).add(body.state.position);			
 		}
 
-		//return Matrix4.multiply(transform4, new Vector3(sv1, sv2, sv3), new Vector3());
-		return body.state.rotation.multiply(localtransform.multiply(vertices.get(index)).add(localdisplacement)).add(body.state.position);
 	}
 
 	@Override

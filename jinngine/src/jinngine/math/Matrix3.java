@@ -353,7 +353,13 @@ public class Matrix3 {
     return r;
   }
 
-  //r = Av
+  /**
+   * Multiply v by A, and place result in r, so r = Av
+   * @param A 3 by 3 matrix
+   * @param v Vector to be multiplied
+   * @param r Vector to hold result of multiplication
+   * @return Reference to the given Vector3 r instance
+   */
   public final static Vector3 multiply( final Matrix3 A, final Vector3 v, final Vector3 r ) {
     //                   
     //               V | v1

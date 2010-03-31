@@ -35,6 +35,7 @@ public class GJK implements ClosestPointsAlgorithm<SupportMap3,SupportMap3> {
 		public final int[] permutation = new int[] {0,1,2,3};
 		public int simplexSize;	
 		public int iterations = 0;
+		public boolean intersection = false;
 		//public boolean initialized = false;
 	}
 
@@ -70,9 +71,10 @@ public class GJK implements ClosestPointsAlgorithm<SupportMap3,SupportMap3> {
 			va.assign(sa);
 			vb.assign(sb);
 			//v.assign(sa.minus(sb));
-			w.print();
-			v.print();
-			System.out.println("GJK: early termination, vlaue "+v.normalize().dot(w));
+//			w.print();
+//			v.print();
+//			System.out.println("GJK: early termination, vlaue "+v.normalize().dot(w));
+			state.intersection = false;
 			return;
 		} 
 		
@@ -102,7 +104,7 @@ public class GJK implements ClosestPointsAlgorithm<SupportMap3,SupportMap3> {
 			
 			//separating axis test (distance is at least more than the envelope)
 			if ( v.normalize().dot(w) > envelope ) {
-//				System.out.println("sep axis, envelope="+envelope+" v.w ="+v.normalize().dot(w)+ " iteration " + iterations);
+				state.intersection = false;
 				break;
 			} 
 						
@@ -141,9 +143,13 @@ public class GJK implements ClosestPointsAlgorithm<SupportMap3,SupportMap3> {
 			Vector3.add(state.q, state.simplices[state.permutation[i]][2].multiply(state.lambda[state.permutation[i]]));				
 		}
 
-		//return closest points in return arguments
+		// return closest points in return arguments
 		va.assign(state.p);
 		vb.assign(state.q);
+		
+		// check for intersection
+		if ( va.minus(vb).norm() < epsilon || state.simplexSize > 3)
+			state.intersection = true;
 	}
 	
 	
