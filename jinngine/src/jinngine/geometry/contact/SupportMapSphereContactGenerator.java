@@ -11,7 +11,6 @@ package jinngine.geometry.contact;
 import java.util.Iterator;
 import java.util.List;
 
-import jinngine.collision.ExpandingPolytope;
 import jinngine.collision.GJK;
 import jinngine.geometry.Sphere;
 import jinngine.geometry.SupportMap3;
@@ -129,10 +128,12 @@ public final class SupportMapSphereContactGenerator implements ContactGenerator 
 		// penetration
 		if (closest.getState().simplexSize > 3  || cp.paw.minus(cp.pbw).norm() < 1e-10 ) {
 			System.out.println("Support-Sphere: penetration");
-			// run EPA
-			ExpandingPolytope epa = new ExpandingPolytope();
-			epa.run(convex, pointmap, cp.paw, cp.pbw, closest.getState());			
-			penetrating = true;
+//			// run EPA
+//			ExpandingPolytope epa = new ExpandingPolytope();
+//			epa.run(convex, pointmap, cp.paw, cp.pbw, closest.getState());			
+//			penetrating = true;
+			
+			//TODO implement ray cast growth distance here
 		}	
 		
 		// find direction

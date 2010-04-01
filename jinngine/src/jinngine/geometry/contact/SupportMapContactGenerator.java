@@ -22,7 +22,7 @@ import jinngine.geometry.contact.ContactGenerator.ContactPoint;
 import jinngine.math.Matrix3;
 import jinngine.math.Vector3;
 
-public class ExperimentalContactGenerator implements ContactGenerator {
+public class SupportMapContactGenerator implements ContactGenerator {
 	
 	private final double epsilon = 1e-7;
 	private final double envelope = 0.125;
@@ -46,7 +46,7 @@ public class ExperimentalContactGenerator implements ContactGenerator {
 
 	
 	
-	public ExperimentalContactGenerator(SupportMap3 sa, Geometry ga, SupportMap3 sb, Geometry gb) {
+	public SupportMapContactGenerator(SupportMap3 sa, Geometry ga, SupportMap3 sb, Geometry gb) {
 		this.Sa = sa;
 		this.Sb = sb;
 		this.ga = ga;

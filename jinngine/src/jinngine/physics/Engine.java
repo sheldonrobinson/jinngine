@@ -257,7 +257,7 @@ public final class Engine implements PhysicsModel, PhysicsScene {
 					Geometry b) {
 				if ( a instanceof SupportMap3 && b instanceof SupportMap3) {
 //					return new FeatureSupportMapContactGenerator((SupportMap3)a, a,  (SupportMap3)b, b);
-					return new ExperimentalContactGenerator((SupportMap3)a, a,  (SupportMap3)b, b);
+					return new SupportMapContactGenerator((SupportMap3)a, a,  (SupportMap3)b, b);
 //					return new BulletPersistentManifold(a,b);
 
 				}

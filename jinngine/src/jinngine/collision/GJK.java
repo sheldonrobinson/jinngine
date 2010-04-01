@@ -17,7 +17,7 @@ import jinngine.math.Vector3;
  * between convex objects and/or closest points. This implementation is based on the theory presented in [Bergen 2003]
  * @author Silcowitz
  */
-public class GJK implements ClosestPointsAlgorithm<SupportMap3,SupportMap3> {
+public class GJK {
 	//private Map<Pair<Body>,GJK3.State> cachedStates = new HashMap<Pair<Body>,GJK3.State>();
 
 	/**
