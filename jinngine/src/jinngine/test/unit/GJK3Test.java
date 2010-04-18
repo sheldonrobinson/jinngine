@@ -31,10 +31,10 @@ public class GJK3Test extends TestCase {
 		
 		//set up geometries
 		Sphere s1 = new Sphere(1);
-		Body b1 = new Body(s1);
+		Body b1 = new Body("default", s1);
 		b1.setPosition(new Vector3(0,3,0));
 		Sphere s2 = new Sphere(1);
-		Body b2 = new Body(s2);
+		Body b2 = new Body("default", s2);
 		b2.setPosition(new Vector3(0,0,0));
 		
 		//closest point vectors
@@ -65,10 +65,10 @@ public class GJK3Test extends TestCase {
 				
 		//set up geometries
 		Sphere s1 = new Sphere(1);
-		Body b1 = new Body(s1);
+		Body b1 = new Body("default", s1);
 		b1.setPosition(new Vector3(0,1+a,0));
 		Sphere s2 = new Sphere(1);
-		Body b2 = new Body(s2);
+		Body b2 = new Body("default", s2);
 		b2.setPosition(new Vector3(0,-1-a,0));
 		
 		//closest point vectors
@@ -92,10 +92,10 @@ public class GJK3Test extends TestCase {
 		
 		//set up two spheres, occupying the exact same space
 		Sphere s1 = new Sphere(1);
-		Body b1 = new Body(s1);
+		Body b1 = new Body("default", s1);
 		b1.setPosition(new Vector3(0,0,0));
 		Sphere s2 = new Sphere(1);
-		Body b2 = new Body(s2);
+		Body b2 = new Body("default", s2);
 		b2.setPosition(new Vector3(0,0,0));
 		
 		//closest point vectors
@@ -117,10 +117,10 @@ public class GJK3Test extends TestCase {
 		
 		//set up two spheres, occupying the exact same space
 		Sphere s1 = new Sphere(1);
-		Body b1 = new Body(s1);
+		Body b1 = new Body("default", s1);
 		b1.setPosition(new Vector3(0,0,0));
 		Sphere s2 = new Sphere(1);
-		Body b2 = new Body(s2);
+		Body b2 = new Body("default", s2);
 		b2.setPosition(new Vector3(0,0,0));
 		
 		int N = 1024*2;

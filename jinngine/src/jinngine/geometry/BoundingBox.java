@@ -16,7 +16,7 @@ import jinngine.math.Vector3;
  * @author mo
  *
  */
-public interface AxisAlignedBoundingBox {
+public interface BoundingBox {
 	/**
 	 * Return a vector that contains all minimum bounds on each axis. The bounds are in world coordinates in world space
 	 */

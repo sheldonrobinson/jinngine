@@ -89,7 +89,7 @@ public class SphereContactGenerator implements ContactGenerator {
 	}
 
 	@Override
-	public boolean run(double dt) {
+	public void run() {
 		// sphere centres in world space
 		Vector3 caw = s1.getTransform().multiply(Vector3.zero);
 		Vector3 cbw = s2.getTransform().multiply(Vector3.zero);
@@ -118,19 +118,25 @@ public class SphereContactGenerator implements ContactGenerator {
 			cp.depth = shell-d;
 			//cp.depth = depth-(envelope/2.0) > 0 ? depth-(envelope/2.0):0;
 			incontact = true;
-			return true;
+			return;
 		// penetration
 		} else if ( d < 0){
 			cp.depth = shell-d;
 			//cp.depth = 0;
 			incontact = true;
-			return true;
+			return;
 		// separation
 		} else {
 			cp.depth = 0;
 			incontact = false;
-			return false;
+			return;
 		}
+	}
+
+	@Override
+	public void remove() {
+		// TODO Auto-generated method stub
+		
 	}
 
 }

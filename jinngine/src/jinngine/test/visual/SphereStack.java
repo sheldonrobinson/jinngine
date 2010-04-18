@@ -31,7 +31,7 @@ import jinngine.physics.force.*;
 		}
 
 		@Override
-		public void deleteScene(PhysicsScene model) {
+		public void deleteScene(DefaultScene model) {
 			for (Body b:boxes) {
 				model.removeBody(b);
 			}
@@ -40,12 +40,12 @@ import jinngine.physics.force.*;
 		}
 
 		@Override
-		public void initScene(PhysicsScene model) {
+		public void initScene(DefaultScene model) {
 			//parameters
-			//model.setDt(dt);
+			model.setTimestep(dt);
 
-			Body table = new Body( new Box(220,1,120));
-			table.setPosition( new Vector3(0,-13,0));
+			Body table = new Body( "default", new Box(220,20,120));
+			table.setPosition( new Vector3(0,-13-10,0));
 			table.setFixed(true);
 			table.advancePositions(1);
 			model.addBody(table);
@@ -55,8 +55,8 @@ import jinngine.physics.force.*;
 			for (int i=0; i<dimention; i++) {
 				for (int j=0; j<dimention; j++) {
 					for ( int k=0; k<dimention; k++) {
-						Body b = new Body( new Sphere(4) );
-						b.setPosition(new Vector3(-40+i*9,j*9 ,k*9));
+						Body b = new Body( "default", new Sphere(4) );
+						b.setPosition(new Vector3(-40+i*9,j*9,k*9));
 						//b.setMass(5);	
 						//b.getGeometries().next().setEnvelope(1);
 						model.addBody(b);
@@ -70,7 +70,7 @@ import jinngine.physics.force.*;
 		}
 
 		public static void main(String arg[]) {
-			Engine model = new Engine();
+			DefaultScene model = new DefaultScene();
 			ThinWall test = new ThinWall(7, 0.05);
 			test.initScene(model);			
 			new BoxVisualisor(model, test.boxes, 1).start();

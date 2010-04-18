@@ -30,8 +30,8 @@ public class ConjugateGradientTest extends TestCase {
 		
 		Solver s = new ConjugateGradients();
 		
-		Body b1 = new Body();
-		Body b2 = new Body();
+		Body b1 = new Body("default");
+		Body b2 = new Body("default");
 		
 		Solver.constraint c1 = new constraint();
 		Vector3 va =new Vector3(1,0,0);
@@ -40,7 +40,7 @@ public class ConjugateGradientTest extends TestCase {
 		c1.assign(b1,b2,
 				va,z,vb,z,
 				va,z,vb,z,
-				-Double.POSITIVE_INFINITY,Double.POSITIVE_INFINITY,null,1);
+				-Double.POSITIVE_INFINITY,Double.POSITIVE_INFINITY,null,1, 0);
 		
 		//This is the system
 		//
@@ -71,8 +71,8 @@ public class ConjugateGradientTest extends TestCase {
 		double epsilon = 1e-7;
 		
 		Solver s = new ConjugateGradients();
-		Body b1 = new Body();
-		Body b2 = new Body();
+		Body b1 = new Body("default");
+		Body b2 = new Body("default");
 		
 		Solver.constraint c1 = new constraint();
 		Solver.constraint c2 = new constraint();
@@ -83,11 +83,11 @@ public class ConjugateGradientTest extends TestCase {
 		c1.assign(b1,b2,
 				va,z,vb,z,
 				va,z,vb,z,
-				0,0,null,1);
+				0,0,null,1, 0);
 		c2.assign(b1,b2,
 				va,z,vb,z,
 				va,z,vb,z,
-				0,0,null,1);
+				0,0,null,1, 0);
 
 		
 		//This is the system

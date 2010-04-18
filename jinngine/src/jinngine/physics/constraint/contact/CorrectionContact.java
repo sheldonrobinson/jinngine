@@ -69,7 +69,7 @@ public final class CorrectionContact implements ContactConstraint {
 		//use ContactGenerators to create new contactpoints
 		for ( ContactGenerator cg: generators) {
 			//run contact generator
-			cg.run(dt);
+			cg.run();
 
 			List<contactpoint> pointlist = contacts.get(cg); 
 
@@ -278,7 +278,7 @@ public final class CorrectionContact implements ContactConstraint {
 				B2,B3,B4,J1,
 				J2,J3,J4,lowerNormalLimit,
 				Double.POSITIVE_INFINITY,null,
-				unf-uni + Fext*dt + correction*nfactor );
+				unf-uni + Fext*dt + correction*nfactor, 0 );
 		
 		//set the correct friction setting for this contact
 		c.mu = cp.friction;
@@ -303,7 +303,7 @@ public final class CorrectionContact implements ContactConstraint {
 				Double.NEGATIVE_INFINITY,
 				Double.POSITIVE_INFINITY,
 				c,
-				ut1f-ut1i + t2Fext*dt + dt1*cfactor
+				ut1f-ut1i + t2Fext*dt + dt1*cfactor, 0
 
 		);
 		
@@ -331,7 +331,7 @@ public final class CorrectionContact implements ContactConstraint {
 				Double.NEGATIVE_INFINITY,
 				Double.POSITIVE_INFINITY,
 				c,
-				ut2f-ut2i + t3Fext*dt +dt2 * cfactor
+				ut2f-ut2i + t3Fext*dt +dt2 * cfactor, 0
 		);
 
 		//book-keep constraints in each body

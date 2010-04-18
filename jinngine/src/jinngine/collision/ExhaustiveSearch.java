@@ -10,30 +10,28 @@ package jinngine.collision;
 
 import java.util.*;
 
-import jinngine.geometry.AxisAlignedBoundingBox;
+import jinngine.geometry.BoundingBox;
 import jinngine.geometry.Geometry;
 import jinngine.geometry.Sphere;
 import jinngine.math.Vector3;
 import jinngine.util.Pair;
 
 /**
- * A naive broad-phase collision detection algorithm. AllPairsTest obviously just performs an
+ * A naive broad-phase collision detection algorithm. ExhaustiveSearch obviously just performs an
  * overlap test on each possible pair in the considered configuration. Despite its O(n^2) complexity, 
  * the method sometimes out-performs more advanced implementations on configurations with few objects.
  * In addition, all pairs test is often useful for test purposes.
- * @author Silcowitz
- *
  */
-public class AllPairsTest implements BroadfaseCollisionDetection {
+public class ExhaustiveSearch implements BroadphaseCollisionDetection {
 	
 	private final Set<Pair<Geometry>> existingPairs = new LinkedHashSet<Pair<Geometry>>();
 	private final Set<Pair<Geometry>> leavingPairs = new LinkedHashSet<Pair<Geometry>>();
 	private final List<Geometry> geometries = new ArrayList<Geometry>();
-	private final List<BroadfaseCollisionDetection.Handler> handlers = new ArrayList<Handler>();
+	private final List<BroadphaseCollisionDetection.Handler> handlers = new ArrayList<Handler>();
 
-	public AllPairsTest() {}
+	public ExhaustiveSearch() {}
 	
-	public AllPairsTest(BroadfaseCollisionDetection.Handler handler) {
+	public ExhaustiveSearch(BroadphaseCollisionDetection.Handler handler) {
 		this.handlers.add(handler);
 	}
 
@@ -80,7 +78,7 @@ public class AllPairsTest implements BroadfaseCollisionDetection {
 		leavingPairs.clear();
 	}
 	
-	private static final boolean overlap( AxisAlignedBoundingBox i , AxisAlignedBoundingBox j) {
+	private static final boolean overlap( BoundingBox i , BoundingBox j) {
 
 		Vector3 bi = i.getMinBounds();
 		Vector3 ei = i.getMaxBounds();

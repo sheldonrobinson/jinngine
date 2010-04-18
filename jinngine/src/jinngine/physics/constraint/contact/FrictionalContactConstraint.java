@@ -98,7 +98,7 @@ public final class FrictionalContactConstraint implements ContactConstraint {
 		//use ContactGenerators to create new contactpoints
 		for ( ContactGenerator cg: generators) {
 			//run contact generator
-			cg.run(dt);
+			cg.run();
 			
 			//generate contacts
 			Iterator<ContactGenerator.ContactPoint> i = cg.getContacts();
@@ -227,9 +227,10 @@ public final class FrictionalContactConstraint implements ContactConstraint {
 		// limit the correction velocity
 		correction = correction< -limit? -limit:correction;  
 		correction = correction>  limit?  limit:correction;
-		//correction = 0;
-
 		
+		// take a factor of real correction velocity
+		correction = correction * 0.9;
+
 		// the normal constraint
 		constraint c = new constraint();
 		c.assign(b1,b2,
@@ -237,9 +238,14 @@ public final class FrictionalContactConstraint implements ContactConstraint {
 				J1, J2, J3, J4,
 				lowerNormalLimit, Double.POSITIVE_INFINITY,
 				null,
-			     -(unf-uni)-correction ) ;
-		// -(unf-uni)-c = -unf+uni-c = -(-emin(uni,0))+uni-c = emin(uni,0)+uni-c
-        // (uni-unf)-c
+			     -(unf-uni)-correction, -correction) ;
+		
+		// set distance (unused in simulator)
+		c.distance = cp.distance;
+		// set the true initial velocity
+		c.ui = uni + J1.dot(b1.deltavelocity) + J2.dot(b1.deltaomega) + J3.dot(b2.deltavelocity) + J4.dot(b2.deltaomega);
+;
+		
 		//normal-friction coupling 
 		final constraint coupling = enableCoupling?c:null;
 		
@@ -265,6 +271,7 @@ public final class FrictionalContactConstraint implements ContactConstraint {
 				-frictionBoundMagnitude, frictionBoundMagnitude,
 				coupling,
 				-(ut1f-ut1i)  //+ t2Fext*dt*0
+, 0
 		);
 		
 		//second tangent
@@ -278,7 +285,7 @@ public final class FrictionalContactConstraint implements ContactConstraint {
 				t3, r1.cross(t3), t3.multiply(-1), r2.cross(t3).multiply(-1),
 				-frictionBoundMagnitude, frictionBoundMagnitude,
 				coupling,
-				-(ut2f-ut2i)  
+				-(ut2f-ut2i), 0  
 		);
 
 		outConstraints.add(c);

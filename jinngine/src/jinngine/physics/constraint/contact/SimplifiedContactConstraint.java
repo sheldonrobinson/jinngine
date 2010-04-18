@@ -81,7 +81,7 @@ public final class SimplifiedContactConstraint implements ContactConstraint {
 		//use ContactGenerators to create new contactpoints
 		for ( ContactGenerator cg: generators) {
 			//run contact generator
-			cg.run(dt);
+			cg.run();
 			//cg.run(dt);
 
 			
@@ -110,7 +110,7 @@ public final class SimplifiedContactConstraint implements ContactConstraint {
 						-5,
 						5,
 						null,
-						basis.column(1).dot(u) );
+						basis.column(1).dot(u), 0 );
 
 				
 				constraint linear2 = new constraint();
@@ -121,7 +121,7 @@ public final class SimplifiedContactConstraint implements ContactConstraint {
 						-5,
 						5,
 						null,
-						basis.column(2).dot(u) );
+						basis.column(2).dot(u), 0 );
 
 //				constraint linear2 = new constraint();
 //				linear2.assign( 
@@ -142,7 +142,7 @@ public final class SimplifiedContactConstraint implements ContactConstraint {
 						-5,
 						5,
 						null,
-						axis.dot(b1.state.omega)-axis.dot(b2.state.omega) );
+						axis.dot(b1.state.omega)-axis.dot(b2.state.omega), 0 );
 
 				constraintIterator.add(linear1);
 				constraintIterator.add(linear2);
@@ -286,7 +286,7 @@ public final class SimplifiedContactConstraint implements ContactConstraint {
 				J1, J2, J3, J4,
 				lowerNormalLimit, Double.POSITIVE_INFINITY,
 				null,
-			     -(unf-uni) - Fext*dt*0 -correction ) ;
+			     -(unf-uni) - Fext*dt*0 -correction, 0 ) ;
 		
 		//set the correct friction setting for this contact
 		c.mu = cp.friction;
@@ -313,6 +313,7 @@ public final class SimplifiedContactConstraint implements ContactConstraint {
 				Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY,
 				c,
 				-(ut1f-ut1i) //+ t2Fext*dt*0
+, 0
 		);
 		
 		//book-keep constraints in each body
@@ -331,7 +332,7 @@ public final class SimplifiedContactConstraint implements ContactConstraint {
 				t3, r1.cross(t3), t3.multiply(-1), r2.cross(t3).multiply(-1),
 				Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY,
 				c,
-				-(ut2f-ut2i) 
+				-(ut2f-ut2i), 0 
 		);
 
 		//book-keep constraints in each body

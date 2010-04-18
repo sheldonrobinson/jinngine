@@ -43,6 +43,5 @@ public interface ContactConstraint extends Constraint {
 	 * @return
 	 */
 	public double getNumberOfGenerators();	
-
 		
 }

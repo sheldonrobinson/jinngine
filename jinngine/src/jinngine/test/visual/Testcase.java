@@ -8,11 +8,11 @@
  */
 package jinngine.test.visual;
 
-import jinngine.physics.PhysicsScene;
+import jinngine.physics.DefaultScene;
 
 public interface Testcase {
 	
-	public void initScene(PhysicsScene model);
-	public void deleteScene(PhysicsScene model);
+	public void initScene(DefaultScene model);
+	public void deleteScene(DefaultScene model);
 
 }

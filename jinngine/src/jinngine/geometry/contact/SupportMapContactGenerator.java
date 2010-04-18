@@ -18,19 +18,13 @@ import jinngine.collision.RayCast;
 import jinngine.geometry.Geometry;
 import jinngine.geometry.Material;
 import jinngine.geometry.SupportMap3;
-import jinngine.geometry.contact.ContactGenerator.ContactPoint;
 import jinngine.math.Matrix3;
 import jinngine.math.Vector3;
 
 public class SupportMapContactGenerator implements ContactGenerator {
-	
-	private final double epsilon = 1e-7;
-	private final double envelope = 0.125;
-	private final double shell = envelope*0.5;
-	private final SupportMap3 Sa, Sb, sco;
-	private final Geometry ga,gb;
-	private final GJK gjk = new GJK();
-	private final RayCast raycast = new RayCast();
+	// data
+	private final SupportMap3 Sa, Sb;
+	private final Geometry ga, gb;
 	private final Vector3 pa = new Vector3();
 	private final Vector3 pb = new Vector3();
 	private final Vector3 v = new Vector3();
@@ -38,36 +32,41 @@ public class SupportMapContactGenerator implements ContactGenerator {
 	private final List<ContactPoint> contacts = new LinkedList<ContactPoint>();
 	private final List<Vector3> faceA = new ArrayList<Vector3>();
 	private final List<Vector3> faceB = new ArrayList<Vector3>();
-	private final double restitution;
-	private final double friction;
 	private final Vector3 gadisp = new Vector3();
 	private final Vector3 gbdisp = new Vector3();
 
+	// settings
+	private final double epsilon = 1e-7;
+	private final double envelope;
+	private final double shell;
+	private final double restitution;
+	private final double friction;
 
-	
-	
+	// distance algorithms
+	private final GJK gjk = new GJK();
+	private final RayCast raycast = new RayCast();
+
 	public SupportMapContactGenerator(SupportMap3 sa, Geometry ga, SupportMap3 sb, Geometry gb) {
 		this.Sa = sa;
 		this.Sb = sb;
 		this.ga = ga;
 		this.gb = gb;
-		this.sco = new SupportMap3() {
-			@Override
-			public Vector3 supportPoint(Vector3 direction) {
-				return Sa.supportPoint(direction).minus(Sb.supportPoint(direction).multiply(-1));
-			}
-			@Override
-			public void supportFeature(Vector3 d, double epsilon, List<Vector3> face) {}
-		};
 		
-		
+		// select the smallest envelope for contact generation
+		if  ( ga.getEnvelope() > gb.getEnvelope() ) {
+			envelope = gb.getEnvelope();
+			shell = envelope*0.5;
+		} else {
+			envelope = ga.getEnvelope();
+			shell = envelope*0.5;			
+		}
+
 		//select the smallest restitution and friction coefficients 
 		if ( ga instanceof Material && gb instanceof Material) {
 			double ea = ((Material)ga).getRestitution();
 			double fa = ((Material)ga).getFrictionCoefficient();
 			double eb = ((Material)gb).getRestitution();
 			double fb = ((Material)gb).getFrictionCoefficient();
-
 			//pick smallest values
 			restitution = ea > eb ? eb : ea;
 			friction    = fa > fb ? fb : fa;
@@ -78,7 +77,7 @@ public class SupportMapContactGenerator implements ContactGenerator {
 		} else if ( gb instanceof Material ) {
 			restitution = ((Material)gb).getRestitution();
 			friction    = ((Material)gb).getFrictionCoefficient();
-		} else { //default values
+		} else { // default values
 			restitution = 0.7;
 			friction = 0.5;
 		}
@@ -90,7 +89,7 @@ public class SupportMapContactGenerator implements ContactGenerator {
 	}
 
 	@Override
-	public boolean run(double dt) {
+	public void run() {
 		// first we run gjk 
 		gjk.run(Sa, Sb, pa, pb, envelope, epsilon, 32);
 		v.assign(pa.minus(pb));
@@ -99,41 +98,37 @@ public class SupportMapContactGenerator implements ContactGenerator {
 		
 		// if distance is below precision
 		if (d < epsilon*epsilon || gjk.getState().simplexSize > 3) {
-//			System.out.println("penetration case simplex " + gjk.getState().simplexSize);
-			// we perform a raycast that is equivalent to
+			// we perform a raycast, that is equivalent to
 			// finding the growth distance between Sa and Sb. 
 			// by that we obtain a contact normal at the 
 			// intersection point. 
-
-			// 
 			ga.getLocalTranslation(gadisp);	
 			gb.getLocalTranslation(gbdisp);
+			
+			// apply body rotation to local displacements (centre of mass of objects)
+			Matrix3.multiply(ga.getBody().state.rotation, gadisp, gadisp);
+			Matrix3.multiply(gb.getBody().state.rotation, gbdisp, gbdisp);
 			Vector3 direction = ga.getBody().getPosition().add(gadisp).minus(gb.getBody().getPosition().add(gbdisp));
-			// compute the largest possible starting lambda, based on the support of A-B
-			// along the ray direction
-//			direction.print();
+
+			// compute the largest possible starting lambda, based on 
+			// the support of A-B along the ray direction
 			Vector3 sp = Sa.supportPoint(direction.negate()).minus(Sb.supportPoint(direction));
 			double lambda = direction.dot(sp)/direction.dot(direction)-envelope/direction.norm();
-			//System.out.println("lambda = " + lambda);
-			//double startvalue = Sa.supportPoint(direction).minus(Sb.supportPoint(direction.multiply(-1))).dot(direction);
 			raycast.run(Sa, Sb, new Vector3(), direction, pa, pb, lambda, envelope, epsilon);
 			
-			generate(pa, pb, pb.minus(pa).normalize(), 0.0,false);
-			//System.out.println("point distance " + pa.minus(pb).norm() +"  got normal " + pb.minus(pa).normalize() );
-		} else if ( d > epsilon*epsilon && d < envelope*envelope) {
-
-			generate(pa, pb, pa.minus(pb).normalize(), 0.0,false);	
-		} else {
+			// generate contact points
+			generate(pa, pb, pa.minus(pb).normalize() );
 			
+		} else if ( d > epsilon*epsilon && d < envelope*envelope) {
+			// generate contact points
+			generate(pa, pb, pa.minus(pb).normalize() );	
+		} else {
+			// outside envelope
 			contacts.clear();
 		}
-		
-		return true;
 	}
-
 	
-	
-	private void generate(Vector3 a, Vector3 b, Vector3 v, double depthr, boolean penetratingr ) {
+	private void generate(Vector3 a, Vector3 b, Vector3 v ) {
 		contacts.clear(); faceA.clear(); faceB.clear();
 		Sa.supportFeature(v.multiply(-1), 0.09, faceA);
 		Sb.supportFeature(v.multiply(1), 0.09, faceB);
@@ -395,21 +390,13 @@ public class SupportMapContactGenerator implements ContactGenerator {
 
 						}
 					}
-					
 					p2p = p2;
 				}
-				
-				
 				p1p = p1;
 			}
-			
-			
-		}//edge-edge case
-		
-
-		
-		//System.out.println("contacts="+contacts.size());
-		//direction.print();
-		
+		}//edge-edge case		
 	}//generate()
+
+	@Override
+	public void remove() {/* nothing to clean up */}
 }

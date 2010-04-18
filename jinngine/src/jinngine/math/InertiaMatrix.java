@@ -69,7 +69,7 @@ public class InertiaMatrix extends Matrix3 {
 	public static InertiaMatrix rotate(InertiaMatrix M, Quaternion q) {
 		//as described in [Erleben et al. 2001]
 		// I'= R I R^T
-		Matrix3 R = q.rotationMatrix3();	
+		Matrix3 R = q.toRotationMatrix3();	
 		Matrix3.multiply(R, M, M);
 		Matrix3.transpose(R);
 		Matrix3.multiply(M, R, M);

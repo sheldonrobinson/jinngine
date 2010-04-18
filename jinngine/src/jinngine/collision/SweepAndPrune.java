@@ -14,7 +14,7 @@ import jinngine.math.Vector3;
 import jinngine.util.Pair;
 
 /**
- * Sweep and Prune implementation of the {@link BroadfaseCollisionDetection} interface. Sweep and Prune
+ * Sweep and Prune implementation of the {@link BroadphaseCollisionDetection} interface. Sweep and Prune
  * is especially effective in taking advantage of temporal coherence, i.e. the fact that a physical configurations
  * changes only slightly during one single time-step. If, on the other hand, Sweep and prune was to be applied to 
  * some obscure configuration, where object positions would change wildly during each time step, it would perform very poorly. 
@@ -22,7 +22,7 @@ import jinngine.util.Pair;
  * @author moo
  *
  */
-public class SweepAndPrune implements BroadfaseCollisionDetection {
+public class SweepAndPrune implements BroadphaseCollisionDetection {
 	private final int MAX_GEOMETRIES = 2500;
 	private int geometries = 0;
 	private final List<Handler> handlers = new ArrayList<Handler>();
@@ -290,7 +290,7 @@ public class SweepAndPrune implements BroadfaseCollisionDetection {
 		}
 
 		public final Geometry geometry;
-		public final AxisAlignedBoundingBox aabb;
+		public final BoundingBox aabb;
 		public final boolean begin;
 		public final int axis;
 		public double value;

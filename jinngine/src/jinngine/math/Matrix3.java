@@ -477,5 +477,20 @@ public class Matrix3 {
     System.out.println("[ "+A.a21+" , " + A.a22 + " , " + A.a23 + " ]" );
     System.out.println("[ "+A.a31+" , " + A.a32 + " , " + A.a33 + " ]" );
   }
+  
+  public static final double[] pack( Matrix3 M ) {
+	  double[] array = new double[3*3];
+	  array[0] = M.a11;
+	  array[1] = M.a21;
+	  array[2] = M.a31;
+	  array[3] = M.a12;
+	  array[4] = M.a22;
+	  array[5] = M.a32;
+	  array[6] = M.a13;
+	  array[7] = M.a23;
+	  array[8] = M.a33;
+	  return array;
+  }
+
 
 }

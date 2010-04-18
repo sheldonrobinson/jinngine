@@ -65,7 +65,7 @@ public class Sphere implements SupportMap3, Geometry, Material {
 	}
 
 	@Override
-	public double getEnvelope(double dt) {
+	public double getEnvelope() {
 		return envelope;
 	}
 	

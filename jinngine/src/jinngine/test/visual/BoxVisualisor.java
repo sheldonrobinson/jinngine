@@ -40,10 +40,10 @@ public class BoxVisualisor extends Frame implements GLEventListener  {
 	private final Vector3 cameraTo = new Vector3(0,0,0);	
 	
 	// Physics
-	private final PhysicsModel model;
+	private final DefaultScene model;
 	private final List<Body> boxes;
 
-	public BoxVisualisor( PhysicsModel model, List<Body> boxes) {
+	public BoxVisualisor( DefaultScene model, List<Body> boxes) {
 		this.model = model;
 		this.boxes = boxes;
 	
@@ -58,7 +58,7 @@ public class BoxVisualisor extends Frame implements GLEventListener  {
 		setVisible(true);
 	}
 	
-	public BoxVisualisor( PhysicsModel model, List<Body> boxes, int ratio)  {
+	public BoxVisualisor( DefaultScene model, List<Body> boxes, int ratio)  {
 		this.model = model;
 		this.boxes = boxes;
 		//Setup exit function

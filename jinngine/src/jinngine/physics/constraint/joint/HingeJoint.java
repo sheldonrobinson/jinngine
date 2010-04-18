@@ -42,10 +42,7 @@ public final class HingeJoint implements Constraint {
 	private constraint angular1 = new constraint();
 	private constraint angular2 = new constraint();
 	private constraint angular3 = new constraint();
-	
-	//TODO remove
-	public boolean hinge = true;
-		
+			
 	/**
 	 * Get the axis controller for the hinge joint. Use this controller to adjust joint limits, motor and friction
 	 * @return A controller for this hinge joint
@@ -62,14 +59,7 @@ public final class HingeJoint implements Constraint {
 		ni = b1.toModelNoTranslation(n);
 		pj = b2.toModel(p);
 		nj = b2.toModelNoTranslation(n);
-		
-		System.out.println("hingejoint constructor");
-		
-		pi.print();
-		ni.print();
-		pj.print();
-		nj.print();
-		
+				
 		//Use a Gram-Schmidt process to create a orthonormal basis for the impact space
 		Vector3 v1 = n.normalize(); Vector3 v2 = Vector3.i; Vector3 v3 = Vector3.k;    
 		Vector3 t1 = v1.normalize(); 
@@ -221,7 +211,7 @@ public final class HingeJoint implements Constraint {
 				Double.NEGATIVE_INFINITY,
 				Double.POSITIVE_INFINITY,
 				null,
-				u.x );
+				u.x, 0 );
 
 		linear2.assign( 
 				b1,	b2, 
@@ -230,7 +220,7 @@ public final class HingeJoint implements Constraint {
 				Double.NEGATIVE_INFINITY,
 				Double.POSITIVE_INFINITY,
 				null,
-				u.y );
+				u.y, 0 );
 
 		linear3.assign( 
 				b1,	b2, 
@@ -239,7 +229,7 @@ public final class HingeJoint implements Constraint {
 				Double.NEGATIVE_INFINITY,
 				Double.POSITIVE_INFINITY,
 				null,
-				u.z );	
+				u.z, 0 );	
 
 	
 		//handle the constraint modelling joint limits and motor
@@ -294,7 +284,7 @@ public final class HingeJoint implements Constraint {
 				low,
 				high,
 				null,
-				bvalue );
+				bvalue, 0 );
 		
 		//keep bodies aligned to the axis
 		angular2.assign( 
@@ -304,7 +294,7 @@ public final class HingeJoint implements Constraint {
 				Double.NEGATIVE_INFINITY,
 				Double.POSITIVE_INFINITY,
 				null,
-				tt2i.dot(b1.state.omega)-tt2i.dot(b2.state.omega) - Kcor*tt2i.dot(nerror)*(1/dt)  );	
+				tt2i.dot(b1.state.omega)-tt2i.dot(b2.state.omega) - Kcor*tt2i.dot(nerror)*(1/dt), 0  );	
 
 		
 		angular3.assign( 
@@ -314,19 +304,16 @@ public final class HingeJoint implements Constraint {
 				Double.NEGATIVE_INFINITY,
 				Double.POSITIVE_INFINITY,
 				null,
-				tt3i.dot(b1.state.omega)-tt3i.dot(b2.state.omega) - Kcor*tt3i.dot(nerror)*(1/dt)  );		
+				tt3i.dot(b1.state.omega)-tt3i.dot(b2.state.omega) - Kcor*tt3i.dot(nerror)*(1/dt), 0  );		
 
 
-		//add constraints to return list
+		// add constraints to return list
 		iterator.add(linear1);
 		iterator.add(linear2);
 		iterator.add(linear3);
 		iterator.add(angular1);
 		iterator.add(angular2);
 		iterator.add(angular3);
-		
-//		linear1.damper = linear2.damper = linear3.damper = 
-//		angular1.damper = angular2.damper = angular3.damper = 20;
 	}
 
 	@Override

@@ -45,7 +45,7 @@ import jinngine.physics.*;
  * 
  * where i is the index of a friction constraint, j is the index of the normal force, and mu is 
  * the friction coefficient. constraint to which the friction constraint is coupled. This coupling 
- * is done to model an approximation to Coulomb's law of friction.
+ * is done to model an approximation to Coulomb's law of friction. 
  */
 public interface Solver {
 	
@@ -85,6 +85,8 @@ public interface Solver {
 		public double diagonal = 0;
 		/** b vector value */ 
 		public double b = 0;
+		/** correction term */
+		public double c = 0;
 		/** Friction coefficient mu. Only in effect if coupling is not null */
 		public double mu = 0;
 		/** Friction coupling */
@@ -105,13 +107,16 @@ public interface Solver {
 		public double s;
 		public double u;
 		public double l;
+		public double distance;
+		public double ui;
 		
 		/**
 		 * Assign operator for a constraint
+		 * @param c TODO
 		 */
 		public final constraint assign( Body body1, Body body2, Vector3 b1, Vector3 b2, Vector3 b3, Vector3 b4, 
 				Vector3 j1, Vector3 j2, Vector3 j3, Vector3 j4,
-				double lambdaMin, double lambdaMax, constraint coupledMax, double b) {
+				double lambdaMin, double lambdaMax, constraint coupledMax, double b, double c ) {
 			
 			this.body1 = body1;
 			this.body2 = body2;
@@ -128,6 +133,7 @@ public interface Solver {
 			this.upper = lambdaMax;
 			this.coupling = coupledMax;
 			this.b = b;
+			this.c = c;
 			this.diagonal = j1.dot(b1) + j2.dot(b2) +  j3.dot(b3) + j4.dot(b4);
 			return this;
 		}

@@ -92,7 +92,7 @@ public class BallInSocketJoint implements Constraint {
 				-forcelimit,
 				forcelimit,
 				null, 
-				u.x );
+				u.x, 0);
 		c2.assign( 
 				b1, b2, 
 				Bi.column(1), Bangi.column(1), Bj.column(1), Bangj.column(1),
@@ -100,7 +100,7 @@ public class BallInSocketJoint implements Constraint {
 				-forcelimit,
 				forcelimit,
 				null, 
-				u.y );
+				u.y, 0);
 		c3.assign( 
 				b1, b2, 
 				Bi.column(2), Bangi.column(2), Bj.column(2), Bangj.column(2), 
@@ -108,7 +108,7 @@ public class BallInSocketJoint implements Constraint {
 				-forcelimit,
 				forcelimit,
 				null, 
-				u.z );
+				u.z, 0);
 		
 		
 		//apply constraints

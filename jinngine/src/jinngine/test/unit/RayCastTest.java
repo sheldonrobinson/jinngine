@@ -32,7 +32,7 @@ public class RayCastTest extends TestCase {
 		
 		// setup cube geometry
 		Sphere s1 = new Sphere(1);
-		Body b1 = new Body(s1);
+		Body b1 = new Body("default", s1);
 		
 		// pick a point outside the sphere, and let the direction point towards 
 		// the centre of the sphere.
@@ -60,7 +60,7 @@ public class RayCastTest extends TestCase {
 		
 		// setup cube geometry
 		Sphere s1 = new Sphere(1);
-		Body b1 = new Body(s1);
+		Body b1 = new Body("default", s1);
 		b1.setPosition(2,-3,-1);
 		
 		// pick a point outside the sphere, and let the direction point towards 
@@ -97,7 +97,7 @@ public class RayCastTest extends TestCase {
 		
 		// setup sphere geometry
 		Sphere s1 = new Sphere(1);
-		Body b1 = new Body(s1);
+		Body b1 = new Body("default", s1);
 
 		// select a point (5,1,0) and the raydirection (-1,0,0)
 		Vector3 point = new Vector3(5, 1, 0);
@@ -132,7 +132,7 @@ public class RayCastTest extends TestCase {
 		
 		// setup cube geometry
 		Box box = new Box(1,1,1);
-		Body b1 = new Body(box);
+		Body b1 = new Body("default", box);
 
 		// select a point (5,1,0) and the raydirection (-1,0,0)
 		Vector3 point = new Vector3(0, 5, 0);
@@ -159,7 +159,7 @@ public class RayCastTest extends TestCase {
 		
 		// setup cube geometry
 		Box box = new Box(1,1,1);
-		Body b1 = new Body(box);
+		Body b1 = new Body("default", box);
 
 		// select a point (5,1,0) and the raydirection (-1,0,0)
 		Vector3 point = new Vector3(2, 5, 9);

@@ -18,7 +18,9 @@ import jinngine.math.*;
  * inertia properties.
  */
 public final class Body {
-	public  String identifier = new String("none");
+	// global public name
+	public  final String identifier;
+
 	// auxiliary members
 	public final Vector3               deltavelocity = new Vector3(0,0,0);
 	public final Vector3               deltaomega    = new Vector3(0,0,0);
@@ -39,12 +41,13 @@ public final class Body {
 			
 	/**
 	 * Create a now body with no geometry
+	 * @param identifier Unique identifier for this body
 	 */
-	public Body() {
+	public Body(String identifier) {
+		this.identifier = new String(identifier);
 		Matrix4.identity(state.transform);
 		Matrix3.identity(state.rotation);
-		updateTransformations();
-		
+		updateTransformations();	
 		this.state.mass=0;
 		Matrix3.set(new Matrix3(), state.inertia);
 	}
@@ -52,9 +55,11 @@ public final class Body {
 	/**
 	 * Create a new Body with a single geometry instance. finalize() is called 
 	 * at the end of this constructor.
+	 * @param identifier Unique identifier for this body
 	 * @param g A geometry that will define this body's mass and inertia properties 
 	 */
-	public Body( Geometry g  ) {
+	public Body( String identifier, Geometry g  ) {
+		this.identifier = new String(identifier);
 		Matrix4.identity(state.transform);
 		Matrix3.identity(state.rotation);
 		updateTransformations();
@@ -73,9 +78,11 @@ public final class Body {
 	/**
 	 * Create a body using the given geometries. After adding all geometries in the iterator i has 
 	 * been added, finalize() is automatically called.
+	 * @param identifier Unique identifier for this body
 	 * @param i
 	 */
-	public Body( Iterator<Geometry> i) {
+	public Body( String identifier, Iterator<Geometry> i) {
+		this.identifier = new String(identifier);
 		Matrix4.identity(state.transform);
 		Matrix3.identity(state.rotation);
 		updateTransformations();
@@ -263,7 +270,7 @@ public final class Body {
 		Matrix4.identity(state.transform);
 
 		//Matrix3.multiply(state.q.rotationMatrix3(), state.rotation, state.rotation);
-		Matrix3.set(state.orientation.rotationMatrix3(), state.rotation);
+		Matrix3.set(state.orientation.toRotationMatrix3(), state.rotation);
 
 		//affine transform
 		Matrix4.multiply(Transforms.rotateAndTranslate4( state.orientation, state.position), state.transform, state.transform);

@@ -9,6 +9,7 @@
 package jinngine.geometry;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 import quickhull3d.Point3d;
@@ -37,8 +38,6 @@ public class ConvexHull implements SupportMap3, Geometry {
 	 * adjacency lists along the way. It also roots out duplicate adjacency entries, arising from the same pair of vertices being present
 	 * two adjacent faces. The motivation for this approach is that the face index lists are the only adjacency information available from 
 	 * the QuickHull3D implementation.
-	 * @param faceindices
-	 * @return
 	 */
 	private final ArrayList<ArrayList<Integer>> adjacencyList( int[][] faceindices, int numberOfVertices) {
 		ArrayList<ArrayList<Integer>> adjacent = new ArrayList<ArrayList<Integer>>();
@@ -149,27 +148,24 @@ public class ConvexHull implements SupportMap3, Geometry {
 			i = i+3;
 		}
 		
-		// build the hull
+		// build the dual hull
 		dualhull.build(dualvectors);
 		
 		// create an adjacency list for the dual hull
 		dualadjacent = adjacencyList(dualhull.getFaces(), dualvertices.size());			
 		
-		//search vertices to find bounds
+		//search vertices to find extremal bounds
 		Vector3 extremal = new Vector3();
 		for ( Vector3 v: vertices) {
 			if (extremal.norm() < v.norm()) extremal.assign(v);
 		}
 		
-		double max = extremal.norm()+5.0;
-		minBounds.assign(new Vector3(-max,-max,-max));
-		maxBounds.assign(new Vector3(max,max,max));
-		//assume identity local transform for now
-		minBoundsTransformed.assign(minBounds);
-		maxBoundsTransformed.assign(maxBounds);
+		// assign max extends
+		double max = extremal.norm();
+		bounds.assign(max,max,max);
 				
 		// perform approximate mass calculation
-		MassProperties masscalculation = new MassProperties( this, 1000000 );
+		MassProperties masscalculation = new MassProperties( this, 0.1 );
 		
 		// set propperties
 		mass = referenceMass = masscalculation.getMass();
@@ -186,22 +182,43 @@ public class ConvexHull implements SupportMap3, Geometry {
 				Vector3.add( p, centreOfMass.multiply(-1));
 		
 	}
+	
+	/**
+	 * Get the number of vertices on the this convex hull
+	 * @return
+	 */
+	public final int getNumberOfVertices() {
+		return vertices.size();
+	}
+	
+	/**
+	 * Get the vertices of this convex hull
+	 * @return
+	 */
+	public final Iterator<Vector3> getVertices() {
+		return vertices.iterator();
+	}
 
-	// SupportMap3
+	// Geometry
 	private Object auxiliary;
-	private Body body = new Body();
-	private double mass = 1;
-	private final InertiaMatrix inertiamatrix;
-	private double envelope =0;
+	private Body body = new Body("default");
+	private double envelope = 0.125;
 	private Matrix3 localtransform = Matrix3.identity(new Matrix3());
 	private Matrix4 localtransform4 = Matrix4.identity(new Matrix4());
 	private final Vector3 localdisplacement = new Vector3();
 	private final Vector3 displacement = new Vector3();
-	private final Vector3 minBounds = new Vector3();
-	private final Vector3 maxBounds = new Vector3();
-	private final Vector3 minBoundsTransformed = new Vector3();
-	private final Vector3 maxBoundsTransformed = new Vector3();
 
+	// AxisAlignedBoundingBox
+	private final Vector3 bounds = new Vector3();
+//	private final Vector3 minBounds = new Vector3();
+//	private final Vector3 maxBounds = new Vector3();
+//	private final Vector3 minBoundsTransformed = new Vector3();
+//	private final Vector3 maxBoundsTransformed = new Vector3();
+	
+	// Material
+	private double mass = 1;
+	private final InertiaMatrix inertiamatrix;
+	
 	@Override
 	public Vector3 supportPoint(Vector3 direction) {
 		Vector3 v = body.state.rotation.multiply(localtransform).transpose().multiply(direction);
@@ -226,7 +243,7 @@ public class ConvexHull implements SupportMap3, Geometry {
 				}
 			}
 			
-			//return Matrix4.multiply(transform4, new Vector3(sv1, sv2, sv3), new Vector3());
+			// return the final support point in world space
 			return body.state.rotation.multiply(localtransform.multiply(vertices.get(index)).add(localdisplacement)).add(body.state.position);
 
 		} else {
@@ -240,6 +257,7 @@ public class ConvexHull implements SupportMap3, Geometry {
 				}
 			}
 			
+			// return final support point in world space
 			return body.state.rotation.multiply(localtransform.multiply(best).add(localdisplacement)).add(body.state.position);			
 		}
 
@@ -247,6 +265,10 @@ public class ConvexHull implements SupportMap3, Geometry {
 
 	@Override
 	public void supportFeature(Vector3 direction, double epsilon, List<Vector3> returnface) {
+		// the support feature of CovexHull is the face with the face normal closest to the 
+		// given support direction. This is accomplished by hill-climbing the dual hull, that
+		// maps a vertex onto a face in the original convex hull. Therefore, this method will 
+		// return a face at all times
 		Vector3 v = body.state.rotation.multiply(localtransform).transpose().multiply(direction);
 		// hill climb the dual hull to find face 
 		int index = 0;
@@ -278,7 +300,7 @@ public class ConvexHull implements SupportMap3, Geometry {
 	}
 
 	@Override
-	public double getEnvelope(double dt) {
+	public double getEnvelope() {
 		return envelope;
 	}
 
@@ -311,33 +333,21 @@ public class ConvexHull implements SupportMap3, Geometry {
 		this.localdisplacement.assign(displacement);
 		Matrix3.set(B, this.localtransform); 
 		Matrix4.set(Transforms.transformAndTranslate4(localtransform, localdisplacement), localtransform4);
-		
-		//extremal points transformed
-		//double max = Matrix3.multiply(localtransform, new Vector3(0.5,0.5,0.5), new Vector3()).norm() +2.0;
-		minBoundsTransformed.assign(Matrix3.multiply(localtransform, minBounds, new Vector3()));
-		maxBoundsTransformed.assign(Matrix3.multiply(localtransform, maxBounds, new Vector3()));
-
-		//add envelope
-		minBoundsTransformed.assign(minBoundsTransformed.minus(new Vector3(envelope,envelope,envelope)));
-		maxBoundsTransformed.assign(maxBoundsTransformed.add(new Vector3(envelope,envelope,envelope)));
-
 	}
 	
-
 	@Override
 	public Vector3 getMaxBounds() {
-		//displacement.assign(Matrix3.multiply(body.state.rotation, localdisplacement, new Vector3()));
-		return maxBoundsTransformed.add(displacement).add(body.state.position);
+		// return the max bounds in world space
+		return bounds.add(displacement).add(body.state.position);
 
 	}
 
 	@Override
 	public Vector3 getMinBounds() {
-		//displacement.assign(Matrix3.multiply(body.state.rotation, localdisplacement, new Vector3()));
-		return minBoundsTransformed.add(displacement).add(body.state.position);
+		// return the min bounds in world space
+		return displacement.add(body.state.position).minus(bounds);
 	}
 
-	
 	@Override
 	public void getLocalTransform(Matrix3 R, Vector3 b) {
 		R.assign(this.localtransform);

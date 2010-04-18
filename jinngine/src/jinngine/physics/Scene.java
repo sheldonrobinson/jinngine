@@ -18,7 +18,7 @@ import jinngine.physics.force.Force;
  *  Interface for creating a new physics scene. One should implement this interface, and pass it onto some 
  *  class that is able to generate the scene. This could be a Collada loader.   
  */
-public interface PhysicsScene {
+public interface Scene {
 
 	/**
 	 * Get an iterator for all bodies in the Scene
@@ -67,6 +67,17 @@ public interface PhysicsScene {
 	 * @param c
 	 */
 	public void removeConstraint( Constraint c );
+	
+	/**
+	 * Perform a time step on this model
+	 * @param  
+	 */
+	public void tick();
+	
+	/**
+	 * Set the time-step size for this scene
+	 */
+	public void setTimestep( double dt);
 	
 	/** 
 	 * Make a body become fixed, during animation

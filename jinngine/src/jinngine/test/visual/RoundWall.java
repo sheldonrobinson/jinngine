@@ -36,7 +36,7 @@ import jinngine.physics.force.GravityForce;
 		
 		
 		@Override
-		public void deleteScene(PhysicsScene model) {
+		public void deleteScene(DefaultScene model) {
 			for (Body b:boxes) {
 				model.removeBody(b);
 			}
@@ -45,10 +45,10 @@ import jinngine.physics.force.GravityForce;
 		}
 
 		@Override
-		public void initScene(PhysicsScene model) {
-			//model.setDt(dt);
+		public void initScene(DefaultScene model) {
+			model.setTimestep(dt);
 			
-			Body table = new Body(new Box(120,1+40,120));
+			Body table = new Body("default", new Box(120,1+40,120));
 			table.setPosition( new Vector3(0,-13-20,0));
 			table.setFixed(true);
 			table.advancePositions(1);
@@ -63,7 +63,7 @@ import jinngine.physics.force.GravityForce;
 					j++;
 	
 					for ( int k=0;k<1;k++) {
-						Body cu = new Body(new Box(8, height, 7));
+						Body cu = new Body("default", new Box(8, height, 7));
 						cu.setPosition( new Vector3( /*0.60*j+(0.3*(i%2))*/ diameter*(double)Math.sin(theta + (i%2)*0.5f*delta_theta ),  (height*1.05f)*i-9.4500f, -5.3f-0.65f*k+diameter*(double)Math.cos(theta + (i%2)*delta_theta*0.5f ) ));
 						cu.setVelocity( new Vector3( 0.000f, 0.000f, 0.0000f ));
 						model.addForce(new GravityForce(cu));
@@ -79,7 +79,7 @@ import jinngine.physics.force.GravityForce;
 		}
 
 		public static void main(String arg[]) {
-			Engine model = new Engine();
+			DefaultScene model = new DefaultScene();
 			RoundWall test = new RoundWall(7, 0.05);
 			test.initScene(model);
 			

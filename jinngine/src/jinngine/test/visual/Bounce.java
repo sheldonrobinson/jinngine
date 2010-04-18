@@ -30,15 +30,15 @@ public class Bounce implements Testcase {
 
 	
 	public static void main(String arg[]) {
-		Engine model = new Engine();
+		DefaultScene model = new DefaultScene();
 		model.setTimestep(0.02);
 
-		Body cube = new Body(new Box(6,6,6));
+		Body cube = new Body("default", new Box(6,6,6));
 		cube.setAngularVelocity(new Vector3(0.1,0,0.1));
 		model.addBody(cube);
 		model.addForce( new GravityForce(cube));
 
-		Body table = new Body(new Box(50,1,50));
+		Body table = new Body("default", new Box(50,1,50));
 		table.setPosition( new Vector3(0,-17,0));
 		table.setFixed(true);
 		model.addBody(table);
@@ -53,7 +53,7 @@ public class Bounce implements Testcase {
 	}
 
 	@Override
-	public void deleteScene(PhysicsScene model) {
+	public void deleteScene(DefaultScene model) {
 		for (Body b:boxes) {
 			model.removeBody(b);
 		}
@@ -63,15 +63,15 @@ public class Bounce implements Testcase {
 
 
 	@Override
-	public void initScene(PhysicsScene model) {
-		//model.setDt(dt);
+	public void initScene(DefaultScene model) {
+		model.setTimestep(dt);
 
-		Body cube = new Body(new Box(24,24,5));
+		Body cube = new Body("default", new Box(24,24,5));
 		cube.setAngularVelocity(new Vector3(0.1,0,0.1));
 		model.addBody(cube);
 		model.addForce( new GravityForce(cube));
 
-		Body table = new Body(new Box(50,1,50));
+		Body table = new Body("default", new Box(50,1,50));
 		table.setPosition( new Vector3(0,-27,0));
 		table.setFixed(true);
 		model.addBody(table);

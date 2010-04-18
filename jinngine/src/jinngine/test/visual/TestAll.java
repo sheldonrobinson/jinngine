@@ -12,12 +12,12 @@ import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.util.LinkedList;
 import java.util.Queue;
-import jinngine.physics.Engine;
+import jinngine.physics.DefaultScene;
 
 public class TestAll implements KeyListener {
 
 	private Testcase currentTest = null;
-	private Engine model = new Engine();
+	private DefaultScene model = new DefaultScene();
 	private BoxVisualisor visual = new BoxVisualisor(model, model.bodies, 1);
 	private Queue<Testcase> tests = new LinkedList<Testcase>();
 	
@@ -83,6 +83,8 @@ public class TestAll implements KeyListener {
 		tests.add(new Oblong( 0.12));
 		
 		//thinwall test
+		tests.add(new SphereStack(1, 0.1));
+
 		tests.add(new SphereStack(2, 0.01));
 		tests.add(new SphereStack(3, 0.01));
 		tests.add(new SphereStack(4, 0.01));
@@ -108,10 +110,10 @@ public class TestAll implements KeyListener {
 		tests.add(new ThinWall(6, 0.05));
 		tests.add(new ThinWall(8, 0.05));
 
-		tests.add(new ThinWall(2, 0.12));
-		tests.add(new ThinWall(3, 0.12));
-		tests.add(new ThinWall(6, 0.12));
-		tests.add(new ThinWall(8, 0.12));
+		tests.add(new ThinWall(2, 0.22));
+		tests.add(new ThinWall(3, 0.22));
+		tests.add(new ThinWall(6, 0.22));
+		tests.add(new ThinWall(8, 0.22));
 
 		//round wall 
 		tests.add(new RoundWall(1, 0.01));

@@ -19,9 +19,9 @@ import jinngine.util.Pair;
  * other simple geometric bounding volume, to simplify the problem. The main motivation of broad-phase collision detection, 
  * is to cheaply cull away object pairs, that is of no interest to any later collision detection and/or contact determination. 
  */
-public interface BroadfaseCollisionDetection {
+public interface BroadphaseCollisionDetection {
 	/**
-	 * A handler for broad-phase collision detection events. An implementation of the {@link BroadfaseCollisionDetection}
+	 * A handler for broad-phase collision detection events. An implementation of the {@link BroadphaseCollisionDetection}
 	 * interface, is required to allow the user to register his or her own handler. 
 	 */
 	public interface Handler {

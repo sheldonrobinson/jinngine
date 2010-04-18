@@ -8,14 +8,11 @@
  */
 package jinngine.physics.solver.experimental;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import jinngine.math.Vector3;
 import jinngine.physics.Body;
-import jinngine.physics.solver.ProjectedGaussSeidel;
 import jinngine.physics.solver.Solver;
-import jinngine.physics.solver.Solver.constraint;
 
 public class NonsmoothNonlinearConjugateGradient implements Solver {
 	int max = 10000;
@@ -30,12 +27,12 @@ public class NonsmoothNonlinearConjugateGradient implements Solver {
 
 	}
 	
-	public NonsmoothNonlinearConjugateGradient(int n, boolean polakribiere) {
+	public NonsmoothNonlinearConjugateGradient(int n ) {
 		this.max = n;
 
 		pgsiters = new double[max];
 		errors = new double[max];
-		this.usepolakribiere = polakribiere;
+		this.usepolakribiere = false;
 	}
 
 	@Override

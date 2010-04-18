@@ -28,7 +28,7 @@ public class Compositions implements Testcase {
 	}
 
 	@Override
-	public void deleteScene(PhysicsScene model) {
+	public void deleteScene(DefaultScene model) {
 		for (Body b:bodies) {
 			model.removeBody(b);
 		}
@@ -37,11 +37,11 @@ public class Compositions implements Testcase {
 	}
 
 	@Override
-	public void initScene(PhysicsScene model) {
+	public void initScene(DefaultScene model) {
 		//parameters
-		//model.setDt(dt);
+		model.setTimestep(dt);
 
-		Body table = new Body( new Box(220,1,120));
+		Body table = new Body( "default", new Box(220,1,120));
 		table.setPosition( new Vector3(0,-13,0));
 		table.setFixed(true);
 		table.advancePositions(1);
@@ -68,7 +68,7 @@ public class Compositions implements Testcase {
 			}
 		}
 		
-		Body b = new Body(spheres.iterator());
+		Body b = new Body("default", spheres.iterator());
 		b.setPosition(new Vector3(0,32,0));
 		model.addBody(b);
 		model.addForce( new GravityForce(b));
@@ -78,7 +78,7 @@ public class Compositions implements Testcase {
 	}
 
 	public static void main(String arg[]) {
-		Engine model = new Engine();
+		DefaultScene model = new DefaultScene();
 		ThinWall test = new ThinWall(7, 0.05);
 		test.initScene(model);			
 		new BoxVisualisor(model, test.boxes, 1).start();

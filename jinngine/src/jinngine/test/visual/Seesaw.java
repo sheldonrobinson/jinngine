@@ -14,8 +14,8 @@ import java.util.List;
 import jinngine.geometry.Box;
 import jinngine.math.Vector3;
 import jinngine.physics.Body;
-import jinngine.physics.Engine;
-import jinngine.physics.PhysicsScene;
+import jinngine.physics.DefaultScene;
+import jinngine.physics.Scene;
 import jinngine.physics.constraint.joint.HingeJoint;
 import jinngine.physics.force.GravityForce;
 import jinngine.util.Pair;
@@ -35,7 +35,7 @@ public class Seesaw implements Testcase {
 	
 	
 	@Override
-	public void deleteScene(PhysicsScene model) {
+	public void deleteScene(DefaultScene model) {
 		for (Body b:boxes) {
 			model.removeBody(b);
 		}
@@ -44,10 +44,10 @@ public class Seesaw implements Testcase {
 	}
 
 	@Override
-	public void initScene(PhysicsScene model) {
-		//model.setDt(dt);
+	public void initScene(DefaultScene model) {
+		model.setTimestep(dt);
 
-		Body cube = new Body(new Box(8,4,8));
+		Body cube = new Body("default", new Box(8,4,8));
 		//cube.setMass(5);
 		//cube.getBoxGeometry().setEnvelope(1);
 		//cube.setAngularVelocity(new Vector3(0.1,0,0.1));
@@ -55,7 +55,7 @@ public class Seesaw implements Testcase {
 		model.addBody(cube);
 		model.addForce( new GravityForce(cube));
 		
-		Body seesaw = new Body(new Box(30,2,8));
+		Body seesaw = new Body("default", new Box(30,2,8));
 		//seesaw.getBoxGeometry().setEnvelope(1);
 		//seesaw.setMass(10);
 		seesaw.setPosition(new Vector3(0,-2,0));
@@ -64,26 +64,26 @@ public class Seesaw implements Testcase {
 		
 		model.addConstraint(new HingeJoint(cube,seesaw, new Vector3(0,-6,0), new Vector3(0,0,1)) );
 		
-		Body weight = new Body( new Box(4,4,4));
+		Body weight = new Body( "default", new Box(4,4,4));
 		//weight.getBoxGeometry().setEnvelope(1);
 		weight.setPosition(new Vector3(10,6,0));
 		model.addBody(weight);
 		model.addForce( new GravityForce(weight));
 		
-		Body weight3 = new Body(new Box(4,4,4));		
+		Body weight3 = new Body("default", new Box(4,4,4));		
 		//weight3.getBoxGeometry().setEnvelope(1);
 		weight3.setPosition(new Vector3(7,11,0));
 		model.addBody(weight3);
 		model.addForce( new GravityForce(weight3));
 		
-		Body weight2 = new Body( new Box(4,4,4) );
+		Body weight2 = new Body( "default", new Box(4,4,4) );
 		//weight2.getBoxGeometry().setEnvelope(1);
 		//weight2.setMass(1.5);
 		weight2.setPosition(new Vector3(-10,10,0));
 		model.addBody(weight2);
 		model.addForce( new GravityForce(weight2));	
 
-		Body table = new Body(new Box(50,1+40,50));
+		Body table = new Body("default", new Box(50,1+40,50));
 		//table.getBoxGeometry().setEnvelope(2);
 		table.setPosition( new Vector3(0,-13-20,0));
 		//table.setMass(9e9);
@@ -101,7 +101,7 @@ public class Seesaw implements Testcase {
 	}
 
 	public static void main(String arg[]) {
-		Engine model = new Engine();
+		DefaultScene model = new DefaultScene();
 		Seesaw test = new Seesaw(0.02);
 		test.initScene(model);		
 		new BoxVisualisor(model, test.boxes).start();
