@@ -8,14 +8,13 @@
  */
 package jinngine.physics;
 import java.util.*;
+import java.util.Map.Entry;
 
 import jinngine.physics.constraint.*;
 import jinngine.physics.constraint.contact.*;	
 import jinngine.physics.solver.*;
 import jinngine.physics.solver.Solver.constraint;
-import jinngine.physics.solver.experimental.FischerNewton;
 import jinngine.physics.solver.experimental.NonsmoothNonlinearConjugateGradient;
-import jinngine.physics.solver.experimental.SubspaceMinimization;
 import jinngine.geometry.contact.*;
 import jinngine.collision.*;
 import jinngine.geometry.*;
@@ -27,12 +26,10 @@ import jinngine.util.ComponentGraph.Component;
 /**
  * A fixed time stepping rigid body simulator. It uses a contact graph to organise constraints, and generates
  * contact constraints upon intersecting/touching geometries. The engine is limited to having one constraint per. 
- * body pair. This means that if a joint constraint is present, there can be no contact constraints simultaneously. Such behaviour 
- * should be modelled using joint limits. 
- * 
- * @author mo
+ * body pair. This means that if a joint constraint is present, there can be no contact constraints simultaneously. 
+ * Such behaviour should be modelled using joint limits. 
  */
-public final class Engine implements PhysicsModel, PhysicsScene {
+public final class Engine implements Model, Scene {
 	// Bodies in model
 	public final List<Body> bodies = new ArrayList<Body>();
 	
@@ -56,7 +53,7 @@ public final class Engine implements PhysicsModel, PhysicsScene {
 	};
 	
 	// Constraints, joints and forces
-	private final List<constraint> constraintList = new LinkedList<constraint>();  
+	public final List<constraint> constraintList = new LinkedList<constraint>();  
 	private final List<Force> forces = new LinkedList<Force>(); 
 	
 	// Create a contact graph classifier, used by the contact graph for determining
@@ -77,8 +74,8 @@ public final class Engine implements PhysicsModel, PhysicsScene {
 	
 	// Setup a broad-phase handler. The handler ensures that ContactConstraints are properly inserted and 
 	// removed from the contact graph, whenever the broad-phase collision detection detects overlaps and separations
-	private final BroadfaseCollisionDetection.Handler handler = 
-		new BroadfaseCollisionDetection.Handler() {
+	private final BroadphaseCollisionDetection.Handler handler = 
+		new BroadphaseCollisionDetection.Handler() {
 			@Override
 			public final void overlap(Pair<Geometry> inputpair) {
 				//retrieve the bodies associated with overlapping geometries
@@ -173,8 +170,14 @@ public final class Engine implements PhysicsModel, PhysicsScene {
 					if (contactGenerators.containsKey(pair)) {
 				
 						//remove the generator from the contact constraint
-						ContactConstraint constraint = contactConstraints.get(bpair);					
-						constraint.removeGenerator(contactGenerators.get(pair));
+						ContactConstraint constraint = contactConstraints.get(bpair);
+						ContactGenerator cg = contactGenerators.get(pair);
+						
+						//notify contact generator
+						cg.remove();
+						
+						// remove from contact constraint
+						constraint.removeGenerator(cg);
 						
 						//remove the generator from our list
 						contactGenerators.remove(pair);
@@ -195,20 +198,19 @@ public final class Engine implements PhysicsModel, PhysicsScene {
 				} else {
 					//TODO enable this and do tests
 					//this is not good, report an error
-					//System.out.println("no constraint pressent");
+					System.out.println("no constraint pressent");
 					//System.exit(0);
 				}
 			}
 	};
 	
 	// Broad phase collision detection implementation 
-	private BroadfaseCollisionDetection broadfase = new SweepAndPrune(handler);
+	private BroadphaseCollisionDetection broadfase = new SweepAndPrune(handler);
 //	private BroadfaseCollisionDetection broadfase = new AllPairsTest(handler);
 
 	//Create a linear complementarity problem solver
 //	private Solver solver = new ProjectedGaussSeidel(35);
 	private Solver solver = new NonsmoothNonlinearConjugateGradient(35, false);
-//	private Solver solver = new SubspaceMinimization(false,null);
 	//time-step size
 	private double dt = 0.01; 
 
@@ -234,11 +236,11 @@ public final class Engine implements PhysicsModel, PhysicsScene {
 			public final ContactGenerator getGenerator(Geometry a,
 					Geometry b) {
 				if ( a instanceof jinngine.geometry.SupportMap3 && b instanceof jinngine.geometry.Sphere) {
-					return new SupportMapSphereContactGenerator(a.getBody(), (jinngine.geometry.SupportMap3)a, b.getBody(), (jinngine.geometry.Sphere)b);
+					return new SupportMapSphereContactGenerator(a.getBody(), a, (jinngine.geometry.SupportMap3)a, b.getBody(), (jinngine.geometry.Sphere)b);
 					//return new SamplingSupportMapContacts(a.getBody(),b.getBody(), (SupportMap3)a, (SupportMap3)b);
 				}
 				if ( a instanceof jinngine.geometry.Sphere && b instanceof jinngine.geometry.SupportMap3) {
-					return new SupportMapSphereContactGenerator(a.getBody(), (jinngine.geometry.Sphere)a, b.getBody(), (jinngine.geometry.SupportMap3)b);
+					return new SupportMapSphereContactGenerator(a.getBody(), (jinngine.geometry.Sphere)a, b.getBody(), b, (jinngine.geometry.SupportMap3)b);
 					//return new SamplingSupportMapContacts(a.getBody(),b.getBody(), (SupportMap3)a, (SupportMap3)b);
 				}
 
@@ -258,8 +260,7 @@ public final class Engine implements PhysicsModel, PhysicsScene {
 				if ( a instanceof SupportMap3 && b instanceof SupportMap3) {
 //					return new FeatureSupportMapContactGenerator((SupportMap3)a, a,  (SupportMap3)b, b);
 					return new SupportMapContactGenerator((SupportMap3)a, a,  (SupportMap3)b, b);
-//					return new BulletPersistentManifold(a,b);
-
+//					return new BulletNativeContactGenerator(a,b);
 				}
 				//not recognised
 				return null;	
@@ -305,24 +306,6 @@ public final class Engine implements PhysicsModel, PhysicsScene {
 		
 		//run the solver
 		solver.solve( constraintList, bodies, 0.0 );
-//		for (constraint ci: constraintList) {
-//			ci.lambda = 0;
-//		}
-//		solver.solve( constraintList, bodies, 0.0 );
-//
-//		for (constraint ci: constraintList) {
-//			ci.lambda = 0;
-//		}
-//		solver.solve( constraintList, bodies, 0.0 );
-//
-//		for (constraint ci: constraintList) {
-//			ci.lambda = 0;
-//		}
-//		solver.solve( constraintList, bodies, 0.0 );
-		
-		//		
-//		System.out.println(" constraints " + constraintList.size() + " psi(x) = " +FischerNewton.fischerMerit(constraintList, bodies) );
-
 		
 		// Apply delta velocities and integrate positions forward
 		for (Body c : bodies ) {						
@@ -395,7 +378,7 @@ public final class Engine implements PhysicsModel, PhysicsScene {
 	}
 
 	@Override
-	public final BroadfaseCollisionDetection getBroadfase() {
+	public final BroadphaseCollisionDetection getBroadfase() {
 		return broadfase;
 	}  
 	
@@ -409,13 +392,6 @@ public final class Engine implements PhysicsModel, PhysicsScene {
 		}
 		return null;
 	}
-
-//	@Override
-//	public final void addContactGeneratorClasifier(
-//			ContactGeneratorClassifier classifier) {
-//		geometryClassifiers.add(classifier);
-//		
-//	}
 	
 	/**
 	 * Add a new ContactConstraintCreator
@@ -484,6 +460,28 @@ public final class Engine implements PhysicsModel, PhysicsScene {
 
 		// reinsert body
 		addBody(b);
+		
+	}
+	
+	public Iterator<ContactConstraint> getContactConstraints() {
+		// iterator for the entry set in contactConstraints
+		final Iterator<Entry<Pair<Body>,ContactConstraint>> iter = contactConstraints.entrySet().iterator();
+		
+		//wrap the iterator into an iterator over contact constraints
+		return new Iterator<ContactConstraint>() {
+			@Override
+			public boolean hasNext() {
+				return iter.hasNext();
+			}
+			@Override
+			public ContactConstraint next() {
+				return iter.next().getValue();
+			}
+			@Override
+			public void remove() {
+				throw new UnsupportedOperationException();
+			}
+		};
 		
 	}
 
