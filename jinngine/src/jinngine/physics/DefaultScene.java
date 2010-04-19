@@ -43,8 +43,31 @@ public final class DefaultScene implements Scene {
 			}
 	};
 	
+	// inner class for storing data in components in constraint graph
+	public final class ComponentData {
+		public boolean deactivaed = false;
+	}
+	
+	// make a component creator for the constraint graph. This only makes sure that we get some data
+	// stored in the component elements of the constraint graph. In this data, we will store information
+	// about the group of bodies that are interacting.
+	private final ComponentGraph.ComponentCreator<ComponentData> componentcreator = 
+		new ComponentGraph.ComponentCreator<ComponentData>() {
+		@Override
+		public Component<ComponentData> createComponent() {
+			return new Component<ComponentData>() {
+				private final ComponentData data = new ComponentData();
+				public ComponentData getComponentElement() {
+					return data;
+				}
+			};
+		}
+	};
+
+	
 	// create the contact graph using the classifier above
-	private final ComponentGraph<Body,Constraint,Boolean> constraintGraph = new HashMapComponentGraph<Body,Constraint,Boolean>(classifier);
+	private final ComponentGraph<Body,Constraint,ComponentData> constraintGraph = 
+		new HashMapComponentGraph<Body,Constraint,ComponentData>(classifier,componentcreator);
 
 	// use sweep and prune as broadphase collision detection
 	private final BroadphaseCollisionDetection broadphase;
@@ -62,7 +85,7 @@ public final class DefaultScene implements Scene {
 	 * Create a new fixed time-stepping simulator 
 	 * @param broadphase Broadphase collision detection method
 	 * @param solver Solver to be used
-	 * @param policy TODO
+	 * @param policy the deactivation policy to be used
 	 */
 	public DefaultScene( BroadphaseCollisionDetection broadphase,  Solver solver, DeactivationPolicy policy ) {	
 		
@@ -75,7 +98,7 @@ public final class DefaultScene implements Scene {
 	}
 	
 	/**
-	 * Create a new fixed time-stepping simulator. 
+	 * Create a new fixed time-stepping simulator with general purpose settings.
 	 */
 	public DefaultScene() {	
 		
@@ -91,6 +114,7 @@ public final class DefaultScene implements Scene {
 
 	@Override
 	public final void tick() {
+
 		// clear acting forces and delta velocities
 		for (Body c:bodies) {
 			c.clearForces();
@@ -113,16 +137,17 @@ public final class DefaultScene implements Scene {
 		ListIterator<constraint> constraintIterator = ncpconstraints.listIterator();
 				
 		// iterate through groups/components in the contact graph
-		Iterator<ComponentGraph.Component<Boolean>> components = constraintGraph.getComponents();		
+		Iterator<ComponentGraph.Component<ComponentData>> components = 
+			constraintGraph.getComponents();		
 		while (components.hasNext()) {
-			// the component 
-			ComponentGraph.Component<Boolean> g = components.next();
+			// get the component 
+			ComponentGraph.Component<ComponentData> g = components.next();
 			
 			// check if whole group is inactive
 			Iterator<Body> bodyiter =constraintGraph.getNodesInComponent(g);
 			boolean activefound = false;
 			while (bodyiter.hasNext()) {
-				if ( !bodyiter.next().deactivated ) { //!policy.isInactive(bodyiter.next()) ) {
+				if ( !bodyiter.next().deactivated ) {
 					activefound = true;
 					break;
 				}
@@ -137,36 +162,85 @@ public final class DefaultScene implements Scene {
 					c.applyConstraints(constraintIterator, timestep);
 				} // while
 			} // if active found
-		} //while groups
+			else {
+				// if we don't find an active body, we mark the whole group as deactivated
+				ComponentData data = g.getComponentElement();
+				data.deactivaed = true;	
+			}
+		} //while components
 
+		
 		
 		// run the solver (compute delta velocities) for all 
 		// components in the constraint graph
 		solver.solve( ncpconstraints, bodies, 0.0 );
 		
-		// apply delta velocities and integrate positions forward 
-		for (Body body : bodies ) {						
-			// apply computed forces to bodies
-			if ( !body.isFixed() && !body.deactivated ) {
-				// apply delta velocities
-				body.state.velocity.assign( body.state.velocity.add( body.deltavelocity));
-				body.state.omega.assign( body.state.omega.add( body.deltaomega));
-				// update angular and linear momentums
-				Matrix3.multiply(body.state.inertia, body.state.omega, body.state.L);
-				body.state.P.assign(body.state.velocity.multiply(body.state.mass));
-			}
-
-			//integrate forward on positions
-			body.advancePositions(timestep);
+		
+		// go thru components to advance apply delta velocities and
+		// advance positions
+		components = constraintGraph.getComponents();		
+		while (components.hasNext()) {
+			// get the component 
+			ComponentGraph.Component<ComponentData> g = 
+				components.next();
 			
-			// change activation state
-			if ( policy.shouldBeDeactivated(body)) {
-				body.deactivated = true;
-			} 
-			else if (policy.shouldBeActivated(body)) {
-				body.deactivated = false;
-			}		
-		} // for bodies
+			// if the component has active bodies, process the whole component
+			if (!g.getComponentElement().deactivaed) {
+
+				// check if whole group is inactive
+				Iterator<Body> bodyiter =constraintGraph.getNodesInComponent(g);
+				while (bodyiter.hasNext()) {
+					Body body = bodyiter.next();
+					
+					// apply computed forces to bodies (in fact, fixed bodies will never end up here)
+					if ( !body.isFixed()  ) {
+						// apply delta velocities
+						body.state.velocity.assign( body.state.velocity.add( body.deltavelocity));
+						body.state.omega.assign( body.state.omega.add( body.deltaomega));
+						// update angular and linear momentums
+						Matrix3.multiply(body.state.inertia, body.state.omega, body.state.L);
+						body.state.P.assign(body.state.velocity.multiply(body.state.mass));
+					}
+					
+					//integrate forward on positions
+					body.advancePositions(timestep);
+					
+					// change activation state
+					if ( policy.shouldBeDeactivated(body)) {
+						body.deactivated = true;
+					} 
+					else if (policy.shouldBeActivated(body)) {
+						body.deactivated = false;
+					}		
+				} // for each body in component
+			} // if active component		
+		} // while components
+
+		
+		// apply delta velocities and integrate positions forward 
+//		for (Body body : bodies ) {						
+//			// apply computed forces to bodies
+//			if ( !body.isFixed() && !body.deactivated ) {
+//				// apply delta velocities
+//				body.state.velocity.assign( body.state.velocity.add( body.deltavelocity));
+//				body.state.omega.assign( body.state.omega.add( body.deltaomega));
+//				// update angular and linear momentums
+//				Matrix3.multiply(body.state.inertia, body.state.omega, body.state.L);
+//				body.state.P.assign(body.state.velocity.multiply(body.state.mass));
+//			}
+//
+//			//integrate forward on positions
+//			body.advancePositions(timestep);
+//			
+//			// change activation state
+//			if ( policy.shouldBeDeactivated(body)) {
+//				body.deactivated = true;
+//			} 
+//			else if (policy.shouldBeActivated(body)) {
+//				body.deactivated = false;
+//			}		
+//		} // for bodies
+
 	} //time-step
 
 
@@ -201,7 +275,7 @@ public final class DefaultScene implements Scene {
 	@Override
 	public Iterator<Constraint> getConstraints() {
 		List<Constraint> list = new ArrayList<Constraint>();
-		Iterator<Component<Boolean>> ci = constraintGraph.getComponents();
+		Iterator<Component<ComponentData>> ci = constraintGraph.getComponents();
 		while(ci.hasNext()) {
 			Iterator<Constraint> ei = constraintGraph.getEdgesInComponent(ci.next());
 			while(ei.hasNext())

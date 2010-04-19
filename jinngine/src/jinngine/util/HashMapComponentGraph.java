@@ -66,25 +66,35 @@ public class HashMapComponentGraph<T,U,V> implements ComponentGraph<T,U,V> {
 	
 	private final NodeClassifier<T> nodeClassifier;
 
-	/**
-	 * Create a new Component element for a new conected component in the graph
-	 * @return
-	 */
-	private final Component<V> createNewComponent() {
-		return new Component<V>() {
-			private V element = null;
-			@Override
-			public V getComponentElement() {
-				return element;
-			}
+	
+	// default component creator
+	private ComponentCreator<V> componentcreator = new ComponentCreator<V>() {
+		public Component<V> createComponent() {
+			return new Component<V>() {
+				private V element = null;
+				@Override
+				public V getComponentElement() {
+					return element;
+				}
+			};
 		};
-	}
+	};
 	
 	/**
 	 * Create a new component graph
 	 * @param nodeClassifier a classifier for the type T, used for the connected components analysis
 	 */
 	public HashMapComponentGraph( NodeClassifier<T> nodeClassifier ) {
+		this.nodeClassifier = nodeClassifier;
+	}
+	
+	/**
+	 * Create a new component graph 
+	 * @param nodeClassifier a classifier for the type T, used for the connected components analysis
+	 * @param componetcreator a creator for new components that arrise inside the component graph
+	 */
+	public HashMapComponentGraph( NodeClassifier<T> nodeClassifier, ComponentCreator<V> componentcreator ) {
+		this.componentcreator = componentcreator;
 		this.nodeClassifier = nodeClassifier;
 	}
 	
@@ -155,7 +165,7 @@ public class HashMapComponentGraph<T,U,V> implements ComponentGraph<T,U,V> {
 		} else if (nodeClassifier.isDelimitor(a.element)) {
 			//if b is not in a group, create a new one for b
 			if (!component.containsKey(b)) {
-				Component<V> g = createNewComponent();
+				Component<V> g = componentcreator.createComponent();
 				component.put(b, g);
 				componentNodes.put(g, new HashSet<Node>());
 				componentNodes.get(g).add(b);
@@ -224,7 +234,7 @@ public class HashMapComponentGraph<T,U,V> implements ComponentGraph<T,U,V> {
 			//no groups
 			} else {
 				//create a new group for both bodies
-				Component<V> newGroup = createNewComponent();
+				Component<V> newGroup = componentcreator.createComponent();
 				component.put(a, newGroup); 
 				component.put(b, newGroup);
 				componentNodes.put(newGroup, new HashSet<Node>());
@@ -463,7 +473,7 @@ public class HashMapComponentGraph<T,U,V> implements ComponentGraph<T,U,V> {
 					//System.out.println("Splitting group");
 
 					//new group
-					Component<V> newgroup = createNewComponent();
+					Component<V> newgroup = componentcreator.createComponent();
 
 					Set<Node> blues = new HashSet<Node>();
 

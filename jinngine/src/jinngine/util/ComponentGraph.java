@@ -19,6 +19,7 @@ import java.util.Iterator;
  *
  * @param <T> Type that stores in nodes
  * @param <U> Type that stores in edges
+ * @param <V> Type that stores in components
  */
 public interface ComponentGraph<T,U,V> {
 
@@ -26,6 +27,15 @@ public interface ComponentGraph<T,U,V> {
 	 * Dummy interface for identifying components in the graph
 	 */
 	public interface Component<V> { public V getComponentElement(); }
+	
+	/**
+	 * Interface for supplying custom component objects. Components are used to reference the 
+	 * independently connected components in the graph. It is therefore useful to be able to 
+	 * store user information within the component references.
+	 */
+	public interface ComponentCreator<V> {
+		public Component<V> createComponent();
+	}
 	
 	/**
 	 * Node classifier for the ContactGraph
