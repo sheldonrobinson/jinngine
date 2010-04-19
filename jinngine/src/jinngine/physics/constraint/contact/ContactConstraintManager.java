@@ -42,7 +42,7 @@ public class ContactConstraintManager {
 	private final Map<Pair<Geometry>,ContactGenerator> contactGenerators = new HashMap<Pair<Geometry>,ContactGenerator>();
 		
 	// the constraint graph to be updated by this contact constraint manager
-	private final ComponentGraph<Body,Constraint> constraintGraph;
+	private final ComponentGraph<Body,Constraint, Boolean> constraintGraph;
 
 	// the default contact constraint creator
 	private final ContactConstraintCreator defaultcreator = new ContactConstraintCreator() {
@@ -56,7 +56,7 @@ public class ContactConstraintManager {
 
 	
 	public ContactConstraintManager( BroadphaseCollisionDetection broadphase, 
-			ComponentGraph<Body, Constraint> constraintgraph ) {
+			ComponentGraph<Body, Constraint, Boolean> constraintgraph ) {
 
 		// store the broadphase and the constraint graph references 
 		this.broadphase = broadphase;

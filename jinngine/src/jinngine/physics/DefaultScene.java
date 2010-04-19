@@ -13,7 +13,6 @@ import jinngine.physics.constraint.*;
 import jinngine.physics.constraint.contact.ContactConstraintManager;
 import jinngine.physics.solver.*;
 import jinngine.physics.solver.Solver.constraint;
-import jinngine.physics.solver.experimental.NonsmoothNonlinearConjugateGradient;
 import jinngine.collision.*;
 import jinngine.geometry.*;
 import jinngine.math.*;
@@ -45,7 +44,7 @@ public final class DefaultScene implements Scene {
 	};
 	
 	// create the contact graph using the classifier above
-	private final ComponentGraph<Body,Constraint> constraintGraph = new HashMapComponentGraph<Body,Constraint>(classifier);
+	private final ComponentGraph<Body,Constraint,Boolean> constraintGraph = new HashMapComponentGraph<Body,Constraint,Boolean>(classifier);
 
 	// use sweep and prune as broadphase collision detection
 	private final BroadphaseCollisionDetection broadphase;
@@ -53,18 +52,23 @@ public final class DefaultScene implements Scene {
 	// create a ncp solver
 	private final Solver solver;
 	
+	// deactivation policy
+	private final DeactivationPolicy policy;
+	
 	// time-step size
-	private double dt = 0.08; 
+	private double timestep = 0.08; 
 
 	/** 
 	 * Create a new fixed time-stepping simulator 
 	 * @param broadphase Broadphase collision detection method
 	 * @param solver Solver to be used
+	 * @param policy TODO
 	 */
-	public DefaultScene( BroadphaseCollisionDetection broadphase,  Solver solver ) {	
+	public DefaultScene( BroadphaseCollisionDetection broadphase,  Solver solver, DeactivationPolicy policy ) {	
 		
 		this.broadphase = broadphase;
 		this.solver = solver;
+		this.policy = policy;
 		
 		// start the new contact constraint manager
 		new ContactConstraintManager( broadphase, constraintGraph);
@@ -76,8 +80,9 @@ public final class DefaultScene implements Scene {
 	public DefaultScene() {	
 		
 		// some default choises
+		this.policy = new DefaultDeactivationPolicy();
 		this.broadphase = new SweepAndPrune();
-		this.solver = new NonsmoothNonlinearConjugateGradient(35);
+		this.solver = new ProjectedGaussSeidel(55);
 		
 		// start the new contact constraint manager
 		new ContactConstraintManager( broadphase, constraintGraph);
@@ -86,16 +91,16 @@ public final class DefaultScene implements Scene {
 
 	@Override
 	public final void tick() {
-		// Clear acting forces and delta velocities
+		// clear acting forces and delta velocities
 		for (Body c:bodies) {
 			c.clearForces();
 			c.deltavelocity.assign(Vector3.zero);
 			c.deltaomega.assign(Vector3.zero);
 		}
 
-        // Apply all forces	to delta velocities
+        // apply all forces	to delta velocities
 		for (Force f: forces) {
-			f.apply(dt);
+			f.apply(timestep);
 		}
 
 		// Run the broad-phase collision detection (this automatically updates the contactGraph,
@@ -108,37 +113,59 @@ public final class DefaultScene implements Scene {
 		ListIterator<constraint> constraintIterator = ncpconstraints.listIterator();
 				
 		// iterate through groups/components in the contact graph
-		Iterator<ComponentGraph.Component> components = constraintGraph.getComponents();		
+		Iterator<ComponentGraph.Component<Boolean>> components = constraintGraph.getComponents();		
 		while (components.hasNext()) {
 			// the component 
-			ComponentGraph.Component g = components.next();
+			ComponentGraph.Component<Boolean> g = components.next();
 			
-			// apply all constraints in interaction component
-			Iterator<Constraint> constraints = constraintGraph.getEdgesInComponent(g);
-			while (constraints.hasNext()) {
-				Constraint c = constraints.next();
-				c.applyConstraints(constraintIterator, dt);
+			// check if whole group is inactive
+			Iterator<Body> bodyiter =constraintGraph.getNodesInComponent(g);
+			boolean activefound = false;
+			while (bodyiter.hasNext()) {
+				if ( !bodyiter.next().deactivated ) { //!policy.isInactive(bodyiter.next()) ) {
+					activefound = true;
+					break;
+				}
 			}
+			
+			// if there are active bodies in the group, apply constraints
+			if (activefound) {
+				// apply all constraints in interaction component
+				Iterator<Constraint> constraints = constraintGraph.getEdgesInComponent(g);
+				while (constraints.hasNext()) {
+					Constraint c = constraints.next();
+					c.applyConstraints(constraintIterator, timestep);
+				} // while
+			} // if active found
 		} //while groups
 
 		
-		//run the solver (compute delta velocities)
+		// run the solver (compute delta velocities) for all 
+		// components in the constraint graph
 		solver.solve( ncpconstraints, bodies, 0.0 );
 		
 		// apply delta velocities and integrate positions forward 
-		for (Body c : bodies ) {						
+		for (Body body : bodies ) {						
 			// apply computed forces to bodies
-			if ( !c.isFixed() ) {
+			if ( !body.isFixed() && !body.deactivated ) {
 				// apply delta velocities
-				c.state.velocity.assign( c.state.velocity.add( c.deltavelocity));
-				c.state.omega.assign( c.state.omega.add( c.deltaomega));
+				body.state.velocity.assign( body.state.velocity.add( body.deltavelocity));
+				body.state.omega.assign( body.state.omega.add( body.deltaomega));
 				// update angular and linear momentums
-				Matrix3.multiply(c.state.inertia, c.state.omega, c.state.L);
-				c.state.P.assign(c.state.velocity.multiply(c.state.mass));
+				Matrix3.multiply(body.state.inertia, body.state.omega, body.state.L);
+				body.state.P.assign(body.state.velocity.multiply(body.state.mass));
 			}
 
 			//integrate forward on positions
-			c.advancePositions(dt);
+			body.advancePositions(timestep);
+			
+			// change activation state
+			if ( policy.shouldBeDeactivated(body)) {
+				body.deactivated = true;
+			} 
+			else if (policy.shouldBeActivated(body)) {
+				body.deactivated = false;
+			}		
 		} // for bodies
 	} //time-step
 
@@ -174,7 +201,7 @@ public final class DefaultScene implements Scene {
 	@Override
 	public Iterator<Constraint> getConstraints() {
 		List<Constraint> list = new ArrayList<Constraint>();
-		Iterator<Component> ci = constraintGraph.getComponents();
+		Iterator<Component<Boolean>> ci = constraintGraph.getComponents();
 		while(ci.hasNext()) {
 			Iterator<Constraint> ei = constraintGraph.getEdgesInComponent(ci.next());
 			while(ei.hasNext())
@@ -212,7 +239,7 @@ public final class DefaultScene implements Scene {
 	
 	@Override
 	public void setTimestep(double dt) {
-		this.dt = dt;
+		this.timestep = dt;
 	}
 
 	@Override

@@ -20,12 +20,12 @@ import java.util.Iterator;
  * @param <T> Type that stores in nodes
  * @param <U> Type that stores in edges
  */
-public interface ComponentGraph<T,U> {
+public interface ComponentGraph<T,U,V> {
 
 	/**
 	 * Dummy interface for identifying components in the graph
 	 */
-	public interface Component {}
+	public interface Component<V> { public V getComponentElement(); }
 	
 	/**
 	 * Node classifier for the ContactGraph
@@ -75,20 +75,20 @@ public interface ComponentGraph<T,U> {
 	 * @param c Component to iterate
 	 * @return Iterator giving the edge elements in the component
 	 */
-	public Iterator<U> getEdgesInComponent(Component c);
+	public Iterator<U> getEdgesInComponent(Component<V> c);
 
 	/**
 	 * Returns an iterator yielding the nodes present in the given component
 	 * @param c Any component of this graph
 	 * @return An iterator yielding the nodes present in the component c
 	 */
-	public Iterator<T> getNodesInComponent(Component c);
+	public Iterator<T> getNodesInComponent(Component<V> c);
 	
 	/**
 	 * Return an iterator that yields the components in the graph
 	 * @return 
 	 */
-	public Iterator<Component> getComponents();
+	public Iterator<Component<V>> getComponents();
 	
 	/**
 	 * Return the number of components in this graph

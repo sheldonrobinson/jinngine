@@ -32,7 +32,7 @@ public class ComponentGraphTest extends TestCase {
 			}
 		};
 		
-		ComponentGraph<Object,Object> graph = new HashMapComponentGraph<Object,Object>(nc);
+		ComponentGraph<Object,Object,Object> graph = new HashMapComponentGraph<Object,Object,Object>(nc);
 		
 		//some dummy nodes and an edge element
 		Object n1 = new Object();
@@ -43,8 +43,8 @@ public class ComponentGraphTest extends TestCase {
 		graph.addEdge(new Pair<Object>(n1,n2), e1);
 		
 		//we expect one component containing n1 and n2
-		Iterator<Component> components = graph.getComponents();
-		Component c = components.next();
+		Iterator<Component<Object>> components = graph.getComponents();
+		Component<Object> c = components.next();
 		
 		//get nodes
 		Iterator<Object> nodes = graph.getNodesInComponent(c);
@@ -81,7 +81,7 @@ public class ComponentGraphTest extends TestCase {
 			}
 		};
 		
-		ComponentGraph<Object,Object> graph = new HashMapComponentGraph<Object,Object>(nc);
+		ComponentGraph<Object,Object,Object> graph = new HashMapComponentGraph<Object,Object,Object>(nc);
 		
 		//some dummy nodes 
 		Object n1 = new Object();
@@ -168,7 +168,7 @@ public class ComponentGraphTest extends TestCase {
 			}
 		};
 		
-		ComponentGraph<Object,Object> graph = new HashMapComponentGraph<Object,Object>(nc);
+		ComponentGraph<Object,Object,Object> graph = new HashMapComponentGraph<Object,Object,Object>(nc);
 		
 		graph.addEdge(new Pair<Object>(n1,d6), new Object() );
 		

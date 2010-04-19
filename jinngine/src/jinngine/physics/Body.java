@@ -19,11 +19,14 @@ import jinngine.math.*;
  */
 public final class Body {
 	// global public name
-	public  final String identifier;
+	public final String identifier;
 
 	// auxiliary members
 	public final Vector3               deltavelocity = new Vector3(0,0,0);
 	public final Vector3               deltaomega    = new Vector3(0,0,0);
+	public boolean                     deactivated = false;
+
+	// more auxiliary members
 	public final Vector3               auxDeltav     = new Vector3();
 	public final Vector3               auxDeltaOmega = new Vector3();
 	public final Vector3               auxDeltav2 = new Vector3();
@@ -36,8 +39,8 @@ public final class Body {
 	private final List<Geometry> geometries = new ArrayList<Geometry>();
 	
 	// fixed setting
-	private boolean isFixed = false;
-	public boolean hidden = false;
+	private boolean fixed = false;
+	
 			
 	/**
 	 * Create a now body with no geometry
@@ -211,11 +214,11 @@ public final class Body {
 	}
 
 	public final boolean isFixed() {
-		return isFixed;
+		return fixed;
 	}
 
 	public void setFixed( boolean value){
-		isFixed = value;
+		fixed = value;
 	}
 
 	public final void setVelocity( Vector3 v ) {
@@ -353,7 +356,7 @@ public final class Body {
 		res  = Matrix3.transposeVectorAndMultiply( state.omega, state.inertia , res);
 		eKin = res.dot( state.omega )*0.5f;
 
-		//Translational energy E = (1/2)*v*m^2
+		//Translational energy E = m*(1/2)*v^2
 		Vector3.multiply(this.state.P, 1.0/this.state.mass, this.state.velocity );
 		eKin += state.velocity.dot(state.velocity)*state.mass*0.5f;
 
