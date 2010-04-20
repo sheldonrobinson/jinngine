@@ -242,9 +242,7 @@ public final class FrictionalContactConstraint implements ContactConstraint {
 		
 		// set distance (unused in simulator)
 		c.distance = cp.distance;
-		// set the true initial velocity
-		c.ui = uni + J1.dot(b1.deltavelocity) + J2.dot(b1.deltaomega) + J3.dot(b2.deltavelocity) + J4.dot(b2.deltaomega);
-;
+		
 		
 		//normal-friction coupling 
 		final constraint coupling = enableCoupling?c:null;

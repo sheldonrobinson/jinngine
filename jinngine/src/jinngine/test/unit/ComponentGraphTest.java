@@ -202,5 +202,208 @@ public class ComponentGraphTest extends TestCase {
 		//still expect 1 component because n1, n2, and n3 is connected
 		assertTrue( graph.getNumberOfComponents() == 1);
 	}
+	
+	/**
+	 * Test that adds and removes nodes
+	 */
+	public void testComponentGraph4() {
 
+		//some dummy nodes 
+		final Object n1 = new Object();
+		final Object n2 = new Object();
+		final Object n3 = new Object();
+
+		NodeClassifier<Object> nc = new NodeClassifier<Object>() {
+			@Override
+			public boolean isDelimitor(Object node) {
+				return false;
+			}
+		};
+		
+		// the graph
+		ComponentGraph<Object,Object,Object> graph = new HashMapComponentGraph<Object,Object,Object>(nc);
+
+		// add some nodes
+		graph.addNode( n1 );
+		graph.addNode( n2 );
+		graph.addNode( n3 );
+				
+		//expect 3 nodes in graph
+		assertTrue( graph.getNumberOfNodes() == 3);
+		
+		// remove nodes one at the time
+		graph.removeNode( n1 );
+		
+		//expect 2 nodes in graph
+		assertTrue( graph.getNumberOfNodes() == 2);
+		
+		//expect 1 node in graph
+		graph.removeNode( n2 );
+		assertTrue( graph.getNumberOfNodes() == 1);
+
+		//expect 0 nodes in graph
+		graph.removeNode( n3 );
+		assertTrue( graph.getNumberOfNodes() == 0);
+		
+	}
+	
+	/**
+	 * Test that adds and removes nodes in a graph with edges
+	 */
+	public void testComponentGraph5() {
+
+		//some dummy nodes 
+		final Object n1 = new Object();
+		final Object n2 = new Object();
+		final Object n3 = new Object();
+		
+		// dummy edges
+		final Object e12 = new Object();
+		final Object e23 = new Object();
+
+		NodeClassifier<Object> nc = new NodeClassifier<Object>() {
+			@Override
+			public boolean isDelimitor(Object node) {
+				return false;
+			}
+		};
+		
+		// the graph
+		ComponentGraph<Object,Object,Object> graph = new HashMapComponentGraph<Object,Object,Object>(nc);
+
+		// add some nodes
+		graph.addNode( n1 );
+		graph.addNode( n2 );
+		graph.addNode( n3 );
+				
+		// expect 3 nodes in graph
+		assertTrue( graph.getNumberOfNodes() == 3);
+		
+		// add an edge ( n1--n2   n3 ) 
+		graph.addEdge( new Pair<Object>(n1,n2), e12 );
+		
+		// expect 3 nodes, 1 component, and 1 free node
+		assertTrue( graph.getNumberOfNodes() == 3);
+		assertTrue( graph.getNumberOfComponents() == 1);
+		assertTrue( graph.getNumberOfFreeNodes() == 1);
+		
+		// add another edge ( n1--n2--n3 )
+		graph.addEdge( new Pair<Object>(n2,n3), e23);
+
+		// expect 3 nodes, 1 component, and 0 free node
+		assertTrue( graph.getNumberOfNodes() == 3);
+		assertTrue( graph.getNumberOfComponents() == 1);
+		assertTrue( graph.getNumberOfFreeNodes() == 0);
+		
+	}
+
+
+
+	/**
+	 * Test that adds and removes edges in a graph, and tracks free nodes
+	 */
+	public void testComponentGraph6() {
+
+		//some dummy nodes 
+		final Object n1 = new Object();
+		final Object n2 = new Object();
+		final Object n3 = new Object();
+
+		// dummy edges
+		final Object e12 = new Object();
+		final Object e13 = new Object();
+		final Object e23 = new Object();
+
+		NodeClassifier<Object> nc = new NodeClassifier<Object>() {
+			@Override
+			public boolean isDelimitor(Object node) {
+				return false;
+			}
+		};
+
+		// the graph
+		ComponentGraph<Object,Object,Object> graph = new HashMapComponentGraph<Object,Object,Object>(nc);
+
+		// add the nodes
+		graph.addNode(n1);
+		graph.addNode(n2);
+		graph.addNode(n3);
+				
+		// add edges and check
+		graph.addEdge( new Pair<Object>(n1,n2), e12);
+		graph.addEdge( new Pair<Object>(n1,n3), e12);
+		graph.addEdge( new Pair<Object>(n2,n3), e12);
+		
+		assertTrue( graph.getNumberOfFreeNodes() == 0);
+
+		graph.removeEdge( new Pair<Object>(n1,n2) );
+
+		assertTrue( graph.getNumberOfFreeNodes() == 0);
+
+		graph.removeEdge( new Pair<Object>(n1,n3) );
+
+		assertTrue( graph.getNumberOfFreeNodes() == 1);
+
+		graph.removeEdge( new Pair<Object>(n2,n3) );
+
+		assertTrue( graph.getNumberOfFreeNodes() == 3);
+		
+		graph.addEdge(new Pair<Object>(n1,n3), e13 );
+
+		assertTrue( graph.getNumberOfFreeNodes() == 1);
+
+	}
+
+	
+	/**
+	 * Tests the removeNode and addNode methods on a small graph
+	 */
+	public void testComponentGraph7() {
+
+		//some dummy nodes 
+		final Object n1 = new Object();
+		final Object n2 = new Object();
+		final Object n3 = new Object();
+
+		// dummy edges
+		final Object e12 = new Object();
+		final Object e13 = new Object();
+		final Object e23 = new Object();
+
+		NodeClassifier<Object> nc = new NodeClassifier<Object>() {
+			@Override
+			public boolean isDelimitor(Object node) {
+				return false;
+			}
+		};
+
+		// the graph
+		ComponentGraph<Object,Object,Object> graph = new HashMapComponentGraph<Object,Object,Object>(nc);
+
+		// add the nodes
+		graph.addNode(n1);
+		graph.addNode(n2);
+		graph.addNode(n3);
+				
+		// add edges and check
+		graph.addEdge( new Pair<Object>(n1,n2), e12);
+		graph.addEdge( new Pair<Object>(n1,n3), e12);
+		graph.addEdge( new Pair<Object>(n2,n3), e12);
+		
+		assertTrue( graph.getNumberOfNodes() == 3 );
+		assertTrue( graph.getNumberOfComponents() == 1 );
+		assertTrue( graph.getNumberOfFreeNodes() == 0 );
+		
+		graph.removeNode(n1);
+		
+		assertTrue( graph.getNumberOfNodes() == 2 );
+		assertTrue( graph.getNumberOfComponents() == 1 );
+		assertTrue( graph.getNumberOfFreeNodes() == 0 );
+		
+		graph.addNode(n1);
+
+		assertTrue( graph.getNumberOfNodes() == 3 );
+		assertTrue( graph.getNumberOfComponents() == 1 );
+		assertTrue( graph.getNumberOfFreeNodes() == 1 );
+	}
 }

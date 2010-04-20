@@ -24,7 +24,11 @@ public final class Body {
 	// auxiliary members
 	public final Vector3               deltavelocity = new Vector3(0,0,0);
 	public final Vector3               deltaomega    = new Vector3(0,0,0);
+	
+	// deactivation
 	public boolean                     deactivated = false;
+	public final Vector3               deactivatedexternalforce = new Vector3();
+	public final Vector3               deactivatedexternaltorque= new Vector3();
 
 	// more auxiliary members
 	public final Vector3               auxDeltav     = new Vector3();

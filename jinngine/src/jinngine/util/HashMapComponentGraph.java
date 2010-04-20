@@ -38,7 +38,9 @@ public class HashMapComponentGraph<T,U,V> implements ComponentGraph<T,U,V> {
 		public final boolean equals( Object other ) {
 //			if (this == other) return true;
 //			if (other == null ) return false;
-			return element == ((Node)other).element;
+//			return element == ((Node)other).element;
+			return element.equals(((Node)other).element);
+
 		}
 
 	}
@@ -57,15 +59,26 @@ public class HashMapComponentGraph<T,U,V> implements ComponentGraph<T,U,V> {
 //		public boolean isDelimitor(final T node);
 //	}
 		
+	
+	// this would ideally be a Set, but the HashSet implementation doesn't allow one to get the
+	// actual reference to a specific object in the set. This means that we can't keep our Node objects
+	// unique, which we would like to do
+	private final Map<Node,Node>               allnodes = new HashMap<Node,Node>();
+
+	private final Set<Node>		               freenodes = new HashSet<Node>();//	
+	private final Map<Node,Set<Node>>          edges = new HashMap<Node,Set<Node>>();
+	private final Map<Node,Component<V>>       component = new HashMap<Node,Component<V>>();
+
+	private final Map<Pair<T>,U>               edgeData = new HashMap<Pair<T>,U>();//
+
 	private final Map<Component<V>,Set<Node>>     componentNodes = new HashMap<Component<V>,Set<Node>>();//
 	private final Map<Component<V>,Set<Pair<T>>>  componentEdges = new HashMap<Component<V>,Set<Pair<T>>>();//
-	private final Map<Node,Set<Node>>          edges = new HashMap<Node,Set<Node>>();
-	private final Map<Node,Component<V>>          component = new HashMap<Node,Component<V>>();
-	private final Map<Node,Node>               nodes = new HashMap<Node,Node>();
-	private final Map<Pair<T>,U>               edgeData = new HashMap<Pair<T>,U>();//
+
 	
 	private final NodeClassifier<T> nodeClassifier;
 
+	//TODO the nodes map is not cleaned up, nodes that are removed still remains in here
+	
 	
 	// default component creator
 	private ComponentCreator<V> componentcreator = new ComponentCreator<V>() {
@@ -109,20 +122,31 @@ public class HashMapComponentGraph<T,U,V> implements ComponentGraph<T,U,V> {
 		
 		//do not act if edge is already present
 		if (edgeData.containsKey(pair)) {
+			// update the edge data user reference
 			edgeData.put(pair,edgeelement);
 			return;
 		}
+		
+		// add the new edge data to the edge
 		edgeData.put(pair,edgeelement);
 		
-		
-		//get nodes from the node tables
+		//get nodes from the node tables ( in this way we can keep data other than T in the Node objects)
+		// if the nodes are not present, we add them to the allnodes and to freenodes
 		Node a = new Node(pair.getFirst());
-		if ( nodes.containsKey(a)) 
-			a = nodes.get(a); else nodes.put(a,a);
-		
+		if ( allnodes.containsKey(a)) {
+			a = allnodes.get(a); 
+		} else { 
+			allnodes.put(a,a);
+			freenodes.add(a);
+		}
 		Node b = new Node(pair.getSecond());
-		if ( nodes.containsKey(b)) 
-			b = nodes.get(b); else nodes.put(b,b);
+		if ( allnodes.containsKey(b)) { 
+			b = allnodes.get(b); 
+		} else { 
+			allnodes.put(b,b);
+			freenodes.add(b);
+		}
+
 		
 		//if b is fixed, interchange a and b ( now, if b is fixed, both a and b are fixed)
 		if (nodeClassifier.isDelimitor(b.element)) {
@@ -130,56 +154,64 @@ public class HashMapComponentGraph<T,U,V> implements ComponentGraph<T,U,V> {
 			a = b; b = t;
 		}
 		
-		//add edge to nodes
-		if (!edges.containsKey(a))
-			edges.put(a, new HashSet<Node>());
-		if (!edges.containsKey(b))
-			edges.put(b, new HashSet<Node>());
+		//add edge to nodes. First create hash sets, and then add the nodes to them
+		if (!edges.containsKey(a)) edges.put(a, new HashSet<Node>());
+		if (!edges.containsKey(b)) edges.put(b, new HashSet<Node>());
 		edges.get(b).add(a);
 		edges.get(a).add(b);
 		
 		//Cases
-		//   i. Both bodies are fixed 
-		//        do nothing
-		//  ii. One body is fixed:
-		//       a). non-fixed is in a group
+		//   i. Both nodes are delimiters 
+		//       a) do nothing
+		//  ii. One node is delimiter:
+		//       a). non-delimiter is in a component
 		//             do nothing
-		//       b). non-fixed is not in a group
-		//             create a new group for the non-fixed body
-		// iii. No body is fixed:
-		//       a). no body is in a group
-		//             create a new group for both bodies
-		//       b). one body is in a group
-		//             add the new body to this group
-		//       c). both bodies are in a group
-		//             1. the same group
+		//       b). non-delimiter is not in a component
+		//             create a new component for the non-delimiter node
+		// iii. No node is delimiter:
+		//       a). no node is in a component
+		//             create a new component for both nodes
+		//       b). one node is in a component
+		//             add the new node to this component
+		//       c). both nodes are in a component
+		//             1. the same component
 		//                 do nothing
-		//             2. different groups
-		//                 merge the one group into the other
+		//             2. different components
+		//                 merge the one component into the other
 		
-		//both a and b are delimitors
+		// case i a) 
+		// both a and b are delimitors
 		if (nodeClassifier.isDelimitor(b.element)) {
 			//do nothing
-			
-		//one is fixed
+		
+		// ii)
+		// one is delimiter
 		} else if (nodeClassifier.isDelimitor(a.element)) {
 			//if b is not in a group, create a new one for b
 			if (!component.containsKey(b)) {
+				// case ii b)
 				Component<V> g = componentcreator.createComponent();
+				
+				// add b to the new group
 				component.put(b, g);
 				componentNodes.put(g, new HashSet<Node>());
 				componentNodes.get(g).add(b);
-				
+
+				// b is not a free node anymore
+				freenodes.remove(b);
+
 				//add to pairs
 				componentEdges.put(g, new HashSet<Pair<T>>());
 				componentEdges.get(g).add(pair);
+				
 				//return;
 			} else {
+				// case ii a)
 				//add to pairs
 				Component<V> g = component.get(b);
 				componentEdges.get(g).add(pair);
 			}
-		//non of the bodies are fixed
+		//non of the bodies are delimiters
 		} else {
 
 			//if b is in a group, interchange a and b 
@@ -189,12 +221,12 @@ public class HashMapComponentGraph<T,U,V> implements ComponentGraph<T,U,V> {
 				a = b; b = t;
 			}
 
-			//both grouped
+			//both in components
 			if (component.containsKey(b)) {
-				//same group
+				//same component
 				if (component.get(a) == component.get(b)) {
 					//do nothing
-					//add pair to this group
+					//add edge to this component
 					componentEdges.get(component.get(a)).add(pair);
 				//different groups
 				} else {
@@ -230,6 +262,10 @@ public class HashMapComponentGraph<T,U,V> implements ComponentGraph<T,U,V> {
 				component.put(b, g);
 				componentNodes.get(g).add(b);
 				componentEdges.get(g).add(pair);
+				
+				// b is not a free node anymore
+				freenodes.remove(b);
+				
 				//return;
 			//no groups
 			} else {
@@ -243,6 +279,10 @@ public class HashMapComponentGraph<T,U,V> implements ComponentGraph<T,U,V> {
 				
 				componentEdges.put(newGroup, new HashSet<Pair<T>>());
 				componentEdges.get(newGroup).add(pair);
+				
+				//both a and b are not free now
+				freenodes.remove(a);
+				freenodes.remove(b);
 				//return;
 			}
 						
@@ -300,15 +340,20 @@ public class HashMapComponentGraph<T,U,V> implements ComponentGraph<T,U,V> {
 	public final boolean removeEdge( Pair<T> pair) {
 		//don't act if edge is not  present
 		if (!edgeData.containsKey(pair))
-			return false; else edgeData.remove(pair);
+			return false; 
+		else 
+			edgeData.remove(pair);
 
+		
+		// get the node out of the node hash map ( at this point we acually know that the nodes must
+		// exist, because the edge exists 
 		Node a = new Node(pair.getFirst());
-		if ( nodes.containsKey(a)) 
-			a = nodes.get(a); else nodes.put(a,a);		
+		if ( allnodes.containsKey(a)) 
+			a = allnodes.get(a); else allnodes.put(a,a);		
 		Node b = new Node(pair.getSecond());
-		if ( nodes.containsKey(b)) 
-			b = nodes.get(b); else nodes.put(b,b);
-
+		if ( allnodes.containsKey(b)) 
+			b = allnodes.get(b); else allnodes.put(b,b);
+		
 
 		//if b is fixed, interchange a and b ( now, if b is fixed, both a and b are fixed)
 		if (nodeClassifier.isDelimitor(b.element)) {
@@ -320,33 +365,35 @@ public class HashMapComponentGraph<T,U,V> implements ComponentGraph<T,U,V> {
 		edges.get(a).remove(b);
 		edges.get(b).remove(a);
 
+		// if no edges left in set, remove the set
 		if (edges.get(a).isEmpty())
 			edges.remove(a);
 
+		// if no edges left in set, remove it
 		if (edges.get(b).isEmpty())
 			edges.remove(b);
 
 
 		//Cases
-		//   i. Both bodies are fixed 
+		//   i. Both node are delimiters 
 		//        do nothing
-		//  ii. One body is fixed:
-		//       a). non-fixed is in a group
-		//             do nothing (body could now be alone in its group)
-		//             if body contains no other edges, delete it from its group
-		//       b). non-fixed is not in a group (not possible)
+		//  ii. One node is delimiter:
+		//       a). non-delimiter is in a component
+		//             do nothing (node could now be alone in its component)
+		//             if node contains no other edges, delete it from its component
+		//       b). non-delimiter is not in a component (not possible)
+		//             do nothing/ report fatal error
+		// iii. No node is delimiter:
+		//       a). no node is in a component (not possible)
+		//             do nothing/ error
+		//       b). one node is in a component (not possible)
 		//             do nothing
-		// iii. No body is fixed:
-		//       a). no body is in a group (not possible)
-		//             do nothing
-		//       b). one body is in a group (not possible)
-		//             do nothing
-		//       c). both bodies are in a group
-		//             1. the same group
-		//                 remove edge, traverse breadth-first from each body to determine 
-		//                 if group should be split. 
-		//             2. different groups (not possible)
-		//                 do nothing
+		//       c). both nodes are in a component
+		//             1. the same component
+		//                 remove edge, traverse breadth-first from each node to determine 
+		//                 if component should be split. 
+		//             2. different components (not possible)
+		//                 do nothing/ error
 
 		//both nodes are fixed
 		if ( nodeClassifier.isDelimitor(b.element)) {
@@ -354,15 +401,19 @@ public class HashMapComponentGraph<T,U,V> implements ComponentGraph<T,U,V> {
 			//return;
 			//one is fixed
 		} else if ( nodeClassifier.isDelimitor(a.element)) {
-			if (component.containsKey(b)) { //(only possible option)
+			if (component.containsKey(b)) { // only possible option 
 				//System.out.println("One fixed node");
 				Component<V> g = component.get(b);
 
 				//check for another edge on this node
 				if (!edges.containsKey(b)) {
 					//System.out.println("b did not have any edges");
-					//remove the body from group
+					//remove the node from component
 					component.remove(b);
+					
+					// b is now free
+					freenodes.add(b);
+					
 					Set<Node> s = componentNodes.get(g);
 					if (!s.remove(b)) {
 						System.out.println("ALARM");
@@ -384,7 +435,7 @@ public class HashMapComponentGraph<T,U,V> implements ComponentGraph<T,U,V> {
 
 
 
-				//remove pair from group (even if b was not removed from the group)
+				//remove edge from component (even if b was not removed from the group)
 				Set<Pair<T>> sp = componentEdges.get(g);
 				sp.remove(pair);
 				//remove group if empty
@@ -394,7 +445,7 @@ public class HashMapComponentGraph<T,U,V> implements ComponentGraph<T,U,V> {
 				}
 
 			} else {
-				System.out.println("What?");
+				System.out.println("HashMapComponentGraph.removeEdge(): A connected non-delimiter node was not in a component!");
 				System.exit(0);
 			}
 			//return;
@@ -493,7 +544,7 @@ public class HashMapComponentGraph<T,U,V> implements ComponentGraph<T,U,V> {
 						System.exit(0);
 					}
 
-					//remove bodies from old groups and add the new group
+					//remove bodies from old components and add the new component
 					componentNodes.get(oldgroup).removeAll(blues);
 					componentNodes.put(newgroup, blues);
 
@@ -525,7 +576,10 @@ public class HashMapComponentGraph<T,U,V> implements ComponentGraph<T,U,V> {
 				component.remove(b);
 				componentNodes.get(oldgroup).remove(b);
 
-				if (componentNodes.get(oldgroup).isEmpty()) { // never happens?
+				// b is now a free node
+				freenodes.add(b);
+				
+				if (componentNodes.get(oldgroup).isEmpty()) { // never happens
 					System.out.println("How can group be empty?");
 					componentNodes.remove(oldgroup);
 				}
@@ -546,6 +600,10 @@ public class HashMapComponentGraph<T,U,V> implements ComponentGraph<T,U,V> {
 				//clear out group entirely
 				component.remove(a);
 				component.remove(b);
+				
+				// both a and b are free nodes now
+				freenodes.add(a);
+				freenodes.add(b);
 
 				//assume that the group is only containing a and b?
 				componentNodes.get(oldgroup).remove(b);
@@ -573,40 +631,40 @@ public class HashMapComponentGraph<T,U,V> implements ComponentGraph<T,U,V> {
 
 
 		//System.out.println("After remove: " + 		groups.keySet().size() + " groups with " + group.size() + " bodies" );
-		Iterator<Component<V>> groupiter = componentNodes.keySet().iterator();
-
-		Set<Pair<T>> allpairs = new HashSet<Pair<T>>();
-		Set<Node> allnodes = new HashSet<Node>();
-		while(groupiter.hasNext()){
-			Component<V> g = groupiter.next();
-			//System.out.println( "Group " + g + " : " + groupPairs.get(g).size() + " pairs " );
-
-			Iterator<Pair<T>> pairiter = componentEdges.get(g).iterator(); 
-			while (pairiter.hasNext()) {
-				Pair<T> thispair = pairiter.next();
-				//System.out.println( "    pair:"+thispair.hashCode());
-				if (allpairs.contains(thispair)) {
-					System.out.println("Duplicates!!!!");
-					System.exit(0);
-				}
-				allpairs.add(thispair);	
-
-			}
-
-
-			Iterator<Node> nodeiter = componentNodes.get(g).iterator(); 
-			while (nodeiter.hasNext()) {
-				Node node = nodeiter.next();
-				//System.out.println( "    Node:"+node);
-				if (allnodes.contains(node)) {
-					System.out.println("Duplicates!!!!");
-					System.exit(0);
-				}
-				allnodes.add(node);	
-
-			}
-
-		}
+//		Iterator<Component<V>> groupiter = componentNodes.keySet().iterator();
+//
+//		Set<Pair<T>> allpairs = new HashSet<Pair<T>>();
+//		Set<Node> allnodes = new HashSet<Node>();
+//		while(groupiter.hasNext()){
+//			Component<V> g = groupiter.next();
+//			//System.out.println( "Group " + g + " : " + groupPairs.get(g).size() + " pairs " );
+//
+//			Iterator<Pair<T>> pairiter = componentEdges.get(g).iterator(); 
+//			while (pairiter.hasNext()) {
+//				Pair<T> thispair = pairiter.next();
+//				//System.out.println( "    pair:"+thispair.hashCode());
+//				if (allpairs.contains(thispair)) {
+//					System.out.println("Duplicates!!!!");
+//					System.exit(0);
+//				}
+//				allpairs.add(thispair);	
+//
+//			}
+//
+//
+//			Iterator<Node> nodeiter = componentNodes.get(g).iterator(); 
+//			while (nodeiter.hasNext()) {
+//				Node node = nodeiter.next();
+//				//System.out.println( "    Node:"+node);
+//				if (allnodes.contains(node)) {
+//					System.out.println("Duplicates!!!!");
+//					System.exit(0);
+//				}
+//				allnodes.add(node);	
+//
+//			}
+//
+//		}
 
 		return true;
 	}
@@ -709,15 +767,14 @@ public class HashMapComponentGraph<T,U,V> implements ComponentGraph<T,U,V> {
 	 * Auxiliary method to print the graph
 	 */
 	public final void print() {
-		System.out.println("Status: " + 		componentNodes.keySet().size() + " groups with " + component.size() + " bodies" );
+		System.out.println("Status: " + 		componentNodes.keySet().size() + " components with " + component.size() + " bodies, " + getNumberOfFreeNodes() + " free ");
 		Iterator<Component<V>> groupiter = componentNodes.keySet().iterator();
 
 		Set<Pair<T>> allpairs = new HashSet<Pair<T>>();
 		Set<Node> allnodes = new HashSet<Node>();
 		while(groupiter.hasNext()){
 			Component<V> g = groupiter.next();
-			System.out.println( "Group " + g + " : " + componentEdges.get(g).size() + " pairs " );
-
+			System.out.println( "Group " + g + " : " + componentEdges.get(g).size() + " pairs, " + componentNodes.get(g).size() + " nodes "  );
 			Iterator<Pair<T>> pairiter = componentEdges.get(g).iterator(); 
 			while (pairiter.hasNext()) {
 				Pair<T> thispair = pairiter.next();
@@ -768,5 +825,64 @@ public class HashMapComponentGraph<T,U,V> implements ComponentGraph<T,U,V> {
 			public void remove() {
 			}
 		};
+	}
+	
+	public void addNode(T nodeelement) {
+		// check if we know about this node
+		Node node = new Node(nodeelement);
+		
+		if (allnodes.containsKey(node) ) {
+			// ignore. Maybe give warning?
+			System.out.println("HashMapComponentGraph.addNode(): Node is already in graph");
+		} else {
+			// add to both allnodes and freenodes
+			allnodes.put(node,node);
+			freenodes.add(node);
+		}
+	}
+	
+	public void removeNode(T nodeelement) {
+		Node node = new Node(nodeelement);
+		// check if node is in freenodes. If so, we don't have to do anything but removing the node
+		// from both freenodes and allnodes
+		if ( freenodes.contains(node)) {
+			freenodes.remove(node);
+			allnodes.remove(node);
+			return;
+		}
+		
+		// we now expect node to be part of a component, but we can now simply remove all incident 
+		// edges to the node. After that, the node will be placed into freenodes, and we can trivially
+		// remove it
+		
+		// remove each incident edges. store edges in intermediate list to avoid
+		// concurrent modification errors
+		List<Pair<T>> edgesToRemove = new ArrayList<Pair<T>>();
+		Iterator<T> neighbors = getConnectedNodes(node.element);
+		while (neighbors.hasNext()) {
+			Pair<T> nodepair = new Pair<T>(node.element, neighbors.next() );			
+			edgesToRemove.add(nodepair);
+		}
+		for (Pair<T> edge: edgesToRemove ) 
+			removeEdge(edge);
+		
+		// we can now remove the node
+		if ( freenodes.contains(node)) {
+			freenodes.remove(node);
+			allnodes.remove(node);
+			return;
+		} else {
+			System.out.println("HashMapComponentGraph.removeNode(): Node was not free after removing its edges");			
+		}
+	}
+	
+	@Override
+	public int getNumberOfNodes() {
+		return allnodes.size();
+	}
+	
+	@Override
+	public int getNumberOfFreeNodes() {
+		return freenodes.size();
 	}
 }

@@ -189,7 +189,7 @@ public class NonsmoothNonlinearConjugateGradient implements Solver {
 			iter = iter+1;
 		}
 		
-//		System.out.println("iters="+iter);
+		System.out.println("iters="+iter);
 		return 0;
 	}
 	

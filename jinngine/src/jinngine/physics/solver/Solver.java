@@ -108,7 +108,6 @@ public interface Solver {
 		public double u;
 		public double l;
 		public double distance;
-		public double ui;
 		
 		/**
 		 * Assign operator for a constraint

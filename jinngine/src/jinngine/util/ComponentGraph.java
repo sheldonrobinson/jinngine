@@ -51,6 +51,18 @@ public interface ComponentGraph<T,U,V> {
 		public boolean isDelimitor(final T node);
 	}
 	
+	/** 
+	 * Add a node to the graph. If the node already exists in the graph, the call will have no effect. 
+	 * @param node
+	 */
+	public void addNode( T node );
+	
+	/**
+	 * Remove a node from the graph. All edges incident to this node will be removed as well. 
+	 * @param node
+	 */
+	public void removeNode( T node );
+	
 	/**
 	 * Add an edge to the graph, and implicitly add included end-nodes if not already present in the graph.
 	 * This is roughly an O(k) and sometimes O(nodes) operation, depending on whether components are to be merged or not.
@@ -104,6 +116,16 @@ public interface ComponentGraph<T,U,V> {
 	 * Return the number of components in this graph
 	 */
 	public int getNumberOfComponents();
+	
+	/**
+	 * Return the total number of nodes in this graph
+	 */
+	public int getNumberOfNodes();
+	
+	/**
+	 * Return the number of free nodes, which are nodes that are not a part of a graph component
+	 */
+	public int getNumberOfFreeNodes();
 	
 	/**
 	 * Get all nodes that is connected to the given node. The constructible pairs
