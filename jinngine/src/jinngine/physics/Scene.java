@@ -84,4 +84,15 @@ public interface Scene {
 	 */
 	public void fixBody( Body b, boolean fixed );
 	
+	/**
+	 * Add an event trigger to this scene
+	 */
+	public void addTrigger( Trigger t);
+	
+	/**
+	 * Remove an event trigger from this scene
+	 */
+	public void removeTrigger( Trigger t);
+	
+	
 }

@@ -33,6 +33,9 @@ public final class DefaultScene implements Scene {
 	public final List<constraint> ncpconstraints = new LinkedList<constraint>();  
 	private final List<Force> forces = new LinkedList<Force>(); 
 	
+	// triggers
+	public final List<Trigger> triggers = new LinkedList<Trigger>();
+	
 	// create a contact graph classifier, used by the contact graph for determining
 	// fixed bodies, i.e. bodies considered to have infinite mass. 
 	private final ComponentGraph.NodeClassifier<Body> classifier = 
@@ -247,49 +250,10 @@ public final class DefaultScene implements Scene {
 		// run the solver (compute delta velocities) for all 
 		// components in the constraint graph
 		solver.solve( ncpconstraints, bodies, 0.0 );
-		
-		
-		// go thru components to advance apply delta velocities and
-		// advance positions
-//		components = constraintGraph.getComponents();		
-//		while (components.hasNext()) {
-//			// get the component 
-//			ComponentGraph.Component<ComponentData> g = 
-//				components.next();
-//			
-//			// if the component has active bodies, process the whole component
-//			if (!g.getComponentElement().deactivated) {
-//
-//				// go through bodies in the component and advance 
-//				// velocities and positions
-//				Iterator<Body> bodyiter =constraintGraph.getNodesInComponent(g);
-//				while (bodyiter.hasNext()) {
-//					Body body = bodyiter.next();
-//					
-//					// apply computed forces to bodies (in fact, fixed bodies will never end up here)
-//					if ( !body.isFixed()  ) {
-//						// apply delta velocities
-//						body.state.velocity.assign( body.state.velocity.add( body.deltavelocity));
-//						body.state.omega.assign( body.state.omega.add( body.deltaomega));
-//						// update angular and linear momentums
-//						Matrix3.multiply(body.state.inertia, body.state.omega, body.state.L);
-//						body.state.P.assign(body.state.velocity.multiply(body.state.mass));
-//					}
-//					
-//					// integrate forward on positions
-//					body.advancePositions(timestep);
-//					
-//					// check for deactivation for this body
-//					if ( policy.shouldBeDeactivated(body)) {
-//						policy.deactivate(body);
-//					} 
-//				} // for each body in component
-//			} // if active component		
-//		} // while components
 
-		// go thru bodies to se if they can be activated
+		
+		// go thru bodies to advance velocities and positions
 		for (Body body: bodies) {
-			//System.out.println("body " + body +" status:" + body.deactivated);
 			if ( !body.deactivated ) {
 				if ( !body.isFixed() ) {
 					// apply delta velocities
@@ -303,35 +267,10 @@ public final class DefaultScene implements Scene {
 				// integrate forward on positions
 				body.advancePositions(timestep);
 			}
-			
 		}
 		
-		// apply delta velocities and integrate positions forward 
-//		for (Body body : bodies ) {						
-//			// apply computed forces to bodies
-//			if ( !body.isFixed() && !body.deactivated ) {
-//				// apply delta velocities
-//				body.state.velocity.assign( body.state.velocity.add( body.deltavelocity));
-//				body.state.omega.assign( body.state.omega.add( body.deltaomega));
-//				// update angular and linear momentums
-//				Matrix3.multiply(body.state.inertia, body.state.omega, body.state.L);
-//				body.state.P.assign(body.state.velocity.multiply(body.state.mass));
-//			}
-//
-//			//integrate forward on positions
-//			body.advancePositions(timestep);
-//			
-//			// change activation state
-//			if ( policy.shouldBeDeactivated(body)) {
-//				body.deactivated = true;
-//			} 
-//			else if (policy.shouldBeActivated(body)) {
-//				body.deactivated = false;
-//			}		
-//		} // for bodies
-
-		
-		//((HashMapComponentGraph<Body, Constraint, ComponentData>)constraintGraph).print();
+		// debugging constraint graph
+		//((HashMapComponentGraph<Body, Constraint, ConstraintGroup>)constraintGraph).print();
 	} //time-step
 
 
@@ -431,6 +370,18 @@ public final class DefaultScene implements Scene {
 
 		// reinsert body
 		addBody(b);
+		
+	}
+
+	@Override
+	public void addTrigger(Trigger t) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void removeTrigger(Trigger t) {
+		// TODO Auto-generated method stub
 		
 	}
 
