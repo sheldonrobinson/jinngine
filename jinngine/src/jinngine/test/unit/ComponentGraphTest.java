@@ -10,9 +10,9 @@ package jinngine.test.unit;
 import java.util.Iterator;
 
 import jinngine.util.ComponentGraph;
-import jinngine.util.ComponentGraph.Component;
 import jinngine.util.HashMapComponentGraph;
 import jinngine.util.Pair;
+import jinngine.util.ComponentGraph.ComponentHandler;
 import jinngine.util.ComponentGraph.NodeClassifier;
 import junit.framework.TestCase;
 
@@ -32,7 +32,13 @@ public class ComponentGraphTest extends TestCase {
 			}
 		};
 		
-		ComponentGraph<Object,Object,Object> graph = new HashMapComponentGraph<Object,Object,Object>(nc);
+		ComponentHandler<Object> ch = new ComponentHandler<Object>() {
+			public Object newComponent() {
+				return new Object();
+			}
+		};
+		
+		ComponentGraph<Object,Object,Object> graph = new HashMapComponentGraph<Object,Object,Object>(nc,ch);
 		
 		//some dummy nodes and an edge element
 		Object n1 = new Object();
@@ -42,9 +48,15 @@ public class ComponentGraphTest extends TestCase {
 		//insert into graph egde (n1->n2)
 		graph.addEdge(new Pair<Object>(n1,n2), e1);
 		
-		//we expect one component containing n1 and n2
-		Iterator<Component<Object>> components = graph.getComponents();
-		Component<Object> c = components.next();
+		//we expect one component containing n1 and n2		
+		assertTrue( graph.getNumberOfComponents() == 1);
+	
+		// get the component
+		Iterator<Object> components = graph.getComponents();
+		Object c = components.next();
+		
+		// component should not be null
+		assertTrue( c != null );
 		
 		//get nodes
 		Iterator<Object> nodes = graph.getNodesInComponent(c);
@@ -81,7 +93,13 @@ public class ComponentGraphTest extends TestCase {
 			}
 		};
 		
-		ComponentGraph<Object,Object,Object> graph = new HashMapComponentGraph<Object,Object,Object>(nc);
+		ComponentHandler<Object> ch = new ComponentHandler<Object>() {
+			public Object newComponent() {
+				return new Object();
+			}
+		};
+		
+		ComponentGraph<Object,Object,Object> graph = new HashMapComponentGraph<Object,Object,Object>(nc,ch);
 		
 		//some dummy nodes 
 		Object n1 = new Object();
@@ -168,7 +186,13 @@ public class ComponentGraphTest extends TestCase {
 			}
 		};
 		
-		ComponentGraph<Object,Object,Object> graph = new HashMapComponentGraph<Object,Object,Object>(nc);
+		ComponentHandler<Object> ch = new ComponentHandler<Object>() {
+			public Object newComponent() {
+				return new Object();
+			}
+		};
+		
+		ComponentGraph<Object,Object,Object> graph = new HashMapComponentGraph<Object,Object,Object>(nc,ch);
 		
 		graph.addEdge(new Pair<Object>(n1,d6), new Object() );
 		
@@ -220,8 +244,14 @@ public class ComponentGraphTest extends TestCase {
 			}
 		};
 		
+		ComponentHandler<Object> ch = new ComponentHandler<Object>() {
+			public Object newComponent() {
+				return new Object();
+			}
+		};
+		
 		// the graph
-		ComponentGraph<Object,Object,Object> graph = new HashMapComponentGraph<Object,Object,Object>(nc);
+		ComponentGraph<Object,Object,Object> graph = new HashMapComponentGraph<Object,Object,Object>(nc,ch);
 
 		// add some nodes
 		graph.addNode( n1 );
@@ -268,8 +298,14 @@ public class ComponentGraphTest extends TestCase {
 			}
 		};
 		
+		ComponentHandler<Object> ch = new ComponentHandler<Object>() {
+			public Object newComponent() {
+				return new Object();
+			}
+		};
+		
 		// the graph
-		ComponentGraph<Object,Object,Object> graph = new HashMapComponentGraph<Object,Object,Object>(nc);
+		ComponentGraph<Object,Object,Object> graph = new HashMapComponentGraph<Object,Object,Object>(nc,ch);
 
 		// add some nodes
 		graph.addNode( n1 );
@@ -320,9 +356,15 @@ public class ComponentGraphTest extends TestCase {
 				return false;
 			}
 		};
+		
+		ComponentHandler<Object> ch = new ComponentHandler<Object>() {
+			public Object newComponent() {
+				return new Object();
+			}
+		};
 
 		// the graph
-		ComponentGraph<Object,Object,Object> graph = new HashMapComponentGraph<Object,Object,Object>(nc);
+		ComponentGraph<Object,Object,Object> graph = new HashMapComponentGraph<Object,Object,Object>(nc,ch);
 
 		// add the nodes
 		graph.addNode(n1);
@@ -376,9 +418,15 @@ public class ComponentGraphTest extends TestCase {
 				return false;
 			}
 		};
+		
+		ComponentHandler<Object> ch = new ComponentHandler<Object>() {
+			public Object newComponent() {
+				return new Object();
+			}
+		};
 
 		// the graph
-		ComponentGraph<Object,Object,Object> graph = new HashMapComponentGraph<Object,Object,Object>(nc);
+		ComponentGraph<Object,Object,Object> graph = new HashMapComponentGraph<Object,Object,Object>(nc,ch);
 
 		// add the nodes
 		graph.addNode(n1);

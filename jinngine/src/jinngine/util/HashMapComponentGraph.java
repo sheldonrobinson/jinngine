@@ -22,12 +22,8 @@ import java.util.*;
  */
 public class HashMapComponentGraph<T,U,V> implements ComponentGraph<T,U,V> {
 	
-//	public final class Group {}
-//	private final class Edge {
-//		public Edge(U element) {
-//		public final U element;
-//	}
-	public final class Node {
+	// wrapping classes
+	private final class Node {
 		public Node(T element) {this.element = element;}
 		public final T element;
 		public int color;
@@ -36,13 +32,21 @@ public class HashMapComponentGraph<T,U,V> implements ComponentGraph<T,U,V> {
 			return element.hashCode();
 		}
 		public final boolean equals( Object other ) {
-//			if (this == other) return true;
-//			if (other == null ) return false;
-//			return element == ((Node)other).element;
 			return element.equals(((Node)other).element);
-
 		}
-
+	}
+	
+	// component wrapper class for the type V. 
+	private final class Component {
+		private final V element;
+		public Component(V element) {this.element = element;}
+		
+		public final int hashCode() {
+			return element.hashCode();
+		}
+		public final boolean equals( Object other ) {
+			return element.equals(((Component)other).element);
+		}
 	}
 	
 //	/**
@@ -67,12 +71,12 @@ public class HashMapComponentGraph<T,U,V> implements ComponentGraph<T,U,V> {
 
 	private final Set<Node>		               freenodes = new HashSet<Node>();//	
 	private final Map<Node,Set<Node>>          edges = new HashMap<Node,Set<Node>>();
-	private final Map<Node,Component<V>>       component = new HashMap<Node,Component<V>>();
+	private final Map<Node,Component>       component = new HashMap<Node,Component>();
 
 	private final Map<Pair<T>,U>               edgeData = new HashMap<Pair<T>,U>();//
 
-	private final Map<Component<V>,Set<Node>>     componentNodes = new HashMap<Component<V>,Set<Node>>();//
-	private final Map<Component<V>,Set<Pair<T>>>  componentEdges = new HashMap<Component<V>,Set<Pair<T>>>();//
+	private final Map<Component,Set<Node>>     componentNodes = new HashMap<Component,Set<Node>>();//
+	private final Map<Component,Set<Pair<T>>>  componentEdges = new HashMap<Component,Set<Pair<T>>>();//
 
 	
 	private final NodeClassifier<T> nodeClassifier;
@@ -81,32 +85,27 @@ public class HashMapComponentGraph<T,U,V> implements ComponentGraph<T,U,V> {
 	
 	
 	// default component creator
-	private ComponentCreator<V> componentcreator = new ComponentCreator<V>() {
-		public Component<V> createComponent() {
-			return new Component<V>() {
-				private V element = null;
-				@Override
-				public V getComponentElement() {
-					return element;
-				}
-			};
-		};
-	};
+	private final ComponentHandler<V> componentcreator;
+//	= new ComponentHandler<V>() {
+//		public V newComponent() {
+//			return null;
+//		};
+//	};
 	
-	/**
-	 * Create a new component graph
-	 * @param nodeClassifier a classifier for the type T, used for the connected components analysis
-	 */
-	public HashMapComponentGraph( NodeClassifier<T> nodeClassifier ) {
-		this.nodeClassifier = nodeClassifier;
-	}
+//	/**
+//	 * Create a new component graph
+//	 * @param nodeClassifier a classifier for the type T, used for the connected components analysis
+//	 */
+//	public HashMapComponentGraph( NodeClassifier<T> nodeClassifier ) {
+//		this.nodeClassifier = nodeClassifier;
+//	}
 	
 	/**
 	 * Create a new component graph 
 	 * @param nodeClassifier a classifier for the type T, used for the connected components analysis
 	 * @param componetcreator a creator for new components that arrise inside the component graph
 	 */
-	public HashMapComponentGraph( NodeClassifier<T> nodeClassifier, ComponentCreator<V> componentcreator ) {
+	public HashMapComponentGraph( NodeClassifier<T> nodeClassifier, ComponentHandler<V> componentcreator ) {
 		this.componentcreator = componentcreator;
 		this.nodeClassifier = nodeClassifier;
 	}
@@ -190,7 +189,7 @@ public class HashMapComponentGraph<T,U,V> implements ComponentGraph<T,U,V> {
 			//if b is not in a group, create a new one for b
 			if (!component.containsKey(b)) {
 				// case ii b)
-				Component<V> g = componentcreator.createComponent();
+				Component g = new Component(componentcreator.newComponent());
 				
 				// add b to the new group
 				component.put(b, g);
@@ -208,7 +207,7 @@ public class HashMapComponentGraph<T,U,V> implements ComponentGraph<T,U,V> {
 			} else {
 				// case ii a)
 				//add to pairs
-				Component<V> g = component.get(b);
+				Component g = component.get(b);
 				componentEdges.get(g).add(pair);
 			}
 		//non of the bodies are delimiters
@@ -233,8 +232,8 @@ public class HashMapComponentGraph<T,U,V> implements ComponentGraph<T,U,V> {
 					//System.out.println("Merging");
 					
 					//merge groups (remove the gb group)  
-					Component<V> ga = component.get(a);
-					Component<V> gb = component.get(b);
+					Component ga = component.get(a);
+					Component gb = component.get(b);
 					
 					//update the group table, i.e. update bodies that was tied to group gb, to ga
 					Iterator<Node> i = componentNodes.get(gb).iterator();
@@ -258,7 +257,7 @@ public class HashMapComponentGraph<T,U,V> implements ComponentGraph<T,U,V> {
 			//one group
 			} else if (component.containsKey(a)) {
 				//assign b to the group of a
-				Component<V> g = component.get(a);
+				Component g = component.get(a);
 				component.put(b, g);
 				componentNodes.get(g).add(b);
 				componentEdges.get(g).add(pair);
@@ -270,7 +269,7 @@ public class HashMapComponentGraph<T,U,V> implements ComponentGraph<T,U,V> {
 			//no groups
 			} else {
 				//create a new group for both bodies
-				Component<V> newGroup = componentcreator.createComponent();
+				Component newGroup = new Component(componentcreator.newComponent());
 				component.put(a, newGroup); 
 				component.put(b, newGroup);
 				componentNodes.put(newGroup, new HashSet<Node>());
@@ -289,12 +288,12 @@ public class HashMapComponentGraph<T,U,V> implements ComponentGraph<T,U,V> {
 		}
 		
 //		System.out.println("After add: " + 		groups.keySet().size() + " groups with " + group.size() + " bodies"  );
-		Iterator<Component<V>> groupiter = componentNodes.keySet().iterator();
+		Iterator<Component> groupiter = componentNodes.keySet().iterator();
 
 		Set<Pair<T>> allpairs = new HashSet<Pair<T>>();
 		Set<Node> allnodes = new HashSet<Node>();
 		while(groupiter.hasNext()){
-			Component<V> g = groupiter.next();
+			Component g = groupiter.next();
 			//System.out.println( "Group " + g + " : " + groupPairs.get(g).size() + " pairs " );
 			
 			Iterator<Pair<T>> pairiter = componentEdges.get(g).iterator(); 
@@ -403,7 +402,7 @@ public class HashMapComponentGraph<T,U,V> implements ComponentGraph<T,U,V> {
 		} else if ( nodeClassifier.isDelimitor(a.element)) {
 			if (component.containsKey(b)) { // only possible option 
 				//System.out.println("One fixed node");
-				Component<V> g = component.get(b);
+				Component g = component.get(b);
 
 				//check for another edge on this node
 				if (!edges.containsKey(b)) {
@@ -460,7 +459,7 @@ public class HashMapComponentGraph<T,U,V> implements ComponentGraph<T,U,V> {
 			}
 
 			//both are in the same group (only possible option)
-			Component<V> oldgroup = component.get(a);
+			Component oldgroup = component.get(a);
 
 			if (oldgroup != component.get(b)) {
 				System.out.println("Different groups??!");
@@ -524,7 +523,7 @@ public class HashMapComponentGraph<T,U,V> implements ComponentGraph<T,U,V> {
 					//System.out.println("Splitting group");
 
 					//new group
-					Component<V> newgroup = componentcreator.createComponent();
+					Component newgroup = new Component(componentcreator.newComponent());
 
 					Set<Node> blues = new HashSet<Node>();
 
@@ -681,16 +680,27 @@ public class HashMapComponentGraph<T,U,V> implements ComponentGraph<T,U,V> {
 
 	
 	@Override
-	public final Iterator<ComponentGraph.Component<V>> getComponents() {
-		// return the key-set in the map of components
-		return componentEdges.keySet().iterator();
+	public final Iterator<V> getComponents() {
+		// wrapping iterator
+		return new Iterator<V>() {
+			private final Iterator<Component> iter = componentEdges.keySet().iterator();
+			public boolean hasNext() {return iter.hasNext();}
+			@Override
+			public V next() {
+				return iter.next().element;
+			}
+			@Override
+			public void remove() {
+				throw new UnsupportedOperationException();
+			}
+		};
 	}
 
 	
 	@Override
-	public final Iterator<U> getEdgesInComponent(ComponentGraph.Component<V> c) {
+	public final Iterator<U> getEdgesInComponent(V c) {
 		//get edges from component
-		final Set<Pair<T>> edges = componentEdges.get(c);
+		final Set<Pair<T>> edges = componentEdges.get(new Component(c));
 		
 		//abort if the component doesn't exist
 		if (edges == null)
@@ -726,9 +736,9 @@ public class HashMapComponentGraph<T,U,V> implements ComponentGraph<T,U,V> {
 	
 
 	@Override
-	public Iterator<T> getNodesInComponent(ComponentGraph.Component<V> c) {
+	public Iterator<T> getNodesInComponent(V c1) {
 		//get edges from component
-		final Set<Node> nodes = componentNodes.get(c);
+		final Set<Node> nodes = componentNodes.get(new Component(c1));
 		
 		//abort if the component doesn't exist
 		if (nodes == null)
@@ -768,12 +778,12 @@ public class HashMapComponentGraph<T,U,V> implements ComponentGraph<T,U,V> {
 	 */
 	public final void print() {
 		System.out.println("Status: " + 		componentNodes.keySet().size() + " components with " + component.size() + " bodies, " + getNumberOfFreeNodes() + " free ");
-		Iterator<Component<V>> groupiter = componentNodes.keySet().iterator();
+		Iterator<Component> groupiter = componentNodes.keySet().iterator();
 
 		Set<Pair<T>> allpairs = new HashSet<Pair<T>>();
 		Set<Node> allnodes = new HashSet<Node>();
 		while(groupiter.hasNext()){
-			Component<V> g = groupiter.next();
+			Component g = groupiter.next();
 			System.out.println( "Group " + g + " : " + componentEdges.get(g).size() + " pairs, " + componentNodes.get(g).size() + " nodes "  );
 			Iterator<Pair<T>> pairiter = componentEdges.get(g).iterator(); 
 			while (pairiter.hasNext()) {
@@ -884,5 +894,25 @@ public class HashMapComponentGraph<T,U,V> implements ComponentGraph<T,U,V> {
 	@Override
 	public int getNumberOfFreeNodes() {
 		return freenodes.size();
+	}
+	
+	@Override
+	public Iterator<T> getFreeNodes() {
+		// wrapping iterator
+		return new Iterator<T>() {
+			Iterator<Node> i = freenodes.iterator();
+			@Override
+			public boolean hasNext() {
+				return i.hasNext();
+			}
+			@Override
+			public T next() {
+				return i.next().element;
+			}
+			@Override
+			public void remove() {
+				throw new UnsupportedOperationException();
+			}
+		};
 	}
 }

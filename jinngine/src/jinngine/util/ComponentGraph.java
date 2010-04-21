@@ -23,18 +23,15 @@ import java.util.Iterator;
  */
 public interface ComponentGraph<T,U,V> {
 
-	/**
-	 * Dummy interface for identifying components in the graph
-	 */
-	public interface Component<V> { public V getComponentElement(); }
+
 	
 	/**
 	 * Interface for supplying custom component objects. Components are used to reference the 
 	 * independently connected components in the graph. It is therefore useful to be able to 
 	 * store user information within the component references.
 	 */
-	public interface ComponentCreator<V> {
-		public Component<V> createComponent();
+	public interface ComponentHandler<V> {
+		public V newComponent();
 	}
 	
 	/**
@@ -97,20 +94,20 @@ public interface ComponentGraph<T,U,V> {
 	 * @param c Component to iterate
 	 * @return Iterator giving the edge elements in the component
 	 */
-	public Iterator<U> getEdgesInComponent(Component<V> c);
+	public Iterator<U> getEdgesInComponent(V c);
 
 	/**
 	 * Returns an iterator yielding the nodes present in the given component
 	 * @param c Any component of this graph
 	 * @return An iterator yielding the nodes present in the component c
 	 */
-	public Iterator<T> getNodesInComponent(Component<V> c);
+	public Iterator<T> getNodesInComponent(V c);
 	
 	/**
 	 * Return an iterator that yields the components in the graph
 	 * @return 
 	 */
-	public Iterator<Component<V>> getComponents();
+	public Iterator<V> getComponents();
 	
 	/**
 	 * Return the number of components in this graph
@@ -126,6 +123,12 @@ public interface ComponentGraph<T,U,V> {
 	 * Return the number of free nodes, which are nodes that are not a part of a graph component
 	 */
 	public int getNumberOfFreeNodes();
+	
+	
+	/**
+	 * Get all free nodes. A free node is not in any component.
+	 */
+	public Iterator<T> getFreeNodes();
 	
 	/**
 	 * Get all nodes that is connected to the given node. The constructible pairs

@@ -18,7 +18,6 @@ import jinngine.geometry.*;
 import jinngine.math.*;
 import jinngine.physics.force.*;
 import jinngine.util.*;
-import jinngine.util.ComponentGraph.Component;
 
 /**
  * A basic fixed time stepping rigid body simulator. It uses a contact graph to organise constraints, and generates
@@ -51,17 +50,12 @@ public final class DefaultScene implements Scene {
 	// make a component creator for the constraint graph. This only makes sure that we get some data
 	// stored in the component elements of the constraint graph. In this data, we will store information
 	// about the group of bodies that are interacting.
-	private final ComponentGraph.ComponentCreator<ComponentData> componentcreator = 
-		new ComponentGraph.ComponentCreator<ComponentData>() {
+	private final ComponentGraph.ComponentHandler<ComponentData> componentcreator = 
+		new ComponentGraph.ComponentHandler<ComponentData>() {
 		@Override
-		public Component<ComponentData> createComponent() {
-			return new Component<ComponentData>() {
-				private final ComponentData data = new ComponentData();
-				public ComponentData getComponentElement() {
-					return data;
-				}
-			};
-		}
+		public ComponentData newComponent() {
+			return new ComponentData();
+		};
 	};
 
 	
@@ -124,16 +118,16 @@ public final class DefaultScene implements Scene {
 		ListIterator<constraint> constraintIterator = ncpconstraints.listIterator();
 				
 		// iterate through groups/components in the constraint graph
-		Iterator<ComponentGraph.Component<ComponentData>> components = 
+		Iterator<ComponentData> components = 
 			constraintGraph.getComponents();
 		
 		// for each component in constraint graph
 		while (components.hasNext()) {
 			// get the component 
-			ComponentGraph.Component<ComponentData> g = components.next();
+			ComponentData g = components.next();
 			
 			// if the component is marked as active
-			if ( !g.getComponentElement().deactivated) {
+			if ( !g.deactivated) {
 				// check if the whole component can be deactivated
 				Iterator<Body> bodyiter =constraintGraph.getNodesInComponent(g);
 				boolean activefound = false;
@@ -147,7 +141,7 @@ public final class DefaultScene implements Scene {
 				// if there are active bodies in the group, apply constraints
 				if (activefound) {
 					// mark the group as active in the component data
-					ComponentData data = g.getComponentElement();
+					ComponentData data = g;
 					data.deactivated = false;
 
 					// apply all constraints in interaction component
@@ -159,7 +153,7 @@ public final class DefaultScene implements Scene {
 				} // if active found
 				else {
 					// if we don't find an active body, we mark the whole group as deactivated
-					ComponentData data = g.getComponentElement();
+					ComponentData data = g;
 					data.deactivated = true;
 
 					// deactivate all bodies in component
@@ -183,7 +177,7 @@ public final class DefaultScene implements Scene {
 				
 				if (activefound) {
 					// mark component as active
-					ComponentData data = g.getComponentElement();
+					ComponentData data = g;
 					data.deactivated = false;
 
 					// activate all bodies in component
@@ -202,6 +196,21 @@ public final class DefaultScene implements Scene {
 				
 			}
 		} //while components
+		
+		// handle free bodies, not in any components
+		Iterator<Body> freebodies = constraintGraph.getFreeNodes();
+		while (freebodies.hasNext()) {
+			Body body = freebodies.next();
+			if (body.deactivated) {
+				if (policy.shouldBeActivated(body)) {
+					policy.activate(body);
+				}
+			} else {
+				if (policy.shouldBeDeactivated(body)) {
+					policy.deactivate(body);
+				}
+			}
+		}
 
 		
 		// clear acting forces and delta velocities
@@ -261,6 +270,7 @@ public final class DefaultScene implements Scene {
 
 		// go thru bodies to se if they can be activated
 		for (Body body: bodies) {
+			System.out.println("body " + body +" status:" + body.deactivated);
 			if ( !body.deactivated ) {
 				if ( !body.isFixed() ) {
 					// apply delta velocities
@@ -337,7 +347,7 @@ public final class DefaultScene implements Scene {
 	@Override
 	public Iterator<Constraint> getConstraints() {
 		List<Constraint> list = new ArrayList<Constraint>();
-		Iterator<Component<ComponentData>> ci = constraintGraph.getComponents();
+		Iterator<ComponentData> ci = constraintGraph.getComponents();
 		while(ci.hasNext()) {
 			Iterator<Constraint> ei = constraintGraph.getEdgesInComponent(ci.next());
 			while(ei.hasNext())
