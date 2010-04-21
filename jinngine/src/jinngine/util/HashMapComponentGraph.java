@@ -227,15 +227,19 @@ public class HashMapComponentGraph<T,U,V> implements ComponentGraph<T,U,V> {
 					//do nothing
 					//add edge to this component
 					componentEdges.get(component.get(a)).add(pair);
-				//different groups
+				//different components
 				} else {
-					//System.out.println("Merging");
+					// two nodes from two different components was connected.
+					// we then merge the two components into one
 					
 					//merge groups (remove the gb group)  
 					Component ga = component.get(a);
 					Component gb = component.get(b);
 					
-					//update the group table, i.e. update bodies that was tied to group gb, to ga
+					// call the user handler to say we are merging gb into ga
+					componentcreator.mergeComponent(ga.element, gb.element);
+					
+					//update the component table, i.e. update bodies that was tied to component gb, to ga
 					Iterator<Node> i = componentNodes.get(gb).iterator();
 					while (i.hasNext()) {
 						Node body = i.next();
@@ -249,9 +253,13 @@ public class HashMapComponentGraph<T,U,V> implements ComponentGraph<T,U,V> {
 					//also, add the new edge (pair) 
 					componentEdges.get(ga).add(pair);
 					
-					//remove the gb group from the groups table
+					//remove the gb component from the component table
 					componentNodes.remove(gb);
 					componentEdges.remove(gb);
+					
+
+
+					
 					//return;
 				}
 			//one group
@@ -268,7 +276,7 @@ public class HashMapComponentGraph<T,U,V> implements ComponentGraph<T,U,V> {
 				//return;
 			//no groups
 			} else {
-				//create a new group for both bodies
+				//create a new component for both bodies
 				Component newGroup = new Component(componentcreator.newComponent());
 				component.put(a, newGroup); 
 				component.put(b, newGroup);

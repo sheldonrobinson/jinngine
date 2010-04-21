@@ -32,6 +32,7 @@ public class ConvexHull implements SupportMap3, Geometry {
 	private final Vector3 centreOfMass;
 	private final double referenceMass;
 	private final int numberOfVertices;
+	private int cachedVertex = 0;
 	
 	/**
 	 * Computes vertex adjacency lists. Method simply runs through all faces, which are given as lists of vertex indices, and fills out 
@@ -224,9 +225,9 @@ public class ConvexHull implements SupportMap3, Geometry {
 		Vector3 v = body.state.rotation.multiply(localtransform).transpose().multiply(direction);
 		
 		// do hill climbing if the hull has a considerable number of vertices
-		if (numberOfVertices > 32) {
+		if (numberOfVertices > 32 || true) {
 			//hill climb along v
-			int index = 0;
+			int index = cachedVertex;
 			double value = v.dot(vertices.get(index));
 			boolean better = true;
 			while (better) {
@@ -242,6 +243,9 @@ public class ConvexHull implements SupportMap3, Geometry {
 					} 
 				}
 			}
+			
+			// keep the vertex
+			cachedVertex = index;
 			
 			// return the final support point in world space
 			return body.state.rotation.multiply(localtransform.multiply(vertices.get(index)).add(localdisplacement)).add(body.state.position);

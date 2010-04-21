@@ -18,7 +18,7 @@ public class DefaultDeactivationPolicy implements DeactivationPolicy {
 	@Override
 	public boolean shouldBeDeactivated(Body b) {		
 		double accel = b.deltavelocity.dot(b.deltavelocity) + b.deltaomega.dot(b.deltaomega);
-		return b.totalKinetic() + accel < 1e-2 ;
+		return b.totalKinetic() + accel < 1e-2;
 	}
 	
 	@Override
@@ -28,7 +28,7 @@ public class DefaultDeactivationPolicy implements DeactivationPolicy {
 		Vector3 forcedeviation = b.state.force.minus(b.deactivatedexternalforce);
 		Vector3 torquedeviation = b.state.torque.minus(b.deactivatedexternaltorque);
 		
-		return b.totalKinetic() + forcedeviation.squaredNorm() + torquedeviation.squaredNorm()  > 1e-1;
+		return b.totalKinetic() + forcedeviation.squaredNorm() + torquedeviation.squaredNorm()  > 25;
 	} 
 	
 	@Override

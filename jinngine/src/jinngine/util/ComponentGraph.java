@@ -23,17 +23,28 @@ import java.util.Iterator;
  */
 public interface ComponentGraph<T,U,V> {
 
-
-	
 	/**
 	 * Interface for supplying custom component objects. Components are used to reference the 
 	 * independently connected components in the graph. It is therefore useful to be able to 
 	 * store user information within the component references.
 	 */
 	public interface ComponentHandler<V> {
+		/**
+		 * Called when a new component is created. This call MUST return a unique object of type 
+		 * V, that has not been previously known to the ComponentGraph
+		 * @return a new unique component of type V
+		 */
 		public V newComponent();
+		/**
+		 * Called prior to two components being merged. This gives the user a way to manipulate 
+		 * data in the component type V. During this call, it is possible to access the data of 
+		 * the ComponentGraph in a read-only fashion. 
+		 * @param remaining The component that will be the union of both components after merge
+		 * @param disappearing The component that will be removed from the graph
+		 */
+		public void mergeComponent( V remaining, V leaving );
 	}
-	
+
 	/**
 	 * Node classifier for the ContactGraph
 	 *

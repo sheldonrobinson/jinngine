@@ -43,25 +43,44 @@ public final class DefaultScene implements Scene {
 	};
 	
 	// inner class for storing data in components in constraint graph
-	public final class ComponentData {
+	public final class ConstraintGroup {
 		public boolean deactivated = false;
 	}
 	
 	// make a component creator for the constraint graph. This only makes sure that we get some data
 	// stored in the component elements of the constraint graph. In this data, we will store information
-	// about the group of bodies that are interacting.
-	private final ComponentGraph.ComponentHandler<ComponentData> componentcreator = 
-		new ComponentGraph.ComponentHandler<ComponentData>() {
-		@Override
-		public ComponentData newComponent() {
-			return new ComponentData();
-		};
+	// about the group of bodies that are interacting. Most importantly, it makes sure that when constraint
+	// components are merged, all the bodies in both components are activated if one of the components was  
+	// active to begin with. 
+	private final ComponentGraph.ComponentHandler<ConstraintGroup> componentcreator = 
+		new ComponentGraph.ComponentHandler<ConstraintGroup>() {
+		public ConstraintGroup newComponent() {return new ConstraintGroup();}
+		public void mergeComponent( ConstraintGroup remaining, ConstraintGroup leaving) {
+			if ( remaining.deactivated && leaving.deactivated ) {
+				// we let the deactivated setting live
+			} else {
+				// activate the new group
+				remaining.deactivated = false;
+				
+				// all bodies from the remaining group
+				Iterator<Body> bodies = constraintGraph.getNodesInComponent(remaining);
+				while(bodies.hasNext()){
+					policy.activate(bodies.next());
+				}
+				
+				// all bodies from the leaving group
+				bodies = constraintGraph.getNodesInComponent(leaving);
+				while(bodies.hasNext()){
+					policy.activate(bodies.next());
+				}
+			}
+		}
 	};
 
 	
 	// create the contact graph using the classifier above
-	private final ComponentGraph<Body,Constraint,ComponentData> constraintGraph = 
-		new HashMapComponentGraph<Body,Constraint,ComponentData>(classifier,componentcreator);
+	private final ComponentGraph<Body,Constraint,ConstraintGroup> constraintGraph = 
+		new HashMapComponentGraph<Body,Constraint,ConstraintGroup>(classifier,componentcreator);
 
 	// use sweep and prune as broadphase collision detection
 	private final BroadphaseCollisionDetection broadphase;
@@ -118,13 +137,13 @@ public final class DefaultScene implements Scene {
 		ListIterator<constraint> constraintIterator = ncpconstraints.listIterator();
 				
 		// iterate through groups/components in the constraint graph
-		Iterator<ComponentData> components = 
+		Iterator<ConstraintGroup> components = 
 			constraintGraph.getComponents();
 		
 		// for each component in constraint graph
 		while (components.hasNext()) {
 			// get the component 
-			ComponentData g = components.next();
+			ConstraintGroup g = components.next();
 			
 			// if the component is marked as active
 			if ( !g.deactivated) {
@@ -141,7 +160,7 @@ public final class DefaultScene implements Scene {
 				// if there are active bodies in the group, apply constraints
 				if (activefound) {
 					// mark the group as active in the component data
-					ComponentData data = g;
+					ConstraintGroup data = g;
 					data.deactivated = false;
 
 					// apply all constraints in interaction component
@@ -153,7 +172,7 @@ public final class DefaultScene implements Scene {
 				} // if active found
 				else {
 					// if we don't find an active body, we mark the whole group as deactivated
-					ComponentData data = g;
+					ConstraintGroup data = g;
 					data.deactivated = true;
 
 					// deactivate all bodies in component
@@ -177,7 +196,7 @@ public final class DefaultScene implements Scene {
 				
 				if (activefound) {
 					// mark component as active
-					ComponentData data = g;
+					ConstraintGroup data = g;
 					data.deactivated = false;
 
 					// activate all bodies in component
@@ -270,7 +289,7 @@ public final class DefaultScene implements Scene {
 
 		// go thru bodies to se if they can be activated
 		for (Body body: bodies) {
-			System.out.println("body " + body +" status:" + body.deactivated);
+			//System.out.println("body " + body +" status:" + body.deactivated);
 			if ( !body.deactivated ) {
 				if ( !body.isFixed() ) {
 					// apply delta velocities
@@ -312,7 +331,7 @@ public final class DefaultScene implements Scene {
 //		} // for bodies
 
 		
-		((HashMapComponentGraph<Body, Constraint, ComponentData>)constraintGraph).print();
+		//((HashMapComponentGraph<Body, Constraint, ComponentData>)constraintGraph).print();
 	} //time-step
 
 
@@ -347,7 +366,7 @@ public final class DefaultScene implements Scene {
 	@Override
 	public Iterator<Constraint> getConstraints() {
 		List<Constraint> list = new ArrayList<Constraint>();
-		Iterator<ComponentData> ci = constraintGraph.getComponents();
+		Iterator<ConstraintGroup> ci = constraintGraph.getComponents();
 		while(ci.hasNext()) {
 			Iterator<Constraint> ei = constraintGraph.getEdgesInComponent(ci.next());
 			while(ei.hasNext())

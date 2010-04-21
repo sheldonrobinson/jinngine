@@ -33,9 +33,8 @@ public class ComponentGraphTest extends TestCase {
 		};
 		
 		ComponentHandler<Object> ch = new ComponentHandler<Object>() {
-			public Object newComponent() {
-				return new Object();
-			}
+			public Object newComponent() { return new Object(); }
+			public void mergeComponent(Object c1, Object c2) {  }
 		};
 		
 		ComponentGraph<Object,Object,Object> graph = new HashMapComponentGraph<Object,Object,Object>(nc,ch);
@@ -94,10 +93,10 @@ public class ComponentGraphTest extends TestCase {
 		};
 		
 		ComponentHandler<Object> ch = new ComponentHandler<Object>() {
-			public Object newComponent() {
-				return new Object();
-			}
+			public Object newComponent() { return new Object(); }
+			public void mergeComponent(Object c1, Object c2) {  }
 		};
+
 		
 		ComponentGraph<Object,Object,Object> graph = new HashMapComponentGraph<Object,Object,Object>(nc,ch);
 		
@@ -187,10 +186,10 @@ public class ComponentGraphTest extends TestCase {
 		};
 		
 		ComponentHandler<Object> ch = new ComponentHandler<Object>() {
-			public Object newComponent() {
-				return new Object();
-			}
+			public Object newComponent() { return new Object(); }
+			public void mergeComponent(Object c1, Object c2) {  }
 		};
+
 		
 		ComponentGraph<Object,Object,Object> graph = new HashMapComponentGraph<Object,Object,Object>(nc,ch);
 		
@@ -245,10 +244,10 @@ public class ComponentGraphTest extends TestCase {
 		};
 		
 		ComponentHandler<Object> ch = new ComponentHandler<Object>() {
-			public Object newComponent() {
-				return new Object();
-			}
+			public Object newComponent() { return new Object(); }
+			public void mergeComponent(Object c1, Object c2) { }
 		};
+
 		
 		// the graph
 		ComponentGraph<Object,Object,Object> graph = new HashMapComponentGraph<Object,Object,Object>(nc,ch);
@@ -299,10 +298,10 @@ public class ComponentGraphTest extends TestCase {
 		};
 		
 		ComponentHandler<Object> ch = new ComponentHandler<Object>() {
-			public Object newComponent() {
-				return new Object();
-			}
+			public Object newComponent() { return new Object(); }
+			public void mergeComponent(Object c1, Object c2) {  }
 		};
+
 		
 		// the graph
 		ComponentGraph<Object,Object,Object> graph = new HashMapComponentGraph<Object,Object,Object>(nc,ch);
@@ -358,10 +357,10 @@ public class ComponentGraphTest extends TestCase {
 		};
 		
 		ComponentHandler<Object> ch = new ComponentHandler<Object>() {
-			public Object newComponent() {
-				return new Object();
-			}
+			public Object newComponent() { return new Object(); }
+			public void mergeComponent(Object c1, Object c2) {  }
 		};
+
 
 		// the graph
 		ComponentGraph<Object,Object,Object> graph = new HashMapComponentGraph<Object,Object,Object>(nc,ch);
@@ -420,10 +419,10 @@ public class ComponentGraphTest extends TestCase {
 		};
 		
 		ComponentHandler<Object> ch = new ComponentHandler<Object>() {
-			public Object newComponent() {
-				return new Object();
-			}
+			public Object newComponent() { return new Object(); }
+			public void mergeComponent(Object c1, Object c2) {  }
 		};
+
 
 		// the graph
 		ComponentGraph<Object,Object,Object> graph = new HashMapComponentGraph<Object,Object,Object>(nc,ch);
@@ -454,4 +453,81 @@ public class ComponentGraphTest extends TestCase {
 		assertTrue( graph.getNumberOfComponents() == 1 );
 		assertTrue( graph.getNumberOfFreeNodes() == 1 );
 	}
+	
+	
+	/**
+	 * Tests merging of components
+	 */
+	public void testComponentGraph8() {
+
+		//some dummy nodes 
+		final Object n1 = new Object();
+		final Object n2 = new Object();
+		final Object n3 = new Object();
+		final Object n4 = new Object();
+
+		// dummy edges
+		final Object e12 = new Object();
+		final Object e34 = new Object();
+		final Object e14 = new Object();
+
+		NodeClassifier<Object> nc = new NodeClassifier<Object>() {
+			@Override
+			public boolean isDelimitor(Object node) {
+				return false;
+			}
+		};
+		
+		final class dummy {
+			public int data = 0;
+		}
+		
+		// make the merge component handler return a specific object
+		ComponentHandler<dummy> ch = new ComponentHandler<dummy>() {
+			public dummy newComponent() { return new dummy(); }
+			public void mergeComponent(dummy c1, dummy c2) { c1.data = 1;  }
+		};
+
+
+		// the graph
+		ComponentGraph<Object,Object,dummy> graph = new HashMapComponentGraph<Object,Object,dummy>(nc,ch);
+
+		// add the nodes
+		graph.addNode(n1);
+		graph.addNode(n2);
+		graph.addNode(n3);
+		graph.addNode(n4);
+		
+		// add edges
+		graph.addEdge(new Pair<Object>(n1,n2), e12);
+		graph.addEdge(new Pair<Object>(n3,n4), e34);
+		
+		// layout
+		// 
+		// n1   n3
+		// |    |
+		// n2   n4
+		
+		// we expect two components 
+		assertTrue( graph.getNumberOfComponents() == 2);
+		
+		// add an edge so the two components will be merged
+		graph.addEdge(new Pair<Object>(n1,n4), e14);
+
+		// layout
+		// 
+		// n1   n3
+		// |  \  |
+		// n2   n4
+		
+		// we expect one component
+		assertTrue( graph.getNumberOfComponents() == 1);
+		
+		// we expect the component to contain the data that we assigned 
+		// during the merge
+		Iterator<dummy> i = graph.getComponents();	
+		assertTrue( i.next().data == 1 );
+		
+	}
+
 }
