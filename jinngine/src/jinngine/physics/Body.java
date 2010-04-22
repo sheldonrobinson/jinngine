@@ -25,6 +25,9 @@ public final class Body {
 	public final Vector3               deltavelocity = new Vector3(0,0,0);
 	public final Vector3               deltaomega    = new Vector3(0,0,0);
 	
+	public final Vector3               externaldeltavelocity = new Vector3();
+	public final Vector3               externaldeltaomega = new Vector3();
+	
 	// deactivation
 	public boolean                     deactivated = false;
 	public final Vector3               deactivatedexternalforce = new Vector3();

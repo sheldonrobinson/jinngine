@@ -55,7 +55,7 @@ public final class DefaultScene implements Scene {
 	// about the group of bodies that are interacting. Most importantly, it makes sure that when constraint
 	// components are merged, all the bodies in both components are activated if one of the components was  
 	// active to begin with. 
-	private final ComponentGraph.ComponentHandler<ConstraintGroup> componentcreator = 
+	private final ComponentGraph.ComponentHandler<ConstraintGroup> componenthandler = 
 		new ComponentGraph.ComponentHandler<ConstraintGroup>() {
 		public ConstraintGroup newComponent() {return new ConstraintGroup();}
 		public void mergeComponent( ConstraintGroup remaining, ConstraintGroup leaving) {
@@ -83,7 +83,7 @@ public final class DefaultScene implements Scene {
 	
 	// create the contact graph using the classifier above
 	private final ComponentGraph<Body,Constraint,ConstraintGroup> constraintGraph = 
-		new HashMapComponentGraph<Body,Constraint,ConstraintGroup>(classifier,componentcreator);
+		new HashMapComponentGraph<Body,Constraint,ConstraintGroup>(classifier,componenthandler);
 
 	// use sweep and prune as broadphase collision detection
 	private final BroadphaseCollisionDetection broadphase;
@@ -121,7 +121,7 @@ public final class DefaultScene implements Scene {
 		// some default choises
 		this.policy = new DefaultDeactivationPolicy();
 		this.broadphase = new SweepAndPrune();
-		this.solver = new ProjectedGaussSeidel(155);
+		this.solver = new ProjectedGaussSeidel(55);
 		
 		// start the new contact constraint manager
 		new ContactConstraintManager( broadphase, constraintGraph);
@@ -130,6 +130,12 @@ public final class DefaultScene implements Scene {
 
 	@Override
 	public final void tick() {
+		// since an awful lot of things are going on in this method, a summarising explanation will be
+		// given here. First, the broad phase collision detection is executed. Since the ContactConstraintManager
+		// has installed event handlers into the BPC, allot of things will happen during the call to broadphase.run(), 
+		// but in short, ContactConstraintManager will insert ContactConstraints into the constraintGraph, and update 
+		// these constraints. See ContactConstraintManager for more details on this.
+		
 		// run the broad-phase collision detection (this automatically updates the contactGraph,
 		// through the BroadfaseCollisionDetection.Handler type)
 		broadphase.run();
@@ -250,7 +256,6 @@ public final class DefaultScene implements Scene {
 		// run the solver (compute delta velocities) for all 
 		// components in the constraint graph
 		solver.solve( ncpconstraints, bodies, 0.0 );
-
 		
 		// go thru bodies to advance velocities and positions
 		for (Body body: bodies) {
