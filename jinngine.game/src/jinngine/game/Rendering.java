@@ -5,7 +5,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 
-import jinngine.physics.PhysicsScene;
+import jinngine.physics.Scene;
 
 import com.ardor3d.extension.effect.water.WaterNode;
 import com.ardor3d.extension.shadow.map.ParallelSplitShadowMapPass;
@@ -14,7 +14,6 @@ import com.ardor3d.extension.ui.UIHud;
 import com.ardor3d.framework.Canvas;
 import com.ardor3d.framework.DisplaySettings;
 import com.ardor3d.framework.NativeCanvas;
-import com.ardor3d.framework.Scene;
 import com.ardor3d.framework.jogl.JoglCanvas;
 import com.ardor3d.framework.jogl.JoglCanvasRenderer;
 import com.ardor3d.image.util.AWTImageLoader;
@@ -63,7 +62,7 @@ import com.ardor3d.util.resource.SimpleResourceLocator;
 /**
  * Ardor3d rengering with jogl
  */
-public final class Rendering implements Scene {
+public final class Rendering implements com.ardor3d.framework.Scene {
 
     // ardor3d members
     private final JoglCanvas canvas;
@@ -105,14 +104,14 @@ public final class Rendering implements Scene {
         }
         
         AWTImageLoader.registerLoader();
-        
-        try {
-			root = (Node)BinaryImporter.getInstance().load( new File("testgraph.xml"));
-
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}	
+//        
+//        try {
+//			root = (Node)BinaryImporter.getInstance().load( new File("testgraph.xml"));
+//
+//		} catch (IOException e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//		}	
         
         
         // default back face culling
@@ -183,12 +182,16 @@ public final class Rendering implements Scene {
 	public final void draw() {
         // Update controllers/render states/transforms/bounds for rootNode.
         timer.update();
+        
 		hud.getLogicalLayer().checkTriggers(timer.getTimePerFrame());
 		hud.updateGeometricState(timer.getTimePerFrame());
 
 		root.updateGeometricState(timer.getTimePerFrame(), true);
 		logicallayer.checkTriggers(timer.getTimePerFrame());
 
+//		if ( timer.getTimeInSeconds()  )
+//			System.out.println(""+timer.getFrameRate());
+		
 		canvas.draw(null);
 	}
 	

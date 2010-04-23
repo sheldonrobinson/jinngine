@@ -41,7 +41,7 @@ import jinngine.game.actors.PhysicalActor;
 import jinngine.geometry.contact.ContactGenerator;
 import jinngine.math.Vector3;
 import jinngine.physics.Body;
-import jinngine.physics.PhysicsScene;
+import jinngine.physics.Scene;
 import jinngine.physics.constraint.Constraint;
 import jinngine.physics.constraint.contact.ContactConstraint;
 import jinngine.physics.constraint.contact.ContactConstraintCreator;
@@ -76,16 +76,16 @@ public class Player extends Node implements PhysicalActor {
 		this.setName("Actor:Player");
 
 		final ColladaImporter colladaImporter = new ColladaImporter();
-        final ColladaStorage storage = colladaImporter.readColladaFile("bearface.dae");
+        final ColladaStorage storage = colladaImporter.readColladaFile("girl.dae");
         final Node body = storage.getScene();
         body.setScale(1);
         body.setName("playermainbody");
         TextureState headts = new TextureState();
         headts.setEnabled(true);
-        headts.setTexture(TextureManager.load("bearlowtex.tga", 
+        headts.setTexture(TextureManager.load("girltexlow.tga", 
         		Texture.MinificationFilter.Trilinear,
                 Format.GuessNoCompression, true),0);
-        headts.setTexture(TextureManager.load("bearlowpolynormalmap.tga", 
+        headts.setTexture(TextureManager.load("girlnormallow.tga", 
         		Texture.MinificationFilter.BilinearNoMipMaps,
                 Format.GuessNoCompression, true),1);
         body.setRenderState(headts);
@@ -122,7 +122,7 @@ public class Player extends Node implements PhysicalActor {
 
 	@Override
 	public void start(final Game game) {
-		PhysicsScene physics = game.getPhysics();
+		Scene physics = game.getPhysics();
 		
         Node body = (Node)getChild("playermainbody");
         
@@ -149,7 +149,7 @@ public class Player extends Node implements PhysicalActor {
         jinngine.geometry.Box box = new jinngine.geometry.Box(1,1,1);
         box.setRestitution(0.20);
         box.setFrictionCoefficient(1);
-        playerbody = new Body(box);
+        playerbody = new Body("default", box);
         Toolbox.setTransformFromNode(body, playerbody);
         physics.addBody(playerbody);
         physics.addForce(new GravityForce(playerbody));
@@ -157,7 +157,7 @@ public class Player extends Node implements PhysicalActor {
         final ImpulseForce impulse = new ImpulseForce(playerbody, new Vector3(), new Vector3(0,1,0), 0);
         game.getPhysics().addForce(impulse);
         
-        final Body dummy = new Body();
+        final Body dummy = new Body("default");
         dummy.setFixed(true);
         
         final double walkvelocity = 2;
@@ -175,11 +175,11 @@ public class Player extends Node implements PhysicalActor {
         			double dt) {
         		// -(unf-uni)  -correction 
         		c.assign(playerbody, dummy,
-        				new Vector3(1,0,0), new Vector3(), new Vector3(), new Vector3(),new Vector3(1,0,0), new Vector3(), new Vector3(), new Vector3(), Math.min(force.x,0), Math.max(0,force.x), null, playerbody.state.velocity.x-velocity.x  );
+        				new Vector3(1,0,0), new Vector3(), new Vector3(), new Vector3(),new Vector3(1,0,0), new Vector3(), new Vector3(), new Vector3(), Math.min(force.x,0), Math.max(0,force.x), null, playerbody.state.velocity.x-velocity.x, 0  );
         		iterator.add(c);
 
         		c2.assign(playerbody, dummy,
-        				new Vector3(0,0,1), new Vector3(), new Vector3(), new Vector3(),new Vector3(0,0,1), new Vector3(), new Vector3(), new Vector3(),Math.min(force.z,0), Math.max(0,force.z), null, playerbody.state.velocity.z-velocity.z  );
+        				new Vector3(0,0,1), new Vector3(), new Vector3(), new Vector3(),new Vector3(0,0,1), new Vector3(), new Vector3(), new Vector3(),Math.min(force.z,0), Math.max(0,force.z), null, playerbody.state.velocity.z-velocity.z, 0  );
         		iterator.add(c2);
 
         		
@@ -191,6 +191,7 @@ public class Player extends Node implements PhysicalActor {
         };
         
         game.getPhysics().addConstraint(controlconstraint);
+        game.getPhysics().liveconstraints.add(controlconstraint);
         
         
         // tangential movement vectors
@@ -241,7 +242,7 @@ public class Player extends Node implements PhysicalActor {
         .registerTrigger( new InputTrigger( new KeyPressedCondition(Key.SPACE), new TriggerAction() {
         	@Override
         	public void perform(Canvas source, TwoInputStates inputState, double tpf) {
-        		System.out.println("space pressed");
+//        		System.out.println("space pressed");
         		impulse.setMagnitude(6.520);
         		
         	}
@@ -252,7 +253,7 @@ public class Player extends Node implements PhysicalActor {
         .registerTrigger( new InputTrigger( new KeyPressedCondition(Key.W), new TriggerAction() {
         	@Override
         	public void perform(Canvas source, TwoInputStates inputState, double tpf) {
-        		System.out.println("w pressed");
+//        		System.out.println("w pressed");
         		
 //        		for (FrictionalContactConstraint f: constraints) {
 //    				f.setTangentialVelocityX(movementx.multiply(movespeed));
@@ -272,7 +273,7 @@ public class Player extends Node implements PhysicalActor {
         .registerTrigger( new InputTrigger( new KeyReleasedCondition(Key.W), new TriggerAction() {
         	@Override
         	public void perform(Canvas source, TwoInputStates inputState, double tpf) {
-        		System.out.println("w released");
+//        		System.out.println("w released");
         		
 //        		for (FrictionalContactConstraint f: constraints) {
 //    				f.setTangentialVelocityX(movementx.multiply(0));
@@ -293,7 +294,7 @@ public class Player extends Node implements PhysicalActor {
         .registerTrigger( new InputTrigger( new KeyPressedCondition(Key.S), new TriggerAction() {
         	@Override
         	public void perform(Canvas source, TwoInputStates inputState, double tpf) {
-        		System.out.println("s pressed");
+//        		System.out.println("s pressed");
         		
 //        		for (FrictionalContactConstraint f: constraints) {
 //    				f.setTangentialVelocityX(movementx.multiply(-movespeed));
@@ -311,7 +312,7 @@ public class Player extends Node implements PhysicalActor {
         .registerTrigger( new InputTrigger( new KeyReleasedCondition(Key.S), new TriggerAction() {
         	@Override
         	public void perform(Canvas source, TwoInputStates inputState, double tpf) {
-        		System.out.println("s released");
+//        		System.out.println("s released");
         		
 //        		for (FrictionalContactConstraint f: constraints) {
 //    				f.setTangentialVelocityX(movementx.multiply(0));
@@ -330,7 +331,7 @@ public class Player extends Node implements PhysicalActor {
         .registerTrigger( new InputTrigger( new KeyPressedCondition(Key.D), new TriggerAction() {
         	@Override
         	public void perform(Canvas source, TwoInputStates inputState, double tpf) {
-        		System.out.println("d pressed");
+//        		System.out.println("d pressed");
         		
 //        		for (FrictionalContactConstraint f: constraints) {
 //    				f.setTangentialVelocityY(movementy.multiply(movespeed));
@@ -349,7 +350,7 @@ public class Player extends Node implements PhysicalActor {
         .registerTrigger( new InputTrigger( new KeyReleasedCondition(Key.D), new TriggerAction() {
         	@Override
         	public void perform(Canvas source, TwoInputStates inputState, double tpf) {
-        		System.out.println("d released");
+//        		System.out.println("d released");
         		
 //        		for (FrictionalContactConstraint f: constraints) {
 //    				f.setTangentialVelocityY(movementy.multiply(0));
@@ -370,7 +371,7 @@ public class Player extends Node implements PhysicalActor {
         .registerTrigger( new InputTrigger( new KeyPressedCondition(Key.A), new TriggerAction() {
         	@Override
         	public void perform(Canvas source, TwoInputStates inputState, double tpf) {
-        		System.out.println("d pressed");
+//        		System.out.println("d pressed");
         		
 //        		for (FrictionalContactConstraint f: constraints) {
 //    				f.setTangentialVelocityY(movementy.multiply(-movespeed));
@@ -387,7 +388,7 @@ public class Player extends Node implements PhysicalActor {
         .registerTrigger( new InputTrigger( new KeyReleasedCondition(Key.A), new TriggerAction() {
         	@Override
         	public void perform(Canvas source, TwoInputStates inputState, double tpf) {
-        		System.out.println("d released");
+//        		System.out.println("d released");
         		
 //        		for (FrictionalContactConstraint f: constraints) {
 //    				f.setTangentialVelocityY(movementy.multiply(0));

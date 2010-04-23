@@ -107,6 +107,8 @@ public class HUDActor implements Actor, ActorOwner {
 				} // while node
 			} // pick results			
 
+			System.out.println("Pressed actor:" + pressedactor);
+			
 			// if found nothing, we're done
 			if (pressedactor == null)
 				return;

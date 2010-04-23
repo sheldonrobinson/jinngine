@@ -18,7 +18,7 @@ import java.util.logging.Level;
 import sun.java2d.pipe.GlyphListLoopPipe;
 
 import jinngine.physics.Body;
-import jinngine.physics.Engine;
+import jinngine.physics.DefaultScene;
 import jinngine.physics.force.GravityForce;
 import jinngine.geometry.*;
 
@@ -135,7 +135,7 @@ public class JoglNoGuiceBoxExample implements Scene {
 
     
     //jinngine
-    Engine engine = new Engine();
+    DefaultScene engine = new DefaultScene();
     
     BasicPassManager _passManager = new BasicPassManager();
 
@@ -216,7 +216,7 @@ public class JoglNoGuiceBoxExample implements Scene {
 
     	
     	//jinngine
-		Body floor = new Body(new jinngine.geometry.Box(1500,10,1500));
+		Body floor = new Body("default", new jinngine.geometry.Box(1500,10,1500));
 		floor.setPosition(new jinngine.math.Vector3(0,-25,0));
 		//floor.state.q.assign(jinngine.math.Quaternion.rotation(-0.04, jinngine.math.Vector3.k));
 		floor.setFixed(true);
@@ -245,12 +245,12 @@ public class JoglNoGuiceBoxExample implements Scene {
     	
     	
 //		final Body box = new Body(new jinngine.geometry.Sphere(6));
-		final Body box = new Body(new jinngine.geometry.Box(6,6,6));
+		final Body box = new Body("default", new jinngine.geometry.Box(6,6,6));
     	engine.addBody(box);
     	//engine.addForce(new GravityForce(box));
     	box.setPosition(new jinngine.math.Vector3(-1,0,-19));
 
-		final Body box2 = new Body(new jinngine.geometry.Box(2,2,2));
+		final Body box2 = new Body("default", new jinngine.geometry.Box(2,2,2));
     	engine.addBody(box2);
     	box2.setAngularVelocity(new jinngine.math.Vector3(0.0,1.4,-1));
     	box2.setVelocity(new jinngine.math.Vector3(0,-0.1,0));
@@ -258,7 +258,7 @@ public class JoglNoGuiceBoxExample implements Scene {
     	box2.setPosition(new jinngine.math.Vector3(0,-14,-2));
 
 
-		final Body boxmonkey = new Body(new jinngine.geometry.Sphere(1));
+		final Body boxmonkey = new Body("default", new jinngine.geometry.Sphere(1));
 //		final Body boxmonkey = new Body(new jinngine.geometry.Sphere(1.5));
 
 		//boxmonkey.setMass(0.05);

@@ -32,7 +32,7 @@ import jinngine.math.Matrix3;
 import jinngine.math.Quaternion;
 import jinngine.math.Vector3;
 import jinngine.physics.Body;
-import jinngine.physics.PhysicsScene;
+import jinngine.physics.Scene;
 import jinngine.physics.constraint.joint.HingeJoint;
 import jinngine.physics.force.GravityForce;
 
@@ -120,7 +120,7 @@ public class Door extends Node implements PhysicalActor, ConfigurableActor {
 
 	@Override
 	public void start( Game game ) {
-		PhysicsScene physics = game.getPhysics();
+		Scene physics = game.getPhysics();
 		Node rootnode = game.getRendering().getRootNode();
 
 		// obtain the transform
@@ -142,8 +142,8 @@ public class Door extends Node implements PhysicalActor, ConfigurableActor {
        
         // door
         jinngine.geometry.Box doorbox = new jinngine.geometry.Box(xext*2,yext*2,zext*2);
-        doorbox.setFrictionCoefficient(0);
-        doorbody = new Body(doorbox);
+        doorbox.setFrictionCoefficient(0.5);
+        doorbody = new Body("default", doorbox);
         physics.addBody(doorbody);
         physics.addForce(new GravityForce(doorbody));
         //doorbody.setPosition(doorbody.getPosition().add(new jinngine.math.Vector3(0,-0.125,0)));
@@ -156,7 +156,7 @@ public class Door extends Node implements PhysicalActor, ConfigurableActor {
         Toolbox.addJinngineDebugMesh("jinnginedebugmesh1", doornode, doorbody);
 
         // doorframe
-        doorframebody = new Body();
+        doorframebody = new Body("default");
         jinngine.geometry.Box box1 = new jinngine.geometry.Box(0.35,2.3,0.35, -0.85,0,0);
         doorframebody.addGeometry(box1);
         jinngine.geometry.Box box2 = new jinngine.geometry.Box(0.35,2.3,0.35, 0.85,0,0);

@@ -32,7 +32,7 @@ import jinngine.game.actors.SelectableActor;
 import jinngine.game.actors.interaction.BodyPlacement;
 import jinngine.math.*;
 import jinngine.physics.Body;
-import jinngine.physics.PhysicsScene;
+import jinngine.physics.Scene;
 import jinngine.physics.constraint.joint.HingeJoint;
 import jinngine.physics.force.GravityForce;
 import jinngine.physics.force.SpringForce;
@@ -44,7 +44,7 @@ public class Bear implements CommandableActor, SelectableActor {
 	private Node head;
 	public  Body bodyhead;
 	
-	private final Body gotocontroller = new Body();
+	private final Body gotocontroller = new Body("default");
 	
 	
 	@Override
@@ -60,7 +60,7 @@ public class Bear implements CommandableActor, SelectableActor {
 
 	@Override
 	public void start( Game game) {
-		final PhysicsScene physics = game.getPhysics();
+		final Scene physics = game.getPhysics();
 		final Node rootnode = game.getRendering().getRootNode();
 		final GLSLShaderObjectsState shader = new GLSLShaderObjectsState();
 
@@ -82,7 +82,7 @@ public class Bear implements CommandableActor, SelectableActor {
         head.setRenderState(headts);
 
         // create the physics for the head
-        bodyhead = new Body(new jinngine.geometry.Box(1,1,1));
+        bodyhead = new Body("default", new jinngine.geometry.Box(1,1,1));
         physics.addBody(bodyhead);
         physics.addForce(new GravityForce(bodyhead));
         bodyhead.setPosition(new jinngine.math.Vector3(2,3.5-25,2));
@@ -110,7 +110,7 @@ public class Bear implements CommandableActor, SelectableActor {
         final Node body = ballstorage.getScene();
         body.setScale(0.35);
         
-        final Body bodybody = new Body(new jinngine.geometry.Box(1,1,1));
+        final Body bodybody = new Body("default", new jinngine.geometry.Box(1,1,1));
         physics.addBody(bodybody);
         physics.addForce(new GravityForce(bodybody));
         bodybody.setPosition(new jinngine.math.Vector3(2,3-25,2));
@@ -143,7 +143,7 @@ public class Bear implements CommandableActor, SelectableActor {
 
         Node righthand = (Node) SceneCopier.makeCopy(body, new SharedCopyLogic());
         righthand.setScale(0.15);
-        final Body righthandbody = new Body(new jinngine.geometry.Box(0.15,0.15,0.15));
+        final Body righthandbody = new Body("default", new jinngine.geometry.Box(0.15,0.15,0.15));
         righthandbody.setPosition(new jinngine.math.Vector3(2.5,3-25,2));
         physics.addBody(righthandbody);
         physics.addForce(new GravityForce(righthandbody));

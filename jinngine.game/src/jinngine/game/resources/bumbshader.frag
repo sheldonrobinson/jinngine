@@ -23,7 +23,7 @@ void main (void) {
 	float diff = /*gl_FrontLightProduct[0].diffuse*/ 0.5 * max(dot(normal,L), 0.0);
 
 	vec3 spec = /*gl_FrontLightProduct[0].specular*/ 
-               2.0 * pow(max(dot(R,E),0.0), 15.0);//gl_FrontMaterial.shininess);
+               0.7 * pow(max(dot(R,E),0.0), 55.0);//gl_FrontMaterial.shininess);
 
 
 	gl_FragColor = vec4((color*( 0.1 + diff + spec )).xyz, 1.0);  

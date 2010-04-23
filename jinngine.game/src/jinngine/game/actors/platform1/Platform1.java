@@ -23,6 +23,7 @@ import com.ardor3d.math.Vector3;
 import com.ardor3d.math.type.ReadOnlyVector3;
 import com.ardor3d.scenegraph.Line;
 import com.ardor3d.scenegraph.Node;
+import com.ardor3d.scenegraph.Spatial;
 import com.ardor3d.scenegraph.hint.LightCombineMode;
 import com.ardor3d.scenegraph.shape.Box;
 import com.ardor3d.util.export.Ardor3DExporter;
@@ -35,7 +36,7 @@ import jinngine.game.actors.ConfigurableActor;
 import jinngine.game.actors.PhysicalActor;
 import jinngine.game.actors.SelectableActor;
 import jinngine.physics.Body;
-import jinngine.physics.PhysicsScene;
+import jinngine.physics.Scene;
 import jinngine.physics.force.GravityForce;
 
 /**
@@ -77,9 +78,6 @@ public class Platform1 extends Node implements PhysicalActor, ConfigurableActor 
 
 	}
 
-
-
-
 	public Platform1(jinngine.math.Vector3 pos, double shade) {
 		this.pos.assign(pos);
 		this.shade = (float)shade;
@@ -118,9 +116,10 @@ public class Platform1 extends Node implements PhysicalActor, ConfigurableActor 
 		Line line = new Line("vector", outline, null, colors, null);
 		line.setAntialiased(false);
 		line.setModelBound(new BoundingBox()); 
-		line.setLineWidth(4f);
+		line.setLineWidth(2.8f);
 		line.getSceneHints().setLightCombineMode(LightCombineMode.Off);
 		line.setName("myplatformboxlines");
+		line.setScale(1.01);
 
 		Box box = new Box("myplatformbox", new Vector3(), scale, scale, scale);
 		box.setModelBound(new BoundingBox());        
@@ -132,7 +131,7 @@ public class Platform1 extends Node implements PhysicalActor, ConfigurableActor 
 		this.attachChild(platform);
 		platform.setTranslation(pos.x, pos.y, pos.z);
 
-		platform.setScale(2,2,3);
+//		platform.setScale(2,2,3);
 		// connect the node with this actor
 		platform.setUserData(this);
 
@@ -145,9 +144,9 @@ public class Platform1 extends Node implements PhysicalActor, ConfigurableActor 
 
 	@Override
 	public void start( Game game ) {
-		PhysicsScene physics = game.getPhysics();
+		Scene physics = game.getPhysics();
 		platform = (Node)this.getChild("myplatform");
-		final Box platformbox = (Box)this.getChild("myplatformbox");
+		final Spatial platformbox = this.getChild("myplatformbox");
 
 		//setup shadowing
 		game.getRendering().getPssmPass().add(platform);
@@ -156,7 +155,7 @@ public class Platform1 extends Node implements PhysicalActor, ConfigurableActor 
 		ReadOnlyVector3 s = platform.getScale();
 
 		
-		platformbox1body = new Body();
+		platformbox1body = new Body("default");
 		boxgeometry = new jinngine.geometry.Box(s.getX(),s.getY(),s.getZ());
 		platformbox1body.addGeometry(boxgeometry);
 		platformbox1body.finalize();

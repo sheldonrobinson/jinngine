@@ -17,8 +17,8 @@ import jinngine.game.actors.bear.Bear;
 import jinngine.game.actors.button.Button;
 import jinngine.game.actors.button.PlacementButton;
 import jinngine.game.actors.platform1.Platform1;
-import jinngine.physics.Engine;
-import jinngine.physics.PhysicsScene;
+import jinngine.physics.DefaultScene;
+import jinngine.physics.Scene;
 
 public class Game {
 	
@@ -29,17 +29,16 @@ public class Game {
 
 	//setup rendering stuff
 	private final Rendering rendering = new Rendering();
-	private final Engine jinngine = new Engine();
+	private final DefaultScene jinngine = new DefaultScene();
 
 	public Game() {
-		jinngine.setTimestep(0.05);
-		
-		
+		jinngine.setTimestep(0.065);
+			
 		//setup some actors
-//		Actor actor = new Environment();
-//		actor.create(this);
-//		actor.start(this);
-//		runningactors.add(actor);
+		Actor actor = new Environment();
+		actor.create(this);
+		actor.start(this);
+		runningactors.add(actor);
 //		
 //		Bear bear = new Bear();
 //		bear.start(this);
@@ -50,41 +49,38 @@ public class Game {
 //		platformbox1.start(this);
 //		runningactors.add(platformbox1);
 //
-//		Platform1 platformbox2 = new Platform1(new jinngine.math.Vector3(-3,-25+3.5,0), 0.9);
-//		platformbox2.create(this);
-//		platformbox2.start(this);
-//		runningactors.add(platformbox2);
+		Platform1 platformbox2 = new Platform1(new jinngine.math.Vector3(-3,-25+3.5,0), 0.9);
+		platformbox2.create(this);
+		platformbox2.start(this);
+		runningactors.add(platformbox2);
 //
-//		Platform1 platformbox3 = new Platform1(new jinngine.math.Vector3(-3,-25+3.5,0), 0.7);
-//		platformbox3.create(this);
-//		platformbox3.start(this);
-//		runningactors.add(platformbox3);
+		Platform1 platformbox3 = new Platform1(new jinngine.math.Vector3(-3,-25+3.5,0), 0.7);
+		platformbox3.create(this);
+		platformbox3.start(this);
+		runningactors.add(platformbox3);
 //		
 //		Button button = new Button();
 //		button.create(this);
 //		addActor(button);
+////
+		Actor p = new jinngine.game.actors.player.Player();
+		p.create(this);
+		addActor(p);
 //
-//		Actor p = new jinngine.game.actors.player.Player();
-//		p.create(this);
-//		addActor(p);
-//
-//		
+		
 //		Actor door = new Door();
 //		door.create(this);
 //		addActor(door);
-
-		
+//		
 //		Button button = new Button();
 //		button.create(this);
 //		addActor(button);
-		
+//		
 		PlacementButton button = new PlacementButton();
 		button.create(this);
 		addActor(button);
-
 		
 		addActor( new HUDActor() );
-
 		
 		//go through the scene graph depth first, and get the actors
 		final ArrayList<Actor> foundactors = new ArrayList<Actor>();
@@ -97,17 +93,16 @@ public class Game {
 						find((Node)sub);
 					}
 				}
-				
 			}
 		}
 //		 run traversal
 		new traverse().find(getRendering().getRootNode());
 
 		//add all actors
-		for (Actor a: foundactors)  {
-			addActor(a);
-			System.out.println(""+a);
-		}
+//		for (Actor a: foundactors)  {
+//			addActor(a);
+//			System.out.println(""+a);
+//		}
 
 		
 		//run forever
@@ -133,7 +128,7 @@ public class Game {
 
 			
 			rendering.draw();
-			Thread.yield();
+			//Thread.yield();
 		}
 	}
 	
@@ -149,7 +144,7 @@ public class Game {
 		return rendering;
 	}
 	
-	public final Engine getPhysics() {
+	public final DefaultScene getPhysics() {
 		return jinngine;
 	}
 	

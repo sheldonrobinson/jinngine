@@ -12,9 +12,11 @@ import jinngine.game.actors.ActionActor;
 import jinngine.game.actors.Actor;
 import jinngine.game.actors.ActorOwner;
 import jinngine.game.Game;
+import jinngine.math.Matrix3;
 import jinngine.math.Vector3;
 import jinngine.physics.Body;
-import jinngine.physics.PhysicsScene;
+import jinngine.physics.DefaultScene;
+import jinngine.physics.Scene;
 import jinngine.physics.constraint.Constraint;
 import jinngine.physics.constraint.joint.BallInSocketJoint;
 
@@ -29,10 +31,14 @@ public class BodyPlacement implements ActionActor {
 	private final Vector3 pickdisplacement = new Vector3();
 	private InputTrigger tracktrigger;
 	private final ActorOwner owner;
+	//stored angular properties
+	private Matrix3 inertia;
+	private Matrix3 inverse;
+
 	
 	public BodyPlacement(ActorOwner owner, Body target, Vector3 pickpoint, Vector2 screenpos) {
 		this.target = target;
-		this.controller = new Body();
+		this.controller = new Body("default");
 		this.controller.state.mass = 1; // hope to prevent bugs
 		this.controller.setFixed(true);
 		this.pickpoint.assign(pickpoint);
@@ -74,7 +80,7 @@ public class BodyPlacement implements ActionActor {
 	@Override
 	public final void start( Game game) {
 		// get out the physics
-		PhysicsScene physics = game.getPhysics();
+		DefaultScene physics = game.getPhysics();
 		target.updateTransformations();
 		controller.updateTransformations();
 
@@ -90,6 +96,15 @@ public class BodyPlacement implements ActionActor {
 		this.force = new BallInSocketJoint(target, controller, controller.getPosition(), new Vector3(0,1,0));
 		this.force.setForceLimit(10);
 
+		physics.liveconstraints.add(this.force);
+		
+		//copy angular mass properties
+		inertia = target.state.inertia.copy();
+		inverse = target.state.inverseinertia.copy();
+		//remove angular movement
+		Matrix3.set( Matrix3.identity(new Matrix3()).multiply(9e9), target.state.inertia);
+		Matrix3.set( Matrix3.zero, target.state.inverseinertia );
+
 		// insert the acting stuff into the physics world
 		physics.addBody(controller);
 		physics.addConstraint(force);
@@ -104,6 +119,7 @@ public class BodyPlacement implements ActionActor {
                     	// update the screen position
                     	screenpos.set(inputState.getCurrent().getMouseState().getX(),
                     			inputState.getCurrent().getMouseState().getY() );
+//                    	System.out.println("mouse moved");
                     	
                     }
                 });
@@ -111,15 +127,29 @@ public class BodyPlacement implements ActionActor {
                 
 		// install trigger
 		game.getRendering().getLogicalLayer().registerTrigger(this.tracktrigger);
+		
+		
+		
 	}
 
 	@Override
 	public final void stop( Game game) {
 		System.out.println("BodyPlacement stopping");
 		//remove controller body and force
-		PhysicsScene physics = game.getPhysics();
+		DefaultScene physics = game.getPhysics();
 		physics.removeConstraint(force);
 		physics.removeBody(controller);	
+		physics.liveconstraints.remove(this.force);
+
+		
+		//remove angular movement
+		Matrix3.set(inertia, target.state.inertia);
+		Matrix3.set(inverse, target.state.inverseinertia );
+
+		//remove velocity 
+//		entity.getPrimaryBody().setVelocity(new Vector3());
+//		entity.getPrimaryBody().setAngularVelocity(new Vector3());
+
 		
 		//remove mouse tracker
 		game.getRendering().getLogicalLayer().deregisterTrigger(this.tracktrigger);

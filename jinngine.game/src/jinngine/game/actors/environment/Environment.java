@@ -9,7 +9,7 @@ import com.ardor3d.scenegraph.shape.Box;
 import jinngine.game.actors.Actor;
 import jinngine.game.*;
 import jinngine.physics.Body;
-import jinngine.physics.PhysicsScene;
+import jinngine.physics.Scene;
 
 /**
  * Floors, background etc
@@ -37,14 +37,14 @@ public class Environment extends Node implements Actor {
 
 	@Override
 	public void start( Game game) {
-		PhysicsScene physics = game.getPhysics();
+		Scene physics = game.getPhysics();
 		floorbox = (Box)getChild("myfloorboxnode");
 		
 		//shadowing
 		game.getRendering().getPssmPass().add(floorbox);
 
 		// make physics box
-		Body floor = new Body(new jinngine.geometry.Box(120,10,120));
+		Body floor = new Body("default", new jinngine.geometry.Box(120,10,120));
 		floor.setPosition(new jinngine.math.Vector3(0,-25 -5,0));
 		floor.setFixed(true);
 		physics.addBody(floor);		
