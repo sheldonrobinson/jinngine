@@ -19,7 +19,6 @@ public class NonsmoothNonlinearConjugateGradient implements Solver {
 	
 	public double[] pgsiters = new double[max];
 	public double[] errors = new double[max];
-	boolean usepolakribiere = false;
 	
 	@Override
 	public void setMaximumIterations(int n) {
@@ -32,7 +31,6 @@ public class NonsmoothNonlinearConjugateGradient implements Solver {
 
 		pgsiters = new double[max];
 		errors = new double[max];
-		this.usepolakribiere = false;
 	}
 
 	@Override
@@ -66,14 +64,15 @@ public class NonsmoothNonlinearConjugateGradient implements Solver {
 			//use one PGS iteration to compute new residual 
 			for (constraint ci: constraints) {
 				//calculate (Ax+b)_i 				
-				double w = ci.j1.dot(ci.body1.deltavelocity) 
-				         + ci.j2.dot(ci.body1.deltaomega)
-				         + ci.j3.dot(ci.body2.deltavelocity) 
-				         + ci.j4.dot(ci.body2.deltaomega) 
+				final double w = ci.j1.dot(ci.body1.deltavelocity.add(ci.body1.externaldeltavelocity)) 
+				         + ci.j2.dot(ci.body1.deltaomega.add(ci.body1.externaldeltaomega))
+				         + ci.j3.dot(ci.body2.deltavelocity.add(ci.body2.externaldeltavelocity)) 
+				         + ci.j4.dot(ci.body2.deltaomega.add(ci.body2.externaldeltaomega)) 
 				         + ci.lambda*ci.damper;
-
-				double deltaLambda = (-ci.b-w)/(ci.diagonal + ci.damper );
-				double lambda0 = ci.lambda;
+				
+			    
+			    double deltaLambda = (-ci.b-w)/(ci.diagonal + ci.damper );
+				final double lambda0 = ci.lambda;
 
 				//Clamp the lambda[i] value to the constraints
 				if (ci.coupling != null) {
@@ -91,7 +90,7 @@ public class NonsmoothNonlinearConjugateGradient implements Solver {
 				} 
 
 				//do projection
-				double newlambda =
+				final double newlambda =
 					Math.max(ci.lower, Math.min(lambda0 + deltaLambda,ci.upper ));
 
 				//update the V vector
@@ -124,7 +123,7 @@ public class NonsmoothNonlinearConjugateGradient implements Solver {
 				}
 				
 			} else {
-				if (Math.abs(rold) < 1e-20) {
+				if (Math.abs(rold) < epsilon) {
 					break;
 				}
 				if ( Math.abs(rold-rnew) < 1e-6 ) {
@@ -152,8 +151,6 @@ public class NonsmoothNonlinearConjugateGradient implements Solver {
 			} else {
 				//beta *=beta;
 				//beta = Math.sqrt(beta);
-				if (usepolakribiere)
-					beta = polakribiere/rold;
 				
 				//PR+
 				//beta=beta<0?0:beta;
@@ -172,13 +169,6 @@ public class NonsmoothNonlinearConjugateGradient implements Solver {
 					Vector3.add( ci.body2.deltavelocity,     ci.b3.multiply(beta*ci.d));
 					Vector3.add( ci.body2.deltaomega, ci.b4.multiply(beta*ci.d));
 					ci.lambda += beta*ci.d;
-
-//					Vector3.add( ci.body1.deltaVCm,     ci.b1.multiply(ci.d));
-//					Vector3.add( ci.body1.deltaOmegaCm, ci.b2.multiply(ci.d));
-//					Vector3.add( ci.body2.deltaVCm,     ci.b3.multiply(ci.d));
-//					Vector3.add( ci.body2.deltaOmegaCm, ci.b4.multiply(ci.d));
-//					ci.lambda += ci.d;
-
 					
 					//update the direction vector
 					ci.d = beta*ci.d + ci.residual; // gradient is -r

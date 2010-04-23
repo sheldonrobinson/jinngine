@@ -26,10 +26,11 @@ public class GaussSeidel implements Solver {
 		for (int m=0; m<maximumIterations; m++) {
 			for (constraint ci: constraints) {
 				//calculate (Ax+b)_i 
-				double w =  ci.j1.dot(ci.body1.deltavelocity) 
-				+ ci.j2.dot(ci.body1.deltaomega)
-				+  ci.j3.dot(ci.body2.deltavelocity) 
-				+ ci.j4.dot(ci.body2.deltaomega) + ci.lambda*ci.damper;
+				double w =  ci.j1.dot(ci.body1.deltavelocity.add(ci.body1.externaldeltavelocity)) 
+			   	+ ci.j2.dot(ci.body1.deltaomega.add(ci.body1.externaldeltaomega))
+				+ ci.j3.dot(ci.body2.deltavelocity.add(ci.body2.externaldeltavelocity)) 
+				+ ci.j4.dot(ci.body2.deltaomega.add(ci.body2.externaldeltaomega)) + ci.lambda*ci.damper;
+
 
 				double deltaLambda = (-ci.b - w)/(ci.diagonal + ci.damper );
 				double lambda0 = ci.lambda;

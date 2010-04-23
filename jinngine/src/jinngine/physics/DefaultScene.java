@@ -13,6 +13,7 @@ import jinngine.physics.constraint.*;
 import jinngine.physics.constraint.contact.ContactConstraintManager;
 import jinngine.physics.solver.*;
 import jinngine.physics.solver.Solver.constraint;
+import jinngine.physics.solver.experimental.NonsmoothNonlinearConjugateGradient;
 import jinngine.collision.*;
 import jinngine.geometry.*;
 import jinngine.math.*;
@@ -30,8 +31,14 @@ public final class DefaultScene implements Scene {
 	public final List<Body> bodies = new ArrayList<Body>();
 	
 	// constraints, joints and forces
-	public final List<constraint> ncpconstraints = new LinkedList<constraint>();  
-	private final List<Force> forces = new LinkedList<Force>(); 
+	public final List<constraint> ncpconstraints = new ArrayList<constraint>();
+	private final List<Body> ncpbodies = new ArrayList<Body>();
+	private final List<Force> forces = new ArrayList<Force>(); 
+	public final List<Constraint> liveconstraints = new ArrayList<Constraint>();
+	
+	//test 
+	//List<Tuple<List<Body>,List<constraint>>> ncpconstraintlists = new ArrayList<Tuple<List<Body>,List<constraint>>>();
+
 	
 	// triggers
 	public final List<Trigger> triggers = new LinkedList<Trigger>();
@@ -121,7 +128,8 @@ public final class DefaultScene implements Scene {
 		// some default choises
 		this.policy = new DefaultDeactivationPolicy();
 		this.broadphase = new SweepAndPrune();
-		this.solver = new ProjectedGaussSeidel(55);
+//		this.solver = new ProjectedGaussSeidel(55);
+		this.solver = new NonsmoothNonlinearConjugateGradient(55);
 		
 		// start the new contact constraint manager
 		new ContactConstraintManager( broadphase, constraintGraph);
@@ -130,6 +138,11 @@ public final class DefaultScene implements Scene {
 
 	@Override
 	public final void tick() {
+//		System.out.println("tick();");
+		
+		// test
+//		ncpconstraintlists.clear();
+		
 		// since an awful lot of things are going on in this method, a summarising explanation will be
 		// given here. First, the broad phase collision detection is executed. Since the ContactConstraintManager
 		// has installed event handlers into the BPC, allot of things will happen during the call to broadphase.run(), 
@@ -140,11 +153,40 @@ public final class DefaultScene implements Scene {
 		// through the BroadfaseCollisionDetection.Handler type)
 		broadphase.run();
 		
+		
+		// clear acting forces and delta velocities
+		for (Body c:bodies) {
+			c.clearForces();
+			c.externaldeltaomega.assignZero();
+			c.externaldeltavelocity.assignZero();		
+		}
+        // apply all forces	to external delta velocities
+		for (Force f: forces) {
+//			System.out.println(""+f);
+			f.apply(timestep);
+		}
+				
+		// Process live constraints. Live constraints are constraints which is not purely
+		// a function of the velocities in the system, such as user controlled motors.
+		// The behaviour of such constraints cannot be predicted by the deactivation system, 
+		// and they have to be treated separately. Basically we perform a single PGS iteration
+		// on the ncp constraints given by the live constraint. This will update the delta 
+		// velocities of the involved bodies, and they can thus be activated.
+		for ( Constraint live: liveconstraints) {
+			ncpconstraints.clear(); ncpbodies.clear();
+			Pair<Body> bodies = live.getBodies();
+			ncpbodies.add(bodies.getFirst());
+			ncpbodies.add(bodies.getSecond());			
+			live.applyConstraints(ncpconstraints.listIterator(), timestep);
+			solver.solve(ncpconstraints, ncpbodies , 1e-7);
+		} 
+
 		// create a special iterator to be used with constraints. Each constraint will
 		// insert its ncp-constraints into this list
 		ncpconstraints.clear();
 		ListIterator<constraint> constraintIterator = ncpconstraints.listIterator();
-				
+
+		
 		// iterate through groups/components in the constraint graph
 		Iterator<ConstraintGroup> components = 
 			constraintGraph.getComponents();
@@ -172,6 +214,14 @@ public final class DefaultScene implements Scene {
 					ConstraintGroup data = g;
 					data.deactivated = false;
 
+					// test
+//					List<constraint> newconstraintlist = new ArrayList<constraint>();
+//					List<Body> newbodylist = new ArrayList<Body>();
+//					ncpconstraintlists.add(new Tuple<List<Body>, List<constraint>>(newbodylist,newconstraintlist));
+//					constraintIterator = newconstraintlist.listIterator();			
+//					Iterator<Body> biter = constraintGraph.getNodesInComponent(g);
+//					while( biter.hasNext()) newbodylist.add(biter.next());
+					
 					// apply all constraints in interaction component
 					Iterator<Constraint> constraints = constraintGraph.getEdgesInComponent(g);
 					while (constraints.hasNext()) {
@@ -213,6 +263,15 @@ public final class DefaultScene implements Scene {
 					while (bodyiter.hasNext()) {
 						policy.activate(bodyiter.next());
 					}
+
+					// test
+//					List<constraint> newconstraintlist = new ArrayList<constraint>();
+//					List<Body> newbodylist = new ArrayList<Body>();
+//					ncpconstraintlists.add(new Tuple<List<Body>, List<constraint>>(newbodylist,newconstraintlist));
+//					constraintIterator = newconstraintlist.listIterator();			
+//					Iterator<Body> biter = constraintGraph.getNodesInComponent(g);
+//					while( biter.hasNext()) newbodylist.add(biter.next());
+
 					
 					// apply all constraints in interaction component
 					Iterator<Constraint> constraints = constraintGraph.getEdgesInComponent(g);
@@ -243,27 +302,36 @@ public final class DefaultScene implements Scene {
 		
 		// clear acting forces and delta velocities
 		for (Body c:bodies) {
-			c.clearForces();
-			c.deltavelocity.assign(Vector3.zero);
-			c.deltaomega.assign(Vector3.zero);
+			// clear delta velocities for active bodies. This is reflects the
+			// fact that all constraints on active bodies starts of with lambda = 0
+			// when solved
+			if (!c.deactivated) {
+				c.deltavelocity.assignZero();
+				c.deltaomega.assignZero();
+			}
 		}
 
-        // apply all forces	to delta velocities
-		for (Force f: forces) {
-			f.apply(timestep);
-		}
+
 		
 		// run the solver (compute delta velocities) for all 
 		// components in the constraint graph
-		solver.solve( ncpconstraints, bodies, 0.0 );
+		solver.solve( ncpconstraints, bodies, 1e-7 );
+		
+		//test
+		// solve each component separated
+//		for (Tuple<List<Body>,List<constraint>> ncps : ncpconstraintlists) {
+//			solver.solve( ncps.second, ncps.first, 1e-9);
+//		}
+		
 		
 		// go thru bodies to advance velocities and positions
 		for (Body body: bodies) {
 			if ( !body.deactivated ) {
 				if ( !body.isFixed() ) {
 					// apply delta velocities
-					body.state.velocity.assign( body.state.velocity.add( body.deltavelocity));
-					body.state.omega.assign( body.state.omega.add( body.deltaomega));
+					body.state.velocity.assign( body.state.velocity.add( body.deltavelocity).add(body.externaldeltavelocity) );
+					body.state.omega.assign( body.state.omega.add( body.deltaomega).add(body.externaldeltaomega));
+
 					// update angular and linear momentums
 					Matrix3.multiply(body.state.inertia, body.state.omega, body.state.L);
 					body.state.P.assign(body.state.velocity.multiply(body.state.mass));

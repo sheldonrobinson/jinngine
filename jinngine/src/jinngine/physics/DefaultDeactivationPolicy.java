@@ -16,19 +16,26 @@ import jinngine.math.Vector3;
  */
 public class DefaultDeactivationPolicy implements DeactivationPolicy {
 	@Override
-	public boolean shouldBeDeactivated(Body b) {		
-		double accel = b.deltavelocity.dot(b.deltavelocity) + b.deltaomega.dot(b.deltaomega);
+	public boolean shouldBeDeactivated(Body b) {
+		double accel = b.deltavelocity.add(b.externaldeltavelocity).squaredNorm();
+		accel += b.deltaomega.add(b.externaldeltaomega).squaredNorm();		
+//		double accel = b.deltavelocity.dot(b.deltavelocity) + b.deltaomega.dot(b.deltaomega);
 		return b.totalKinetic() + accel < 1e-2;
+//		return false;
 	}
 	
 	@Override
 	public boolean shouldBeActivated(Body b) {
-		double accel = b.deltavelocity.dot(b.deltavelocity) + b.deltaomega.dot(b.deltaomega);
+		//double accel = b.deltavelocity.dot(b.deltavelocity) + b.deltaomega.dot(b.deltaomega);
 		
-		Vector3 forcedeviation = b.state.force.minus(b.deactivatedexternalforce);
-		Vector3 torquedeviation = b.state.torque.minus(b.deactivatedexternaltorque);
+//		Vector3 forcedeviation = b.state.force.minus(b.deactivatedexternalforce);
+//		Vector3 torquedeviation = b.state.torque.minus(b.deactivatedexternaltorque);
+
+		double accel = b.deltavelocity.add(b.externaldeltavelocity).squaredNorm();
+		accel += b.deltaomega.add(b.externaldeltaomega).squaredNorm();		
+
 		
-		return b.totalKinetic() + forcedeviation.squaredNorm() + torquedeviation.squaredNorm()  > 25;
+		return accel > 1e-1;
 	} 
 	
 	@Override
@@ -40,8 +47,8 @@ public class DefaultDeactivationPolicy implements DeactivationPolicy {
 	public void deactivate(Body b) {
 		// store information about external forces
 		b.deactivated = true;
-		b.deactivatedexternalforce.assign(b.state.force);
-		b.deactivatedexternaltorque.assign(b.state.torque);
+//		b.deactivatedexternalforce.assign(b.state.force);
+//		b.deactivatedexternaltorque.assign(b.state.torque);
 		
 		// remove velocity from body
 		b.state.velocity.assign(Vector3.zero);

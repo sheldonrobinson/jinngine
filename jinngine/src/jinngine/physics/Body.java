@@ -343,8 +343,13 @@ public final class Body {
 			Vector3.multiply(this.state.force, 1.0/this.state.mass, this.state.acceleration );
 
 			//apply directly to delta velocities
-			Vector3.add(this.deltavelocity, F.multiply(dt/this.state.mass));
-			Vector3.add(this.deltaomega, state.inverseinertia.multiply(point.cross(F)).multiply(dt));
+//			Vector3.add(this.deltavelocity, F.multiply(dt/this.state.mass));
+//			Vector3.add(this.deltaomega, state.inverseinertia.multiply(point.cross(F)).multiply(dt));
+			
+			//apply directly to delta velocities
+			Vector3.add(this.externaldeltavelocity, F.multiply(dt/this.state.mass));
+			Vector3.add(this.externaldeltaomega, state.inverseinertia.multiply(point.cross(F)).multiply(dt));
+
 		}
 	}
 
