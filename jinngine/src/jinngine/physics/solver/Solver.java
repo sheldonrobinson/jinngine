@@ -93,6 +93,9 @@ public interface Solver {
 		public constraint coupling;
 		/** Damping coefficient */
 		public double damper = 0;
+		/** External force impulse */
+		public double Fext;
+		
 		
 		// Auxiliary variables. These variables is included to aid the implementation of solvers. 
 		/** The Fischer reformulation value */

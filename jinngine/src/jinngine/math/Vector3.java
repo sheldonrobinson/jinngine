@@ -108,6 +108,17 @@ public final class Vector3 implements Serializable {
 	public final Vector3 minus( Vector3 v) {
 		return new Vector3( x-v.x, y-v.y, z-v.z );
 	}
+	
+	/**
+	 * Subtract a from b and place result in a
+	 * @param a
+	 * @param b
+	 */
+	public static final void minus( Vector3 a, Vector3 b) {
+		a.x -= b.x;
+		a.y -= b.y;
+		a.z -= b.z;		
+	}
 
 	public final Vector3 multiply( double s ) {
 		return new Vector3( x*s, y*s, z*s);
@@ -127,6 +138,21 @@ public final class Vector3 implements Serializable {
 		result.x += v.x*s; 
 		result.y += v.y*s; 
 		result.z += v.z*s;
+	}
+
+	/**
+	 * Multiply v by s, and store result in v. Add v to result and store in result
+	 * @param v
+	 * @param s
+	 * @param result
+	 */
+	public static final void  multiplyStoreAndAdd( Vector3 v, double s, Vector3 result) {
+		v.x *= s;
+		v.y *= s;
+		v.z *= s;		
+		result.x += v.x; 
+		result.y += v.y; 
+		result.z += v.z;
 	}
 
 

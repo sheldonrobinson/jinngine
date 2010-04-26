@@ -246,6 +246,7 @@ public class Box implements SupportMap3, Geometry, Material {
 			zeroAxisIndices[numberOfZeroAxis++]=2;
 		} else { nonZeroAxisIndices[ numberOfNonZeroAxis++] = 2; }
 		
+		
 		if (numberOfZeroAxis == 0) {
 			//eight possible points
 

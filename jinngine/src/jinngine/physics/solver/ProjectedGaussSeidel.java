@@ -35,29 +35,38 @@ public class ProjectedGaussSeidel implements Solver {
 	//solve NCP problem
 	public final double solve(List<constraint> constraints, List<Body> bodies, double epsilon) {
 		double iterations = 0;
+		
+		// compute external force contribution, clear direction and residual
+		for (constraint ci: constraints) {
+			ci.Fext = ci.j1.dot(ci.body1.externaldeltavelocity)
+			+ ci.j2.dot(ci.body1.externaldeltaomega)
+			+ ci.j3.dot(ci.body2.externaldeltavelocity) 
+			+ ci.j4.dot(ci.body2.externaldeltaomega); 			
+		}
+		
 		//perform iterations
 		for (int m=0; m<maximumIterations; m++) {
 			deltaResidual = 0;
 			for (constraint ci: constraints) {				
 				//calculate (Ax+b)_i 
-//				final double w =  ci.j1.dot(ci.body1.deltavelocity.add(ci.body1.externaldeltavelocity)) 
-//			   	+ ci.j2.dot(ci.body1.deltaomega.add(ci.body1.externaldeltaomega))
-//				+ ci.j3.dot(ci.body2.deltavelocity.add(ci.body2.externaldeltavelocity)) 
-//				+ ci.j4.dot(ci.body2.deltaomega.add(ci.body2.externaldeltaomega)) + ci.lambda*ci.damper;
+				final double w =  ci.j1.dot(ci.body1.deltavelocity) 
+			   	+ ci.j2.dot(ci.body1.deltaomega)
+				+ ci.j3.dot(ci.body2.deltavelocity) 
+				+ ci.j4.dot(ci.body2.deltaomega) + ci.lambda*ci.damper + ci.Fext;
 
-				final double w = 
-				  ci.j1.x*(ci.body1.deltavelocity.x+ci.body1.externaldeltavelocity.x) 
-				+ ci.j1.y*(ci.body1.deltavelocity.y+ci.body1.externaldeltavelocity.y)
-				+ ci.j1.z*(ci.body1.deltavelocity.z+ci.body1.externaldeltavelocity.z)
-				+ ci.j2.x*(ci.body1.deltaomega.x+ci.body1.externaldeltaomega.x) 
-				+ ci.j2.y*(ci.body1.deltaomega.y+ci.body1.externaldeltaomega.y)
-				+ ci.j2.z*(ci.body1.deltaomega.z+ci.body1.externaldeltaomega.z)
-				+ ci.j3.x*(ci.body2.deltavelocity.x+ci.body2.externaldeltavelocity.x) 
-				+ ci.j3.y*(ci.body2.deltavelocity.y+ci.body2.externaldeltavelocity.y)
-				+ ci.j3.z*(ci.body2.deltavelocity.z+ci.body2.externaldeltavelocity.z)
-				+ ci.j4.x*(ci.body2.deltaomega.x+ci.body2.externaldeltaomega.x) 
-				+ ci.j4.y*(ci.body2.deltaomega.y+ci.body2.externaldeltaomega.y)
-				+ ci.j4.z*(ci.body2.deltaomega.z+ci.body2.externaldeltaomega.z) + ci.lambda*ci.damper;
+//				final double w = 
+//				  ci.j1.x*(ci.body1.deltavelocity.x+ci.body1.externaldeltavelocity.x) 
+//				+ ci.j1.y*(ci.body1.deltavelocity.y+ci.body1.externaldeltavelocity.y)
+//				+ ci.j1.z*(ci.body1.deltavelocity.z+ci.body1.externaldeltavelocity.z)
+//				+ ci.j2.x*(ci.body1.deltaomega.x+ci.body1.externaldeltaomega.x) 
+//				+ ci.j2.y*(ci.body1.deltaomega.y+ci.body1.externaldeltaomega.y)
+//				+ ci.j2.z*(ci.body1.deltaomega.z+ci.body1.externaldeltaomega.z)
+//				+ ci.j3.x*(ci.body2.deltavelocity.x+ci.body2.externaldeltavelocity.x) 
+//				+ ci.j3.y*(ci.body2.deltavelocity.y+ci.body2.externaldeltavelocity.y)
+//				+ ci.j3.z*(ci.body2.deltavelocity.z+ci.body2.externaldeltavelocity.z)
+//				+ ci.j4.x*(ci.body2.deltaomega.x+ci.body2.externaldeltaomega.x) 
+//				+ ci.j4.y*(ci.body2.deltaomega.y+ci.body2.externaldeltaomega.y)
+//				+ ci.j4.z*(ci.body2.deltaomega.z+ci.body2.externaldeltaomega.z) + ci.lambda*ci.damper;
 
 				double deltaLambda = (-ci.b-w)/(ci.diagonal + ci.damper );
 				final double lambda0 = ci.lambda;

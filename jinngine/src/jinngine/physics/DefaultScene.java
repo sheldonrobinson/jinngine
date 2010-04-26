@@ -13,6 +13,7 @@ import jinngine.physics.constraint.*;
 import jinngine.physics.constraint.contact.ContactConstraintManager;
 import jinngine.physics.solver.*;
 import jinngine.physics.solver.Solver.constraint;
+import jinngine.physics.solver.experimental.NonsmoothNonlinearConjugateGradientOld;
 import jinngine.physics.solver.experimental.NonsmoothNonlinearConjugateGradient;
 import jinngine.collision.*;
 import jinngine.geometry.*;
@@ -129,6 +130,7 @@ public final class DefaultScene implements Scene {
 		this.policy = new DefaultDeactivationPolicy();
 		this.broadphase = new SweepAndPrune();
 //		this.solver = new ProjectedGaussSeidel(55);
+//		this.solver = new NonsmoothNonlinearConjugateGradient(55);
 		this.solver = new NonsmoothNonlinearConjugateGradient(55);
 		
 		// start the new contact constraint manager
@@ -155,15 +157,16 @@ public final class DefaultScene implements Scene {
 		
 		
 		// clear acting forces and delta velocities
-		for (Body c:bodies) {
-			c.clearForces();
-			c.externaldeltaomega.assignZero();
-			c.externaldeltavelocity.assignZero();		
+		for (Body bi:bodies) {
+			bi.clearForces();
+			bi.externaldeltavelocity.assignZero();
+			bi.externaldeltaomega.assignZero();
+
 		}
         // apply all forces	to external delta velocities
-		for (Force f: forces) {
+		for (Force fi: forces) {
 //			System.out.println(""+f);
-			f.apply(timestep);
+			fi.apply(timestep);
 		}
 				
 		// Process live constraints. Live constraints are constraints which is not purely
@@ -311,6 +314,8 @@ public final class DefaultScene implements Scene {
 			}
 		}
 
+//		if (ncpconstraints.size()<1)
+//			System.exit(0);
 
 		
 		// run the solver (compute delta velocities) for all 

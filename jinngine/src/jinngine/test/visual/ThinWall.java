@@ -46,7 +46,7 @@ import jinngine.physics.force.*;
 			Body table = new Body("default", new Box(220,10,120));
 			table.setPosition( new Vector3(0,-18,0));
 			table.setFixed(true);
-			table.advancePositions(1);
+			//table.advancePositions(1);
 			model.addBody(table);
 			boxes.add(table);	
 
