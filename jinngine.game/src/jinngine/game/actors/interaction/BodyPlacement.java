@@ -96,7 +96,7 @@ public class BodyPlacement implements ActionActor {
 		this.force = new BallInSocketJoint(target, controller, controller.getPosition(), new Vector3(0,1,0));
 		this.force.setForceLimit(10);
 
-		physics.liveconstraints.add(this.force);
+		physics.addLiveConstraint(this.force);
 		
 		//copy angular mass properties
 		inertia = target.state.inertia.copy();
@@ -139,7 +139,7 @@ public class BodyPlacement implements ActionActor {
 		DefaultScene physics = game.getPhysics();
 		physics.removeConstraint(force);
 		physics.removeBody(controller);	
-		physics.liveconstraints.remove(this.force);
+		physics.removeLiveConstraint(this.force);
 
 		
 		//remove angular movement

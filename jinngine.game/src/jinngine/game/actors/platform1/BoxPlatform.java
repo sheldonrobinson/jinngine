@@ -42,11 +42,12 @@ import jinngine.physics.force.GravityForce;
 /**
  * A primitive box platform
  */
-public class Platform1 extends Node implements PhysicalActor, ConfigurableActor {
+public class BoxPlatform extends Node implements PhysicalActor, ConfigurableActor {
 
 	// jinngine
 	private Body platformbox1body;
 	private jinngine.geometry.Box boxgeometry;
+	//private jinngine.geometry.ConvexHull platformhullgeometry;
 	
 	// ardor3d
 	private Node platform;
@@ -58,7 +59,7 @@ public class Platform1 extends Node implements PhysicalActor, ConfigurableActor 
 	private UIFrame frame;
 
 
-	public Platform1() {
+	public BoxPlatform() {
 	}
 
 	@Override
@@ -78,7 +79,7 @@ public class Platform1 extends Node implements PhysicalActor, ConfigurableActor 
 
 	}
 
-	public Platform1(jinngine.math.Vector3 pos, double shade) {
+	public BoxPlatform(jinngine.math.Vector3 pos, double shade) {
 		this.pos.assign(pos);
 		this.shade = (float)shade;
 	}

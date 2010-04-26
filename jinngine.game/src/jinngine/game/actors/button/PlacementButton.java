@@ -17,7 +17,7 @@ import jinngine.game.actors.PhysicalActor;
 import jinngine.game.actors.SelectableActor;
 import jinngine.game.actors.interaction.BodyPlacement;
 import jinngine.game.actors.interaction.ConfigureActor;
-import jinngine.game.actors.platform1.Platform1;
+import jinngine.game.actors.platform1.BoxPlatform;
 import jinngine.math.Vector3;
 import jinngine.physics.Body;
 

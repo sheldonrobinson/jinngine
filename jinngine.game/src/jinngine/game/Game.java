@@ -16,7 +16,7 @@ import jinngine.game.actors.Actor;
 import jinngine.game.actors.bear.Bear;
 import jinngine.game.actors.button.Button;
 import jinngine.game.actors.button.PlacementButton;
-import jinngine.game.actors.platform1.Platform1;
+import jinngine.game.actors.platform1.BoxPlatform;
 import jinngine.physics.DefaultScene;
 import jinngine.physics.Scene;
 
@@ -32,7 +32,7 @@ public class Game {
 	private final DefaultScene jinngine = new DefaultScene();
 
 	public Game() {
-		jinngine.setTimestep(0.065);
+		jinngine.setTimestep(0.085);
 			
 		//setup some actors
 		Actor actor = new Environment();
@@ -49,12 +49,12 @@ public class Game {
 //		platformbox1.start(this);
 //		runningactors.add(platformbox1);
 //
-		Platform1 platformbox2 = new Platform1(new jinngine.math.Vector3(-3,-25+3.5,0), 0.9);
+		BoxPlatform platformbox2 = new BoxPlatform(new jinngine.math.Vector3(-3,-25+3.5,0), 0.9);
 		platformbox2.create(this);
 		platformbox2.start(this);
 		runningactors.add(platformbox2);
 //
-		Platform1 platformbox3 = new Platform1(new jinngine.math.Vector3(-3,-25+3.5,0), 0.7);
+		BoxPlatform platformbox3 = new BoxPlatform(new jinngine.math.Vector3(-3,-25+3.5,0), 0.7);
 		platformbox3.create(this);
 		platformbox3.start(this);
 		runningactors.add(platformbox3);

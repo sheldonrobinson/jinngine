@@ -191,7 +191,7 @@ public class Player extends Node implements PhysicalActor {
         };
         
         game.getPhysics().addConstraint(controlconstraint);
-        game.getPhysics().liveconstraints.add(controlconstraint);
+        game.getPhysics().addLiveConstraint(controlconstraint);
         
         
         // tangential movement vectors
