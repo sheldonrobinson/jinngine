@@ -14,7 +14,6 @@ import jinngine.physics.constraint.contact.ContactConstraintManager;
 import jinngine.physics.solver.*;
 import jinngine.physics.solver.Solver.constraint;
 import jinngine.physics.solver.experimental.NonsmoothNonlinearConjugateGradientOld;
-import jinngine.physics.solver.experimental.NonsmoothNonlinearConjugateGradient;
 import jinngine.collision.*;
 import jinngine.geometry.*;
 import jinngine.math.*;

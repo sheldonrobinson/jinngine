@@ -6,13 +6,12 @@
  * Jinngine is published under the GPL license, available 
  * at http://www.gnu.org/copyleft/gpl.html. 
  */
-package jinngine.physics.solver.experimental;
+package jinngine.physics.solver;
 
 import java.util.List;
 
 import jinngine.math.Vector3;
 import jinngine.physics.Body;
-import jinngine.physics.solver.Solver;
 
 public class NonsmoothNonlinearConjugateGradient implements Solver {
 	int max = 10000;
