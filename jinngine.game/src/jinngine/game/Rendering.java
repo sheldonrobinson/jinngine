@@ -23,6 +23,7 @@ import com.ardor3d.input.awt.AwtFocusWrapper;
 import com.ardor3d.input.awt.AwtKeyboardWrapper;
 import com.ardor3d.input.awt.AwtMouseManager;
 import com.ardor3d.input.awt.AwtMouseWrapper;
+import com.ardor3d.input.logical.DummyControllerWrapper;
 import com.ardor3d.input.logical.InputTrigger;
 import com.ardor3d.input.logical.KeyPressedCondition;
 import com.ardor3d.input.logical.LogicalLayer;
@@ -81,17 +82,23 @@ public final class Rendering implements com.ardor3d.framework.Scene {
         TextureRendererFactory.INSTANCE.setProvider(new JoglTextureRendererProvider());
         canvas =  new JoglCanvas(canvasRenderer, settings);
         canvas.init();        
-        canvas.setTitle("Rendering");
+        canvas.setTitle("Machinery");
         canvas.getCanvasRenderer().getCamera().setLocation(0, -25+7, -20);
         canvas.getCanvasRenderer().getCamera().setFrustumPerspective(25, 16.0/9.0, 1, 1500);
         canvas.getCanvasRenderer().getCamera().lookAt(0, -25, 0, Vector3.UNIT_Y);
         canvas.getCanvasRenderer().getRenderer().setBackgroundColor(new ColorRGBA(1,1,1,1));
 
         // do some ardor3d stuff to make the user interface stuff work
+//        physicallayer = new PhysicalLayer(new AwtKeyboardWrapper(canvas), 
+//    			 new AwtMouseWrapper(canvas, new AwtMouseManager(canvas)),
+//                 new AwtFocusWrapper(canvas));
+        
         physicallayer = new PhysicalLayer(new AwtKeyboardWrapper(canvas), 
-    			 new AwtMouseWrapper(canvas, new AwtMouseManager(canvas)),
-                 new AwtFocusWrapper(canvas));
-        logicallayer.registerInput(canvas, physicallayer);
+        		new AwtMouseWrapper(canvas, new AwtMouseManager(canvas)), 
+        		DummyControllerWrapper.INSTANCE, 
+        		new AwtFocusWrapper(canvas));
+
+       logicallayer.registerInput(canvas, physicallayer);
         
         // setup resource locator
         try {
@@ -105,13 +112,13 @@ public final class Rendering implements com.ardor3d.framework.Scene {
         
         AWTImageLoader.registerLoader();
 //        
-//        try {
-//			root = (Node)BinaryImporter.getInstance().load( new File("testgraph.xml"));
-//
-//		} catch (IOException e) {
-//			// TODO Auto-generated catch block
-//			e.printStackTrace();
-//		}	
+        try {
+			root = (Node)XMLImporter.getInstance().load( new File("testgraph.xml"));
+
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}	
         
         
         // default back face culling
@@ -135,11 +142,11 @@ public final class Rendering implements com.ardor3d.framework.Scene {
         
         // define some light
         final DirectionalLight light = new DirectionalLight();
-        light.setDirection(0.1, 0.1, -0.1);
+        light.setDirection(-0.1, -0.1, 0.1);
         light.setDiffuse(new ColorRGBA(0.0f, 0.0f, 0.0f, 1.0f));
         light.setAmbient(new ColorRGBA(0.0f, 0.0f, 0.0f, 1.0f));
         light.setSpecular(new ColorRGBA(1.0f, 1.0f, 1.0f, 1.0f));
-        light.setAttenuate(false);
+        light.setAttenuate(true);
         
         // setup passes
         final RenderPass defaultpass = new RenderPass();       
@@ -162,7 +169,7 @@ public final class Rendering implements com.ardor3d.framework.Scene {
         // setup for ui components
         UIComponent.setUseTransparency(true);
         hud = new UIHud();
-        hud.setupInput(canvas, physicallayer, logicallayer); 
+        //hud.setupInput(canvas, physicallayer, logicallayer); 
 	}
 	
 	/**
@@ -183,10 +190,10 @@ public final class Rendering implements com.ardor3d.framework.Scene {
         // Update controllers/render states/transforms/bounds for rootNode.
         timer.update();
         
-		hud.getLogicalLayer().checkTriggers(timer.getTimePerFrame());
-		hud.updateGeometricState(timer.getTimePerFrame());
-
+		//hud.getLogicalLayer().checkTriggers(timer.getTimePerFrame());
+		//hud.updateGeometricState(timer.getTimePerFrame());
 		root.updateGeometricState(timer.getTimePerFrame(), true);
+		
 		logicallayer.checkTriggers(timer.getTimePerFrame());
 
 //		if ( timer.getTimeInSeconds()  )

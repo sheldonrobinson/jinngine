@@ -36,7 +36,7 @@ import com.ardor3d.framework.jogl.JoglCanvas;
 import com.ardor3d.framework.jogl.JoglCanvasRenderer;
 import com.ardor3d.image.Texture;
 import com.ardor3d.image.Texture2D;
-import com.ardor3d.image.Image.Format;
+import com.ardor3d.image.TextureStoreFormat;
 import com.ardor3d.image.util.AWTImageLoader;
 import com.ardor3d.intersection.PickResults;
 import com.ardor3d.light.DirectionalLight;
@@ -351,7 +351,7 @@ public class JoglNoGuiceBoxExample implements Scene {
         
         final ColladaImporter colladaImporter = new ColladaImporter();
         
-        final ColladaStorage storage2 = colladaImporter.readColladaFile("platformbox1.dae");
+        final ColladaStorage storage2 = colladaImporter.load("platformbox1.dae");
         _box2 = storage2.getScene();
         
         // Make a box...
@@ -397,7 +397,7 @@ public class JoglNoGuiceBoxExample implements Scene {
         _root.attachChild(floornode);
         
         //duck
-        final ColladaStorage storage = colladaImporter.readColladaFile("bearface.dae");
+        final ColladaStorage storage = colladaImporter.load("bearface.dae");
          colladaNode = storage.getScene();
 
          
@@ -474,10 +474,10 @@ public class JoglNoGuiceBoxExample implements Scene {
 //                Format.GuessNoCompression, true),1);
 
         ts.setTexture(TextureManager.load("bearlowtex.tga", Texture.MinificationFilter.Trilinear,
-                Format.GuessNoCompression, true),0);
+        		TextureStoreFormat.GuessCompressedFormat, true),0);
 
         ts.setTexture(TextureManager.load("bearlowpolynormalmap.tga", Texture.MinificationFilter.BilinearNoMipMaps,
-                Format.GuessNoCompression, true),1);
+        		TextureStoreFormat.GuessCompressedFormat, true),1);
 
 //        ts.setTexture(TextureManager.load("facepaintlow.tga", Texture.MinificationFilter.Trilinear,
 //                Format.GuessNoCompression, true),0);
@@ -665,10 +665,10 @@ public class JoglNoGuiceBoxExample implements Scene {
       TextureState ts2 = new TextureState();
       ts2.setEnabled(true);
       ts2.setTexture(TextureManager.load("concrete.tga", Texture.MinificationFilter.Trilinear,
-              Format.Guess, true),0);
+    		  TextureStoreFormat.GuessCompressedFormat, true),0);
 
       ts2.setTexture(TextureManager.load("bakedpaltform1normals.tga", Texture.MinificationFilter.BilinearNoMipMaps,
-              Format.Guess, true),1);
+    		  TextureStoreFormat.GuessCompressedFormat, true),1);
 
       ts2.getTexture(0).setWrap(Texture.WrapMode.Repeat);
       ts2.getTexture(0).setMagnificationFilter(Texture.MagnificationFilter.Bilinear);

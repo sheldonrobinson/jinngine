@@ -9,8 +9,9 @@ import com.ardor3d.extension.model.collada.jdom.ColladaImporter;
 import com.ardor3d.extension.model.collada.jdom.data.ColladaStorage;
 import com.ardor3d.framework.Canvas;
 import com.ardor3d.image.Texture;
-import com.ardor3d.image.Image.Format;
+import com.ardor3d.image.TextureStoreFormat;
 import com.ardor3d.input.Key;
+import com.ardor3d.input.KeyboardState;
 import com.ardor3d.input.logical.InputTrigger;
 import com.ardor3d.input.logical.KeyPressedCondition;
 import com.ardor3d.input.logical.KeyReleasedCondition;
@@ -28,11 +29,14 @@ import com.ardor3d.scenegraph.Renderable;
 import com.ardor3d.scenegraph.Spatial;
 import com.ardor3d.scenegraph.controller.SpatialController;
 import com.ardor3d.util.TextureManager;
-import com.ardor3d.util.export.Ardor3DExporter;
 import com.ardor3d.util.export.binary.BinaryExporter;
 import com.ardor3d.util.export.xml.XMLExporter;
 import com.ardor3d.util.geom.SceneCopier;
 import com.ardor3d.util.geom.SharedCopyLogic;
+import com.ardor3d.util.export.InputCapsule;
+import com.ardor3d.util.export.OutputCapsule;
+import com.google.common.base.Predicate;
+
 
 import jinngine.game.Game;
 import jinngine.game.Toolbox;
@@ -56,27 +60,22 @@ import jinngine.util.Pair;
 public class Player extends Node implements PhysicalActor {
 
 	private Body playerbody;
-	private final List<FrictionalContactConstraint> constraints = new ArrayList<FrictionalContactConstraint>();
-	private boolean keywstate = false;
-	private double movespeed = 1.5;
-	private double tangentforce = 5.2;
-	
 	private Constraint controlconstraint;
+	private double jumpable = 0;
+	
+	
 	
 	@Override
-	public void write(Ardor3DExporter e) throws IOException {
-		// TODO Auto-generated method stub
-		super.write(e);
-		e.getCapsule(this);				
+	public void write(final OutputCapsule oc) throws IOException {
+		super.write(oc);
 	}
-	
-	
+		
 	@Override
 	public void create(Game game) {
 		this.setName("Actor:Player");
 
 		final ColladaImporter colladaImporter = new ColladaImporter();
-        final ColladaStorage storage = colladaImporter.readColladaFile("girl.dae");
+        final ColladaStorage storage = colladaImporter.load("girl.dae");
         final Node body = storage.getScene();
         body.setScale(1);
         body.setName("playermainbody");
@@ -84,10 +83,10 @@ public class Player extends Node implements PhysicalActor {
         headts.setEnabled(true);
         headts.setTexture(TextureManager.load("girltexlow.tga", 
         		Texture.MinificationFilter.Trilinear,
-                Format.GuessNoCompression, true),0);
+        		TextureStoreFormat.GuessCompressedFormat, true),0);
         headts.setTexture(TextureManager.load("girlnormallow.tga", 
         		Texture.MinificationFilter.BilinearNoMipMaps,
-                Format.GuessNoCompression, true),1);
+        		TextureStoreFormat.GuessCompressedFormat, true),1);
         body.setRenderState(headts);
         
 
@@ -116,8 +115,8 @@ public class Player extends Node implements PhysicalActor {
 
 	@Override
 	public void act(Game game) {
-		// TODO Auto-generated method stub
-
+		if (jumpable > 0)
+			jumpable--;
 	}
 
 	@Override
@@ -147,8 +146,8 @@ public class Player extends Node implements PhysicalActor {
         
         // Physics      
         jinngine.geometry.Box box = new jinngine.geometry.Box(1,1,1);
-        box.setRestitution(0.20);
-        box.setFrictionCoefficient(1);
+        box.setRestitution(0.00);
+        //box.setFrictionCoefficient(1);
         playerbody = new Body("default", box);
         Toolbox.setTransformFromNode(body, playerbody);
         physics.addBody(playerbody);
@@ -164,12 +163,11 @@ public class Player extends Node implements PhysicalActor {
         final Vector3 velocity = new Vector3();
         final Vector3 force = new Vector3();
                 
-        // create control constraint
+        // create control velocity constraint
         controlconstraint = new Constraint() {       	
         	final constraint c = new constraint();       	
         	final constraint c2 = new constraint();       	
-        	
-        	
+
         	@Override
         	public void applyConstraints(ListIterator<constraint> iterator,
         			double dt) {
@@ -181,13 +179,17 @@ public class Player extends Node implements PhysicalActor {
         		c2.assign(playerbody, dummy,
         				new Vector3(0,0,1), new Vector3(), new Vector3(), new Vector3(),new Vector3(0,0,1), new Vector3(), new Vector3(), new Vector3(),Math.min(force.z,0), Math.max(0,force.z), null, playerbody.state.velocity.z-velocity.z, 0  );
         		iterator.add(c2);
-
         		
         	}
         	@Override
         	public Pair<Body> getBodies() {
         		return new Pair<Body>(playerbody,dummy);
         	}
+			@Override
+			public void getNcpConstraints(ListIterator<constraint> constraints) {
+				constraints.add(c);
+				constraints.add(c2);
+			}
         };
         
         game.getPhysics().addConstraint(controlconstraint);
@@ -195,241 +197,73 @@ public class Player extends Node implements PhysicalActor {
         
         
         // tangential movement vectors
-        final Vector3 movementx = new Vector3(0,0,1);
-        final Vector3 movementy = new Vector3(-1,0,0);
+//        final Vector3 movementx = new Vector3(0,0,1);
+//        final Vector3 movementy = new Vector3(-1,0,0);
 
         //debug mesh
-        Toolbox.addJinngineDebugMesh("playerdebugmesh", body, playerbody);
+//        Toolbox.addJinngineDebugMesh("playerdebugmesh", body, playerbody);
 
         
-        // create a contact constraint creator, to book-keep the contact constraints
-        // generated by the base body. 
-//        ContactConstraintCreator creator = new ContactConstraintCreator() {
-//        	@Override
-//        	public ContactConstraint createContactConstraint(Body b1, Body b2,
-//        			ContactGenerator g) {
-//        		
-//        		if ( b1 == playerbody ) {
-//            		System.out.println("Player: add");
-//        			FrictionalContactConstraint constraint = new FrictionalContactConstraint(b1,b2,g,this);
-//        			constraints.add(constraint);
-//        			return constraint;
-//        		} else if ( b2 == playerbody)  {
-//        			
-//        			FrictionalContactConstraint constraint = new FrictionalContactConstraint(b1,b2,g,this);
-//        			constraint.setTangentialVelocityMultiplier(-1);
-//        			constraints.add(constraint);
-//        			return constraint;
-//        			
-//        			
-//        		} else {
-//        			return null;
-//        		}
-//        		
-//        	}
-//        	@Override
-//        	public void removeContactConstraint(ContactConstraint constraint) {
-//        		System.out.println("Player: remove");
-//        		constraints.remove(constraint);
-//        	}
-//        };
-//        
-//        // install creator
-//        game.getPhysics().addContactConstraintCreator(creator);
-       
-        //install some key controls
-        game.getRendering().getLogicalLayer()
-        .registerTrigger( new InputTrigger( new KeyPressedCondition(Key.SPACE), new TriggerAction() {
-        	@Override
-        	public void perform(Canvas source, TwoInputStates inputState, double tpf) {
-//        		System.out.println("space pressed");
-        		impulse.setMagnitude(6.520);
-        		
-        	}
-        }));
+        
+        // WASD control ( more or less the same as in the ardor3d examples)
+        final Predicate<TwoInputStates> keysHeld = new Predicate<TwoInputStates>() {
+            Key[] keys = new Key[] { Key.W, Key.A, Key.S, Key.D, Key.SPACE };
 
-        
-        game.getRendering().getLogicalLayer()
-        .registerTrigger( new InputTrigger( new KeyPressedCondition(Key.W), new TriggerAction() {
-        	@Override
-        	public void perform(Canvas source, TwoInputStates inputState, double tpf) {
-//        		System.out.println("w pressed");
-        		
-//        		for (FrictionalContactConstraint f: constraints) {
-//    				f.setTangentialVelocityX(movementx.multiply(movespeed));
-//    				f.setCouplingEnabled(false);
-//    				f.setFixedFrictionBoundsMagnitude(tangentforce);
-//        		}
+            public boolean apply(final TwoInputStates states) {
+                for (final Key k : keys) {
+                    if (states.getCurrent() != null && states.getCurrent().getKeyboardState().isDown(k)) {
+                        return true;
+                    }
+                }
+                return true;
+            }
+        };
 
-        		velocity.z = walkvelocity;
-        		force.z = 1;
-
-        		
-        		keywstate = true;
-        	}
-        }));
+        final TriggerAction moveAction = new TriggerAction() {
+            public void perform(final Canvas source, final TwoInputStates inputStates, final double tpf) {
+                 KeyboardState kb = inputStates.getCurrent().getKeyboardState();
+                 
+//                 System.out.println("Key action");
+                 //handle keys
+                 // MOVEMENT
+                 
+                 velocity.assignZero();
+                 force.assignZero();
+                 
+                 if (kb.isDown(Key.W)) {
+             		velocity.z = walkvelocity;
+            		force.z = 1;
+                 }
+                 if (kb.isDown(Key.S)) {
+             		velocity.z = -walkvelocity;
+            		force.z = -1;
+                 }
+                 if (kb.isDown(Key.A)) {
+             		velocity.x = walkvelocity;
+            		force.x = 1;
+                 }
+                 if (kb.isDown(Key.D)) {
+             		velocity.x = -walkvelocity;
+            		force.x = -1;
+                 }  
+                 
+                 if (kb.isDown(Key.SPACE)) {
+                	 if (jumpable == 0) {
+                		 jumpable = jumpable + 100;
+                		 impulse.setMagnitude(7);
+                	 }
+                 }
+            }
+        };
         
-        game.getRendering().getLogicalLayer()
-        .registerTrigger( new InputTrigger( new KeyReleasedCondition(Key.W), new TriggerAction() {
-        	@Override
-        	public void perform(Canvas source, TwoInputStates inputState, double tpf) {
-//        		System.out.println("w released");
-        		
-//        		for (FrictionalContactConstraint f: constraints) {
-//    				f.setTangentialVelocityX(movementx.multiply(0));
-//    				f.setCouplingEnabled(true);
-//    				f.setFixedFrictionBoundsMagnitude(Double.POSITIVE_INFINITY);
-//        		}
-        		
-        		velocity.z = 0;
-        		force.z = 0;
-        		
-        		keywstate = false;
-        		
-        	}
-        }));
-
-        
-        game.getRendering().getLogicalLayer()
-        .registerTrigger( new InputTrigger( new KeyPressedCondition(Key.S), new TriggerAction() {
-        	@Override
-        	public void perform(Canvas source, TwoInputStates inputState, double tpf) {
-//        		System.out.println("s pressed");
-        		
-//        		for (FrictionalContactConstraint f: constraints) {
-//    				f.setTangentialVelocityX(movementx.multiply(-movespeed));
-//    				//f.setCouplingEnabled(false);
-//    				f.setFixedFrictionBoundsMagnitude(tangentforce);
-//        		}
-        		
-        		velocity.z = -walkvelocity;
-        		force.z = -1;
-        		keywstate = true;
-        	}
-        }));
-        
-        game.getRendering().getLogicalLayer()
-        .registerTrigger( new InputTrigger( new KeyReleasedCondition(Key.S), new TriggerAction() {
-        	@Override
-        	public void perform(Canvas source, TwoInputStates inputState, double tpf) {
-//        		System.out.println("s released");
-        		
-//        		for (FrictionalContactConstraint f: constraints) {
-//    				f.setTangentialVelocityX(movementx.multiply(0));
-////    				f.setCouplingEnabled(true);
-//    				f.setFixedFrictionBoundsMagnitude(Double.POSITIVE_INFINITY);
-//        		}
-        		 
-        		velocity.z = 0;
-        		force.z = 0;
-        		keywstate = false;
-        		
-        	}
-        }));
-
-        game.getRendering().getLogicalLayer()
-        .registerTrigger( new InputTrigger( new KeyPressedCondition(Key.D), new TriggerAction() {
-        	@Override
-        	public void perform(Canvas source, TwoInputStates inputState, double tpf) {
-//        		System.out.println("d pressed");
-        		
-//        		for (FrictionalContactConstraint f: constraints) {
-//    				f.setTangentialVelocityY(movementy.multiply(movespeed));
-////    				f.setCouplingEnabled(false);
-//    				f.setFixedFrictionBoundsMagnitude(tangentforce);
-//        		}
-        		
-        		velocity.x = -walkvelocity;
-        		force.x = -1;
-        		
-        		keywstate = true;
-        	}
-        }));
-        
-        game.getRendering().getLogicalLayer()
-        .registerTrigger( new InputTrigger( new KeyReleasedCondition(Key.D), new TriggerAction() {
-        	@Override
-        	public void perform(Canvas source, TwoInputStates inputState, double tpf) {
-//        		System.out.println("d released");
-        		
-//        		for (FrictionalContactConstraint f: constraints) {
-//    				f.setTangentialVelocityY(movementy.multiply(0));
-////    				f.setCouplingEnabled(true);
-//    				f.setFixedFrictionBoundsMagnitude(Double.POSITIVE_INFINITY);
-        		
-//        		}
-        		
-        		velocity.x = 0;
-        		force.x = 0;
-        		
-        		keywstate = false;
-        		
-        	}
-        }));
-
-        game.getRendering().getLogicalLayer()
-        .registerTrigger( new InputTrigger( new KeyPressedCondition(Key.A), new TriggerAction() {
-        	@Override
-        	public void perform(Canvas source, TwoInputStates inputState, double tpf) {
-//        		System.out.println("d pressed");
-        		
-//        		for (FrictionalContactConstraint f: constraints) {
-//    				f.setTangentialVelocityY(movementy.multiply(-movespeed));
-////    				f.setCouplingEnabled(false);
-//    				f.setFixedFrictionBoundsMagnitude(tangentforce);
-//        		}
-        		velocity.x = walkvelocity;
-        		force.x = 1;
-        		keywstate = true;
-        	}
-        }));
-        
-        game.getRendering().getLogicalLayer()
-        .registerTrigger( new InputTrigger( new KeyReleasedCondition(Key.A), new TriggerAction() {
-        	@Override
-        	public void perform(Canvas source, TwoInputStates inputState, double tpf) {
-//        		System.out.println("d released");
-        		
-//        		for (FrictionalContactConstraint f: constraints) {
-//    				f.setTangentialVelocityY(movementy.multiply(0));
-////    				f.setCouplingEnabled(true);
-//    				f.setFixedFrictionBoundsMagnitude(Double.POSITIVE_INFINITY);
-//        		}
-        		velocity.x = 0;
-        		force.x = 0;
-        		
-        		keywstate = false;
-        		
-        	}
-        }));
-        
-        
-        
-        
-        game.getRendering().getLogicalLayer()
-        .registerTrigger( new InputTrigger( new KeyPressedCondition(Key.RETURN), new TriggerAction() {
-        	@Override
-        	public void perform(Canvas source, TwoInputStates inputState, double tpf) {
-        		System.out.println("Writing scene graph");
-        		
-                try {
-                	BinaryExporter.getInstance().save( game.getRendering().getRootNode(), new File("testgraph.xml"));
-        		} catch (IOException e) {
-        			// TODO Auto-generated catch block
-        			e.printStackTrace();
-        		}
-        	
-        	}
-        }));
-
+        // install trigger
+        InputTrigger mytrigger = new InputTrigger(keysHeld, moveAction);
+        game.getRendering().getLogicalLayer().registerTrigger(mytrigger);
         
 	}
-	
-	
 
 	@Override
 	public void stop(Game game) {
-		// TODO Auto-generated method stub
 
 	}
 
@@ -437,5 +271,4 @@ public class Player extends Node implements PhysicalActor {
 	public Body getBodyFromNode(Node node) {
 		return playerbody;
 	}
-
 }

@@ -8,7 +8,7 @@ import com.ardor3d.extension.effect.water.WaterNode;
 import com.ardor3d.extension.model.collada.jdom.ColladaImporter;
 import com.ardor3d.extension.model.collada.jdom.data.ColladaStorage;
 import com.ardor3d.image.Texture;
-import com.ardor3d.image.Image.Format;
+import com.ardor3d.image.TextureStoreFormat;
 import com.ardor3d.math.Matrix3;
 import com.ardor3d.math.Vector2;
 import com.ardor3d.math.Vector3;
@@ -66,7 +66,7 @@ public class Bear implements CommandableActor, SelectableActor {
 
 		// head
 		final ColladaImporter colladaImporter = new ColladaImporter();
-        final ColladaStorage storage = colladaImporter.readColladaFile("bearface.dae");
+        final ColladaStorage storage = colladaImporter.load("bearface.dae");
         head = storage.getScene();
         head.setScale(0.75);
 
@@ -75,10 +75,10 @@ public class Bear implements CommandableActor, SelectableActor {
         headts.setEnabled(true);
         headts.setTexture(TextureManager.load("bearlowtex.tga", 
         		Texture.MinificationFilter.Trilinear,
-                Format.GuessNoCompression, true),0);
+        		TextureStoreFormat.GuessCompressedFormat, true),0);
         headts.setTexture(TextureManager.load("bearlowpolynormalmap.tga", 
         		Texture.MinificationFilter.BilinearNoMipMaps,
-                Format.GuessNoCompression, true),1);
+        		TextureStoreFormat.GuessCompressedFormat, true),1);
         head.setRenderState(headts);
 
         // create the physics for the head
@@ -106,7 +106,7 @@ public class Bear implements CommandableActor, SelectableActor {
         head.setUserData(this);
 
         // body
-        final ColladaStorage ballstorage = colladaImporter.readColladaFile("ball.dae");
+        final ColladaStorage ballstorage = colladaImporter.load("ball.dae");
         final Node body = ballstorage.getScene();
         body.setScale(0.35);
         
@@ -131,10 +131,10 @@ public class Bear implements CommandableActor, SelectableActor {
         TextureState ts = new TextureState();
         ts.setEnabled(true);
         ts.setTexture(TextureManager.load("balllowtex.tga", Texture.MinificationFilter.Trilinear,
-                Format.GuessNoCompression, true),0);
+        		TextureStoreFormat.GuessCompressedFormat, true),0);
 
         ts.setTexture(TextureManager.load("balllownormalmap.tga", Texture.MinificationFilter.BilinearNoMipMaps,
-                Format.GuessNoCompression, true),1);
+        		TextureStoreFormat.GuessCompressedFormat, true),1);
         body.setRenderState(ts);
 
         HingeJoint joint = new HingeJoint(bodyhead,bodybody, new jinngine.math.Vector3(2,3.25-25,2), new jinngine.math.Vector3(1,0,0));

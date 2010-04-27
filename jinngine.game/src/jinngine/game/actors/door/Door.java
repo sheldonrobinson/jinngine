@@ -20,8 +20,8 @@ import com.ardor3d.scenegraph.Line;
 import com.ardor3d.scenegraph.Node;
 import com.ardor3d.scenegraph.Spatial;
 import com.ardor3d.scenegraph.shape.Box;
-import com.ardor3d.util.export.Ardor3DExporter;
-import com.ardor3d.util.export.Ardor3DImporter;
+import com.ardor3d.util.export.OutputCapsule;
+import com.ardor3d.util.export.InputCapsule;
 
 import jinngine.game.Game;
 import jinngine.game.Toolbox;
@@ -51,16 +51,15 @@ public class Door extends Node implements PhysicalActor, ConfigurableActor {
 	}
 	
 	@Override
-	public void write(Ardor3DExporter e) throws IOException {
-		super.write(e);
-		
-		e.getCapsule(this).write( fixedframe,"fixedframe", false);
+	public void write(final OutputCapsule oc) throws IOException {
+		super.write(oc);
+		oc.write( fixedframe,"fixedframe", false);
 	}
 	
 	@Override
-	public void read(Ardor3DImporter e) throws IOException {
-		super.read(e);
-		fixedframe = e.getCapsule(this).readBoolean( "fixedframe", false);
+	public void read(final InputCapsule ic) throws IOException {
+		super.read(ic);
+		fixedframe = ic.readBoolean( "fixedframe", false);
 	}
 	
 	@Override
@@ -74,7 +73,7 @@ public class Door extends Node implements PhysicalActor, ConfigurableActor {
 		
 		// load door asset
         final ColladaImporter colladaImporter = new ColladaImporter();
-        final ColladaStorage storage = colladaImporter.readColladaFile("doorframe.dae");
+        final ColladaStorage storage = colladaImporter.load("doorframe.dae");
         Node doorscene = storage.getScene();
 
         // set the door transform of the collada file to the new door node

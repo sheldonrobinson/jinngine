@@ -2,11 +2,17 @@ package jinngine.game.actors.platform1;
 
 import java.io.IOException;
 import java.nio.FloatBuffer;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
 
 import javax.tools.Tool;
 
 import com.ardor3d.bounding.BoundingBox;
 
+import com.ardor3d.extension.model.collada.jdom.ColladaImporter;
+import com.ardor3d.extension.model.collada.jdom.data.ColladaStorage;
 import com.ardor3d.extension.ui.UIButton;
 import com.ardor3d.extension.ui.UICheckBox;
 import com.ardor3d.extension.ui.UIFrame;
@@ -22,12 +28,15 @@ import com.ardor3d.math.Vector2;
 import com.ardor3d.math.Vector3;
 import com.ardor3d.math.type.ReadOnlyVector3;
 import com.ardor3d.scenegraph.Line;
+import com.ardor3d.scenegraph.Mesh;
+import com.ardor3d.scenegraph.MeshData;
 import com.ardor3d.scenegraph.Node;
 import com.ardor3d.scenegraph.Spatial;
 import com.ardor3d.scenegraph.hint.LightCombineMode;
 import com.ardor3d.scenegraph.shape.Box;
 import com.ardor3d.util.export.InputCapsule;
 import com.ardor3d.util.export.OutputCapsule;
+import com.ardor3d.util.geom.BufferUtils;
 
 import jinngine.game.Game;
 import jinngine.game.Toolbox;
@@ -35,31 +44,35 @@ import jinngine.game.actors.Actor;
 import jinngine.game.actors.ConfigurableActor;
 import jinngine.game.actors.PhysicalActor;
 import jinngine.game.actors.SelectableActor;
+import jinngine.geometry.ConvexHull;
 import jinngine.physics.Body;
 import jinngine.physics.Scene;
 import jinngine.physics.force.GravityForce;
 
 /**
- * A primitive box platform
+ * A primitive convex platform
  */
-public class BoxPlatform extends Node implements PhysicalActor, ConfigurableActor {
+public class ConvexPlatform extends Node implements PhysicalActor, ConfigurableActor {
 
 	// jinngine
-	private Body platformbox1body;
+	private Body platformconvexbody;
 	private jinngine.geometry.Box boxgeometry;
-	//private jinngine.geometry.ConvexHull platformhullgeometry;
+	private jinngine.geometry.ConvexHull platformhullgeometry;
 	
 	// ardor3d
 	private Node platform;
 	
 	// properties
 	private final jinngine.math.Vector3 pos = new jinngine.math.Vector3();	
-	private double shade;	
+	private double shade = 0.7;
+	private String daefilename;
 	private boolean isFixed = false;
 	private UIFrame frame;
+	
 
 
-	public BoxPlatform() {
+	public ConvexPlatform() {
+		daefilename = "convexplatform.dae";
 	}
 
 	@Override
@@ -67,72 +80,97 @@ public class BoxPlatform extends Node implements PhysicalActor, ConfigurableActo
 		super.read(ic);
 		// read some settings
 		isFixed = ic.readBoolean("isFixed", false);
-		shade = (float)ic.readDouble("shade", 0);
+		shade = ic.readDouble("shade", 0.7);
+		daefilename = (String)ic.readString("daefilename", "convexplatform.dae");
 	}
 
 	@Override
 	public void write(final OutputCapsule oc) throws IOException {
 		super.write(oc);		
 		// write some settings
-		oc.write(isFixed, "isFixed", false);
-		oc.write(shade, "shade", 0.0);
-
+		oc.write( isFixed, "isFixed", false);
+		oc.write( shade, "shade", 0.7);
+		oc.write( daefilename, "daefilename", "convexplatform.dae");
 	}
 
-	public BoxPlatform(jinngine.math.Vector3 pos, double shade) {
+	public ConvexPlatform(jinngine.math.Vector3 pos, double shade) {
 		this.pos.assign(pos);
 		this.shade = (float)shade;
+		this.daefilename = "convexplatform.dae";
+		
+
 	}
 
 	@Override
 	public void create(Game game) {
 		Node rootnode = game.getRendering().getRootNode();
-		this.setName("Actor:Platform");
+		this.setName("Actor:ConvexPlatform");
 
 		platform = new Node();
 
-		double scale = 0.5;
+		// load door asset
+        final ColladaImporter colladaImporter = new ColladaImporter();
+        final ColladaStorage storage = colladaImporter.load(daefilename);
+        Node convexplatformscene = storage.getScene();
 
-		// make the outline
-		ColorRGBA[] colors = new ColorRGBA[24];
-		for ( int i=0; i<colors.length; i++)
-			colors[i] = new ColorRGBA(0f,0f,0f,1.0f);
+        
+        // set the transform of the collada file to the new platform node
+        platform.setTransform(convexplatformscene.getChild("ConvexPlatformSolid").getTransform());
+        
+        // load the outline
+        Line outline = (Line)convexplatformscene.getChild("ConvexPlatformOut_lines");
+		outline.setLineWidth(4);
+		outline.setDefaultColor(new ColorRGBA(0,0,0,1));
+		outline.setScale(1.01);
+        platform.attachChild(outline);
+        
+        // load faces
+        Spatial convexplatformfaces = convexplatformscene.getChild("ConvexPlatformSolid-Geometry_triangles");
+        platform.attachChild(convexplatformfaces);
+	
+        // set some color
+        ((Mesh)convexplatformfaces).setSolidColor(new ColorRGBA((float)shade,(float)shade,(float)shade,1));
+        
+        // load vertices
+        //Mesh convexplatformvertices = (Mesh)convexplatformscene.getChild("ConvexPlatform_001_vertex");
+        
 
-		// define outline lines for the box
-		Vector3[] outline = new Vector3[]  { 
-				new Vector3( scale, scale, scale), new Vector3(-scale, scale, scale),
-				new Vector3( scale, scale, scale), new Vector3( scale,-scale, scale),
-				new Vector3( scale, scale, scale), new Vector3( scale, scale,-scale),				
-				new Vector3(-scale, scale, scale), new Vector3(-scale,-scale, scale),
-				new Vector3(-scale, scale, scale), new Vector3(-scale, scale,-scale),				
-				new Vector3( scale,-scale, scale), new Vector3(-scale,-scale, scale),
-				new Vector3( scale,-scale, scale), new Vector3( scale,-scale,-scale),				
-				new Vector3(-scale,-scale, scale), new Vector3(-scale,-scale,-scale),
-				new Vector3( scale, scale,-scale), new Vector3(-scale, scale,-scale),
-				new Vector3( scale, scale,-scale), new Vector3( scale,-scale,-scale),
-				new Vector3(-scale, scale,-scale), new Vector3(-scale,-scale,-scale),				
-				new Vector3( scale,-scale,-scale), new Vector3(-scale,-scale,-scale)				
-		};
+//		Line line = new Line("vector", outline, null, colors, null);
+//		line.setAntialiased(false);
+//		line.setModelBound(new BoundingBox()); 
+//		line.setLineWidth(2.8f);
+//		line.getSceneHints().setLightCombineMode(LightCombineMode.Off);
+//		line.setName("myplatformboxlines");
+		
 
-		Line line = new Line("vector", outline, null, colors, null);
-		line.setAntialiased(false);
-		line.setModelBound(new BoundingBox()); 
-		line.setLineWidth(2.8f);
-		line.getSceneHints().setLightCombineMode(LightCombineMode.Off);
-		line.setName("myplatformboxlines");
-		line.setScale(1.01);
+//        MeshData meshdata       = ((Mesh)convexplatformfaces).getMeshData();
+//        FloatBuffer verticedata = meshdata.getVertexBuffer();
 
-		Box box = new Box("myplatformbox", new Vector3(), scale, scale, scale);
-		box.setModelBound(new BoundingBox());        
-		box.setSolidColor(new ColorRGBA((float)shade,(float)shade,(float)shade,1));
+//       // load vertices
+//       // points for the convex hull
+//       List<jinngine.math.Vector3> points = new ArrayList<jinngine.math.Vector3>();
+//       float[] p = new float[3];
+//       verticedata.rewind();
+//       while ( verticedata.hasRemaining()) {
+//    	   verticedata.get(p, 0, 3);
+//    	   points.add(new jinngine.math.Vector3(p[0],p[1],p[2]));
+//       }
+//       
+////        System.out.println(verticedata);
+//        
+//        // do the convex hull and setup mesh 
+//		ConvexHull hull = new ConvexHull(points);
 
-		platform.attachChild(box);
-		platform.attachChild(line);
-		platform.setName("myplatform");
+//		Box box = new Box("myplatformbox", new Vector3(), scale, scale, scale);
+//		box.setModelBound(new BoundingBox());        
+//		box.setSolidColor(new ColorRGBA((float)shade,(float)shade,(float)shade,1));
+
+		platform.attachChild(convexplatformfaces);
+		platform.attachChild(outline);
+		platform.setName("myconvexplatform");
 		this.attachChild(platform);
 		platform.setTranslation(pos.x, pos.y, pos.z);
 
-//		platform.setScale(2,2,3);
 		// connect the node with this actor
 		platform.setUserData(this);
 
@@ -146,34 +184,65 @@ public class BoxPlatform extends Node implements PhysicalActor, ConfigurableActo
 	@Override
 	public void start( Game game ) {
 		Scene physics = game.getPhysics();
-		platform = (Node)this.getChild("myplatform");
-		final Spatial platformbox = this.getChild("myplatformbox");
+		platform = (Node)this.getChild("myconvexplatform");
+//		final Spatial platformbox = this.getChild("myplatformbox");
 
-		//setup shadowing
-		game.getRendering().getPssmPass().add(platform);
-		game.getRendering().getPssmPass().addOccluder(platformbox);
 
 		ReadOnlyVector3 s = platform.getScale();
+		
+		// get the mesh
+		Spatial convexplatformfaces = platform.getChild("ConvexPlatformSolid-Geometry_triangles");
+		MeshData meshdata  = ((Mesh)convexplatformfaces).getMeshData();
+		FloatBuffer verticedata = meshdata.getVertexBuffer();
+
+		// set color
+        ((Mesh)convexplatformfaces).setSolidColor(new ColorRGBA((float)shade,(float)shade,(float)shade,1));
+		
+		//setup shadowing
+		game.getRendering().getPssmPass().add(convexplatformfaces);
+		game.getRendering().getPssmPass().addOccluder(convexplatformfaces);
 
 		
-		platformbox1body = new Body("default");
-		boxgeometry = new jinngine.geometry.Box(s.getX(),s.getY(),s.getZ());
-		platformbox1body.addGeometry(boxgeometry);
-		platformbox1body.finalize();
-		physics.addBody(platformbox1body);
-		physics.addForce(new GravityForce(platformbox1body));
-		platformbox1body.setPosition(pos);
-		platformbox1body.setAngularVelocity(new jinngine.math.Vector3(0,0,0));
-		platformbox1body.setFixed(isFixed);
+		// load vertices
+		// points for the convex hull
+		List<jinngine.math.Vector3> points = new ArrayList<jinngine.math.Vector3>();
+		float[] p = new float[3];
+		verticedata.rewind();
+		while ( verticedata.hasRemaining()) {
+			verticedata.get(p, 0, 3);
+			points.add(new jinngine.math.Vector3(p[0],p[1],p[2]));
+		}
+		
+		
+		System.out.println("ConvexPlatform: Vertices for hull " + points.size());
 
-		Toolbox.setTransformFromNode(platform, platformbox1body);
-		platform.addController(Toolbox.createSpatialControllerForBody(platformbox1body));
+		//	        System.out.println(verticedata);
+
+		// do the convex hull and setup mesh 
+		ConvexHull hull = new ConvexHull(points);
+		
+		System.out.println("ConvexPlatform: final hull vertices " + hull.getNumberOfVertices());
+		
+
+		
+		platformconvexbody = new Body("convexplatform", hull);
+		//boxgeometry = new jinngine.geometry.Box(s.getX(),s.getY(),s.getZ());
+		//platformconvexbody.addGeometry(boxgeometry);
+		//platformconvexbody.finalize();
+		physics.addBody(platformconvexbody);
+		physics.addForce(new GravityForce(platformconvexbody));
+		platformconvexbody.setPosition(pos);
+		platformconvexbody.setAngularVelocity(new jinngine.math.Vector3(0,0,0));
+		platformconvexbody.setFixed(isFixed);
+
+		Toolbox.setTransformFromNode(platform, platformconvexbody);
+		platform.addController(Toolbox.createSpatialControllerForBody(platformconvexbody));
 	}
 	
 	public void update( Game game) {
 		// reflect the change in jinngine geometry
 		ReadOnlyVector3 s = platform.getScale();
-		boxgeometry.setBoxSideLengths(Math.max(0.5,s.getX()),Math.max(0.5,s.getY()),Math.max(0.5,s.getZ()));
+//		boxgeometry.setBoxSideLengths(Math.max(0.5,s.getX()),Math.max(0.5,s.getY()),Math.max(0.5,s.getZ()));
 	}
 
 	@Override
@@ -182,7 +251,7 @@ public class BoxPlatform extends Node implements PhysicalActor, ConfigurableActo
 	@Override
 	public Body getBodyFromNode(Node node) {
 		if (node == platform)
-			return platformbox1body;
+			return platformconvexbody;
 		else
 			return null;
 	}
@@ -295,9 +364,9 @@ public class BoxPlatform extends Node implements PhysicalActor, ConfigurableActo
 				public void actionPerformed(final ActionEvent event) {
 					boolean state = ((UICheckBox)event.getSource()).isSelected();
 					//remove velocity from body
-					platformbox1body.setVelocity(0,0,0);
-					platformbox1body.setAngularVelocity(0, 0, 0);
-					game.getPhysics().fixBody(platformbox1body, state);
+					platformconvexbody.setVelocity(0,0,0);
+					platformconvexbody.setAngularVelocity(0, 0, 0);
+					game.getPhysics().fixBody(platformconvexbody, state);
 					isFixed = state;				
 					System.out.println("setting state " + state);
 				}

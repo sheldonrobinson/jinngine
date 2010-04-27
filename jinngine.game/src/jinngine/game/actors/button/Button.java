@@ -4,7 +4,6 @@ import com.ardor3d.bounding.BoundingBox;
 import com.ardor3d.extension.model.collada.jdom.ColladaImporter;
 import com.ardor3d.extension.model.collada.jdom.data.ColladaStorage;
 import com.ardor3d.image.Texture;
-import com.ardor3d.image.Image.Format;
 import com.ardor3d.math.ColorRGBA;
 import com.ardor3d.math.Vector2;
 import com.ardor3d.math.Vector3;

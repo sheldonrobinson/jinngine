@@ -1,7 +1,7 @@
 package jinngine.game.actors.button;
 
 import com.ardor3d.image.Texture;
-import com.ardor3d.image.Image.Format;
+import com.ardor3d.image.TextureStoreFormat;
 import com.ardor3d.math.Vector2;
 import com.ardor3d.renderer.state.TextureState;
 import com.ardor3d.renderer.state.RenderState.StateType;
@@ -35,11 +35,11 @@ public class PlacementButton extends Button {
 		// load textures
 		selectedtexture = TextureManager.load("selectedhand.tga",
 				Texture.MinificationFilter.Trilinear,
-				Format.Guess, true);
+				TextureStoreFormat.GuessNoCompressedFormat, true);
 
 		deselectedtexture = TextureManager.load("deselectedhand.tga",
 				Texture.MinificationFilter.Trilinear,
-				Format.Guess, true);
+				TextureStoreFormat.GuessNoCompressedFormat, true);
 		
 		// get the texture state on the button box
 		texturestate = (TextureState)buttonnode.getChild("mybuttonbox").getLocalRenderState(StateType.Texture);
