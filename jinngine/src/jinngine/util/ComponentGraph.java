@@ -146,5 +146,12 @@ public interface ComponentGraph<T,U,V> {
 	 * Pair<T> can then be used to obtain the edge type U using getEdge(Pair<T>)
 	 */
 	public Iterator<T> getConnectedNodes(T node);
+	
+	/**
+	 * Get all edges connected to the given node
+	 * @param node
+	 * @return An iterator over all edges connected to the given node
+	 */
+	public Iterator<U> getConnectedEdges(T node);
 
 }

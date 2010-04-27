@@ -444,4 +444,14 @@ public final class DefaultScene implements Scene {
 		
 	}
 
+	@Override
+	public double getTimestep() {
+		return this.timestep;
+	}
+
+	@Override
+	public Iterator<Constraint> getConstraints(Body body) {
+		return constraintGraph.getConnectedEdges(body);
+	}
+
 }

@@ -35,6 +35,7 @@ import jinngine.util.Pair;
 public final class SimplifiedContactConstraint implements ContactConstraint {	
 	private final Body b1, b2;                  //bodies in constraint
 	private final List<ContactGenerator> generators = new ArrayList<ContactGenerator>();
+	private final List<constraint>       ncpconstraints = new ArrayList<constraint>();
 	private final ContactConstraintCreator creator;
 	
 	/**
@@ -78,6 +79,9 @@ public final class SimplifiedContactConstraint implements ContactConstraint {
 	
 	@Override
 	public final void applyConstraints(ListIterator<constraint> constraintIterator, double dt) {
+		// clear list of ncp constraints
+		ncpconstraints.clear();
+		
 		//use ContactGenerators to create new contactpoints
 		for ( ContactGenerator cg: generators) {
 			//run contact generator
@@ -146,9 +150,11 @@ public final class SimplifiedContactConstraint implements ContactConstraint {
 
 				constraintIterator.add(linear1);
 				constraintIterator.add(linear2);
-
 				constraintIterator.add(angular1);
-
+				
+				ncpconstraints.add(linear1);
+				ncpconstraints.add(linear2);
+				ncpconstraints.add(angular1);
 			}
 			
 			
@@ -346,6 +352,13 @@ public final class SimplifiedContactConstraint implements ContactConstraint {
 	@Override
 	public Pair<Body> getBodies() {
 		return new Pair<Body>(b1,b2);
+	}
+
+	@Override
+	public void getNcpConstraints(ListIterator<constraint> constraints) {
+		for (constraint ci: ncpconstraints) {
+			constraints.add(ci);
+		}		
 	}
 
 

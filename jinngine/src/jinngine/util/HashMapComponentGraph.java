@@ -923,4 +923,26 @@ public class HashMapComponentGraph<T,U,V> implements ComponentGraph<T,U,V> {
 			}
 		};
 	}
+
+	@Override
+	public Iterator<U> getConnectedEdges(final T node) {		
+		// create a wrap iterator
+		return new Iterator<U>() {
+			Iterator<Node> i = edges.get(new Node(node)).iterator();
+			@Override
+			public boolean hasNext() {
+				return i.hasNext();
+			}
+			@Override
+			public U next() {
+				// create a edge pair from the node types, and return the edge data
+				return  edgeData.get(new Pair<T>(node,i.next().element));
+			}
+			@Override
+			public void remove() {
+				throw new UnsupportedOperationException();
+			}
+		};
+
+	}
 }

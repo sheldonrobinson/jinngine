@@ -9,6 +9,7 @@
 package jinngine.physics.constraint.joint;
 
 import java.util.*;
+
 import jinngine.physics.constraint.*;
 import jinngine.math.Matrix3;
 import jinngine.math.Vector3;
@@ -319,5 +320,15 @@ public final class HingeJoint implements Constraint {
 	@Override
 	public Pair<Body> getBodies() {
 		return new Pair<Body>(b1,b2);
+	}
+
+	@Override
+	public void getNcpConstraints(ListIterator<constraint> iterator) {
+		iterator.add(linear1);
+		iterator.add(linear2);
+		iterator.add(linear3);
+		iterator.add(angular1);
+		iterator.add(angular2);
+		iterator.add(angular3);
 	}
 }

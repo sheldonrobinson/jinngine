@@ -34,6 +34,7 @@ import jinngine.util.Pair;
 public final class FrictionalContactConstraint implements ContactConstraint {	
 	private final Body b1, b2;                  //bodies in constraint
 	private final List<ContactGenerator> generators = new ArrayList<ContactGenerator>();
+	private final List<constraint>       ncpconstraints = new ArrayList<constraint>();
 	private final ContactConstraintCreator creator;
 	private double frictionBoundMagnitude = Double.POSITIVE_INFINITY;
 	
@@ -95,6 +96,9 @@ public final class FrictionalContactConstraint implements ContactConstraint {
 	
 	@Override
 	public final void applyConstraints(ListIterator<constraint> constraintIterator, double dt) {
+		//clear list of ncp constraints
+		ncpconstraints.clear();
+		
 		//use ContactGenerators to create new contactpoints
 		for ( ContactGenerator cg: generators) {
 			//run contact generator
@@ -289,13 +293,18 @@ public final class FrictionalContactConstraint implements ContactConstraint {
 		outConstraints.add(c);
 		outConstraints.add(c2);
 		outConstraints.add(c3);
+		
+		// add to list
+		ncpconstraints.add(c);
+		ncpconstraints.add(c2);
+		ncpconstraints.add(c3);
+
 	}
 
 	@Override
 	public Pair<Body> getBodies() {
 		return new Pair<Body>(b1,b2);
 	}
-
 
 	/**
 	 * Specify whether a normal force magnitude coupling should be used on the friction force bounds.
@@ -313,6 +322,12 @@ public final class FrictionalContactConstraint implements ContactConstraint {
 	public final void setFixedFrictionBoundsMagnitude( double magnitude) {
 		this.frictionBoundMagnitude  = magnitude;
 	}
-	
+
+	@Override
+	public void getNcpConstraints(ListIterator<constraint> constraints) {
+		for (constraint ci: ncpconstraints) {
+			constraints.add(ci);			
+		}
+	}
 	
 }

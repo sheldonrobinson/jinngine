@@ -31,7 +31,14 @@ public interface Scene {
 	 * @return An iterator over constraints
 	 */ 
 	public Iterator<Constraint> getConstraints();
-
+	
+	/** 
+	 * Get all constraints acting upon to a specific body
+	 * @param A body
+	 * @return An iterator over constraints that act upon the given body
+	 */
+	public Iterator<Constraint> getConstraints(Body body);
+	
 	/**
 	 * Add a body to the scene
 	 * @param b
@@ -78,6 +85,11 @@ public interface Scene {
 	 * Set the time-step size for this scene
 	 */
 	public void setTimestep( double dt);
+	
+	/**
+	 * Get the time-step size
+	 */
+	public double getTimestep();
 	
 	/** 
 	 * Make a body become fixed, during animation

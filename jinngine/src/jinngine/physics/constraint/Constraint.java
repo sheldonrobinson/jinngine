@@ -22,6 +22,12 @@ public interface Constraint {
 	public void applyConstraints( ListIterator<constraint> iterator, double dt );
 
 	/**
+	 * Get the NCP constraints associated with this Constraint 
+	 * @param constraints
+	 */
+	public void getNcpConstraints( ListIterator<constraint> constraints ); 
+	
+	/**
 	 * Return the pair of bodies that this constraint is acting upon 
 	 */
 	public Pair<Body> getBodies();

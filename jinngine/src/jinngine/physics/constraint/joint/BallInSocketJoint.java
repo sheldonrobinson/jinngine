@@ -15,6 +15,7 @@ import jinngine.math.Vector3;
 import jinngine.physics.Body;
 import jinngine.physics.constraint.Constraint;
 import jinngine.physics.solver.*;
+import jinngine.physics.solver.Solver.constraint;
 import jinngine.util.Pair;
 
 /**
@@ -120,5 +121,12 @@ public class BallInSocketJoint implements Constraint {
 	@Override
 	public Pair<Body> getBodies() {
 		return new Pair<Body>(b1,b2);
+	}
+
+	@Override
+	public void getNcpConstraints(ListIterator<constraint> constraints) {
+		constraints.add(c1);
+		constraints.add(c2);
+		constraints.add(c3);
 	}
 }

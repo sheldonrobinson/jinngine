@@ -8,11 +8,6 @@
  */
 package jinngine.physics;
 
-public interface Trigger {
-	/**
-	 * Update this trigger
-	 * @param s
-	 */
-	public void update( Scene s);
-
+public interface TriggerCallback<T> {
+	public void callback(T trigger);
 }
