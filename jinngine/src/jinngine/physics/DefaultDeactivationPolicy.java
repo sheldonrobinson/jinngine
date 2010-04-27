@@ -20,7 +20,7 @@ public class DefaultDeactivationPolicy implements DeactivationPolicy {
 		double accel = b.deltavelocity.add(b.externaldeltavelocity).squaredNorm();
 		accel += b.deltaomega.add(b.externaldeltaomega).squaredNorm();		
 //		double accel = b.deltavelocity.dot(b.deltavelocity) + b.deltaomega.dot(b.deltaomega);
-		return b.totalKinetic() + accel < 1e-2;
+		return b.totalKinetic()/b.state.mass + accel < 1e-3;
 //		return false;
 	}
 	

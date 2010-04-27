@@ -43,8 +43,8 @@ import jinngine.physics.force.*;
 			//parameters
 			model.setTimestep(dt);
 
-			Body table = new Body("default", new Box(220,10,120));
-			table.setPosition( new Vector3(0,-18,0));
+			Body table = new Body("default", new Box(220,20,120));
+			table.setPosition( new Vector3(0,-18-5,0));
 			table.setFixed(true);
 			//table.advancePositions(1);
 			model.addBody(table);

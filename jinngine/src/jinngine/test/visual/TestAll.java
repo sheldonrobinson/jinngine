@@ -110,10 +110,10 @@ public class TestAll implements KeyListener {
 		tests.add(new ThinWall(6, 0.05));
 		tests.add(new ThinWall(8, 0.05));
 
-		tests.add(new ThinWall(2, 0.22));
-		tests.add(new ThinWall(3, 0.22));
-		tests.add(new ThinWall(6, 0.22));
-		tests.add(new ThinWall(8, 0.22));
+		tests.add(new ThinWall(2, 0.12));
+		tests.add(new ThinWall(3, 0.12));
+		tests.add(new ThinWall(6, 0.12));
+		tests.add(new ThinWall(8, 0.12));
 
 		//round wall 
 		tests.add(new RoundWall(1, 0.01));

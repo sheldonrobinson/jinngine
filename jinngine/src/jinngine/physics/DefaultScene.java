@@ -34,11 +34,7 @@ public final class DefaultScene implements Scene {
 	public final List<constraint> ncpconstraints = new ArrayList<constraint>();
 	private final List<Body> ncpbodies = new ArrayList<Body>();
 	private final List<Force> forces = new ArrayList<Force>(); 
-	public final List<Constraint> liveconstraints = new ArrayList<Constraint>();
-	
-	//test 
-	//List<Tuple<List<Body>,List<constraint>>> ncpconstraintlists = new ArrayList<Tuple<List<Body>,List<constraint>>>();
-
+	private final List<Constraint> liveconstraints = new ArrayList<Constraint>();
 	
 	// triggers
 	public final List<Trigger> triggers = new LinkedList<Trigger>();
@@ -92,11 +88,14 @@ public final class DefaultScene implements Scene {
 	private final ComponentGraph<Body,Constraint,ConstraintGroup> constraintGraph = 
 		new HashMapComponentGraph<Body,Constraint,ConstraintGroup>(classifier,componenthandler);
 
-	// use sweep and prune as broadphase collision detection
+	// broadphase collision detection
 	private final BroadphaseCollisionDetection broadphase;
 
-	// create a ncp solver
+	// ncp solver
 	private final Solver solver;
+	
+	// PGS iteration for live constraints
+	private final Solver pgs = new ProjectedGaussSeidel(1);
 	
 	// deactivation policy
 	private final DeactivationPolicy policy;
@@ -130,7 +129,7 @@ public final class DefaultScene implements Scene {
 		this.broadphase = new SweepAndPrune();
 //		this.solver = new ProjectedGaussSeidel(55);
 //		this.solver = new NonsmoothNonlinearConjugateGradient(55);
-		this.solver = new NonsmoothNonlinearConjugateGradient(55);
+		this.solver = new NonsmoothNonlinearConjugateGradient(35);
 		
 		// start the new contact constraint manager
 		new ContactConstraintManager( broadphase, constraintGraph);
@@ -140,10 +139,7 @@ public final class DefaultScene implements Scene {
 	@Override
 	public final void tick() {
 //		System.out.println("tick();");
-		
-		// test
-//		ncpconstraintlists.clear();
-		
+				
 		// since an awful lot of things are going on in this method, a summarising explanation will be
 		// given here. First, the broad phase collision detection is executed. Since the ContactConstraintManager
 		// has installed event handlers into the BPC, allot of things will happen during the call to broadphase.run(), 
@@ -180,7 +176,7 @@ public final class DefaultScene implements Scene {
 			ncpbodies.add(bodies.getFirst());
 			ncpbodies.add(bodies.getSecond());			
 			live.applyConstraints(ncpconstraints.listIterator(), timestep);
-			solver.solve(ncpconstraints, ncpbodies , 1e-7);
+			pgs.solve(ncpconstraints, ncpbodies , 1e-7);
 		} 
 
 		// create a special iterator to be used with constraints. Each constraint will
@@ -215,14 +211,6 @@ public final class DefaultScene implements Scene {
 					// mark the group as active in the component data
 					ConstraintGroup data = g;
 					data.deactivated = false;
-
-					// test
-//					List<constraint> newconstraintlist = new ArrayList<constraint>();
-//					List<Body> newbodylist = new ArrayList<Body>();
-//					ncpconstraintlists.add(new Tuple<List<Body>, List<constraint>>(newbodylist,newconstraintlist));
-//					constraintIterator = newconstraintlist.listIterator();			
-//					Iterator<Body> biter = constraintGraph.getNodesInComponent(g);
-//					while( biter.hasNext()) newbodylist.add(biter.next());
 					
 					// apply all constraints in interaction component
 					Iterator<Constraint> constraints = constraintGraph.getEdgesInComponent(g);
@@ -245,7 +233,7 @@ public final class DefaultScene implements Scene {
 			} // if component active
 			else {
 				// component is deactivated
-				// check if the whole component can be deactivated
+				// check if the whole component can be activated
 				Iterator<Body> bodyiter =constraintGraph.getNodesInComponent(g);
 				boolean activefound = false;
 				while (bodyiter.hasNext()) {
@@ -265,14 +253,6 @@ public final class DefaultScene implements Scene {
 					while (bodyiter.hasNext()) {
 						policy.activate(bodyiter.next());
 					}
-
-					// test
-//					List<constraint> newconstraintlist = new ArrayList<constraint>();
-//					List<Body> newbodylist = new ArrayList<Body>();
-//					ncpconstraintlists.add(new Tuple<List<Body>, List<constraint>>(newbodylist,newconstraintlist));
-//					constraintIterator = newconstraintlist.listIterator();			
-//					Iterator<Body> biter = constraintGraph.getNodesInComponent(g);
-//					while( biter.hasNext()) newbodylist.add(biter.next());
 
 					
 					// apply all constraints in interaction component
@@ -313,20 +293,11 @@ public final class DefaultScene implements Scene {
 			}
 		}
 
-//		if (ncpconstraints.size()<1)
-//			System.exit(0);
-
 		
 		// run the solver (compute delta velocities) for all 
 		// components in the constraint graph
 		solver.solve( ncpconstraints, bodies, 1e-7 );
-		
-		//test
-		// solve each component separated
-//		for (Tuple<List<Body>,List<constraint>> ncps : ncpconstraintlists) {
-//			solver.solve( ncps.second, ncps.first, 1e-9);
-//		}
-		
+
 		
 		// go thru bodies to advance velocities and positions
 		for (Body body: bodies) {
@@ -449,7 +420,18 @@ public final class DefaultScene implements Scene {
 		addBody(b);
 		
 	}
+	
+	@Override
+	public void addLiveConstraint( Constraint c) {
+		liveconstraints.add(c);
+	}
+	
+	@Override
+	public void removeLiveConstraint( Constraint c) {
+		liveconstraints.remove(c);
+	}
 
+	
 	@Override
 	public void addTrigger(Trigger t) {
 		// TODO Auto-generated method stub

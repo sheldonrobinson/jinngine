@@ -22,7 +22,7 @@ import jinngine.math.Transforms;
 import jinngine.math.Vector3;
 import jinngine.physics.Body;
 
-public class ConvexHull implements SupportMap3, Geometry {
+public class ConvexHull implements SupportMap3, Geometry, Material {
 
 	private final List<Vector3[]> faces = new ArrayList<Vector3[]>();
 	private final ArrayList<Vector3> vertices = new ArrayList<Vector3>();
@@ -121,8 +121,10 @@ public class ConvexHull implements SupportMap3, Geometry {
 			//convert to Vector3 array
 			Vector3[] f = new Vector3[faceIndices[i].length];
 			for (int j=0; j<faceIndices[i].length; j++) {
-				Point3d p = points[faceIndices[i][j]];
-				f[j] = new Vector3(p.x,p.y,p.z );
+				//Point3d p = points[faceIndices[i][j]];	
+				//f[j] = new Vector3(p.x,p.y,p.z );
+				// use the vectors in vertices insted of new vectors
+				f[j] = vertices.get(faceIndices[i][j]);
 			}
 
 			//append face to external representation
@@ -193,11 +195,19 @@ public class ConvexHull implements SupportMap3, Geometry {
 	}
 	
 	/**
-	 * Get the vertices of this convex hull
+	 * Get the vertices of this convex hull in object space
 	 * @return
 	 */
 	public final Iterator<Vector3> getVertices() {
 		return vertices.iterator();
+	}
+	
+	/**
+	 * Get the faces of the convex hull in object space
+	 * @return
+	 */
+	public final Iterator<Vector3[]> getFaces() {
+		return faces.iterator();
 	}
 
 	// Geometry
@@ -384,5 +394,27 @@ public class ConvexHull implements SupportMap3, Geometry {
 	
 	public Vector3 getCentreOfMass() {
 		return centreOfMass.copy();
+	}
+
+	@Override
+	public double getFrictionCoefficient() {
+		return 0.5;
+	}
+
+	@Override
+	public double getRestitution() {
+		return 0.7;
+	}
+
+	@Override
+	public void setFrictionCoefficient(double f) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void setRestitution(double e) {
+		// TODO Auto-generated method stub
+		
 	}
 }

@@ -85,6 +85,26 @@ public interface Scene {
 	public void fixBody( Body b, boolean fixed );
 	
 	/**
+	 * Add a live constraint. A live constraint is a {@link Constraint} that is controlled by the user
+	 * or some other control mechanism, partly or completely independent of the velocities and forces in the 
+	 * {@link Scene}. This could for instance be the {@link HingeJoint} where a {@link JointAxisController} 
+	 * instance is used by some automated or user controlled mechanism. This makes the constraint unpredictable
+	 * for the deactivation system, and once the two {@link Body} objects that the constraint is acting upon 
+	 * is deactivated, there is no way for the constraint to start working and reactivate the bodies. By adding 
+	 * the constraint to the live constraints list, the constraint will be monitored and reactivated appropriately. 
+	 * Remember to remove unused constraints with {@link removeLiveConstraint} so they do not unnecessarily take up resources.
+	 * @param c
+	 */
+	public void addLiveConstraint( Constraint c);
+	
+	/**
+	 * Remove a {@link Constraint} from the live constraints monitoring list. See {@link addLiveConstraint} for details on 
+	 * live constraints.
+	 * @param c {@link Constraint} to be removed
+	 */
+	public void removeLiveConstraint( Constraint c);
+	
+	/**
 	 * Add an event trigger to this scene
 	 */
 	public void addTrigger( Trigger t);
