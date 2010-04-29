@@ -26,7 +26,7 @@ public class ConjugateGradients implements Solver {
 	}
 
 	@Override
-	public double solve(List<constraint> constraints, List<Body> bodies, double epsilon) {
+	public double solve(List<NCPConstraint> constraints, List<Body> bodies, double epsilon) {
 		maxIterations = constraints.size();
 		//System.out.println("*) CG "+ n+"x" + n+" system");
 		
@@ -48,7 +48,7 @@ public class ConjugateGradients implements Solver {
 		//r  = b-Ax
 		//d  = M^(-1)r
 		//delta_new = rTr
-		for (constraint ci: constraints) {
+		for (NCPConstraint ci: constraints) {
 			ci.residual = 
 				-ci.b - ci.j1.dot(ci.body1.deltavelocity.add(ci.body1.externaldeltavelocity)) - ci.j2.dot(ci.body1.deltaomega.add(ci.body1.externaldeltaomega))
 						- ci.j3.dot(ci.body2.deltavelocity.add(ci.body2.externaldeltavelocity)) - ci.j4.dot(ci.body2.deltaomega.add(ci.body2.externaldeltaomega))
@@ -87,7 +87,7 @@ public class ConjugateGradients implements Solver {
 			//q = Ad
 			//alpha = delta_new/dTq
 			double dTq = 0;
-			for (constraint ci: constraints) {
+			for (NCPConstraint ci: constraints) {
 				ci.q = ci.j1.dot(ci.body1.auxDeltav) + ci.j2.dot(ci.body1.auxDeltaOmega)
 				+ ci.j3.dot(ci.body2.auxDeltav) + ci.j4.dot(ci.body2.auxDeltaOmega)
 				+ ci.d * ci.damper;
@@ -107,7 +107,7 @@ public class ConjugateGradients implements Solver {
 			delta_old = delta_new;
 			delta_new = 0;
 
-			for (constraint ci: constraints) {
+			for (NCPConstraint ci: constraints) {
 				//x = x + alpha d
 				ci.dlambda += alpha*ci.d;
 
@@ -150,7 +150,7 @@ public class ConjugateGradients implements Solver {
 				Vector3.multiply( b.auxDeltav,     beta);
 				Vector3.multiply( b.auxDeltaOmega, beta);				
 			}			
-			for (constraint ci: constraints) { 
+			for (NCPConstraint ci: constraints) { 
 				// d = d + r
 				//ci.d = ci.residual + beta* ci.d;
 				ci.d = ci.s + beta* ci.d;
@@ -178,7 +178,7 @@ public class ConjugateGradients implements Solver {
 		//if (delta_best < epsilon) {
 
 			//apply the lambda values to the final velocities
-			for (constraint ci: constraints) {
+			for (NCPConstraint ci: constraints) {
 				ci.lambda += ci.bestdlambda;
 
 				//reflect in delta velocities

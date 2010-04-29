@@ -15,7 +15,7 @@ import jinngine.physics.solver.*;
 
 public class QuadraticPrograming implements Solver {
 
-	private final List<constraint> normals = new ArrayList<constraint>();
+	private final List<NCPConstraint> normals = new ArrayList<NCPConstraint>();
 	private final Solver cg = new ConjugateGradients();
 	
 	@Override
@@ -25,9 +25,9 @@ public class QuadraticPrograming implements Solver {
 	}
 
 	@Override
-	public double solve(List<constraint> constraints, List<Body> bodies, double epsilon) {
+	public double solve(List<NCPConstraint> constraints, List<Body> bodies, double epsilon) {
 	   	normals.clear();
-    	for (constraint ci: constraints) 
+    	for (NCPConstraint ci: constraints) 
     		if (ci.coupling == null) {
     			normals.add(ci);
     			ci.b = ci.b;

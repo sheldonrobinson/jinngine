@@ -12,6 +12,7 @@ import java.util.Iterator;
 
 import jinngine.physics.Body;
 import jinngine.physics.constraint.Constraint;
+import jinngine.physics.constraint.contact.ContactConstraintManager;
 import jinngine.physics.force.Force;
 
 /**
@@ -125,6 +126,11 @@ public interface Scene {
 	 * Remove an event trigger from this scene
 	 */
 	public void removeTrigger( Trigger t);
+	
+	/**
+	 * Get the {@link ContactConstraintManager} that is governing contact constraints in this scene.
+	 */
+	public ContactConstraintManager getContactConstraintManager();
 	
 	
 }

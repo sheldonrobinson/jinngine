@@ -14,7 +14,7 @@ import jinngine.geometry.contact.*;
 import jinngine.math.Matrix3;
 import jinngine.math.Vector3;
 import jinngine.physics.Body;
-import jinngine.physics.solver.Solver.constraint;
+import jinngine.physics.solver.Solver.NCPConstraint;
 import jinngine.util.GramSchmidt;
 import jinngine.util.Pair;
 
@@ -34,7 +34,7 @@ import jinngine.util.Pair;
 public final class FrictionalContactConstraint implements ContactConstraint {	
 	private final Body b1, b2;                  //bodies in constraint
 	private final List<ContactGenerator> generators = new ArrayList<ContactGenerator>();
-	private final List<constraint>       ncpconstraints = new ArrayList<constraint>();
+	private final List<NCPConstraint>       ncpconstraints = new ArrayList<NCPConstraint>();
 	private final ContactConstraintCreator creator;
 	private double frictionBoundMagnitude = Double.POSITIVE_INFINITY;
 	
@@ -95,7 +95,7 @@ public final class FrictionalContactConstraint implements ContactConstraint {
 	}
 	
 	@Override
-	public final void applyConstraints(ListIterator<constraint> constraintIterator, double dt) {
+	public final void applyConstraints(ListIterator<NCPConstraint> constraintIterator, double dt) {
 		//clear list of ncp constraints
 		ncpconstraints.clear();
 		
@@ -168,7 +168,7 @@ public final class FrictionalContactConstraint implements ContactConstraint {
 	public final void createFrictionalContactConstraint( 
 			ContactGenerator.ContactPoint cp,
 			Body b1, Body b2, Vector3 p, Vector3 n, double depth, double dt,
-			ListIterator<constraint> outConstraints 
+			ListIterator<NCPConstraint> outConstraints 
 	) {
 
 		//Use a gram-schmidt process to create a orthonormal basis for the contact point ( normal and tangential directions)
@@ -236,7 +236,7 @@ public final class FrictionalContactConstraint implements ContactConstraint {
 		correction = correction * 0.9;
 
 		// the normal constraint
-		constraint c = new constraint();
+		NCPConstraint c = new NCPConstraint();
 		c.assign(b1,b2,
 				B1, B2, B3, B4,
 				J1, J2, J3, J4,
@@ -249,7 +249,7 @@ public final class FrictionalContactConstraint implements ContactConstraint {
 		
 		
 		//normal-friction coupling 
-		final constraint coupling = enableCoupling?c:null;
+		final NCPConstraint coupling = enableCoupling?c:null;
 		
 		//set the correct friction setting for this contact
 		c.mu = cp.friction;
@@ -266,7 +266,7 @@ public final class FrictionalContactConstraint implements ContactConstraint {
 		Vector3 t2B3 = b2.isFixed()? Vector3.zero: t2.multiply(-1/m2);				
 		Vector3 t2B4 = b2.isFixed()? Vector3.zero: I2.multiply(r2.cross(t2).multiply(-1));
 		//double t2Fext = t2B1.dot(b1.state.FCm) + t2B2.dot(b1.state.tauCm) + t2B3.dot(b2.state.FCm) + t2B4.dot(b2.state.tauCm);
-		constraint c2 = new constraint();
+		NCPConstraint c2 = new NCPConstraint();
 		c2.assign(b1,b2,
 				t2B1, t2B2,	t2B3, t2B4,				
 				t2, r1.cross(t2), t2.multiply(-1),	r2.cross(t2).multiply(-1),
@@ -281,7 +281,7 @@ public final class FrictionalContactConstraint implements ContactConstraint {
 		Vector3 t3B2 = b1.isFixed()? Vector3.zero: I1.multiply(r1.cross(t3));
 		Vector3 t3B3 = b2.isFixed()? Vector3.zero: t3.multiply(-1/m2);				
 		Vector3 t3B4 = b2.isFixed()? Vector3.zero: I2.multiply(r2.cross(t3).multiply(-1));
-		constraint c3 = new constraint();
+		NCPConstraint c3 = new NCPConstraint();
 		c3.assign(b1,b2,
 				t3B1, t3B2,	t3B3, t3B4,
 				t3, r1.cross(t3), t3.multiply(-1), r2.cross(t3).multiply(-1),
@@ -302,7 +302,7 @@ public final class FrictionalContactConstraint implements ContactConstraint {
 	}
 
 	@Override
-	public Pair<Body> getBodies() {
+	public final Pair<Body> getBodies() {
 		return new Pair<Body>(b1,b2);
 	}
 
@@ -324,10 +324,13 @@ public final class FrictionalContactConstraint implements ContactConstraint {
 	}
 
 	@Override
-	public void getNcpConstraints(ListIterator<constraint> constraints) {
-		for (constraint ci: ncpconstraints) {
-			constraints.add(ci);			
-		}
+	public final Iterator<NCPConstraint> getNcpConstraints() {
+		return ncpconstraints.iterator();
+	}
+
+	@Override
+	public final Iterator<ContactGenerator> getGenerators() {
+		return generators.iterator();
 	}
 	
 }

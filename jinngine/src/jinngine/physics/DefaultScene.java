@@ -11,8 +11,9 @@ import java.util.*;
 
 import jinngine.physics.constraint.*;
 import jinngine.physics.constraint.contact.ContactConstraintManager;
+import jinngine.physics.constraint.contact.DefaultContactConstraintManager;
 import jinngine.physics.solver.*;
-import jinngine.physics.solver.Solver.constraint;
+import jinngine.physics.solver.Solver.NCPConstraint;
 import jinngine.physics.solver.experimental.NonsmoothNonlinearConjugateGradientOld;
 import jinngine.collision.*;
 import jinngine.geometry.*;
@@ -31,7 +32,7 @@ public final class DefaultScene implements Scene {
 	public final List<Body> bodies = new ArrayList<Body>();
 	
 	// constraints, joints and forces
-	public final List<constraint> ncpconstraints = new ArrayList<constraint>();
+	public final List<NCPConstraint> ncpconstraints = new ArrayList<NCPConstraint>();
 	private final List<Body> ncpbodies = new ArrayList<Body>();
 	private final List<Force> forces = new ArrayList<Force>(); 
 	private final List<Constraint> liveconstraints = new ArrayList<Constraint>();
@@ -90,6 +91,9 @@ public final class DefaultScene implements Scene {
 
 	// broadphase collision detection
 	private final BroadphaseCollisionDetection broadphase;
+	
+	// contact constraints
+	private final ContactConstraintManager contactmanager;
 
 	// ncp solver
 	private final Solver solver;
@@ -116,7 +120,7 @@ public final class DefaultScene implements Scene {
 		this.policy = policy;
 		
 		// start the new contact constraint manager
-		new ContactConstraintManager( broadphase, constraintGraph);
+		this.contactmanager = new DefaultContactConstraintManager( broadphase, constraintGraph);
 	}
 	
 	/**
@@ -132,7 +136,7 @@ public final class DefaultScene implements Scene {
 		this.solver = new NonsmoothNonlinearConjugateGradient(35);
 		
 		// start the new contact constraint manager
-		new ContactConstraintManager( broadphase, constraintGraph);
+		this.contactmanager = new DefaultContactConstraintManager( broadphase, constraintGraph);
 	}
 
 
@@ -182,7 +186,7 @@ public final class DefaultScene implements Scene {
 		// create a special iterator to be used with constraints. Each constraint will
 		// insert its ncp-constraints into this list
 		ncpconstraints.clear();
-		ListIterator<constraint> constraintIterator = ncpconstraints.listIterator();
+		ListIterator<NCPConstraint> constraintIterator = ncpconstraints.listIterator();
 
 		
 		// iterate through groups/components in the constraint graph
@@ -297,7 +301,12 @@ public final class DefaultScene implements Scene {
 		// run the solver (compute delta velocities) for all 
 		// components in the constraint graph
 		solver.solve( ncpconstraints, bodies, 1e-7 );
-
+		
+		
+		// update triggers
+		for (Trigger trigger: triggers) {
+			trigger.update(this);
+		}
 		
 		// go thru bodies to advance velocities and positions
 		for (Body body: bodies) {
@@ -434,14 +443,14 @@ public final class DefaultScene implements Scene {
 	
 	@Override
 	public void addTrigger(Trigger t) {
-		// TODO Auto-generated method stub
-		
+		t.setup(this);
+		triggers.add(t);		
 	}
 
 	@Override
 	public void removeTrigger(Trigger t) {
-		// TODO Auto-generated method stub
-		
+		triggers.remove(t);
+		t.cleanup(this);
 	}
 
 	@Override
@@ -452,6 +461,11 @@ public final class DefaultScene implements Scene {
 	@Override
 	public Iterator<Constraint> getConstraints(Body body) {
 		return constraintGraph.getConnectedEdges(body);
+	}
+
+	@Override
+	public ContactConstraintManager getContactConstraintManager() {
+		return this.contactmanager;
 	}
 
 }

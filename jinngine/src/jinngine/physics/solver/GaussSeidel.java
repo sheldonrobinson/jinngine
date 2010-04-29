@@ -21,10 +21,10 @@ public class GaussSeidel implements Solver {
 
 	@Override
 	//solve linear system of equations 
-	public final double solve(List<constraint> constraints, List<Body> bodies, double epsilon) {
+	public final double solve(List<NCPConstraint> constraints, List<Body> bodies, double epsilon) {
 		//perform iterations
 		for (int m=0; m<maximumIterations; m++) {
-			for (constraint ci: constraints) {
+			for (NCPConstraint ci: constraints) {
 				//calculate (Ax+b)_i 
 				double w =  ci.j1.dot(ci.body1.deltavelocity.add(ci.body1.externaldeltavelocity)) 
 			   	+ ci.j2.dot(ci.body1.deltaomega.add(ci.body1.externaldeltaomega))

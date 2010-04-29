@@ -15,7 +15,7 @@ import jinngine.math.Vector3;
 import jinngine.physics.Body;
 import jinngine.physics.constraint.Constraint;
 import jinngine.physics.solver.*;
-import jinngine.physics.solver.Solver.constraint;
+import jinngine.physics.solver.Solver.NCPConstraint;
 import jinngine.util.Pair;
 
 /**
@@ -24,9 +24,9 @@ import jinngine.util.Pair;
 public class BallInSocketJoint implements Constraint {	
 	private final Body b1,b2;
 	private final Vector3 p1, p2;// n1, n2;
-	private final Solver.constraint c1 = new Solver.constraint();
-	private final Solver.constraint c2 = new Solver.constraint();
-	private final Solver.constraint c3 = new Solver.constraint();
+	private final Solver.NCPConstraint c1 = new Solver.NCPConstraint();
+	private final Solver.NCPConstraint c2 = new Solver.NCPConstraint();
+	private final Solver.NCPConstraint c3 = new Solver.NCPConstraint();
 	private double forcelimit = Double.POSITIVE_INFINITY;
 	
 	public BallInSocketJoint(Body b1, Body b2, Vector3 p, Vector3 n) {
@@ -45,7 +45,7 @@ public class BallInSocketJoint implements Constraint {
 		this.forcelimit = forcelimit;
 	}
 	
-	public void applyConstraints( ListIterator<Solver.constraint> iterator, double dt ) {
+	public void applyConstraints( ListIterator<Solver.NCPConstraint> iterator, double dt ) {
 		// Ball-In-Socket joint has a 3x12 jacobian matrix, since
 		// it has 3 DOFs, thus removing 3, inducing 3 new constraints
 		Vector3 ri = Matrix3.multiply(b1.state.rotation, p1, new Vector3());
@@ -124,9 +124,27 @@ public class BallInSocketJoint implements Constraint {
 	}
 
 	@Override
-	public void getNcpConstraints(ListIterator<constraint> constraints) {
-		constraints.add(c1);
-		constraints.add(c2);
-		constraints.add(c3);
+	public final Iterator<NCPConstraint> getNcpConstraints() {
+		// return iterator over the members c1, c2, and c3
+		return new  Iterator<NCPConstraint>() {
+			private int i = 0;
+			@Override
+			public final boolean hasNext() {
+				return i<3;
+			}
+			@Override
+			public final NCPConstraint next() {
+				switch (i) {
+				case 0: i=i+1; return c1; 
+				case 1: i=i+1; return c2; 
+				case 2: i=i+1; return c3; 
+				}				
+				return null;
+			}
+			@Override
+			public final void remove() {
+				throw new UnsupportedOperationException();
+			}
+		};
 	}
 }

@@ -33,7 +33,7 @@ public class NonsmoothNonlinearConjugateGradient implements Solver {
 	}
 
 	@Override
-	public double solve(List<constraint> constraints, List<Body> bodies,
+	public double solve(List<NCPConstraint> constraints, List<Body> bodies,
 			double epsilon) {
 		
 		double rnew = 0;
@@ -43,7 +43,7 @@ public class NonsmoothNonlinearConjugateGradient implements Solver {
 		
 		
 		// compute external force contribution, clear direction and residual
-		for (constraint ci: constraints) {
+		for (NCPConstraint ci: constraints) {
 			ci.Fext = ci.j1.dot(ci.body1.externaldeltavelocity)
 			+ ci.j2.dot(ci.body1.externaldeltaomega)
 			+ ci.j3.dot(ci.body2.externaldeltavelocity) 
@@ -73,7 +73,7 @@ public class NonsmoothNonlinearConjugateGradient implements Solver {
 			rold = rnew; rnew = 0;
 			
 			// use one PGS iteration to compute new residual 
-			for (constraint ci: constraints) {
+			for (NCPConstraint ci: constraints) {
 				// update lambda and d
 				final double alpha  = beta*ci.d;
 				ci.lambda += alpha;
@@ -166,7 +166,7 @@ public class NonsmoothNonlinearConjugateGradient implements Solver {
 	}
 	
 
-	public static final double merit(List<constraint> constraints, List<Body> bodies, boolean onlyfrictions) {
+	public static final double merit(List<NCPConstraint> constraints, List<Body> bodies, boolean onlyfrictions) {
 		double value = 0;
 		
 		//copy to auxiliary
@@ -175,12 +175,12 @@ public class NonsmoothNonlinearConjugateGradient implements Solver {
 			bi.auxDeltaOmega.assign(bi.deltaomega);
 		}
 		//copy lambda value
-		for (constraint ci: constraints) {
+		for (NCPConstraint ci: constraints) {
 			ci.s = ci.lambda;
 		}
 		
 		//use one PGS iteration to compute new residual 
-		for (constraint ci: constraints) {
+		for (NCPConstraint ci: constraints) {
 			//calculate (Ax+b)_i 
 			double w =  ci.j1.dot(ci.body1.auxDeltav) 
 			+ ci.j2.dot(ci.body1.auxDeltaOmega)

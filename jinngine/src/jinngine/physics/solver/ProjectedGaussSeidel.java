@@ -10,7 +10,7 @@ package jinngine.physics.solver;
 import java.util.*;
 import jinngine.math.Vector3;
 import jinngine.physics.Body;
-import jinngine.physics.solver.Solver.constraint;
+import jinngine.physics.solver.Solver.NCPConstraint;
 import jinngine.physics.solver.experimental.FischerNewton;
 
 /**
@@ -33,11 +33,11 @@ public class ProjectedGaussSeidel implements Solver {
 
 	@Override
 	//solve NCP problem
-	public final double solve(List<constraint> constraints, List<Body> bodies, double epsilon) {
+	public final double solve(List<NCPConstraint> constraints, List<Body> bodies, double epsilon) {
 		double iterations = 0;
 		
 		// compute external force contribution, clear direction and residual
-		for (constraint ci: constraints) {
+		for (NCPConstraint ci: constraints) {
 			ci.Fext = ci.j1.dot(ci.body1.externaldeltavelocity)
 			+ ci.j2.dot(ci.body1.externaldeltaomega)
 			+ ci.j3.dot(ci.body2.externaldeltavelocity) 
@@ -47,7 +47,7 @@ public class ProjectedGaussSeidel implements Solver {
 		//perform iterations
 		for (int m=0; m<maximumIterations; m++) {
 			deltaResidual = 0;
-			for (constraint ci: constraints) {				
+			for (NCPConstraint ci: constraints) {				
 				//calculate (Ax+b)_i 
 				final double w =  ci.j1.dot(ci.body1.deltavelocity) 
 			   	+ ci.j2.dot(ci.body1.deltaomega)

@@ -9,6 +9,8 @@
 package jinngine.physics.constraint.contact;
 
 
+import java.util.Iterator;
+
 import jinngine.physics.constraint.*;
 import jinngine.geometry.contact.*;
 
@@ -39,8 +41,12 @@ public interface ContactConstraint extends Constraint {
 	public void removeGenerator(ContactGenerator g);
 	
 	/**
+	 * Get all contact generators in this contact constraints
+	 */
+	public Iterator<ContactGenerator> getGenerators();
+	
+	/**
 	 * Return the number of contact point generators
-	 * @return
 	 */
 	public double getNumberOfGenerators();	
 		

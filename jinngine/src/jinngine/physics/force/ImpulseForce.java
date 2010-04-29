@@ -30,6 +30,14 @@ public final class ImpulseForce implements Force {
 		this.magnitude = magnitude;
 	}
 	
+	public final void setDirection( Vector3 direction ) {
+		this.direction.assign(direction);
+	}
+	
+	public final void setPoint( Vector3 point) {
+		this.point.assign(point);
+	}
+	
 	public final void setMagnitude(double magnitude) {
 		this.magnitude = magnitude;
 	}

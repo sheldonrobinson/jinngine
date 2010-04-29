@@ -14,7 +14,7 @@ import jinngine.physics.constraint.*;
 import jinngine.math.Matrix3;
 import jinngine.math.Vector3;
 import jinngine.physics.Body;
-import jinngine.physics.solver.Solver.constraint;
+import jinngine.physics.solver.Solver.NCPConstraint;
 import jinngine.util.Pair;
 
 /**
@@ -37,12 +37,12 @@ public final class HingeJoint implements Constraint {
 	private final double shell = 0.05;
 	
 	// constraint entries
-	private constraint linear1 = new constraint();
-	private constraint linear2 = new constraint();
-	private constraint linear3 = new constraint();
-	private constraint angular1 = new constraint();
-	private constraint angular2 = new constraint();
-	private constraint angular3 = new constraint();
+	private NCPConstraint linear1 = new NCPConstraint();
+	private NCPConstraint linear2 = new NCPConstraint();
+	private NCPConstraint linear3 = new NCPConstraint();
+	private NCPConstraint angular1 = new NCPConstraint();
+	private NCPConstraint angular2 = new NCPConstraint();
+	private NCPConstraint angular3 = new NCPConstraint();
 			
 	/**
 	 * Get the axis controller for the hinge joint. Use this controller to adjust joint limits, motor and friction
@@ -171,7 +171,7 @@ public final class HingeJoint implements Constraint {
 	}
 
 	
-	public final void applyConstraints(ListIterator<constraint> iterator, double dt) {
+	public final void applyConstraints(ListIterator<NCPConstraint> iterator, double dt) {
 		//transform points
 		Vector3 ri = Matrix3.multiply(b1.state.rotation, pi, new Vector3());
 		Vector3 rj = Matrix3.multiply(b2.state.rotation, pj, new Vector3());
@@ -323,12 +323,30 @@ public final class HingeJoint implements Constraint {
 	}
 
 	@Override
-	public void getNcpConstraints(ListIterator<constraint> iterator) {
-		iterator.add(linear1);
-		iterator.add(linear2);
-		iterator.add(linear3);
-		iterator.add(angular1);
-		iterator.add(angular2);
-		iterator.add(angular3);
+	public final Iterator<NCPConstraint> getNcpConstraints() {
+		// return iterator over the members linear1, linear2, linear3. angular1, angular2, angular3
+		return new  Iterator<NCPConstraint>() {
+			private int i = 0;
+			@Override
+			public final boolean hasNext() {
+				return i<6;
+			}
+			@Override
+			public final NCPConstraint next() {
+				switch (i) {
+				case 0: i=i+1; return linear1; 
+				case 1: i=i+1; return linear2; 
+				case 2: i=i+1; return linear3; 
+				case 3: i=i+1; return angular1; 
+				case 4: i=i+1; return angular2; 
+				case 5: i=i+1; return angular3; 
+				}				
+				return null;
+			}
+			@Override
+			public final void remove() {
+				throw new UnsupportedOperationException();
+			}
+		};
 	}
 }

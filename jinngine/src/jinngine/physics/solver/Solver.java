@@ -55,7 +55,7 @@ public interface Solver {
 	 * @param epsilon TODO
 	 * @return error
 	 */
-	public double solve(List<constraint> constraints, List<Body> bodies, double epsilon );
+	public double solve(List<NCPConstraint> constraints, List<Body> bodies, double epsilon );
 	
 	/**
 	 * Set an upper limit on the number of (usually outer) iterations, 
@@ -68,7 +68,7 @@ public interface Solver {
 	 * A constraint definition involving a pair of bodies. A list of Solver.constraint 
 	 * defines an NCP problem to be solved.
 	 */
-	public final class constraint  {
+	public final class NCPConstraint  {
 		/** Involved body pair */
 		public Body body1,body2; 
 		/** Jacobian, 1 by 12 matrix */
@@ -90,7 +90,7 @@ public interface Solver {
 		/** Friction coefficient mu. Only in effect if coupling is not null */
 		public double mu = 0;
 		/** Friction coupling */
-		public constraint coupling;
+		public NCPConstraint coupling;
 		/** Damping coefficient */
 		public double damper = 0;
 		/** External force impulse */
@@ -116,9 +116,9 @@ public interface Solver {
 		 * Assign operator for a constraint
 		 * @param c TODO
 		 */
-		public final constraint assign( Body body1, Body body2, Vector3 b1, Vector3 b2, Vector3 b3, Vector3 b4, 
+		public final NCPConstraint assign( Body body1, Body body2, Vector3 b1, Vector3 b2, Vector3 b3, Vector3 b4, 
 				Vector3 j1, Vector3 j2, Vector3 j3, Vector3 j4,
-				double lambdaMin, double lambdaMax, constraint coupledMax, double b, double c ) {
+				double lambdaMin, double lambdaMax, NCPConstraint coupledMax, double b, double c ) {
 			
 			this.body1 = body1;
 			this.body2 = body2;

@@ -12,7 +12,7 @@ import java.util.List;
 import jinngine.math.Vector3;
 import jinngine.physics.Body;
 import jinngine.physics.solver.Solver;
-import jinngine.physics.solver.Solver.constraint;
+import jinngine.physics.solver.Solver.NCPConstraint;
 
 /**
  * This is not a real solver, it can simply project the given constraints into their proper limits,
@@ -20,10 +20,10 @@ import jinngine.physics.solver.Solver.constraint;
  */
 public class Projection implements Solver {
 	@Override
-	public final double solve(List<constraint> constraints, List<Body> bodies, double epsilon) {
+	public final double solve(List<NCPConstraint> constraints, List<Body> bodies, double epsilon) {
 		boolean projected = false;
 		
-		for (constraint ci: constraints) {
+		for (NCPConstraint ci: constraints) {
 			double deltaLambda = 0;
 			double lambda0 = ci.lambda;
 

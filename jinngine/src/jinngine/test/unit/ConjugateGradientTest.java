@@ -17,7 +17,7 @@ import jinngine.physics.solver.ConjugateGradients;
 import jinngine.physics.solver.experimental.FischerNewton;
 import jinngine.physics.solver.ProjectedGaussSeidel;
 import jinngine.physics.solver.Solver;
-import jinngine.physics.solver.Solver.constraint;
+import jinngine.physics.solver.Solver.NCPConstraint;
 import junit.framework.TestCase;
 
 public class ConjugateGradientTest extends TestCase {
@@ -33,7 +33,7 @@ public class ConjugateGradientTest extends TestCase {
 		Body b1 = new Body("default");
 		Body b2 = new Body("default");
 		
-		Solver.constraint c1 = new constraint();
+		Solver.NCPConstraint c1 = new NCPConstraint();
 		Vector3 va =new Vector3(1,0,0);
 		Vector3 vb =new Vector3(-1,0,0);
 		Vector3 z = new Vector3(0,0,0);
@@ -51,7 +51,7 @@ public class ConjugateGradientTest extends TestCase {
 		
 		//list of bodies and constraints
 		List<Body> bodies = new ArrayList<Body>();
-		List<constraint> constraints = new ArrayList<constraint>();
+		List<NCPConstraint> constraints = new ArrayList<NCPConstraint>();
 		bodies.add(b1); bodies.add(b2); constraints.add(c1);
 
 		//run the solver
@@ -74,8 +74,8 @@ public class ConjugateGradientTest extends TestCase {
 		Body b1 = new Body("default");
 		Body b2 = new Body("default");
 		
-		Solver.constraint c1 = new constraint();
-		Solver.constraint c2 = new constraint();
+		Solver.NCPConstraint c1 = new NCPConstraint();
+		Solver.NCPConstraint c2 = new NCPConstraint();
 
 		Vector3 va =new Vector3(1,0,0);
 		Vector3 vb =new Vector3(-1,0,0);
@@ -102,7 +102,7 @@ public class ConjugateGradientTest extends TestCase {
 		
 		//list of bodies and constraints
 		List<Body> bodies = new ArrayList<Body>();
-		List<constraint> constraints = new ArrayList<constraint>();
+		List<NCPConstraint> constraints = new ArrayList<NCPConstraint>();
 		bodies.add(b1); bodies.add(b2); constraints.add(c1); constraints.add(c2);
 
 		//run the solver

@@ -17,7 +17,7 @@ import java.util.Random;
 import java.util.ListIterator;
 import jinngine.math.Vector3;
 import jinngine.physics.Body;
-import jinngine.physics.solver.Solver.constraint;
+import jinngine.physics.solver.Solver.NCPConstraint;
 import jinngine.physics.solver.*;
 import jinngine.physics.solver.experimental.*;
 
@@ -34,10 +34,10 @@ public class SubspaceMinimization implements Solver {
 	private final Solver projection = new Projection();
 	private final Solver gs = new GaussSeidel();
 	//private final Solver cg  = new FischerNewtonConjugateGradients();	
-	private final List<constraint> inactive = new ArrayList<constraint>();
-	private final List<constraint> active = new ArrayList<constraint>();
-	private final List<constraint> normals = new ArrayList<constraint>();
-	private final List<constraint> frictions = new ArrayList<constraint>();
+	private final List<NCPConstraint> inactive = new ArrayList<NCPConstraint>();
+	private final List<NCPConstraint> active = new ArrayList<NCPConstraint>();
+	private final List<NCPConstraint> normals = new ArrayList<NCPConstraint>();
+	private final List<NCPConstraint> frictions = new ArrayList<NCPConstraint>();
 	
 	private final double epsilon = 1e-6;
 	private  int pgsmin = 25;
@@ -59,7 +59,7 @@ public class SubspaceMinimization implements Solver {
 	}
 
 	@Override
-	public double solve(List<constraint> constraints, List<Body> bodies, double epsilon) {
+	public double solve(List<NCPConstraint> constraints, List<Body> bodies, double epsilon) {
 		//solvePlain(constraints,bodies);
 		//solveNormal(constraints,bodies);
 		//solveStaggered(constraints, bodies);
@@ -67,7 +67,7 @@ public class SubspaceMinimization implements Solver {
 		return 0;
 	}
 	
-	private void solvePlain(List<constraint> constraints, List<Body> bodies) {
+	private void solvePlain(List<NCPConstraint> constraints, List<Body> bodies) {
 //	   	normals.clear();
 //    	for (constraint ci: constraints) 
 //    		if (ci.coupling == null)
@@ -78,9 +78,9 @@ public class SubspaceMinimization implements Solver {
 		solveInternal(constraints, bodies,true);
 	}
 
-	private double solveMLCP(List<constraint> constraints, List<Body> bodies) {
+	private double solveMLCP(List<NCPConstraint> constraints, List<Body> bodies) {
 	   	normals.clear();
-    	for (constraint ci: constraints) 
+    	for (NCPConstraint ci: constraints) 
     		if (ci.coupling == null)
     			normals.add(ci);
     	
@@ -89,7 +89,7 @@ public class SubspaceMinimization implements Solver {
  	//pgs.solve( normals, bodies );
 		
 //		//compute bounds
-		for (constraint ci: constraints) {
+		for (NCPConstraint ci: constraints) {
 			if (ci.coupling != null) {
 				//if the constraint is coupled, allow only lambda <= coupled lambda
 				ci.lower = -Math.abs(ci.coupling.lambda)*ci.coupling.mu;
@@ -102,10 +102,10 @@ public class SubspaceMinimization implements Solver {
 		return 0;
 	}
 	
-	private double solveStaggered(List<constraint> constraints, List<Body> bodies) {
+	private double solveStaggered(List<NCPConstraint> constraints, List<Body> bodies) {
 	   	normals.clear();
 	   	frictions.clear();
-    	for (constraint ci: constraints) 
+    	for (NCPConstraint ci: constraints) 
     		if (rand.nextBoolean())
     			normals.add(ci);
     		else
@@ -127,7 +127,7 @@ public class SubspaceMinimization implements Solver {
 		
 	   	normals.clear();
 	   	frictions.clear();
-    	for (constraint ci: constraints) 
+    	for (NCPConstraint ci: constraints) 
     		if (rand.nextBoolean())
     			normals.add(ci);
     		else
@@ -161,10 +161,10 @@ public class SubspaceMinimization implements Solver {
 	}
 	
 	
-	public double solveInternal(List<constraint> constraints, List<Body> bodies, boolean bounds) {
+	public double solveInternal(List<NCPConstraint> constraints, List<Body> bodies, boolean bounds) {
 		int productcount =0;
 		//set damping
-		for (constraint ci: constraints) {
+		for (NCPConstraint ci: constraints) {
 			//System.out.println(ci.lower+"-"+ci.upper);
 
 			if (ci.coupling != null) 
@@ -190,7 +190,7 @@ public class SubspaceMinimization implements Solver {
 		//System.out.println(""+phi);
 
 		//set damping
-		for (constraint ci: constraints) {
+		for (NCPConstraint ci: constraints) {
 			//System.out.println(ci.lower+"-"+ci.upper);
 
 			if (ci.coupling != null) 
@@ -212,7 +212,7 @@ public class SubspaceMinimization implements Solver {
 			
 			//find inactive set
 			inactive.clear();
-			for (constraint ci: constraints) {
+			for (NCPConstraint ci: constraints) {
 				
 				if ((ci.lower < ci.lambda && ci.lambda < ci.upper) ) { 
 					inactive.add(ci);
@@ -345,7 +345,7 @@ public class SubspaceMinimization implements Solver {
 //					System.out.println(""+ci.lambda);
 				
 				if (bounds)
-					for (constraint ci: inactive) {
+					for (NCPConstraint ci: inactive) {
 						if (ci.coupling != null) {
 							//if the constraint is coupled, allow only lambda <= coupled lambda
 //							ci.lower = -Math.abs(ci.coupling.lambda)*ci.coupling.mu;
@@ -374,9 +374,9 @@ public class SubspaceMinimization implements Solver {
 				}
 				
 				//remove active constraints
-				ListIterator<constraint> j = inactive.listIterator();
+				ListIterator<NCPConstraint> j = inactive.listIterator();
 				while(j.hasNext()) {
-					constraint ci = j.next();			
+					NCPConstraint ci = j.next();			
 					if (ci.lower < ci.lambda && ci.lambda < ci.upper) { 
 						//do nothing
 					} else {
@@ -407,7 +407,7 @@ public class SubspaceMinimization implements Solver {
 			
 			//if here damp the frictions
 			//set damping
-			for (constraint ci: constraints) {
+			for (NCPConstraint ci: constraints) {
 				//System.out.println(ci.lower+"-"+ci.upper);
 
 				if (ci.coupling != null) 
@@ -427,7 +427,7 @@ public class SubspaceMinimization implements Solver {
     
     
     if (phi>0.1 && false) {
-    	for (constraint ci: constraints) {
+    	for (NCPConstraint ci: constraints) {
     		if (ci.coupling != null)
     			System.out.print("F:");
 

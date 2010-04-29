@@ -15,7 +15,7 @@ import jinngine.math.Matrix3;
 import jinngine.math.Vector3;
 import jinngine.physics.Body;
 import jinngine.physics.solver.*;
-import jinngine.physics.solver.Solver.constraint;
+import jinngine.physics.solver.Solver.NCPConstraint;
 import jinngine.util.GramSchmidt;
 import jinngine.util.Pair;
 
@@ -35,7 +35,7 @@ import jinngine.util.Pair;
 public final class SimplifiedContactConstraint implements ContactConstraint {	
 	private final Body b1, b2;                  //bodies in constraint
 	private final List<ContactGenerator> generators = new ArrayList<ContactGenerator>();
-	private final List<constraint>       ncpconstraints = new ArrayList<constraint>();
+	private final List<NCPConstraint>       ncpconstraints = new ArrayList<NCPConstraint>();
 	private final ContactConstraintCreator creator;
 	
 	/**
@@ -78,7 +78,7 @@ public final class SimplifiedContactConstraint implements ContactConstraint {
 	}
 	
 	@Override
-	public final void applyConstraints(ListIterator<constraint> constraintIterator, double dt) {
+	public final void applyConstraints(ListIterator<NCPConstraint> constraintIterator, double dt) {
 		// clear list of ncp constraints
 		ncpconstraints.clear();
 		
@@ -106,7 +106,7 @@ public final class SimplifiedContactConstraint implements ContactConstraint {
 				
 				Vector3 u = b1.state.velocity.minus(b2.state.velocity);
 				
-				constraint linear1 = new constraint();
+				NCPConstraint linear1 = new NCPConstraint();
 				linear1.assign( 
 						b1,	b2, 
 						basis.column(1).multiply(1/b1.state.mass), Vector3.zero, basis.column(1).multiply(-1/b2.state.mass), Vector3.zero, 
@@ -117,7 +117,7 @@ public final class SimplifiedContactConstraint implements ContactConstraint {
 						basis.column(1).dot(u), 0 );
 
 				
-				constraint linear2 = new constraint();
+				NCPConstraint linear2 = new NCPConstraint();
 				linear2.assign( 
 						b1,	b2, 
 						basis.column(2).multiply(1/b1.state.mass), Vector3.zero, basis.column(2).multiply(-1/b2.state.mass), Vector3.zero, 
@@ -138,7 +138,7 @@ public final class SimplifiedContactConstraint implements ContactConstraint {
 //						u.y );
 				
 				//create experimental friction constraint
-				constraint angular1 = new constraint();
+				NCPConstraint angular1 = new NCPConstraint();
 				angular1.assign( 
 						b1,	b2, 
 						new Vector3(), b1.state.inverseinertia.multiply(axis), new Vector3(), b2.state.inverseinertia.multiply(axis.multiply(-1)), 
@@ -214,7 +214,7 @@ public final class SimplifiedContactConstraint implements ContactConstraint {
 	public final void createFrictionalContactConstraint( 
 			ContactGenerator.ContactPoint cp,
 			Body b1, Body b2, Vector3 p, Vector3 n, double depth, double dt,
-			ListIterator<constraint> outConstraints 
+			ListIterator<NCPConstraint> outConstraints 
 	) {
 
 		//Use a gram-schmidt process to create a orthonormal basis for the contact point ( normal and tangential directions)
@@ -286,7 +286,7 @@ public final class SimplifiedContactConstraint implements ContactConstraint {
 		//un-comment to disable correction
 		//correction = 0;
 		
-		constraint c = new constraint();
+		NCPConstraint c = new NCPConstraint();
 		c.assign(b1,b2,
 				B1, B2, B3, B4,
 				J1, J2, J3, J4,
@@ -312,7 +312,7 @@ public final class SimplifiedContactConstraint implements ContactConstraint {
 		Vector3 t2B3 = t2.multiply(-1/m2);				
 		Vector3 t2B4 = I2.multiply(r2.cross(t2).multiply(-1));
 		//double t2Fext = t2B1.dot(b1.state.FCm) + t2B2.dot(b1.state.tauCm) + t2B3.dot(b2.state.FCm) + t2B4.dot(b2.state.tauCm);
-		constraint c2 = new constraint();
+		NCPConstraint c2 = new NCPConstraint();
 		c2.assign(b1,b2,
 				t2B1, t2B2,	t2B3, t2B4,				
 				t2, r1.cross(t2), t2.multiply(-1),	r2.cross(t2).multiply(-1),
@@ -332,7 +332,7 @@ public final class SimplifiedContactConstraint implements ContactConstraint {
 		Vector3 t3B2 = I1.multiply(r1.cross(t3));
 		Vector3 t3B3 = t3.multiply(-1/m2);				
 		Vector3 t3B4 = I2.multiply(r2.cross(t3).multiply(-1));
-		constraint c3 = new constraint();
+		NCPConstraint c3 = new NCPConstraint();
 		c3.assign(b1,b2,
 				t3B1, t3B2,	t3B3, t3B4,
 				t3, r1.cross(t3), t3.multiply(-1), r2.cross(t3).multiply(-1),
@@ -355,10 +355,13 @@ public final class SimplifiedContactConstraint implements ContactConstraint {
 	}
 
 	@Override
-	public void getNcpConstraints(ListIterator<constraint> constraints) {
-		for (constraint ci: ncpconstraints) {
-			constraints.add(ci);
-		}		
+	public Iterator<NCPConstraint> getNcpConstraints() {
+		return ncpconstraints.iterator();
+	}
+
+	@Override
+	public Iterator<ContactGenerator> getGenerators() {
+		return generators.iterator();
 	}
 
 

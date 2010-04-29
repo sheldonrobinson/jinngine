@@ -435,5 +435,10 @@ public final class Body {
 	public final Vector3 translate( final Vector3 v) {
 		return v.add(state.position);
 	}
+	
+	@Override
+	public String toString() {
+		return identifier+":"+super.toString();
+	}
 }  
 

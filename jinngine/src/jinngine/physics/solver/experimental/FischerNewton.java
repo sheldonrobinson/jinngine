@@ -13,7 +13,7 @@ import java.util.List;
 
 import jinngine.math.Vector3;
 import jinngine.physics.Body;
-import jinngine.physics.solver.Solver.constraint;
+import jinngine.physics.solver.Solver.NCPConstraint;
 import jinngine.physics.solver.Solver;
 
 /**
@@ -67,12 +67,12 @@ public class FischerNewton implements Solver {
 	private double epsilon = 1e-29;
 	 double damper =0.000000;
 	
-	List<constraint> normals = new ArrayList<constraint>();
+	List<NCPConstraint> normals = new ArrayList<NCPConstraint>();
 	
     @Override
-	public double solve(List<constraint> constraints, List<Body> bodies, double epsilon) {
+	public double solve(List<NCPConstraint> constraints, List<Body> bodies, double epsilon) {
     	normals.clear();
-    	for (constraint ci: constraints) 
+    	for (NCPConstraint ci: constraints) 
     		if (ci.coupling == null)
     			normals.add(ci);
     	
@@ -88,7 +88,7 @@ public class FischerNewton implements Solver {
 		return 0;
 	}
 	
-	public double solveInternal(List<constraint> constraints, List<Body> bodies) {
+	public double solveInternal(List<NCPConstraint> constraints, List<Body> bodies) {
 		int n = constraints.size();
 		double error = 0;
 		double besterror = Double.POSITIVE_INFINITY;
@@ -103,7 +103,7 @@ public class FischerNewton implements Solver {
 		
 		
 		//compute fisher
-		for (constraint ci: constraints) {
+		for (NCPConstraint ci: constraints) {
 			//velocity
 			double w = ci.j1.dot(ci.body1.deltavelocity) + ci.j2.dot(ci.body1.deltaomega)
 			+ ci.j3.dot(ci.body2.deltavelocity) + ci.j4.dot(ci.body2.deltaomega) + (ci.b) + damper*ci.lambda;
@@ -164,7 +164,7 @@ public class FischerNewton implements Solver {
 			int k = 0;
 			
 			//r= Phi(xk), d = r
-			int j = 0; for (constraint ci: constraints) {
+			int j = 0; for (NCPConstraint ci: constraints) {
 				r[j] = ci.fischer;
 				d[j] = r[j];
 				j++;
@@ -193,7 +193,7 @@ public class FischerNewton implements Solver {
 				}
 				
 				// compute change in velocity
-				j=0; for (constraint ci: constraints) {
+				j=0; for (NCPConstraint ci: constraints) {
 					double delta = d[j]*h;
 					Vector3.add( ci.body1.auxDeltav,     ci.b1.multiply(delta));
 					Vector3.add( ci.body1.auxDeltaOmega, ci.b2.multiply(delta));
@@ -203,7 +203,7 @@ public class FischerNewton implements Solver {
 				}
 
 				//compute q = (Phi(xk+ d*h)-Phi(xk))/h
-				j=0; for (constraint ci: constraints) {
+				j=0; for (NCPConstraint ci: constraints) {
 					double lambda = ci.lambda + d[j]*h;
 
 					//velocity
@@ -276,7 +276,7 @@ public class FischerNewton implements Solver {
 			}
 
 			//compute velocity vector for step length 1, move velocity forward
-			j=0; for (constraint ci: constraints) {
+			j=0; for (NCPConstraint ci: constraints) {
 				double delta = dk[j];
 				ci.lambda += dk[j];
 				//System.out.println(""+ dk[j]);
@@ -300,7 +300,7 @@ public class FischerNewton implements Solver {
 			while(true) {
 				//compute fisher
 				squarederror = 0;
-				j=0; for (constraint ci: constraints) {				
+				j=0; for (NCPConstraint ci: constraints) {				
 					//velocity
 					double w = ci.j1.dot(ci.body1.deltavelocity) + ci.j2.dot(ci.body1.deltaomega)
 					+ ci.j3.dot(ci.body2.deltavelocity) + ci.j4.dot(ci.body2.deltaomega) + (ci.b)
@@ -413,9 +413,9 @@ public class FischerNewton implements Solver {
 	 * Evaluate the fischer funciton merit, based on a MLCP formulation having lower 
 	 * and upper limit vectors. This funciton handles limits at infinty.
 	 */
-	public static double fischerMerit( List<constraint> constraints, List<Body> bodies) {
+	public static double fischerMerit( List<NCPConstraint> constraints, List<Body> bodies) {
 		double phi = 0;
-		for (constraint ci: constraints) {
+		for (NCPConstraint ci: constraints) {
 //			if (ci.coupling==null) //only friction
 //				continue;
 			//calculate (Ax+b)_i 
@@ -456,7 +456,7 @@ public class FischerNewton implements Solver {
 		return phi*0.5;
 	}
 
-	public static double fischer( constraint ci ) {
+	public static double fischer( NCPConstraint ci ) {
 		double phi = 0;
 			//calculate (Ax+b)_i 
 			double w =  ci.j1.dot(ci.body1.deltavelocity) 
@@ -487,12 +487,12 @@ public class FischerNewton implements Solver {
 
 	
 	@SuppressWarnings("unused")
-	public static void printA(List<constraint> constraints) {
+	public static void printA(List<NCPConstraint> constraints) {
 		System.out.println("A = [ ");
 
 		//int i = 0; 
 		int k =0;
-		for (constraint ci: constraints) {
+		for (NCPConstraint ci: constraints) {
 			System.out.println("");
 
 			//v[i] = -ci.b;
@@ -500,7 +500,7 @@ public class FischerNewton implements Solver {
 
 			//velocity pass
 			int j=0;
-			for (constraint cj: constraints) {
+			for (NCPConstraint cj: constraints) {
 				k++;
 				//for each interacting constraint
 				ai[j] = 0;
@@ -538,19 +538,19 @@ public class FischerNewton implements Solver {
 		
 
 		System.out.println("]\n b = [ ");
-		for (constraint ci: constraints) {
+		for (NCPConstraint ci: constraints) {
 			System.out.print( (-ci.b) + " ");
 		}		
 		System.out.println("]");
 			
 	}
 	
-	public static void fillInA(List<constraint> constraints, double[][] A) {
+	public static void fillInA(List<NCPConstraint> constraints, double[][] A) {
 		//int i = 0; 
 		int k =0;
-		for (constraint ci: constraints) {
+		for (NCPConstraint ci: constraints) {
 			int j=0;
-			for (constraint cj: constraints) {
+			for (NCPConstraint cj: constraints) {
 				//for each interacting constraint
 				A[k][j] = 0;
 				if( ci.body1 == cj.body1) {
@@ -574,12 +574,12 @@ public class FischerNewton implements Solver {
 		} //for ci
 	}
 	
-	public static void fillInA(List<constraint> constraint1, List<constraint> constraint2, double[][] A) {
+	public static void fillInA(List<NCPConstraint> constraint1, List<NCPConstraint> constraint2, double[][] A) {
 		//int i = 0; 
 		int k =0;
-		for (constraint ci: constraint1) {
+		for (NCPConstraint ci: constraint1) {
 			int j=0;
-			for (constraint cj: constraint2) {
+			for (NCPConstraint cj: constraint2) {
 				//for each interacting constraint
 				A[k][j] = 0;
 				if( ci.body1 == cj.body1) {
@@ -604,18 +604,18 @@ public class FischerNewton implements Solver {
 	}
 
 	
-	public static void fillInb(List<constraint> constraints, double[] b) {
+	public static void fillInb(List<NCPConstraint> constraints, double[] b) {
 		int i=0;
-		for (constraint ci: constraints) {
+		for (NCPConstraint ci: constraints) {
 			b[i] = ci.b;
 			i++;
 		}		
 		
 	}
 
-	public static void fillInLambda(List<constraint> constraints, double[] lambda) {
+	public static void fillInLambda(List<NCPConstraint> constraints, double[] lambda) {
 		int i=0;
-		for (constraint ci: constraints) {
+		for (NCPConstraint ci: constraints) {
 			lambda[i] = ci.lambda;
 			i++;
 		}		
