@@ -13,8 +13,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
 
-import sun.security.action.GetBooleanAction;
-
 import jinngine.physics.constraint.Constraint;
 import jinngine.physics.constraint.contact.ContactConstraint;
 import jinngine.physics.constraint.contact.ContactConstraintManager;
@@ -47,7 +45,7 @@ public class ContactTrigger implements Trigger {
 	// constraints that have triggered an event
 	private final List<ContactConstraint> triggeredconstraints = new ArrayList<ContactConstraint>();
 	
-	// interface for callbacks from this trigger type
+	// interface for callback from this trigger type
 	public interface Callback {
 		public void contactAboveThreshold( Body interactingBody );
 		public void contactBelowThreshold( Body interactingBody );		
@@ -56,7 +54,7 @@ public class ContactTrigger implements Trigger {
 	/**
 	 * Create new contact trigger
 	 * @param body Body to monitor
-	 * @param forcethreshold the total normal force excerted by the contact in last time-step
+	 * @param forcethreshold the total normal force exerted by the contact in last time-step
 	 */
 	public ContactTrigger( Body body, double forcethreshold, ContactTrigger.Callback callback ) {
 		this.body = body;
@@ -98,7 +96,7 @@ public class ContactTrigger implements Trigger {
 			} // if force > forcethreshold
 		} // for monitored constraints	
 		
-		// see if triggered constraints should be moved back 
+		// see if triggered constraints should be moved back to monitored
 		ListIterator<ContactConstraint> triggered = triggeredconstraints.listIterator();
 		while ( triggered.hasNext()) {
 
@@ -117,7 +115,7 @@ public class ContactTrigger implements Trigger {
 			// check condition
 			if (totalforce < forcethreshold) {	
 				
-				// move constraint to triggered list
+				// move constraint to monitored list
 				triggered.remove();
 				monitoredconstraints.add(constraint);
 				
@@ -153,6 +151,7 @@ public class ContactTrigger implements Trigger {
 		contactConstraintHandler = new ContactConstraintManager.Handler() {
 			@Override
 			public void contactConstraintCreated(Pair<Body> bodies, ContactConstraint contact) {
+				System.out.println("created");
 				// if the constraint involves the body that we are monitoring, add it to our
 				// internal list of contact constraints
 				if (bodies.contains(body)) {
@@ -161,6 +160,8 @@ public class ContactTrigger implements Trigger {
 			}
 			@Override
 			public void contactConstraintRemoved(Pair<Body> bodies, ContactConstraint contact ) {
+				System.out.println("deleted");
+
 				if (bodies.contains(body)) {
 					// if we had this constraint on our list of triggerd constraints, signal an event
 					if (triggeredconstraints.contains(contact)) {

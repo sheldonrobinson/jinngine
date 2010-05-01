@@ -85,7 +85,7 @@ public class HashMapComponentGraph<T,U,V> implements ComponentGraph<T,U,V> {
 	
 	
 	// default component creator
-	private final ComponentHandler<V> componentcreator;
+	private final ComponentHandler<T,V> componenthandler;
 //	= new ComponentHandler<V>() {
 //		public V newComponent() {
 //			return null;
@@ -105,8 +105,8 @@ public class HashMapComponentGraph<T,U,V> implements ComponentGraph<T,U,V> {
 	 * @param nodeClassifier a classifier for the type T, used for the connected components analysis
 	 * @param componetcreator a creator for new components that arrise inside the component graph
 	 */
-	public HashMapComponentGraph( NodeClassifier<T> nodeClassifier, ComponentHandler<V> componentcreator ) {
-		this.componentcreator = componentcreator;
+	public HashMapComponentGraph( NodeClassifier<T> nodeClassifier, ComponentHandler<T,V> componentcreator ) {
+		this.componenthandler = componentcreator;
 		this.nodeClassifier = nodeClassifier;
 	}
 	
@@ -189,12 +189,15 @@ public class HashMapComponentGraph<T,U,V> implements ComponentGraph<T,U,V> {
 			//if b is not in a group, create a new one for b
 			if (!component.containsKey(b)) {
 				// case ii b)
-				Component g = new Component(componentcreator.newComponent());
+				Component g = new Component(componenthandler.newComponent());
 				
 				// add b to the new group
 				component.put(b, g);
 				componentNodes.put(g, new HashSet<Node>());
 				componentNodes.get(g).add(b);
+				
+				// notify handler
+				componenthandler.nodeAddedToComponent(g.element, b.element);
 
 				// b is not a free node anymore
 				freenodes.remove(b);
@@ -237,7 +240,7 @@ public class HashMapComponentGraph<T,U,V> implements ComponentGraph<T,U,V> {
 					Component gb = component.get(b);
 					
 					// call the user handler to say we are merging gb into ga
-					componentcreator.mergeComponent(ga.element, gb.element);
+					componenthandler.mergeComponent(ga.element, gb.element);
 					
 					//update the component table, i.e. update bodies that was tied to component gb, to ga
 					Iterator<Node> i = componentNodes.get(gb).iterator();
@@ -273,16 +276,23 @@ public class HashMapComponentGraph<T,U,V> implements ComponentGraph<T,U,V> {
 				// b is not a free node anymore
 				freenodes.remove(b);
 				
+				// notify handler that b is added to the group of a
+				componenthandler.nodeAddedToComponent(g.element, b.element);
+				
 				//return;
 			//no groups
 			} else {
 				//create a new component for both bodies
-				Component newGroup = new Component(componentcreator.newComponent());
+				Component newGroup = new Component(componenthandler.newComponent());
 				component.put(a, newGroup); 
 				component.put(b, newGroup);
 				componentNodes.put(newGroup, new HashSet<Node>());
 				componentNodes.get(newGroup).add(a);
 				componentNodes.get(newGroup).add(b);
+				
+				// notify handler that a and b is added to the new component 
+				componenthandler.nodeAddedToComponent(newGroup.element, a.element);
+				componenthandler.nodeAddedToComponent(newGroup.element, b.element);
 				
 				componentEdges.put(newGroup, new HashSet<Pair<T>>());
 				componentEdges.get(newGroup).add(pair);
@@ -418,6 +428,9 @@ public class HashMapComponentGraph<T,U,V> implements ComponentGraph<T,U,V> {
 					//remove the node from component
 					component.remove(b);
 					
+					//notify handler
+					componenthandler.nodeRemovedFromComponent(g.element, b.element);
+					
 					// b is now free
 					freenodes.add(b);
 					
@@ -430,6 +443,7 @@ public class HashMapComponentGraph<T,U,V> implements ComponentGraph<T,U,V> {
 					if (s.isEmpty()) {
 						//System.out.println("groups entry removed");
 						componentNodes.remove(g);
+						//TODO notify handler
 					} else {
 						System.out.println("Group isn't empty, why??");
 						//System.exit(0);
@@ -531,7 +545,7 @@ public class HashMapComponentGraph<T,U,V> implements ComponentGraph<T,U,V> {
 					//System.out.println("Splitting group");
 
 					//new group
-					Component newgroup = new Component(componentcreator.newComponent());
+					Component newgroup = new Component(componenthandler.newComponent());
 
 					Set<Node> blues = new HashSet<Node>();
 
@@ -551,7 +565,7 @@ public class HashMapComponentGraph<T,U,V> implements ComponentGraph<T,U,V> {
 						System.exit(0);
 					}
 
-					//remove bodies from old components and add the new component
+					// remove bodies from old components and add the new component
 					componentNodes.get(oldgroup).removeAll(blues);
 					componentNodes.put(newgroup, blues);
 
@@ -586,6 +600,9 @@ public class HashMapComponentGraph<T,U,V> implements ComponentGraph<T,U,V> {
 				// b is now a free node
 				freenodes.add(b);
 				
+				// notify handler that b is removed from oldgroup
+				componenthandler.nodeRemovedFromComponent(oldgroup.element, b.element);
+				
 				if (componentNodes.get(oldgroup).isEmpty()) { // never happens
 					System.out.println("How can group be empty?");
 					componentNodes.remove(oldgroup);
@@ -611,6 +628,10 @@ public class HashMapComponentGraph<T,U,V> implements ComponentGraph<T,U,V> {
 				// both a and b are free nodes now
 				freenodes.add(a);
 				freenodes.add(b);
+				
+				//notify handler that a and b is removed
+				componenthandler.nodeRemovedFromComponent(oldgroup.element, a.element);
+				componenthandler.nodeRemovedFromComponent(oldgroup.element, b.element);
 
 				//assume that the group is only containing a and b?
 				componentNodes.get(oldgroup).remove(b);
@@ -792,7 +813,7 @@ public class HashMapComponentGraph<T,U,V> implements ComponentGraph<T,U,V> {
 		Set<Node> allnodes = new HashSet<Node>();
 		while(groupiter.hasNext()){
 			Component g = groupiter.next();
-			System.out.println( "Group " + g + " : " + componentEdges.get(g).size() + " pairs, " + componentNodes.get(g).size() + " nodes "  );
+			System.out.println( "Group " + g.element + " : " + componentEdges.get(g).size() + " pairs, " + componentNodes.get(g).size() + " nodes "  );
 			Iterator<Pair<T>> pairiter = componentEdges.get(g).iterator(); 
 			while (pairiter.hasNext()) {
 				Pair<T> thispair = pairiter.next();

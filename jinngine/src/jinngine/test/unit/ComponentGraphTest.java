@@ -32,9 +32,11 @@ public class ComponentGraphTest extends TestCase {
 			}
 		};
 		
-		ComponentHandler<Object> ch = new ComponentHandler<Object>() {
+		ComponentHandler<Object,Object> ch = new ComponentHandler<Object,Object>() {
 			public Object newComponent() { return new Object(); }
 			public void mergeComponent(Object c1, Object c2) {  }
+			public void nodeAddedToComponent(Object component, Object node) {};
+			public void nodeRemovedFromComponent(Object component, Object node) {}
 		};
 		
 		ComponentGraph<Object,Object,Object> graph = new HashMapComponentGraph<Object,Object,Object>(nc,ch);
@@ -92,9 +94,11 @@ public class ComponentGraphTest extends TestCase {
 			}
 		};
 		
-		ComponentHandler<Object> ch = new ComponentHandler<Object>() {
+		ComponentHandler<Object,Object> ch = new ComponentHandler<Object,Object>() {
 			public Object newComponent() { return new Object(); }
 			public void mergeComponent(Object c1, Object c2) {  }
+			public void nodeAddedToComponent(Object component, Object node) {};
+			public void nodeRemovedFromComponent(Object component, Object node) {}
 		};
 
 		
@@ -185,9 +189,11 @@ public class ComponentGraphTest extends TestCase {
 			}
 		};
 		
-		ComponentHandler<Object> ch = new ComponentHandler<Object>() {
+		ComponentHandler<Object,Object> ch = new ComponentHandler<Object,Object>() {
 			public Object newComponent() { return new Object(); }
 			public void mergeComponent(Object c1, Object c2) {  }
+			public void nodeAddedToComponent(Object component, Object node) {};
+			public void nodeRemovedFromComponent(Object component, Object node) {}
 		};
 
 		
@@ -243,9 +249,11 @@ public class ComponentGraphTest extends TestCase {
 			}
 		};
 		
-		ComponentHandler<Object> ch = new ComponentHandler<Object>() {
+		ComponentHandler<Object,Object> ch = new ComponentHandler<Object,Object>() {
 			public Object newComponent() { return new Object(); }
-			public void mergeComponent(Object c1, Object c2) { }
+			public void mergeComponent(Object c1, Object c2) {  }
+			public void nodeAddedToComponent(Object component, Object node) {};
+			public void nodeRemovedFromComponent(Object component, Object node) {}
 		};
 
 		
@@ -297,9 +305,11 @@ public class ComponentGraphTest extends TestCase {
 			}
 		};
 		
-		ComponentHandler<Object> ch = new ComponentHandler<Object>() {
+		ComponentHandler<Object,Object> ch = new ComponentHandler<Object,Object>() {
 			public Object newComponent() { return new Object(); }
 			public void mergeComponent(Object c1, Object c2) {  }
+			public void nodeAddedToComponent(Object component, Object node) {};
+			public void nodeRemovedFromComponent(Object component, Object node) {}
 		};
 
 		
@@ -356,9 +366,11 @@ public class ComponentGraphTest extends TestCase {
 			}
 		};
 		
-		ComponentHandler<Object> ch = new ComponentHandler<Object>() {
+		ComponentHandler<Object,Object> ch = new ComponentHandler<Object,Object>() {
 			public Object newComponent() { return new Object(); }
 			public void mergeComponent(Object c1, Object c2) {  }
+			public void nodeAddedToComponent(Object component, Object node) {};
+			public void nodeRemovedFromComponent(Object component, Object node) {}
 		};
 
 
@@ -418,9 +430,11 @@ public class ComponentGraphTest extends TestCase {
 			}
 		};
 		
-		ComponentHandler<Object> ch = new ComponentHandler<Object>() {
+		ComponentHandler<Object,Object> ch = new ComponentHandler<Object,Object>() {
 			public Object newComponent() { return new Object(); }
 			public void mergeComponent(Object c1, Object c2) {  }
+			public void nodeAddedToComponent(Object component, Object node) {};
+			public void nodeRemovedFromComponent(Object component, Object node) {}
 		};
 
 
@@ -483,9 +497,11 @@ public class ComponentGraphTest extends TestCase {
 		}
 		
 		// make the merge component handler return a specific object
-		ComponentHandler<dummy> ch = new ComponentHandler<dummy>() {
+		ComponentHandler<Object,dummy> ch = new ComponentHandler<Object,dummy>() {
 			public dummy newComponent() { return new dummy(); }
 			public void mergeComponent(dummy c1, dummy c2) { c1.data = 1;  }
+			public void nodeAddedToComponent(dummy component, Object node) {};
+			public void nodeRemovedFromComponent(dummy component, Object node) {};
 		};
 
 

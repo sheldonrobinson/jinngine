@@ -28,7 +28,7 @@ public interface ComponentGraph<T,U,V> {
 	 * independently connected components in the graph. It is therefore useful to be able to 
 	 * store user information within the component references.
 	 */
-	public interface ComponentHandler<V> {
+	public interface ComponentHandler<T,V> {
 		/**
 		 * Called when a new component is created. This call MUST return a unique object of type 
 		 * V, that has not been previously known to the ComponentGraph
@@ -43,6 +43,17 @@ public interface ComponentGraph<T,U,V> {
 		 * @param disappearing The component that will be removed from the graph
 		 */
 		public void mergeComponent( V remaining, V leaving );
+		
+		/**
+		 * Called when a node is added to some component
+		 */
+		public void nodeAddedToComponent( V component, T node );
+		
+		/**
+		 * Called when a node is removed from some component
+		 */
+		public void nodeRemovedFromComponent( V component, T node);
+		
 	}
 
 	/**

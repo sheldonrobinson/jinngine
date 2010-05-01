@@ -52,6 +52,10 @@ public final class DefaultScene implements Scene {
 	// inner class for storing data in components in constraint graph
 	public final class ConstraintGroup {
 		public boolean deactivated = false;
+		@Override
+		public String toString() {
+			return deactivated?"deactivated":"active";
+		}
 	}
 	
 	// make a component creator for the constraint graph. This only makes sure that we get some data
@@ -59,8 +63,8 @@ public final class DefaultScene implements Scene {
 	// about the group of bodies that are interacting. Most importantly, it makes sure that when constraint
 	// components are merged, all the bodies in both components are activated if one of the components was  
 	// active to begin with. 
-	private final ComponentGraph.ComponentHandler<ConstraintGroup> componenthandler = 
-		new ComponentGraph.ComponentHandler<ConstraintGroup>() {
+	private final ComponentGraph.ComponentHandler<Body,ConstraintGroup> componenthandler = 
+		new ComponentGraph.ComponentHandler<Body,ConstraintGroup>() {
 		public ConstraintGroup newComponent() {return new ConstraintGroup();}
 		public void mergeComponent( ConstraintGroup remaining, ConstraintGroup leaving) {
 			if ( remaining.deactivated && leaving.deactivated ) {
@@ -81,6 +85,24 @@ public final class DefaultScene implements Scene {
 					policy.activate(bodies.next());
 				}
 			}
+		}
+
+		public void nodeAddedToComponent(ConstraintGroup component, Body node) {
+			// if the Body is active and the group is deactivated, activate the component 
+			if (!node.deactivated && component.deactivated) {
+				// all bodies from the remaining group
+				Iterator<Body> bodies = constraintGraph.getNodesInComponent(component);
+				while(bodies.hasNext()){
+					policy.activate(bodies.next());
+				}
+				
+				// set the group activation setting
+				component.deactivated = false;
+			}
+		}
+
+		public void nodeRemovedFromComponent(ConstraintGroup component, Body node) {
+			// TODO Auto-generated method stub
 		}
 	};
 

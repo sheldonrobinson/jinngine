@@ -76,6 +76,7 @@ public class DefaultContactConstraintManager implements ContactConstraintManager
 		// removed from the contact graph, whenever the broad-phase collision detection detects overlaps and separations
 		handler = new BroadphaseCollisionDetection.Handler() {
 				public final void overlap(Pair<Geometry> inputpair) {
+//					System.out.println("overlap");
 					//retrieve the bodies associated with overlapping geometries
 					Body a = inputpair.getFirst().getBody();
 					Body b = inputpair.getSecond().getBody();

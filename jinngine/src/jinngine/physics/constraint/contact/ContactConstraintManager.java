@@ -8,7 +8,6 @@
  */
 package jinngine.physics.constraint.contact;
 
-import jinngine.geometry.Geometry;
 import jinngine.physics.Body;
 import jinngine.physics.Scene;
 import jinngine.util.Pair;
