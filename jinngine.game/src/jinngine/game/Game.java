@@ -1,25 +1,14 @@
 package jinngine.game;
 
-import java.io.File;
-import java.io.IOException;
 import java.util.*;
 
 import com.ardor3d.scenegraph.Node;
 import com.ardor3d.scenegraph.Spatial;
-import com.ardor3d.util.export.xml.XMLExporter;
-import com.ardor3d.util.export.xml.XMLImporter;
 
 import jinngine.game.actors.interaction.HUDActor;
-import jinngine.game.actors.door.Door;
-import jinngine.game.actors.environment.Environment;
 import jinngine.game.actors.Actor;
-import jinngine.game.actors.bear.Bear;
-import jinngine.game.actors.button.Button;
-import jinngine.game.actors.button.PlacementButton;
-import jinngine.game.actors.platform1.BoxPlatform;
 import jinngine.game.actors.platform1.ConvexPlatform;
 import jinngine.physics.DefaultScene;
-import jinngine.physics.Scene;
 
 public class Game {
 	
@@ -33,7 +22,7 @@ public class Game {
 	private final DefaultScene jinngine = new DefaultScene();
 
 	public Game() {
-		jinngine.setTimestep(0.085);
+		jinngine.setTimestep(0.065);
 			
 		//setup some actors
 //		Actor actor = new Environment();

@@ -94,7 +94,9 @@ public class BodyPlacement implements ActionActor {
 		
 //		this.force = new SpringForce(target, new Vector3(), controller, new Vector3(), 122, 16 ); 
 		this.force = new BallInSocketJoint(target, controller, controller.getPosition(), new Vector3(0,1,0));
-		this.force.setForceLimit(100);
+		this.force.setForceLimit(5);
+		this.force.setCorrectionVelocityLimit(10);
+		
 
 		physics.addLiveConstraint(this.force);
 		

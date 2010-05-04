@@ -13,48 +13,36 @@ import com.ardor3d.image.TextureStoreFormat;
 import com.ardor3d.input.Key;
 import com.ardor3d.input.KeyboardState;
 import com.ardor3d.input.logical.InputTrigger;
-import com.ardor3d.input.logical.KeyPressedCondition;
-import com.ardor3d.input.logical.KeyReleasedCondition;
 import com.ardor3d.input.logical.TriggerAction;
 import com.ardor3d.input.logical.TwoInputStates;
 import com.ardor3d.math.Matrix3;
 import com.ardor3d.math.type.ReadOnlyMatrix3;
-import com.ardor3d.math.type.ReadOnlyQuaternion;
-import com.ardor3d.math.type.ReadOnlyTransform;
 import com.ardor3d.math.type.ReadOnlyVector3;
 import com.ardor3d.renderer.state.GLSLShaderObjectsState;
 import com.ardor3d.renderer.state.TextureState;
 import com.ardor3d.scenegraph.Node;
-import com.ardor3d.scenegraph.Renderable;
 import com.ardor3d.scenegraph.Spatial;
 import com.ardor3d.scenegraph.controller.SpatialController;
 import com.ardor3d.util.TextureManager;
-import com.ardor3d.util.export.binary.BinaryExporter;
-import com.ardor3d.util.export.xml.XMLExporter;
-import com.ardor3d.util.geom.SceneCopier;
-import com.ardor3d.util.geom.SharedCopyLogic;
-import com.ardor3d.util.export.InputCapsule;
 import com.ardor3d.util.export.OutputCapsule;
 import com.google.common.base.Predicate;
 
 
 import jinngine.game.Game;
 import jinngine.game.Toolbox;
-import jinngine.game.actors.Actor;
 import jinngine.game.actors.PhysicalActor;
 import jinngine.geometry.contact.ContactGenerator;
+import jinngine.geometry.contact.ContactGenerator.ContactPoint;
+
 import jinngine.math.Vector3;
 import jinngine.physics.Body;
+import jinngine.physics.ContactTrigger;
 import jinngine.physics.Scene;
+import jinngine.physics.Trigger;
 import jinngine.physics.constraint.Constraint;
 import jinngine.physics.constraint.contact.ContactConstraint;
-import jinngine.physics.constraint.contact.ContactConstraintCreator;
-import jinngine.physics.constraint.contact.FrictionalContactConstraint;
-import jinngine.physics.constraint.joint.HingeJoint;
-import jinngine.physics.force.Force;
 import jinngine.physics.force.GravityForce;
-import jinngine.physics.force.ImpulseForce;
-import jinngine.physics.solver.Solver.constraint;
+import jinngine.physics.solver.Solver.NCPConstraint;
 import jinngine.util.Pair;
 
 public class Player extends Node implements PhysicalActor {
@@ -62,7 +50,29 @@ public class Player extends Node implements PhysicalActor {
 	private Body playerbody;
 	private Constraint controlconstraint;
 	private double jumpable = 0;
+	private boolean jumped = false;
+	private int contacts = 0;
+	private boolean jumpedinframe = false;
+	private boolean focuscamera = false;
+	private double focusxcoord = 0;
 	
+	private double tick = 0;
+	
+	private KeyboardState previouskbstate;
+	
+	private jinngine.geometry.Box box;
+	
+    final double walkvelocity = 2;
+    final double walkimpulse = 0.5*2;
+    final Vector3 velocity = new Vector3();
+    final Vector3 force = new Vector3();
+
+    private final Vector3 jumpdirection = new Vector3(0,1,0);	
+    private final Vector3 heading = new Vector3(1,0,0);
+    private final Vector3 playerdisplace = new Vector3(0,0,0);
+    
+    
+    private final List<ContactConstraint> contactconstraints = new ArrayList<ContactConstraint>();
 	
 	
 	@Override
@@ -96,7 +106,6 @@ public class Player extends Node implements PhysicalActor {
           shader.setVertexShader(WaterNode.class.getClassLoader().getResourceAsStream("jinngine/game/resources/bumbshader.vert"));
           shader.setFragmentShader(WaterNode.class.getClassLoader().getResourceAsStream("jinngine/game/resources/bumbshader.frag"));
       } catch (final IOException e) {
-//  	  logger.log(Level.WARNING, "Error loading shader", e);
     	  e.printStackTrace();
           return;
       }
@@ -115,8 +124,39 @@ public class Player extends Node implements PhysicalActor {
 
 	@Override
 	public void act(Game game) {
+		
+		playerdisplace.y = Math.sin(tick)*0.25;
+		
+		
 		if (jumpable > 0)
 			jumpable--;
+		
+		jumpedinframe = false;
+		
+  		//reset jump velocity and force
+		velocity.y = 0;
+		force.y = 0;
+
+		// get camera
+		ReadOnlyVector3 location = game.getRendering().getCamera().getLocation();
+		double camlocation = location.getX();
+		
+		if (focuscamera) {
+			
+			game.getRendering().getCamera().setLocation( (camlocation*0.95+focusxcoord*0.05), -25+7, -20);
+			game.getRendering().getCamera().lookAt((camlocation*0.95+focusxcoord*0.05), -25, 0, com.ardor3d.math.Vector3.UNIT_Y);
+			
+			if (Math.abs(camlocation-focusxcoord) < 0.01) {
+				focuscamera = false;
+			}
+		} else {
+			
+			if (Math.abs(camlocation-playerbody.state.position.x) > 6.7) {
+				focusxcoord = playerbody.state.position.x;
+				focuscamera = true;
+			}
+		}
+
 	}
 
 	@Override
@@ -128,7 +168,10 @@ public class Player extends Node implements PhysicalActor {
         body.addController(new SpatialController<Spatial>() {
             public void update(final double time, final Spatial caller) {
             	Body body = playerbody;
-            	caller.setTranslation(body.state.position.x, body.state.position.y, body.state.position.z);
+            	Vector3 disp = body.state.position.copy();
+            	Vector3.add( disp,  playerdisplace );
+            	
+            	caller.setTranslation(disp.x, disp.y, disp.z);
             	ReadOnlyMatrix3 mat = new Matrix3(body.state.rotation.a11, body.state.rotation.a12, body.state.rotation.a13,
             			body.state.rotation.a21, body.state.rotation.a22, body.state.rotation.a23, 
             			body.state.rotation.a31, body.state.rotation.a32, body.state.rotation.a33);
@@ -145,76 +188,134 @@ public class Player extends Node implements PhysicalActor {
         game.getRendering().getPssmPass().addOccluder(body);
         
         // Physics      
-        jinngine.geometry.Box box = new jinngine.geometry.Box(1,1,1);
-        box.setRestitution(0.00);
-        //box.setFrictionCoefficient(1);
+        box = new jinngine.geometry.Box(1,1,1);
+//        jinngine.geometry.Sphere box = new Sphere(1);
+        box.setRestitution(0.25);
+        box.setFrictionCoefficient(0.15);
+        box.setEnvelope(0.2);
         playerbody = new Body("default", box);
+//        box.setLocalTransform(jinngine.math.Matrix3.identity(), playerdisplace );
         Toolbox.setTransformFromNode(body, playerbody);
         physics.addBody(playerbody);
         physics.addForce(new GravityForce(playerbody));
         
-        final ImpulseForce impulse = new ImpulseForce(playerbody, new Vector3(), new Vector3(0,1,0), 0);
-        game.getPhysics().addForce(impulse);
+//        final ImpulseForce impulse = new ImpulseForce(playerbody, new Vector3(), new Vector3(0,1,0), 0);
+//        game.getPhysics().addForce(impulse);
         
         final Body dummy = new Body("default");
         dummy.setFixed(true);
         
-        final double walkvelocity = 2;
-        final Vector3 velocity = new Vector3();
-        final Vector3 force = new Vector3();
-                
+           
         // create control velocity constraint
         controlconstraint = new Constraint() {       	
-        	final constraint c = new constraint();       	
-        	final constraint c2 = new constraint();       	
+        	final NCPConstraint c = new NCPConstraint();       	
+        	final NCPConstraint c2 = new NCPConstraint();   
+        	final NCPConstraint c3 = new NCPConstraint();   
+        	final NCPConstraint c4 = new NCPConstraint();   
+        	final NCPConstraint c5 = new NCPConstraint();   
 
         	@Override
-        	public void applyConstraints(ListIterator<constraint> iterator,
+        	public void applyConstraints(ListIterator<NCPConstraint> iterator,
         			double dt) {
+        		
+        		Vector3 u = playerbody.state.velocity;//.add(playerbody.state.omega.cross(ri));
+        		
         		// -(unf-uni)  -correction 
         		c.assign(playerbody, dummy,
-        				new Vector3(1,0,0), new Vector3(), new Vector3(), new Vector3(),new Vector3(1,0,0), new Vector3(), new Vector3(), new Vector3(), Math.min(force.x,0), Math.max(0,force.x), null, playerbody.state.velocity.x-velocity.x, 0  );
+        				new Vector3(1,0,0), new Vector3(), new Vector3(), new Vector3(),
+        				new Vector3(1,0,0), new Vector3(), new Vector3(), new Vector3(), 
+        				Math.min(force.x,0), Math.max(0,force.x), 
+        				null,
+        				u.x-velocity.x, 0  );
         		iterator.add(c);
 
         		c2.assign(playerbody, dummy,
-        				new Vector3(0,0,1), new Vector3(), new Vector3(), new Vector3(),new Vector3(0,0,1), new Vector3(), new Vector3(), new Vector3(),Math.min(force.z,0), Math.max(0,force.z), null, playerbody.state.velocity.z-velocity.z, 0  );
+        				new Vector3(0,0,1), new Vector3(), new Vector3(), new Vector3(),
+        				new Vector3(0,0,1), new Vector3(), new Vector3(), new Vector3(), 
+        				Math.min(force.z,0), Math.max(0,force.z), 
+        				null,
+        				u.z-velocity.z, 0  );
         		iterator.add(c2);
+
         		
+        		c3.assign(playerbody, dummy,
+        				jumpdirection, new Vector3(), new Vector3(), new Vector3(),
+        				jumpdirection, new Vector3(), new Vector3(), new Vector3(),
+        				Math.min(force.y,0), Math.max(0,force.y), 
+        				null, 
+        				jumpdirection.dot(playerbody.state.velocity)-velocity.y, 0  );
+        		iterator.add(c3);
+
+        		
+        		Vector3 axis = playerbody.state.rotation.multiply(new Vector3(1,0,0));
+        		c4.assign(playerbody, dummy,
+        				new Vector3(), new Vector3(0,1,0), new Vector3(), new Vector3(),
+        				new Vector3(), new Vector3(0,1,0), new Vector3(), new Vector3(),
+        				-1, 1, 
+        				null, 
+        				playerbody.state.omega.y-axis.cross(heading).y*10, 0  );
+        		iterator.add(c4);
+        		
+        		c5.assign(playerbody, dummy,
+        				new Vector3(), new Vector3(0,0,1), new Vector3(), new Vector3(),
+        				new Vector3(), new Vector3(0,0,1), new Vector3(), new Vector3(),
+        				-1, 1, 
+        				null, 
+        				playerbody.state.omega.z-axis.cross(heading).z*10, 0  );
+        		iterator.add(c5);
+
+
         	}
+        	
         	@Override
         	public Pair<Body> getBodies() {
         		return new Pair<Body>(playerbody,dummy);
         	}
 			@Override
-			public void getNcpConstraints(ListIterator<constraint> constraints) {
-				constraints.add(c);
-				constraints.add(c2);
+			public Iterator<NCPConstraint> getNcpConstraints() {
+				throw new UnsupportedOperationException();
 			}
         };
         
+        // add constraint to jinngine
         game.getPhysics().addConstraint(controlconstraint);
         game.getPhysics().addLiveConstraint(controlconstraint);
         
+        // create a trigger that registers players contact forces  
+        Trigger trigger = new ContactTrigger(playerbody, 0.025, new ContactTrigger.Callback() {
+        	@Override
+        	public void contactAboveThreshold(Body interactingBody, ContactConstraint contact) {
+        		
+        		contacts++;    
+        		
+        		contactconstraints.add(contact);
+        		        		
+        	}
+        	public void contactBelowThreshold(Body interactingBody, ContactConstraint contact ) { 
+        		
+        		contactconstraints.remove(contact);
+        		contacts--; }
+        });
         
-        // tangential movement vectors
-//        final Vector3 movementx = new Vector3(0,0,1);
-//        final Vector3 movementy = new Vector3(-1,0,0);
-
+        // add the trigger
+        game.getPhysics().addTrigger(trigger);
+        
+        
+        
+        
         //debug mesh
 //        Toolbox.addJinngineDebugMesh("playerdebugmesh", body, playerbody);
-
-        
         
         // WASD control ( more or less the same as in the ardor3d examples)
         final Predicate<TwoInputStates> keysHeld = new Predicate<TwoInputStates>() {
             Key[] keys = new Key[] { Key.W, Key.A, Key.S, Key.D, Key.SPACE };
 
             public boolean apply(final TwoInputStates states) {
-                for (final Key k : keys) {
-                    if (states.getCurrent() != null && states.getCurrent().getKeyboardState().isDown(k)) {
-                        return true;
-                    }
-                }
+//                for (final Key k : keys) {
+//                    if (states.getCurrent() != null && states.getCurrent().getKeyboardState().isDown(k)) {
+//                        return true;
+//                    }
+//                }
                 return true;
             }
         };
@@ -223,37 +324,141 @@ public class Player extends Node implements PhysicalActor {
             public void perform(final Canvas source, final TwoInputStates inputStates, final double tpf) {
                  KeyboardState kb = inputStates.getCurrent().getKeyboardState();
                  
-//                 System.out.println("Key action");
-                 //handle keys
-                 // MOVEMENT
-                 
-                 velocity.assignZero();
-                 force.assignZero();
-                 
-                 if (kb.isDown(Key.W)) {
-             		velocity.z = walkvelocity;
-            		force.z = 1;
-                 }
-                 if (kb.isDown(Key.S)) {
-             		velocity.z = -walkvelocity;
-            		force.z = -1;
-                 }
-                 if (kb.isDown(Key.A)) {
-             		velocity.x = walkvelocity;
-            		force.x = 1;
-                 }
-                 if (kb.isDown(Key.D)) {
-             		velocity.x = -walkvelocity;
-            		force.x = -1;
-                 }  
-                 
-                 if (kb.isDown(Key.SPACE)) {
-                	 if (jumpable == 0) {
-                		 jumpable = jumpable + 100;
-                		 impulse.setMagnitude(7);
+
+                 if (previouskbstate != null) {
+                	 // get held keys
+                	 EnumSet<Key> keys = kb.getKeysPressedSince(previouskbstate);
+
+                	 velocity.assignZero();
+                	 force.assignZero();
+                	 box.setFrictionCoefficient(2);
+                	 
+
+                	 if (kb.isDown(Key.W)) {
+
+                		 if (contacts>0)
+                			 tick = tick + 0.5;
+
+                		 heading.assign(0,0,1);
+                		 velocity.z = walkvelocity;
+                		 force.z = walkimpulse;
+                		 box.setFrictionCoefficient(0.25);
+                	 }
+                	 if (kb.isDown(Key.S)) {
+                		 tick = tick + 0.5;
+
+                		 heading.assign(0,0,-1);
+                		 velocity.z = -walkvelocity;
+                		 force.z = -walkimpulse;
+                		 box.setFrictionCoefficient(0.25);
+
+                	 }
+                	 if (kb.isDown(Key.A)) {
+                		 tick = tick + 0.5;
+
+                		 heading.assign(1,0,0);
+                		 velocity.x = walkvelocity;
+                		 force.x = walkimpulse;
+                		 box.setFrictionCoefficient(0.25);
+
+                	 }
+                	 if (kb.isDown(Key.D)) {
+                		 tick = tick + 0.5;
+
+                		 heading.assign(-1,0,0);
+                		 velocity.x = -walkvelocity;
+                		 force.x = -walkimpulse;
+                		 box.setFrictionCoefficient(0.25);
+
+                	 }  
+
+
+            		 if (contacts<1)
+            			 tick = tick*0.5;
+
+
+                	 if (tick > 2*Math.PI) tick = tick -2*Math.PI;
+
+                	 //                 
+                	 //                 if (kb.isDown(Key.W) && kb.isDown(Key.D)) {
+                	 ////                	 System.out.println("W and D");
+                	 //                	 movedirection.assign(-0.707106,0,0.707106);
+                	 //                	 velocity.x = walkvelocity;
+                	 //                	 force.x = walkimpulse;                 	 
+                	 //                 } else if (kb.isDown(Key.D) && kb.isDown(Key.S)) {
+                	 //                	 movedirection.assign(-0.707106,0,-0.707106);
+                	 //                	 velocity.x = walkvelocity;
+                	 //                	 force.x = walkimpulse;
+                	 //                 } else if (kb.isDown(Key.S) && kb.isDown(Key.A)) {
+                	 //                	 movedirection.assign(0.707106,0,-0.707106);
+                	 //                	 velocity.x = walkvelocity;
+                	 //                	 force.x = walkimpulse;
+                	 //                 } else if (kb.isDown(Key.A) && kb.isDown(Key.W)) {
+                	 //                	 movedirection.assign(0.707106,0,0.707106);
+                	 //                	 velocity.x = walkvelocity;
+                	 //                	 force.x = walkimpulse;
+                	 //                 }
+                	 //                 } else if (kb.isDown(Key.W)) {
+                	 ////                	 System.out.println("W");
+                	 //                	 movedirection.assign(0,0,1);
+                	 //                	 velocity.x = walkvelocity;
+                	 //                	 force.x = walkimpulse;
+                	 //                 } else if (kb.isDown(Key.D)) {
+                	 //                	 movedirection.assign(-1,0,0);
+                	 //                	 velocity.x = walkvelocity;
+                	 //                	 force.x = walkimpulse;
+                	 //                 } else if (kb.isDown(Key.S)) {
+                	 //                	 movedirection.assign(0,0,-1);
+                	 //                	 velocity.x = walkvelocity;
+                	 //                	 force.x = walkimpulse;
+                	 //                 } else if (kb.isDown(Key.A)) {
+                	 //                	 movedirection.assign(1,0,0);
+                	 //                	 velocity.x = walkvelocity;
+                	 //                	 force.x = walkimpulse;
+                	 //                 }  
+
+                	 if (kb.isDown(Key.SPACE)) {
+                		 if (!jumped && contacts > 0 && !jumpedinframe ) {
+                			 jumped = true;
+                			 jumpedinframe = true;
+                			 jumpdirection.assign(0,1,0);
+
+                			 boolean canjump = false;
+                			 // check for a "jumpable" contact normal
+                			 for ( ContactConstraint contact: contactconstraints) {
+                				 // get contact generators (geometry pairs)
+                				 Iterator<ContactGenerator> cgs = contact.getGenerators();
+                				 while (cgs.hasNext()) {
+                					 // get contact points
+                					 Iterator<ContactPoint> cps = cgs.next().getContacts();
+                					 if (cps.hasNext()) {	 
+                						 // take the normal from the first contact point (because we expect all normals to be the same)
+                						 Vector3 normal = new Vector3(cps.next().normal);
+
+                						 // turn normal the right way around
+                						 if ( contact.getBodies().getSecond() == playerbody )
+                							 Vector3.multiply(normal,-1);
+
+                						 if (jumpdirection.dot(normal) > 0.75) {
+                							 canjump = true;
+                						 }
+                					 }
+                				 }
+                			 } // for contactconstraints
+
+                			 if ( canjump) {
+                				 // impulse.setMagnitude(7);
+                				 velocity.y=5;
+                				 force.y = 20;
+                			 }
+                		 }
+                	 } else { // not pressed space
+                		 jumped = false;
                 	 }
                  }
-            }
+                // store this kb state
+             	previouskbstate = kb;
+            } // void perform
         };
         
         // install trigger

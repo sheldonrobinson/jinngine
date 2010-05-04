@@ -75,6 +75,7 @@ public final class Rendering implements com.ardor3d.framework.Scene {
     private final ParallelSplitShadowMapPass pssm;
     private final PhysicalLayer physicallayer; 
     private final UIHud hud;
+    private final Camera camera;
     
 	public Rendering() {
         final JoglCanvasRenderer canvasRenderer = new JoglCanvasRenderer(this);
@@ -83,6 +84,7 @@ public final class Rendering implements com.ardor3d.framework.Scene {
         canvas =  new JoglCanvas(canvasRenderer, settings);
         canvas.init();        
         canvas.setTitle("Machinery");
+        this.camera = canvas.getCanvasRenderer().getCamera();
         canvas.getCanvasRenderer().getCamera().setLocation(0, -25+7, -20);
         canvas.getCanvasRenderer().getCamera().setFrustumPerspective(25, 16.0/9.0, 1, 1500);
         canvas.getCanvasRenderer().getCamera().lookAt(0, -25, 0, Vector3.UNIT_Y);
@@ -93,12 +95,18 @@ public final class Rendering implements com.ardor3d.framework.Scene {
 //    			 new AwtMouseWrapper(canvas, new AwtMouseManager(canvas)),
 //                 new AwtFocusWrapper(canvas));
         
-        physicallayer = new PhysicalLayer(new AwtKeyboardWrapper(canvas), 
+        
+     
+        AwtKeyboardWrapper keywrap = new AwtKeyboardWrapper(canvas);
+        
+        
+        physicallayer = new PhysicalLayer( keywrap,
         		new AwtMouseWrapper(canvas, new AwtMouseManager(canvas)), 
         		DummyControllerWrapper.INSTANCE, 
         		new AwtFocusWrapper(canvas));
 
        logicallayer.registerInput(canvas, physicallayer);
+       
         
         // setup resource locator
         try {
@@ -240,4 +248,7 @@ public final class Rendering implements com.ardor3d.framework.Scene {
 		renderer.draw(hud);
 		return true;
 	}
+	
+
+	
 }
