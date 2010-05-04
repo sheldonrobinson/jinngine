@@ -19,14 +19,11 @@ import jinngine.physics.Body;
  * of the simulator (Model) to instantiate correct implementations of ContactGenerators, when various types of geometries 
  * in proximity are encountered during simulation. A ContactConstraint can handle one or more ContactGenerators. This allows for bodies in the simulation, which have more 
  * than one geometry instance attached.
- * 
- * @author silcowitz
  */
 public interface ContactGenerator {
 
 	/**
 	 * A simple structure class representing a contact point with a normal and a penetration depth
-	 * @author Moo
 	 */
 	public class ContactPoint {
 		/**
@@ -47,7 +44,7 @@ public interface ContactGenerator {
 		/**
 		 * Point on body A in A space
 		 */
-		public final Vector3 pa = new Vector3();
+//		public final Vector3 pa = new Vector3();
 		
 		/**
 		 * Point on body B in world space
@@ -57,7 +54,7 @@ public interface ContactGenerator {
 		/**
 		 * Point on body B in B space
 		 */
-		public final Vector3 pb = new Vector3();
+//		public final Vector3 pb = new Vector3();
 
 		/**
 		 * Interaction point in world space
@@ -97,7 +94,7 @@ public interface ContactGenerator {
 	
 	
 	/**
-	 * Called when this ContactGenerator is being removed from the ContactConstraint (or some other user). 
+	 * Called when this ContactGenerator is being removed from the {@link ContactConstraint} (or some other user). 
 	 * This method can be used to perform clean-up if needed.
 	 */
 	public void remove();

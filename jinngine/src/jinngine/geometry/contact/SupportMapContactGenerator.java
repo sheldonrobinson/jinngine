@@ -39,8 +39,8 @@ public class SupportMapContactGenerator implements ContactGenerator {
 	private final double epsilon = 1e-7;
 	private final double envelope;
 	private final double shell;
-	private final double restitution;
-	private final double friction;
+	private double restitution;
+	private double friction;
 
 	// distance algorithms
 	private final GJK gjk = new GJK();
@@ -52,8 +52,8 @@ public class SupportMapContactGenerator implements ContactGenerator {
 		this.ga = ga;
 		this.gb = gb;
 		
-		// select the smallest envelope for contact generation
-		if  ( ga.getEnvelope() > gb.getEnvelope() ) {
+		// select the largest envelope for contact generation
+		if  ( gb.getEnvelope() > ga.getEnvelope() ) {
 			envelope = gb.getEnvelope();
 			shell = envelope*0.5;
 		} else {
@@ -61,6 +61,17 @@ public class SupportMapContactGenerator implements ContactGenerator {
 			shell = envelope*0.5;			
 		}
 
+
+	}
+	
+	@Override
+	public Iterator<ContactPoint> getContacts() {
+		return contacts.iterator();
+	}
+
+	@Override
+	public void run() {
+		
 		//select the smallest restitution and friction coefficients 
 		if ( ga instanceof Material && gb instanceof Material) {
 			double ea = ((Material)ga).getRestitution();
@@ -81,15 +92,8 @@ public class SupportMapContactGenerator implements ContactGenerator {
 			restitution = 0.7;
 			friction = 0.5;
 		}
-	}
-	
-	@Override
-	public Iterator<ContactPoint> getContacts() {
-		return contacts.iterator();
-	}
-
-	@Override
-	public void run() {
+		
+		
 		// first we run gjk 
 		gjk.run(Sa, Sb, pa, pb, envelope, epsilon, 32);
 		v.assign(pa.minus(pb));
@@ -231,8 +235,8 @@ public class SupportMapContactGenerator implements ContactGenerator {
 						
 //						cp.pa.assign(ga.getBody().toModel(paw));
 //						cp.pb.assign(gb.getBody().toModel(pbw));
-						cp.pa.assign(ga.getBody().toModel(pbw));
-						cp.pb.assign(gb.getBody().toModel(paw));
+//						cp.pa.assign(ga.getBody().toModel(pbw));
+//						cp.pb.assign(gb.getBody().toModel(paw));
 
 						cp.midpoint.assign(S.multiply(p1tp).add(midpoint));
 						cp.normal.assign(direction);
@@ -307,8 +311,8 @@ public class SupportMapContactGenerator implements ContactGenerator {
 						cp.envelope = envelope;
 						cp.paw.assign(paw);
 						cp.pbw.assign(p1);
-						cp.pa.assign(ga.getBody().toModel(paw));
-						cp.pb.assign(gb.getBody().toModel(p1));
+//						cp.pa.assign(ga.getBody().toModel(paw));
+//						cp.pb.assign(gb.getBody().toModel(p1));
 						cp.midpoint.assign(S.multiply(p1tp).add(midpoint));
 						cp.normal.assign(direction);
 						contacts.add(cp);
@@ -378,8 +382,8 @@ public class SupportMapContactGenerator implements ContactGenerator {
 								cp.envelope = envelope;
 								cp.paw.assign(paw);
 								cp.pbw.assign(pbw);
-								cp.pa.assign(ga.getBody().toModel(paw));
-								cp.pb.assign(gb.getBody().toModel(pbw));
+//								cp.pa.assign(ga.getBody().toModel(paw));
+//								cp.pb.assign(gb.getBody().toModel(pbw));
 								
 								cp.midpoint.assign(S.multiply(p1pt.add(d1t.multiply(alpha))).add(midpoint)  );
 								cp.normal.assign(direction);

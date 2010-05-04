@@ -28,7 +28,7 @@ import jinngine.util.Pair;
 public class ContactTrigger implements Trigger {
 
 	private final Body body;
-	private final double forcethreshold;
+	private final double impulsethreshold;
 	private final Callback callback;
 
 	// helper variables
@@ -47,18 +47,18 @@ public class ContactTrigger implements Trigger {
 	
 	// interface for callback from this trigger type
 	public interface Callback {
-		public void contactAboveThreshold( Body interactingBody );
-		public void contactBelowThreshold( Body interactingBody );		
+		public void contactAboveThreshold( Body interactingBody, ContactConstraint constraint );
+		public void contactBelowThreshold( Body interactingBody, ContactConstraint constraint );		
 	}
 	
 	/**
 	 * Create new contact trigger
 	 * @param body Body to monitor
-	 * @param forcethreshold the total normal force exerted by the contact in last time-step
+	 * @param impulsethreshold the total normal impulse exerted by the contact in last time-step
 	 */
-	public ContactTrigger( Body body, double forcethreshold, ContactTrigger.Callback callback ) {
+	public ContactTrigger( Body body, double impulsethreshold, ContactTrigger.Callback callback ) {
 		this.body = body;
-		this.forcethreshold = forcethreshold;
+		this.impulsethreshold = impulsethreshold;
 		this.callback = callback;
 	}
 	
@@ -77,12 +77,12 @@ public class ContactTrigger implements Trigger {
 			Iterator<NCPConstraint> ncps = constraint.getNcpConstraints();
 			while(ncps.hasNext()) {
 				NCPConstraint ncp = ncps.next();
-				totalforce += ncp.lambda/timestep;
+				totalforce += ncp.lambda;
 				numberOfNcpConstraints += 1;
 			}
 
 			// check condition
-			if (totalforce > forcethreshold) {	
+			if (totalforce > impulsethreshold) {	
 				
 				// move constraint to triggered list
 				monitored.remove();
@@ -91,7 +91,7 @@ public class ContactTrigger implements Trigger {
 				// perform trigger event callback
 				Pair<Body> bodies =  constraint.getBodies();
 				Body interacting = bodies.getFirst()==body? bodies.getSecond(): bodies.getFirst();
-				callback.contactAboveThreshold(interacting);
+				callback.contactAboveThreshold(interacting, constraint);
 
 			} // if force > forcethreshold
 		} // for monitored constraints	
@@ -108,12 +108,12 @@ public class ContactTrigger implements Trigger {
 			Iterator<NCPConstraint> ncps = constraint.getNcpConstraints();
 			while(ncps.hasNext()) {
 				NCPConstraint ncp = ncps.next();
-				totalforce += ncp.lambda/timestep;
+				totalforce += ncp.lambda;
 				numberOfNcpConstraints += 1;
 			}
 
 			// check condition
-			if (totalforce < forcethreshold) {	
+			if (totalforce < impulsethreshold) {	
 				
 				// move constraint to monitored list
 				triggered.remove();
@@ -122,7 +122,7 @@ public class ContactTrigger implements Trigger {
 				// perform trigger event callback
 				Pair<Body> bodies =  constraint.getBodies();
 				Body interacting = bodies.getFirst()==body? bodies.getSecond(): bodies.getFirst();
-				callback.contactBelowThreshold(interacting);
+				callback.contactBelowThreshold(interacting, constraint);
 
 			} // if force > forcethreshold
 		} // for monitored constraints	
@@ -151,7 +151,7 @@ public class ContactTrigger implements Trigger {
 		contactConstraintHandler = new ContactConstraintManager.Handler() {
 			@Override
 			public void contactConstraintCreated(Pair<Body> bodies, ContactConstraint contact) {
-				System.out.println("created");
+//				System.out.println("created");
 				// if the constraint involves the body that we are monitoring, add it to our
 				// internal list of contact constraints
 				if (bodies.contains(body)) {
@@ -160,7 +160,7 @@ public class ContactTrigger implements Trigger {
 			}
 			@Override
 			public void contactConstraintRemoved(Pair<Body> bodies, ContactConstraint contact ) {
-				System.out.println("deleted");
+//				System.out.println("deleted");
 
 				if (bodies.contains(body)) {
 					// if we had this constraint on our list of triggerd constraints, signal an event
@@ -168,7 +168,7 @@ public class ContactTrigger implements Trigger {
 
 						// perform the call back 
 						Body interacting = bodies.getFirst()==body? bodies.getSecond(): bodies.getFirst();
-						callback.contactBelowThreshold(interacting);
+						callback.contactBelowThreshold(interacting, contact);
 
 						// remove from internal list
 						triggeredconstraints.remove(contact);

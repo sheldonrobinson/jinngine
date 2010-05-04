@@ -28,6 +28,7 @@ public class BallInSocketJoint implements Constraint {
 	private final Solver.NCPConstraint c2 = new Solver.NCPConstraint();
 	private final Solver.NCPConstraint c3 = new Solver.NCPConstraint();
 	private double forcelimit = Double.POSITIVE_INFINITY;
+	private double velocitylimit = Double.POSITIVE_INFINITY;
 	
 	public BallInSocketJoint(Body b1, Body b2, Vector3 p, Vector3 n) {
 		this.b1 = b1;
@@ -43,6 +44,13 @@ public class BallInSocketJoint implements Constraint {
 	 */
 	public void setForceLimit( double forcelimit ) {
 		this.forcelimit = forcelimit;
+	}
+	
+	/**
+	 * Set the maximal velocity allowed when correcting displacement of anchor points
+	 */
+	public void setCorrectionVelocityLimit( double limit) {
+		this.velocitylimit = limit;
 	}
 	
 	public void applyConstraints( ListIterator<Solver.NCPConstraint> iterator, double dt ) {
@@ -79,9 +87,14 @@ public class BallInSocketJoint implements Constraint {
 //		Vector3 u = b1.state.velocity.add( b1.state.omega.cross(ri)).minus(b2.state.velocity).add(b2.state.omega.cross(rj));
 		Vector3 u = b1.state.velocity.add( b1.state.omega.cross(ri)).minus(b2.state.velocity.add(b2.state.omega.cross(rj)));
 
-		double Kcor = 0.8;
 //		Vector3 posError = b1.state.rCm.add(b1.state.q.rotate(p1)).minus(b2.state.rCm).minus(b2.state.q.rotate(p2)).multiply(Kcor);
-		Vector3 posError = b1.state.position.add(ri).minus(b2.state.position).minus(rj).multiply(Kcor*(1.0/dt));
+		Vector3 posError = b1.state.position.add(ri).minus(b2.state.position).minus(rj).multiply(1.0/dt);
+		
+		// correction velocity limit
+		if ( posError.norm() > velocitylimit) {
+			posError.assign( posError.normalize().multiply(velocitylimit));
+		}
+		
 		u.assign( u.add(posError));
 		
 		
