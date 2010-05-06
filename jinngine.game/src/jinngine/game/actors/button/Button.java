@@ -160,4 +160,9 @@ public class Button extends Node implements SelectableActor, PhysicalActor {
 	public Body getBodyFromNode(Node node) {
 		return node==buttonnode?buttonbody:null;
 	}
+
+	@Override
+	public boolean canBeSelected() {
+		return true;
+	}
 }

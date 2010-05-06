@@ -130,10 +130,14 @@ public class HUDActor implements Actor, ActorOwner {
 
 				} else if ( selectedactor == null ) {
 					// whole new selection
-					newselection.setSelected(game,true);
-					selectedactor = newselection;								
-					System.out.println("Selected " + newselection);
-
+					
+					// can it be selected? 
+					if( newselection.canBeSelected() ) {
+						newselection.setSelected(game,true);
+						selectedactor = newselection;								
+						System.out.println("Selected " + newselection);
+					}
+					
 					// done
 					return;
 				}
@@ -180,6 +184,23 @@ public class HUDActor implements Actor, ActorOwner {
 			}
 				
 		}
+		
+		// if we have an active selection ...
+		if ( selectedactor != null) {
+			// make sure it still wants to be selected
+			if( !selectedactor.canBeSelected() ) {
+				// deselect the selected actor and stop the action actor
+				if (actionactor != null) {
+					finished(game, actionactor);
+				}
+
+				// deselect
+				System.out.println("Deselected " + selectedactor);
+				selectedactor.setSelected(game,false);
+				selectedactor = null;
+			}
+		}
+		
 	}
 
 	@Override

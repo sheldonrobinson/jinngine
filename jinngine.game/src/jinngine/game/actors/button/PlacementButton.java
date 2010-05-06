@@ -1,5 +1,9 @@
 package jinngine.game.actors.button;
 
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+
 import com.ardor3d.image.Texture;
 import com.ardor3d.image.TextureStoreFormat;
 import com.ardor3d.math.Vector2;
@@ -18,18 +22,38 @@ import jinngine.game.actors.SelectableActor;
 import jinngine.game.actors.interaction.BodyPlacement;
 import jinngine.game.actors.interaction.ConfigureActor;
 import jinngine.game.actors.platform1.BoxPlatform;
+import jinngine.game.actors.player.Player;
 import jinngine.math.Vector3;
 import jinngine.physics.Body;
+
+import javax.sound.sampled.*;
+import javax.sound.sampled.Mixer.Info;
 
 public class PlacementButton extends Button {
 	
 	private Texture selectedtexture;
 	private Texture deselectedtexture;	
 	private TextureState texturestate;
+	private final Player player;
+	private final double distancelimit = 2.5;
+
+	private SourceDataLine sound;
+	
+	public PlacementButton( Player player) {
+		this.player = player;
+		
+	}
+	
+	@Override
+	public void act(Game game) {
+		super.act(game);
+		
+		// do something if player is within range
+		
+	}
 	
 	@Override
 	public void start(Game game) {
-		// TODO Auto-generated method stub
 		super.start(game);
 		
 		// load textures
@@ -44,10 +68,8 @@ public class PlacementButton extends Button {
 		// get the texture state on the button box
 		texturestate = (TextureState)buttonnode.getChild("mybuttonbox").getLocalRenderState(StateType.Texture);
 
-
 		// set the deselected texture by default
 		texturestate.setTexture(deselectedtexture);	
-
 	}
 	
 	@Override
@@ -72,10 +94,22 @@ public class PlacementButton extends Button {
 	public void setSelected(Game game, boolean selected) {
 		super.setSelected(game, selected);
 		
-		if (selected) {
+		if (selected) {			
+
 			texturestate.setTexture(selectedtexture);
+			
 		} else {
+
 			texturestate.setTexture(deselectedtexture);	
+		}
+	}
+	
+	@Override
+	public boolean canBeSelected() {
+		if (buttonbody.getPosition().minus(player.getPosition()).norm() > distancelimit ) {
+			return false;
+		} else {
+			return true;
 		}
 	}
 	

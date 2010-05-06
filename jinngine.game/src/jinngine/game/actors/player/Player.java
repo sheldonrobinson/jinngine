@@ -1,7 +1,6 @@
 package jinngine.game.actors.player;
 
 import java.util.*;
-import java.io.File;
 import java.io.IOException;
 
 import com.ardor3d.extension.effect.water.WaterNode;
@@ -57,18 +56,25 @@ public class Player extends Node implements PhysicalActor {
 	private double focusxcoord = 0;
 	
 	private double tick = 0;
-	
-	private KeyboardState previouskbstate;
+
+	boolean movingkeyspressed = false;
+
 	
 	private jinngine.geometry.Box box;
 	
     final double walkvelocity = 2;
     final double walkimpulse = 0.5*2;
     final Vector3 velocity = new Vector3();
-    final Vector3 force = new Vector3();
+    final Vector3 walkforce = new Vector3();
+    final Vector3 walkconstraintforce = new Vector3();
+    private double jumpconstraintforce = 0;
+    private double angularforcelimit = 0.8;
+
+    
 
     private final Vector3 jumpdirection = new Vector3(0,1,0);	
     private final Vector3 heading = new Vector3(1,0,0);
+    private final Vector3 upvector = new Vector3(0,1,0);
     private final Vector3 playerdisplace = new Vector3(0,0,0);
     
     
@@ -87,7 +93,7 @@ public class Player extends Node implements PhysicalActor {
 		final ColladaImporter colladaImporter = new ColladaImporter();
         final ColladaStorage storage = colladaImporter.load("girl.dae");
         final Node body = storage.getScene();
-        body.setScale(1);
+//        body.setScale(0.05);
         body.setName("playermainbody");
         TextureState headts = new TextureState();
         headts.setEnabled(true);
@@ -125,7 +131,7 @@ public class Player extends Node implements PhysicalActor {
 	@Override
 	public void act(Game game) {
 		
-		playerdisplace.y = Math.sin(tick)*0.25;
+		playerdisplace.y = Math.sin(tick*1.3)*0.10;
 		
 		
 		if (jumpable > 0)
@@ -135,23 +141,58 @@ public class Player extends Node implements PhysicalActor {
 		
   		//reset jump velocity and force
 		velocity.y = 0;
-		force.y = 0;
+		jumpconstraintforce = 0;
 
+		
+
+		
+ 		// handle deviations thats more than 90 degrees        	
+ 		Vector3 axis = playerbody.state.rotation.multiply(new Vector3(0,1,0));
+ 		double correctionvelocity = axis.cross(upvector).x;
+ 		if ( axis.dot(upvector) < 0) {
+ 			if (correctionvelocity < 0) {
+ 				correctionvelocity = -Math.PI-correctionvelocity;
+ 			} else {
+ 				correctionvelocity = Math.PI-correctionvelocity;
+ 			}
+ 		}
+
+ 		// if we are in contact with something, we can only move if we're in 
+ 		// the right orientation
+ 		if (contacts>0 && Math.abs(correctionvelocity)>0.1  ) {
+ 			walkconstraintforce.assign(0,0,0);
+ 			angularforcelimit = 0;
+ 		} else {
+ 			// let the constraint forces work
+ 			walkconstraintforce.assign(walkforce);
+ 			angularforcelimit = 0.8;
+
+ 			// movement motion only if movement keys are down
+ 			if (movingkeyspressed) 
+ 				tick = tick + 0.5;
+ 			else
+ 				tick = tick * 0.5;
+ 		}
+
+ 		// keep tick in [0,2PI]
+ 		if (tick > 2*Math.PI) tick = tick -2*Math.PI;
+
+ 		
 		// get camera
 		ReadOnlyVector3 location = game.getRendering().getCamera().getLocation();
 		double camlocation = location.getX();
 		
 		if (focuscamera) {
 			
-			game.getRendering().getCamera().setLocation( (camlocation*0.95+focusxcoord*0.05), -25+7, -20);
-			game.getRendering().getCamera().lookAt((camlocation*0.95+focusxcoord*0.05), -25, 0, com.ardor3d.math.Vector3.UNIT_Y);
+			game.getRendering().getCamera().setLocation( (camlocation*0.85+focusxcoord*0.15), -25+7, -20);
+			game.getRendering().getCamera().lookAt((camlocation*0.85+focusxcoord*0.15), -25, 0, com.ardor3d.math.Vector3.UNIT_Y);
 			
 			if (Math.abs(camlocation-focusxcoord) < 0.01) {
 				focuscamera = false;
 			}
 		} else {
 			
-			if (Math.abs(camlocation-playerbody.state.position.x) > 6.7) {
+			if (Math.abs(camlocation-playerbody.state.position.x) > 6.0) {
 				focusxcoord = playerbody.state.position.x;
 				focuscamera = true;
 			}
@@ -179,6 +220,8 @@ public class Player extends Node implements PhysicalActor {
             	caller.setRotation(mat);
             }
         });
+        
+        body.setScale(0.75);
                 
         //connect actor to mesh
         body.setUserData(this);
@@ -208,11 +251,12 @@ public class Player extends Node implements PhysicalActor {
            
         // create control velocity constraint
         controlconstraint = new Constraint() {       	
-        	final NCPConstraint c = new NCPConstraint();       	
-        	final NCPConstraint c2 = new NCPConstraint();   
-        	final NCPConstraint c3 = new NCPConstraint();   
-        	final NCPConstraint c4 = new NCPConstraint();   
-        	final NCPConstraint c5 = new NCPConstraint();   
+        	final NCPConstraint linear1 = new NCPConstraint();       	
+        	final NCPConstraint linear2 = new NCPConstraint();   
+        	final NCPConstraint linear3 = new NCPConstraint();   
+        	final NCPConstraint angular1 = new NCPConstraint();   
+        	final NCPConstraint angular2 = new NCPConstraint();   
+        	final NCPConstraint angular3 = new NCPConstraint();   
 
         	@Override
         	public void applyConstraints(ListIterator<NCPConstraint> iterator,
@@ -221,48 +265,93 @@ public class Player extends Node implements PhysicalActor {
         		Vector3 u = playerbody.state.velocity;//.add(playerbody.state.omega.cross(ri));
         		
         		// -(unf-uni)  -correction 
-        		c.assign(playerbody, dummy,
+        		linear1.assign(playerbody, dummy,
         				new Vector3(1,0,0), new Vector3(), new Vector3(), new Vector3(),
         				new Vector3(1,0,0), new Vector3(), new Vector3(), new Vector3(), 
-        				Math.min(force.x,0), Math.max(0,force.x), 
+        				Math.min(walkconstraintforce.x,0), Math.max(0,walkconstraintforce.x), 
         				null,
         				u.x-velocity.x, 0  );
-        		iterator.add(c);
+        		iterator.add(linear1);
 
-        		c2.assign(playerbody, dummy,
+        		linear2.assign(playerbody, dummy,
         				new Vector3(0,0,1), new Vector3(), new Vector3(), new Vector3(),
         				new Vector3(0,0,1), new Vector3(), new Vector3(), new Vector3(), 
-        				Math.min(force.z,0), Math.max(0,force.z), 
+        				Math.min(walkconstraintforce.z,0), Math.max(0,walkconstraintforce.z), 
         				null,
         				u.z-velocity.z, 0  );
-        		iterator.add(c2);
+        		iterator.add(linear2);
 
         		
-        		c3.assign(playerbody, dummy,
+        		linear3.assign(playerbody, dummy,
         				jumpdirection, new Vector3(), new Vector3(), new Vector3(),
         				jumpdirection, new Vector3(), new Vector3(), new Vector3(),
-        				Math.min(force.y,0), Math.max(0,force.y), 
+        				Math.min(jumpconstraintforce,0), Math.max(0,jumpconstraintforce), 
         				null, 
         				jumpdirection.dot(playerbody.state.velocity)-velocity.y, 0  );
-        		iterator.add(c3);
+        		iterator.add(linear3);
 
         		
         		Vector3 axis = playerbody.state.rotation.multiply(new Vector3(1,0,0));
-        		c4.assign(playerbody, dummy,
-        				new Vector3(), new Vector3(0,1,0), new Vector3(), new Vector3(),
-        				new Vector3(), new Vector3(0,1,0), new Vector3(), new Vector3(),
-        				-1, 1, 
-        				null, 
-        				playerbody.state.omega.y-axis.cross(heading).y*10, 0  );
-        		iterator.add(c4);
+ 
+        		// handle deviations thats more than 90 degrees
+        		double correctionvelocity = axis.cross(heading).y;
+        		if ( axis.dot(heading) < 0) {
+        			if (correctionvelocity < 0) {
+        				correctionvelocity = -Math.PI-correctionvelocity;
+        			} else {
+        				correctionvelocity = Math.PI-correctionvelocity;
+        			}
+        		}
         		
-        		c5.assign(playerbody, dummy,
-        				new Vector3(), new Vector3(0,0,1), new Vector3(), new Vector3(),
-        				new Vector3(), new Vector3(0,0,1), new Vector3(), new Vector3(),
-        				-1, 1, 
+        		angular1.assign(playerbody, dummy,
+        				new Vector3(), new Vector3(0,1,0), new Vector3(), new Vector3(),
+        				new Vector3(), new Vector3(0,1,0), new Vector3(), new Vector3(),
+        				-angularforcelimit, angularforcelimit, 
         				null, 
-        				playerbody.state.omega.z-axis.cross(heading).z*10, 0  );
-        		iterator.add(c5);
+        				playerbody.state.omega.y-correctionvelocity*5, 0  );
+        		iterator.add(angular1);
+
+        		
+        		// handle deviations thats more than 90 degrees        		
+        		correctionvelocity = axis.cross(heading).z;
+        		if ( axis.dot(heading) < 0) {
+        			if (correctionvelocity < 0) {
+        				correctionvelocity = -Math.PI-correctionvelocity;
+        			} else {
+        				correctionvelocity = Math.PI-correctionvelocity;
+        			}
+        		}
+
+        		
+        		angular2.assign(playerbody, dummy,
+        				new Vector3(), new Vector3(0,0,1), new Vector3(), new Vector3(),
+        				new Vector3(), new Vector3(0,0,1), new Vector3(), new Vector3(),
+        				-angularforcelimit, angularforcelimit, 
+        				null, 
+        				playerbody.state.omega.z-correctionvelocity*5, 0  );
+        		iterator.add(angular2);
+        		
+        		
+
+        		axis = playerbody.state.rotation.multiply(upvector);
+
+        		// handle deviations thats more than 90 degrees        		
+        		correctionvelocity = axis.cross(upvector).x;
+        		if ( axis.dot(upvector) < 0) {
+        			if (correctionvelocity < 0) {
+        				correctionvelocity = -Math.PI-correctionvelocity;
+        			} else {
+        				correctionvelocity = Math.PI-correctionvelocity;
+        			}
+        		}
+        		
+        		angular3.assign(playerbody, dummy,
+        				new Vector3(), new Vector3(1,0,0), new Vector3(), new Vector3(),
+        				new Vector3(), new Vector3(1,0,0), new Vector3(), new Vector3(),
+        				-angularforcelimit, angularforcelimit, 
+        				null, 
+        				playerbody.state.omega.x-correctionvelocity*5, 0  );
+        		iterator.add(angular3);
 
 
         	}
@@ -311,11 +400,14 @@ public class Player extends Node implements PhysicalActor {
             Key[] keys = new Key[] { Key.W, Key.A, Key.S, Key.D, Key.SPACE };
 
             public boolean apply(final TwoInputStates states) {
+            	
+//            	states.
 //                for (final Key k : keys) {
 //                    if (states.getCurrent() != null && states.getCurrent().getKeyboardState().isDown(k)) {
 //                        return true;
 //                    }
 //                }
+            	
                 return true;
             }
         };
@@ -325,59 +417,49 @@ public class Player extends Node implements PhysicalActor {
                  KeyboardState kb = inputStates.getCurrent().getKeyboardState();
                  
 
-                 if (previouskbstate != null) {
-                	 // get held keys
-                	 EnumSet<Key> keys = kb.getKeysPressedSince(previouskbstate);
-
+                     movingkeyspressed = false;
                 	 velocity.assignZero();
-                	 force.assignZero();
+                	 walkforce.assignZero();
                 	 box.setFrictionCoefficient(2);
                 	 
 
                 	 if (kb.isDown(Key.W)) {
-
-                		 if (contacts>0)
-                			 tick = tick + 0.5;
+                		 movingkeyspressed = true;
 
                 		 heading.assign(0,0,1);
                 		 velocity.z = walkvelocity;
-                		 force.z = walkimpulse;
+                		 walkforce.z = walkimpulse;
                 		 box.setFrictionCoefficient(0.25);
                 	 }
                 	 if (kb.isDown(Key.S)) {
-                		 tick = tick + 0.5;
+                		 movingkeyspressed = true;
 
                 		 heading.assign(0,0,-1);
                 		 velocity.z = -walkvelocity;
-                		 force.z = -walkimpulse;
+                		 walkforce.z = -walkimpulse;
                 		 box.setFrictionCoefficient(0.25);
 
                 	 }
                 	 if (kb.isDown(Key.A)) {
-                		 tick = tick + 0.5;
+                		 movingkeyspressed = true;
 
                 		 heading.assign(1,0,0);
                 		 velocity.x = walkvelocity;
-                		 force.x = walkimpulse;
+                		 walkforce.x = walkimpulse;
                 		 box.setFrictionCoefficient(0.25);
 
                 	 }
                 	 if (kb.isDown(Key.D)) {
-                		 tick = tick + 0.5;
+                		 movingkeyspressed = true;
 
                 		 heading.assign(-1,0,0);
                 		 velocity.x = -walkvelocity;
-                		 force.x = -walkimpulse;
+                		 walkforce.x = -walkimpulse;
                 		 box.setFrictionCoefficient(0.25);
 
                 	 }  
 
-
-            		 if (contacts<1)
-            			 tick = tick*0.5;
-
-
-                	 if (tick > 2*Math.PI) tick = tick -2*Math.PI;
+                	 
 
                 	 //                 
                 	 //                 if (kb.isDown(Key.W) && kb.isDown(Key.D)) {
@@ -449,15 +531,12 @@ public class Player extends Node implements PhysicalActor {
                 			 if ( canjump) {
                 				 // impulse.setMagnitude(7);
                 				 velocity.y=5;
-                				 force.y = 20;
+                				jumpconstraintforce = 20;
                 			 }
                 		 }
                 	 } else { // not pressed space
                 		 jumped = false;
                 	 }
-                 }
-                // store this kb state
-             	previouskbstate = kb;
             } // void perform
         };
         
@@ -475,5 +554,9 @@ public class Player extends Node implements PhysicalActor {
 	@Override
 	public Body getBodyFromNode(Node node) {
 		return playerbody;
+	}
+	
+	public Vector3 getPosition() {
+		return playerbody.getPosition();
 	}
 }

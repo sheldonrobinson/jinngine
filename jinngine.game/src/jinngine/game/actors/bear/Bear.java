@@ -254,4 +254,9 @@ public class Bear implements CommandableActor, SelectableActor {
 		
 	}
 
+	@Override
+	public boolean canBeSelected() {
+		return true;
+	}
+
 }

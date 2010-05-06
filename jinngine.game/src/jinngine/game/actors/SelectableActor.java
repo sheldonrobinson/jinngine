@@ -8,6 +8,14 @@ import jinngine.math.Vector3;
 
 public interface SelectableActor extends Actor {
 	
+	
+	/**
+	 * Query actor if it wants to be selected
+	 * @return
+	 */
+	public boolean canBeSelected();
+	
+	
 	/**
 	 * Tell this actor its selected state
 	 * @param selected

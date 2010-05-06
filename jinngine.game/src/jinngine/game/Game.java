@@ -5,9 +5,12 @@ import java.util.*;
 import com.ardor3d.scenegraph.Node;
 import com.ardor3d.scenegraph.Spatial;
 
+import jinngine.game.actors.button.PlacementButton;
+import jinngine.game.actors.environment.Environment;
 import jinngine.game.actors.interaction.HUDActor;
 import jinngine.game.actors.Actor;
 import jinngine.game.actors.platform1.ConvexPlatform;
+import jinngine.game.actors.player.Player;
 import jinngine.physics.DefaultScene;
 
 public class Game {
@@ -25,10 +28,10 @@ public class Game {
 		jinngine.setTimestep(0.065);
 			
 		//setup some actors
-//		Actor actor = new Environment();
-//		actor.create(this);
+		Actor actor = new Environment();
+		actor.create(this);
 //		actor.start(this);
-//		runningactors.add(actor);
+		runningactors.add(actor);
 
 		
 		//		Actor platformbox1 = new Platform1(new jinngine.math.Vector3(-3,-25+2,0), 0.7);
@@ -57,8 +60,8 @@ public class Game {
 //		button.create(this);
 //		addActor(button);
 ////
-//		Actor p = new jinngine.game.actors.player.Player();
-//		p.create(this);
+		Player p = new jinngine.game.actors.player.Player();
+		p.create(this);
 //		addActor(p);
 //
 		
@@ -70,9 +73,14 @@ public class Game {
 //		button.create(this);
 //		addActor(button);
 //		
-//		PlacementButton button = new PlacementButton();
-//		button.create(this);
+		PlacementButton button = new PlacementButton(p);
+		button.create(this);
 //		addActor(button);
+		
+		PlacementButton button2 = new PlacementButton(p);
+		button2.create(this);
+//		addActor(button2);
+
 		
 		addActor( new HUDActor() );
 		

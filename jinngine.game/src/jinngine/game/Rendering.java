@@ -1,62 +1,49 @@
 package jinngine.game;
 
-import java.io.File;
-import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 
-import jinngine.physics.Scene;
+import org.lwjgl.LWJGLException;
 
-import com.ardor3d.extension.effect.water.WaterNode;
+
+
 import com.ardor3d.extension.shadow.map.ParallelSplitShadowMapPass;
 import com.ardor3d.extension.ui.UIComponent;
 import com.ardor3d.extension.ui.UIHud;
 import com.ardor3d.framework.Canvas;
 import com.ardor3d.framework.DisplaySettings;
 import com.ardor3d.framework.NativeCanvas;
-import com.ardor3d.framework.jogl.JoglCanvas;
-import com.ardor3d.framework.jogl.JoglCanvasRenderer;
+import com.ardor3d.framework.lwjgl.LwjglAwtCanvas;
+import com.ardor3d.framework.lwjgl.LwjglCanvasRenderer;
 import com.ardor3d.image.util.AWTImageLoader;
-import com.ardor3d.input.Key;
 import com.ardor3d.input.PhysicalLayer;
 import com.ardor3d.input.awt.AwtFocusWrapper;
 import com.ardor3d.input.awt.AwtKeyboardWrapper;
 import com.ardor3d.input.awt.AwtMouseManager;
 import com.ardor3d.input.awt.AwtMouseWrapper;
 import com.ardor3d.input.logical.DummyControllerWrapper;
-import com.ardor3d.input.logical.InputTrigger;
-import com.ardor3d.input.logical.KeyPressedCondition;
 import com.ardor3d.input.logical.LogicalLayer;
-import com.ardor3d.input.logical.TriggerAction;
-import com.ardor3d.input.logical.TwoInputStates;
 import com.ardor3d.intersection.PickResults;
 import com.ardor3d.intersection.PickingUtil;
 import com.ardor3d.intersection.PrimitivePickResults;
 import com.ardor3d.light.DirectionalLight;
-import com.ardor3d.light.PointLight;
 import com.ardor3d.math.ColorRGBA;
 import com.ardor3d.math.Ray3;
 import com.ardor3d.math.Vector3;
 import com.ardor3d.renderer.Camera;
 import com.ardor3d.renderer.Renderer;
 import com.ardor3d.renderer.TextureRendererFactory;
-import com.ardor3d.renderer.jogl.JoglTextureRendererProvider;
+import com.ardor3d.renderer.lwjgl.LwjglTextureRendererProvider;
 import com.ardor3d.renderer.pass.BasicPassManager;
-import com.ardor3d.renderer.pass.OutlinePass;
 import com.ardor3d.renderer.pass.RenderPass;
 import com.ardor3d.renderer.state.BlendState;
 import com.ardor3d.renderer.state.CullState;
-import com.ardor3d.renderer.state.GLSLShaderObjectsState;
 import com.ardor3d.renderer.state.ZBufferState;
 import com.ardor3d.renderer.state.BlendState.DestinationFunction;
 import com.ardor3d.renderer.state.BlendState.SourceFunction;
 import com.ardor3d.renderer.state.CullState.Face;
 import com.ardor3d.scenegraph.Node;
-import com.ardor3d.scenegraph.shape.Pyramid;
 import com.ardor3d.util.Timer;
-import com.ardor3d.util.export.binary.BinaryImporter;
-import com.ardor3d.util.export.xml.XMLExporter;
-import com.ardor3d.util.export.xml.XMLImporter;
 import com.ardor3d.util.resource.ResourceLocatorTool;
 import com.ardor3d.util.resource.SimpleResourceLocator;
 
@@ -66,7 +53,8 @@ import com.ardor3d.util.resource.SimpleResourceLocator;
 public final class Rendering implements com.ardor3d.framework.Scene {
 
     // ardor3d members
-    private final JoglCanvas canvas;
+    private LwjglAwtCanvas canvas;
+//	private LwjglAwtCanvas canvas;
     private final Timer timer = new Timer();
     private Node root = new Node();
     private final BasicPassManager passes = new BasicPassManager();
@@ -78,12 +66,25 @@ public final class Rendering implements com.ardor3d.framework.Scene {
     private final Camera camera;
     
 	public Rendering() {
-        final JoglCanvasRenderer canvasRenderer = new JoglCanvasRenderer(this);
         final DisplaySettings settings = new DisplaySettings((int)(600*(16.0/9.0)), 600, 16, 0, 0, 8, 0, 0, false, false);
-        TextureRendererFactory.INSTANCE.setProvider(new JoglTextureRendererProvider());
-        canvas =  new JoglCanvas(canvasRenderer, settings);
+//        final JoglCanvasRenderer canvasRenderer = new JoglCanvasRenderer(this);
+//        TextureRendererFactory.INSTANCE.setProvider(new JoglTextureRendererProvider());
+//        canvas =  new JoglCanvas(canvasRenderer, settings);
+
+        final LwjglCanvasRenderer canvasRenderer = new LwjglCanvasRenderer(this);
+        TextureRendererFactory.INSTANCE.setProvider(new LwjglTextureRendererProvider());
+		canvas = null;
+
+        try {
+			canvas =  new LwjglAwtCanvas(settings, canvasRenderer);
+		} catch (LWJGLException e) {
+			e.printStackTrace();
+			System.exit(0);
+		}
+
+        
         canvas.init();        
-        canvas.setTitle("Machinery");
+        //canvas.setTitle("Machinery");
         this.camera = canvas.getCanvasRenderer().getCamera();
         canvas.getCanvasRenderer().getCamera().setLocation(0, -25+7, -20);
         canvas.getCanvasRenderer().getCamera().setFrustumPerspective(25, 16.0/9.0, 1, 1500);
@@ -98,6 +99,7 @@ public final class Rendering implements com.ardor3d.framework.Scene {
         
      
         AwtKeyboardWrapper keywrap = new AwtKeyboardWrapper(canvas);
+//        KeyboardWrapper keywrap = new 
         
         
         physicallayer = new PhysicalLayer( keywrap,
@@ -120,13 +122,13 @@ public final class Rendering implements com.ardor3d.framework.Scene {
         
         AWTImageLoader.registerLoader();
 //        
-        try {
-			root = (Node)XMLImporter.getInstance().load( new File("testgraph.xml"));
-
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}	
+//        try {
+//			root = (Node)XMLImporter.getInstance().load( new File("testgraph.xml"));
+//
+//		} catch (IOException e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//		}	
         
         
         // default back face culling
@@ -225,7 +227,7 @@ public final class Rendering implements com.ardor3d.framework.Scene {
 		return physicallayer;
 	}
 	
-	public final NativeCanvas getCanvas() {
+	public final Canvas getCanvas() {
 		return canvas;
 	}
 
