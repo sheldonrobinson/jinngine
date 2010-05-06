@@ -1,9 +1,16 @@
 package jinngine.game;
 
+import java.awt.Dimension;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.net.URI;
 import java.net.URISyntaxException;
 
+import javax.swing.JFrame;
+
 import org.lwjgl.LWJGLException;
+import org.lwjgl.util.Display;
+import org.newdawn.slick.openal.SoundStore;
 
 
 
@@ -14,8 +21,10 @@ import com.ardor3d.framework.Canvas;
 import com.ardor3d.framework.DisplaySettings;
 import com.ardor3d.framework.NativeCanvas;
 import com.ardor3d.framework.lwjgl.LwjglAwtCanvas;
+import com.ardor3d.framework.lwjgl.LwjglCanvas;
 import com.ardor3d.framework.lwjgl.LwjglCanvasRenderer;
 import com.ardor3d.image.util.AWTImageLoader;
+import com.ardor3d.input.FocusWrapper;
 import com.ardor3d.input.PhysicalLayer;
 import com.ardor3d.input.awt.AwtFocusWrapper;
 import com.ardor3d.input.awt.AwtKeyboardWrapper;
@@ -23,6 +32,8 @@ import com.ardor3d.input.awt.AwtMouseManager;
 import com.ardor3d.input.awt.AwtMouseWrapper;
 import com.ardor3d.input.logical.DummyControllerWrapper;
 import com.ardor3d.input.logical.LogicalLayer;
+import com.ardor3d.input.lwjgl.LwjglKeyboardWrapper;
+import com.ardor3d.input.lwjgl.LwjglMouseWrapper;
 import com.ardor3d.intersection.PickResults;
 import com.ardor3d.intersection.PickingUtil;
 import com.ardor3d.intersection.PrimitivePickResults;
@@ -33,6 +44,7 @@ import com.ardor3d.math.Vector3;
 import com.ardor3d.renderer.Camera;
 import com.ardor3d.renderer.Renderer;
 import com.ardor3d.renderer.TextureRendererFactory;
+import com.ardor3d.renderer.lwjgl.LwjglPbufferTextureRenderer;
 import com.ardor3d.renderer.lwjgl.LwjglTextureRendererProvider;
 import com.ardor3d.renderer.pass.BasicPassManager;
 import com.ardor3d.renderer.pass.RenderPass;
@@ -53,7 +65,7 @@ import com.ardor3d.util.resource.SimpleResourceLocator;
 public final class Rendering implements com.ardor3d.framework.Scene {
 
     // ardor3d members
-    private LwjglAwtCanvas canvas;
+    final private LwjglCanvas canvas;
 //	private LwjglAwtCanvas canvas;
     private final Timer timer = new Timer();
     private Node root = new Node();
@@ -66,50 +78,41 @@ public final class Rendering implements com.ardor3d.framework.Scene {
     private final Camera camera;
     
 	public Rendering() {
-        final DisplaySettings settings = new DisplaySettings((int)(600*(16.0/9.0)), 600, 16, 0, 0, 8, 0, 0, false, false);
+//        System.setProperty("ardor3d.useMultipleContexts", "true");
+        final DisplaySettings settings = new DisplaySettings((int)(600*(16.0/9.0)), 600, 24, 0, 0, 16, 0, 0, false, false);
+//        final DisplaySettings settings = new DisplaySettings(800, 600, 24, 0, 0, 16, 0, 0, false, false);
 //        final JoglCanvasRenderer canvasRenderer = new JoglCanvasRenderer(this);
 //        TextureRendererFactory.INSTANCE.setProvider(new JoglTextureRendererProvider());
 //        canvas =  new JoglCanvas(canvasRenderer, settings);
-
         final LwjglCanvasRenderer canvasRenderer = new LwjglCanvasRenderer(this);
         TextureRendererFactory.INSTANCE.setProvider(new LwjglTextureRendererProvider());
-		canvas = null;
-
-        try {
-			canvas =  new LwjglAwtCanvas(settings, canvasRenderer);
-		} catch (LWJGLException e) {
-			e.printStackTrace();
-			System.exit(0);
-		}
-
-        
+        canvas =  new LwjglCanvas(canvasRenderer, settings);
+        canvas.setVSyncEnabled(true);
         canvas.init();        
-        //canvas.setTitle("Machinery");
         this.camera = canvas.getCanvasRenderer().getCamera();
         canvas.getCanvasRenderer().getCamera().setLocation(0, -25+7, -20);
         canvas.getCanvasRenderer().getCamera().setFrustumPerspective(25, 16.0/9.0, 1, 1500);
         canvas.getCanvasRenderer().getCamera().lookAt(0, -25, 0, Vector3.UNIT_Y);
         canvas.getCanvasRenderer().getRenderer().setBackgroundColor(new ColorRGBA(1,1,1,1));
-
         // do some ardor3d stuff to make the user interface stuff work
-//        physicallayer = new PhysicalLayer(new AwtKeyboardWrapper(canvas), 
-//    			 new AwtMouseWrapper(canvas, new AwtMouseManager(canvas)),
-//                 new AwtFocusWrapper(canvas));
-        
-        
-     
-        AwtKeyboardWrapper keywrap = new AwtKeyboardWrapper(canvas);
-//        KeyboardWrapper keywrap = new 
-        
-        
-        physicallayer = new PhysicalLayer( keywrap,
-        		new AwtMouseWrapper(canvas, new AwtMouseManager(canvas)), 
+        physicallayer = new PhysicalLayer( new LwjglKeyboardWrapper(),
+        		new LwjglMouseWrapper(), 
         		DummyControllerWrapper.INSTANCE, 
-        		new AwtFocusWrapper(canvas));
+        		canvas
+        ); 
+        
 
        logicallayer.registerInput(canvas, physicallayer);
        
-        
+
+       // init sound
+		SoundStore.get().init();		
+		
+//		SoundStore.get().setSoundsOn(true);
+		
+//		org.lwjgl.openal
+
+       
         // setup resource locator
         try {
             final SimpleResourceLocator srl = new SimpleResourceLocator(new URI("file:///home/mo/workspace/jinngine.game/"));

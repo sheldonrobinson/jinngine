@@ -1,8 +1,11 @@
 package jinngine.game.actors.button;
 
+
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+
+import org.newdawn.slick.openal.*;
 
 import com.ardor3d.image.Texture;
 import com.ardor3d.image.TextureStoreFormat;
@@ -26,8 +29,6 @@ import jinngine.game.actors.player.Player;
 import jinngine.math.Vector3;
 import jinngine.physics.Body;
 
-import javax.sound.sampled.*;
-import javax.sound.sampled.Mixer.Info;
 
 public class PlacementButton extends Button {
 	
@@ -36,11 +37,24 @@ public class PlacementButton extends Button {
 	private TextureState texturestate;
 	private final Player player;
 	private final double distancelimit = 2.5;
-
-	private SourceDataLine sound;
+	private Audio click;
+	private int audiobufferid = 0;
 	
 	public PlacementButton( Player player) {
 		this.player = player;
+		
+		try {
+//			SoundStore.get().get
+			click = SoundStore.get().getWAV("audiodump.wav");
+			click.playAsSoundEffect(1, 0, false);
+//			System.out.println(click.getPosition());
+//			audiobufferid = click.getBufferID();
+
+			System.out.println(click);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		
 	}
 	
@@ -94,11 +108,14 @@ public class PlacementButton extends Button {
 	public void setSelected(Game game, boolean selected) {
 		super.setSelected(game, selected);
 		
-		if (selected) {			
+		if (selected) {
+			click.setPosition(20);
+			click.playAsSoundEffect(1, 100, false);
 
 			texturestate.setTexture(selectedtexture);
 			
 		} else {
+			click.playAsSoundEffect(1, 100, false);
 
 			texturestate.setTexture(deselectedtexture);	
 		}
