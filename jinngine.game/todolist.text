@@ -1,0 +1,20 @@
+Game project todo list
+----------------------
+
+- Make object placement support vertical movement
+- Create support for a scrolling background image
+- Make final player model in Blender
+- move sounds and sound loading into the resource folder
+- organize content .blend and .dae files in svn
+- contact troels about writing music and creating sounds 
+  - into tune
+  - puzzle tune 
+- Design an exit mechanism for levels (like the door or something else)
+- Implement the exit mechanism
+- Make scene that tells the user that next level i being loaded
+- Make welcome scene with start game, continue, star over and quit buttons 
+- Test that the game can run inside a webstart package
+- Create button for deleting actors
+- Create button for fixing and unfixing actors
+- Create button for saving scene graph
+- Create button for creating new actors
