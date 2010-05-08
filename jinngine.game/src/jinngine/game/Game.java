@@ -11,6 +11,7 @@ import jinngine.game.actors.button.PlacementButton;
 import jinngine.game.actors.environment.Environment;
 import jinngine.game.actors.interaction.HUDActor;
 import jinngine.game.actors.Actor;
+import jinngine.game.actors.platform1.BoxPlatform;
 import jinngine.game.actors.platform1.ConvexPlatform;
 import jinngine.game.actors.player.Player;
 import jinngine.physics.DefaultScene;
@@ -33,30 +34,37 @@ public class Game {
 		Actor actor = new Environment();
 		actor.create(this);
 //		actor.start(this);
-		runningactors.add(actor);
+//		runningactors.add(actor);
 
 		
-		//		Actor platformbox1 = new Platform1(new jinngine.math.Vector3(-3,-25+2,0), 0.7);
+//		Actor platformbox1 = new Platform1(new jinngine.math.Vector3(-3,-25+2,0), 0.7);
 //		platformbox1.create(this);
-//		platformbox1.start(this);
-//		runningactors.add(platformbox1);
-//
-//				BoxPlatform platformbox2 = new BoxPlatform(new jinngine.math.Vector3(-3,-25+3.5,0), 0.9);
-//				platformbox2.create(this);
-//				platformbox2.start(this);
-//				runningactors.add(platformbox2);
-//		//
-//				BoxPlatform platformbox3 = new BoxPlatform(new jinngine.math.Vector3(-3,-25+3.5,0), 0.7);
-//				platformbox3.create(this);
-//				platformbox3.start(this);
-//				runningactors.add(platformbox3);
-//
+
+		BoxPlatform platformbox2 = new BoxPlatform(new jinngine.math.Vector3(-3,-25+3.5,0), 0.9);
+		platformbox2.create(this);
+		//
+		BoxPlatform platformbox3 = new BoxPlatform(new jinngine.math.Vector3(-3,-25+3.5,0), 0.7);
+		platformbox3.create(this);
+
 		
 		
 		ConvexPlatform platform3 = new ConvexPlatform(new jinngine.math.Vector3(0,-25+3.5,0), 0.7);
 		platform3.create(this);
+		
+		ConvexPlatform platform4 = new ConvexPlatform(new jinngine.math.Vector3(0,-25+3.5,0), 0.7);
+		platform4.create(this);
+
+		ConvexPlatform platform5 = new ConvexPlatform(new jinngine.math.Vector3(0,-25+3.5,0), 0.7);
+		platform5.create(this);
+
+		ConvexPlatform platform6 = new ConvexPlatform(new jinngine.math.Vector3(0,-25+3.5,0), 0.7);
+		platform6.create(this);
+
+		ConvexPlatform platform7 = new ConvexPlatform(new jinngine.math.Vector3(0,-25+3.5,0), 0.7);
+		platform7.create(this);
+		
 //		platform3.start(this);
-		runningactors.add(platform3);
+//		runningactors.add(platform3);
 		
 //		Button button = new Button();
 //		button.create(this);

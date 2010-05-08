@@ -17,6 +17,7 @@ import com.ardor3d.input.logical.TwoInputStates;
 import com.ardor3d.math.Matrix3;
 import com.ardor3d.math.type.ReadOnlyMatrix3;
 import com.ardor3d.math.type.ReadOnlyVector3;
+import com.ardor3d.renderer.Camera;
 import com.ardor3d.renderer.state.GLSLShaderObjectsState;
 import com.ardor3d.renderer.state.TextureState;
 import com.ardor3d.scenegraph.Node;
@@ -124,6 +125,7 @@ public class Player extends Node implements PhysicalActor {
       
       body.setTranslation(body.getTranslation().add(0,-20,0,null));
       
+      
       // attach to root
       game.getRendering().getRootNode().attachChild(this);
 	}
@@ -183,9 +185,9 @@ public class Player extends Node implements PhysicalActor {
 		double camlocation = location.getX();
 		
 		if (focuscamera) {
-			
-			game.getRendering().getCamera().setLocation( (camlocation*0.85+focusxcoord*0.15), -25+7, -20);
-			game.getRendering().getCamera().lookAt((camlocation*0.85+focusxcoord*0.15), -25, 0, com.ardor3d.math.Vector3.UNIT_Y);
+			double cameraycoord = -20;
+			game.getRendering().getCamera().setLocation( (camlocation*0.85+focusxcoord*0.15), cameraycoord+5.5, -20);
+			game.getRendering().getCamera().lookAt((camlocation*0.85+focusxcoord*0.15), cameraycoord, 0, com.ardor3d.math.Vector3.UNIT_Y);
 			
 			if (Math.abs(camlocation-focusxcoord) < 0.01) {
 				focuscamera = false;

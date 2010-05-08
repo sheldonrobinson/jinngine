@@ -1,10 +1,7 @@
 package jinngine.game.actors.button;
 
 
-import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
-
 import org.newdawn.slick.openal.*;
 
 import com.ardor3d.image.Texture;
@@ -19,14 +16,10 @@ import jinngine.game.Game;
 import jinngine.game.actors.ActionActor;
 import jinngine.game.actors.Actor;
 import jinngine.game.actors.ActorOwner;
-import jinngine.game.actors.ConfigurableActor;
 import jinngine.game.actors.PhysicalActor;
-import jinngine.game.actors.SelectableActor;
 import jinngine.game.actors.interaction.BodyPlacement;
-import jinngine.game.actors.interaction.ConfigureActor;
-import jinngine.game.actors.platform1.BoxPlatform;
 import jinngine.game.actors.player.Player;
-import jinngine.math.Vector3;
+
 import jinngine.physics.Body;
 
 
@@ -109,7 +102,7 @@ public class PlacementButton extends Button {
 		super.setSelected(game, selected);
 		
 		if (selected) {
-			click.setPosition(20);
+			// play click sound
 			click.playAsSoundEffect(1, 100, false);
 
 			texturestate.setTexture(selectedtexture);
@@ -117,6 +110,7 @@ public class PlacementButton extends Button {
 		} else {
 			click.playAsSoundEffect(1, 100, false);
 
+			// play click sound
 			texturestate.setTexture(deselectedtexture);	
 		}
 	}

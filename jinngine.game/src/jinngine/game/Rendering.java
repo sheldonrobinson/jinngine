@@ -23,6 +23,8 @@ import com.ardor3d.framework.NativeCanvas;
 import com.ardor3d.framework.lwjgl.LwjglAwtCanvas;
 import com.ardor3d.framework.lwjgl.LwjglCanvas;
 import com.ardor3d.framework.lwjgl.LwjglCanvasRenderer;
+import com.ardor3d.image.TextureStoreFormat;
+import com.ardor3d.image.Texture.MinificationFilter;
 import com.ardor3d.image.util.AWTImageLoader;
 import com.ardor3d.input.FocusWrapper;
 import com.ardor3d.input.PhysicalLayer;
@@ -48,13 +50,21 @@ import com.ardor3d.renderer.lwjgl.LwjglPbufferTextureRenderer;
 import com.ardor3d.renderer.lwjgl.LwjglTextureRendererProvider;
 import com.ardor3d.renderer.pass.BasicPassManager;
 import com.ardor3d.renderer.pass.RenderPass;
+import com.ardor3d.renderer.queue.RenderBucketType;
 import com.ardor3d.renderer.state.BlendState;
 import com.ardor3d.renderer.state.CullState;
+import com.ardor3d.renderer.state.TextureState;
 import com.ardor3d.renderer.state.ZBufferState;
 import com.ardor3d.renderer.state.BlendState.DestinationFunction;
 import com.ardor3d.renderer.state.BlendState.SourceFunction;
 import com.ardor3d.renderer.state.CullState.Face;
 import com.ardor3d.scenegraph.Node;
+import com.ardor3d.scenegraph.hint.CullHint;
+import com.ardor3d.scenegraph.hint.LightCombineMode;
+import com.ardor3d.scenegraph.hint.PickingHint;
+import com.ardor3d.scenegraph.hint.TextureCombineMode;
+import com.ardor3d.scenegraph.shape.Quad;
+import com.ardor3d.util.TextureManager;
 import com.ardor3d.util.Timer;
 import com.ardor3d.util.resource.ResourceLocatorTool;
 import com.ardor3d.util.resource.SimpleResourceLocator;
@@ -93,7 +103,7 @@ public final class Rendering implements com.ardor3d.framework.Scene {
         canvas.getCanvasRenderer().getCamera().setLocation(0, -25+7, -20);
         canvas.getCanvasRenderer().getCamera().setFrustumPerspective(25, 16.0/9.0, 1, 1500);
         canvas.getCanvasRenderer().getCamera().lookAt(0, -25, 0, Vector3.UNIT_Y);
-        canvas.getCanvasRenderer().getRenderer().setBackgroundColor(new ColorRGBA(1,1,1,1));
+        canvas.getCanvasRenderer().getRenderer().setBackgroundColor(new ColorRGBA(1,1,0,1));
         // do some ardor3d stuff to make the user interface stuff work
         physicallayer = new PhysicalLayer( new LwjglKeyboardWrapper(),
         		new LwjglMouseWrapper(), 
@@ -144,6 +154,7 @@ public final class Rendering implements com.ardor3d.framework.Scene {
         final ZBufferState buf = new ZBufferState();
         buf.setEnabled(true);
         buf.setFunction(ZBufferState.TestFunction.LessThanOrEqualTo);
+//        buf.setFunction(ZBufferState.TestFunction.Always);
         root.setRenderState(buf);
         
         //blending
@@ -178,6 +189,9 @@ public final class Rendering implements com.ardor3d.framework.Scene {
 //        outline.add(root);
 //        outline.setEnabled(true);
 //        passes.add(outline);
+        
+
+        
         
         // setup for ui components
         UIComponent.setUseTransparency(true);

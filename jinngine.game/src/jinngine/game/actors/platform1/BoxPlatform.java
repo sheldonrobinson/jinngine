@@ -57,6 +57,8 @@ public class BoxPlatform extends Node implements PhysicalActor, ConfigurableActo
 	private double shade;	
 	private boolean isFixed = false;
 	private UIFrame frame;
+	private double scale = 1.0;
+
 
 
 	public BoxPlatform() {
@@ -68,6 +70,8 @@ public class BoxPlatform extends Node implements PhysicalActor, ConfigurableActo
 		// read some settings
 		isFixed = ic.readBoolean("isFixed", false);
 		shade = (float)ic.readDouble("shade", 0);
+		scale = (double)ic.readDouble("scale", 1.0);
+
 	}
 
 	@Override
@@ -76,6 +80,7 @@ public class BoxPlatform extends Node implements PhysicalActor, ConfigurableActo
 		// write some settings
 		oc.write(isFixed, "isFixed", false);
 		oc.write(shade, "shade", 0.0);
+		oc.write(scale, "scale", 1.0);
 
 	}
 
@@ -91,7 +96,6 @@ public class BoxPlatform extends Node implements PhysicalActor, ConfigurableActo
 
 		platform = new Node();
 
-		double scale = 0.5;
 
 		// make the outline
 		ColorRGBA[] colors = new ColorRGBA[24];
@@ -157,7 +161,7 @@ public class BoxPlatform extends Node implements PhysicalActor, ConfigurableActo
 
 		
 		platformbox1body = new Body("default");
-		boxgeometry = new jinngine.geometry.Box(s.getX(),s.getY(),s.getZ());
+		boxgeometry = new jinngine.geometry.Box(scale*2,scale*2,scale*2);
 		platformbox1body.addGeometry(boxgeometry);
 		platformbox1body.finalize();
 		physics.addBody(platformbox1body);
