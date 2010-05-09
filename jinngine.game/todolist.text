@@ -1,16 +1,25 @@
 Game project todo list
 ----------------------
 
-- Make object placement support vertical movement
-- Create support for a scrolling background image
+- Make object placement support vertical movement [done 8/5/10, LSHIFT as modifier key]
+- Create support for a scrolling background image [done, but scrolling didn't seem to work so well 8/5/10]
 - Make final player model in Blender
 - move sounds and sound loading into the resource folder
 - organize content .blend and .dae files in svn
 - contact troels about writing music and creating sounds 
   - into tune
   - puzzle tune 
-- Design an exit mechanism for levels (like the door or something else)
+- Design an exit mechanism for levels (like the door or something else) [ done 9/5/10 ]
 - Implement the exit mechanism
+
+- make a tool-tip function, that can show keys that user can press, like the key to
+  exit a level
+  
+- implement level change functionality. When exit is activated, the scene must be replaced by the 
+  next level. 
+
+- fix player up-side down problem. User should not have any problem with this.  
+  
 - Make scene that tells the user that next level i being loaded
 - Make welcome scene with start game, continue, star over and quit buttons 
 - Test that the game can run inside a webstart package
@@ -18,3 +27,7 @@ Game project todo list
 - Create button for fixing and unfixing actors
 - Create button for saving scene graph
 - Create button for creating new actors
+- create drifting clouds actor
+
+- make helper system that shows and explains 
+  the keys that user can use with explanaitions 
