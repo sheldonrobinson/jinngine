@@ -61,7 +61,7 @@ public class Bear implements CommandableActor, SelectableActor {
 	@Override
 	public void start( Game game) {
 		final Scene physics = game.getPhysics();
-		final Node rootnode = game.getRendering().getRootNode();
+		final Node rootnode = game.getRendering().getScene();
 		final GLSLShaderObjectsState shader = new GLSLShaderObjectsState();
 
 		// head

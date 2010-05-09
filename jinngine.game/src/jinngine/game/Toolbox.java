@@ -22,6 +22,20 @@ import com.ardor3d.scenegraph.hint.LightCombineMode;
 
 public final class Toolbox {
 
+	public static final void writeOutScene(Node node) {
+		System.out.println(""+node.getName());
+		
+		for (Spatial child: node.getChildren()) {
+			if (child instanceof Node) {
+				writeOutScene((Node)child);
+			} else {
+				System.out.println(""+child.getName());
+			}
+			
+		}
+	}
+	
+	
 	/**
 	 * Set the transform of a Ardor3d node to a jinngine body
 	 * @param node

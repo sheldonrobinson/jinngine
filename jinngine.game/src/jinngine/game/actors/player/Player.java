@@ -127,7 +127,7 @@ public class Player extends Node implements PhysicalActor {
       
       
       // attach to root
-      game.getRendering().getRootNode().attachChild(this);
+      game.getRendering().getScene().attachChild(this);
 	}
 
 	@Override

@@ -96,13 +96,19 @@ public class HUDActor implements Actor, ActorOwner {
 				System.out.println(""+node);
 				// walk upwards in the scenegraph to find a SelectableActor
 				while (node != null) {
-					if (node.getUserData() != null) {
-						if (node.getUserData() instanceof Actor ) {								
-							pressedactor = (Actor)node.getUserData();
-							// got what we wantet, done
-							break;
-						}						
-					} // if user data					
+//					if (node.getUserData() != null) {
+//						if (node.getUserData() instanceof Actor ) {								
+//							pressedactor = (Actor)node.getUserData();
+//							// got what we wantet, done
+//							break;
+//						}						
+//					} // if user data
+					
+					if (node instanceof Actor) {
+						pressedactor = (Actor)node;
+						break;
+					}
+					
 					node = node.getParent();
 				} // while node
 			} // pick results			

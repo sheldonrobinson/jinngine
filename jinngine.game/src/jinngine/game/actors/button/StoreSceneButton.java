@@ -23,17 +23,14 @@ import jinngine.game.actors.player.Player;
 import jinngine.physics.Body;
 
 
-public class PlacementButton extends Button {
+public class StoreSceneButton extends Button {
 	
 	private Texture selectedtexture;
 	private Texture deselectedtexture;	
 	private TextureState texturestate;
-	private Player player = null;
-	private final double distancelimit = 2.5;
 	private Audio click;
-	private int audiobufferid = 0;
 	
-	public PlacementButton() {
+	public StoreSceneButton() {
 		
 		try {
 //			SoundStore.get().get
@@ -54,10 +51,8 @@ public class PlacementButton extends Button {
 	public void act(Game game) {
 		super.act(game);
 		
-		//if we have no player, search for him
-		if (player == null) {
-			player = (Player)game.getRendering().getScene().getChild("Actor:Player");
-		}
+		// do something if player is within range
+		
 	}
 	
 	@Override
@@ -65,11 +60,11 @@ public class PlacementButton extends Button {
 		super.start(game);
 		
 		// load textures
-		selectedtexture = TextureManager.load("selectedhand.tga",
+		selectedtexture = TextureManager.load("selectedstorescene.tga",
 				Texture.MinificationFilter.Trilinear,
 				TextureStoreFormat.GuessNoCompressedFormat, true);
 
-		deselectedtexture = TextureManager.load("deselectedhand.tga",
+		deselectedtexture = TextureManager.load("deselectedstorescene.tga",
 				Texture.MinificationFilter.Trilinear,
 				TextureStoreFormat.GuessNoCompressedFormat, true);
 		
@@ -84,19 +79,6 @@ public class PlacementButton extends Button {
 	public ActionActor provideActionActor(ActorOwner owner, Actor target, Node picknode,
 			jinngine.math.Vector3 pickpoint, Vector2 screenpos ) {
 				
-		System.out.println("PlacementButton: got an actor "+ target);
-		
-		// spawn a BodyPlacement actor if possible
-		if (target instanceof PhysicalActor) {
-			PhysicalActor physactor = (PhysicalActor)target;
-			Body body = physactor.getBodyFromNode(picknode);
-		
-			if (body != null)
-				return new BodyPlacement(owner, body,pickpoint,screenpos);
-			else
-				System.out.println("No body recieved from actor");
-		}
-				
 		return null;
 	}
 	
@@ -107,6 +89,8 @@ public class PlacementButton extends Button {
 		if (selected) {
 			// play click sound
 			click.playAsSoundEffect(1, 100, false);
+			
+			game.storeCurrentLevel("storedlevel.xml");
 
 			texturestate.setTexture(selectedtexture);
 			
@@ -120,15 +104,7 @@ public class PlacementButton extends Button {
 	
 	@Override
 	public boolean canBeSelected() {
-		if (player !=null) {
-			if (buttonbody.getPosition().minus(player.getPosition()).norm() > distancelimit ) {
-				return false;
-			} else {
-				return true;
-			}
-		}
-		
-		return false;
+		return true;
 	}
 	
 }

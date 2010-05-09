@@ -12,6 +12,7 @@ import com.ardor3d.renderer.queue.RenderBucketType;
 import com.ardor3d.renderer.state.TextureState;
 import com.ardor3d.renderer.state.ZBufferState;
 import com.ardor3d.scenegraph.Node;
+import com.ardor3d.scenegraph.Spatial;
 import com.ardor3d.scenegraph.hint.CullHint;
 import com.ardor3d.scenegraph.hint.LightCombineMode;
 import com.ardor3d.scenegraph.hint.PickingHint;
@@ -37,7 +38,7 @@ public class Environment extends Node implements Actor {
 
 	@Override
 	public void create(Game game) {
-		Node rootnode = game.getRendering().getRootNode();
+		Node rootnode = game.getRendering().getScene();
 
 		// make the floor box 
 		
@@ -88,8 +89,8 @@ public class Environment extends Node implements Actor {
         		MinificationFilter.BilinearNearestMipMap,
         		TextureStoreFormat.GuessCompressedFormat, true));
         sky.setRenderState(ts2);
-        sky.getSceneHints().setPickingHint(PickingHint.Pickable, false);
-        sky.getSceneHints().setPickingHint(PickingHint.Collidable, false);
+//        sky.getSceneHints().setPickingHint(PickingHint.Pickable, false);
+//        sky.getSceneHints().setPickingHint(PickingHint.Collidable, false);
        this.attachChild(sky);
        
 //       this.setUserData(this);
@@ -108,7 +109,7 @@ public class Environment extends Node implements Actor {
 	@Override
 	public void start( Game game) {
 		Scene physics = game.getPhysics();
-//		floorbox = (Box)getChild("myfloorboxnode");
+		floorbox = (Box)getChild("myfloorboxnode");
 		
 		//shadowing
 		game.getRendering().getPssmPass().add(floorbox);
@@ -118,7 +119,13 @@ public class Environment extends Node implements Actor {
 		floor.setPosition(new jinngine.math.Vector3(0,-25 -5,0));
 		floor.setFixed(true);
 		physics.addBody(floor);	
-		
+
+		// set scene hints again, as they seem to get lost over scene graph export/import
+		Spatial sky = getChild("SkyBackdrop");
+        sky.getSceneHints().setCullHint(CullHint.Never);
+        sky.getSceneHints().setTextureCombineMode(TextureCombineMode.Replace);
+        sky.getSceneHints().setLightCombineMode(LightCombineMode.Off);
+        sky.getSceneHints().setRenderBucketType(RenderBucketType.Ortho);	
 	}
 
 	@Override

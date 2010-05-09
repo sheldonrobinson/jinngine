@@ -78,7 +78,8 @@ public final class Rendering implements com.ardor3d.framework.Scene {
     final private LwjglCanvas canvas;
 //	private LwjglAwtCanvas canvas;
     private final Timer timer = new Timer();
-    private Node root = new Node();
+    private final Node root = new Node();
+    private Node scene;
     private final BasicPassManager passes = new BasicPassManager();
     private boolean exit = false;
     private final LogicalLayer logicallayer = new LogicalLayer(); 
@@ -111,19 +112,14 @@ public final class Rendering implements com.ardor3d.framework.Scene {
         		canvas
         ); 
         
-
+        // input from keyboards and mouse etc
        logicallayer.registerInput(canvas, physicallayer);
        
 
        // init sound
 		SoundStore.get().init();		
-		
-//		SoundStore.get().setSoundsOn(true);
-		
-//		org.lwjgl.openal
 
-       
-        // setup resource locator
+		// setup resource locator
         try {
             final SimpleResourceLocator srl = new SimpleResourceLocator(new URI("file:///home/mo/workspace/jinngine.game/"));
             ResourceLocatorTool.addResourceLocator(ResourceLocatorTool.TYPE_TEXTURE, srl);
@@ -134,14 +130,6 @@ public final class Rendering implements com.ardor3d.framework.Scene {
         }
         
         AWTImageLoader.registerLoader();
-//        
-//        try {
-//			root = (Node)XMLImporter.getInstance().load( new File("testgraph.xml"));
-//
-//		} catch (IOException e) {
-//			// TODO Auto-generated catch block
-//			e.printStackTrace();
-//		}	
         
         
         // default back face culling
@@ -267,6 +255,15 @@ public final class Rendering implements com.ardor3d.framework.Scene {
 		renderer.draw(hud);
 		return true;
 	}
+
+	public Node getScene() {
+		return scene;
+	}
+
+	public void setScene(Node scene) {
+		this.scene = scene;
+	}
+	
 	
 
 	

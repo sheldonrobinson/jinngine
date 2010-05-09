@@ -73,7 +73,7 @@ public class Door extends Node implements PhysicalActor, ConfigurableActor {
 		
 		// load door asset
         final ColladaImporter colladaImporter = new ColladaImporter();
-        final ColladaStorage storage = colladaImporter.load("doorframe.dae");
+        final ColladaStorage storage = colladaImporter.load("door.dae");
         Node doorscene = storage.getScene();
 
         // set the door transform of the collada file to the new door node
@@ -108,7 +108,7 @@ public class Door extends Node implements PhysicalActor, ConfigurableActor {
 		doornode.setTranslation(doornode.getTranslation().add(0, -10, 0, null));
 		
 		// attach to root
-		game.getRendering().getRootNode().attachChild(this);
+		game.getRendering().getScene().attachChild(this);
 	}
 	
 	@Override
@@ -120,7 +120,7 @@ public class Door extends Node implements PhysicalActor, ConfigurableActor {
 	@Override
 	public void start( Game game ) {
 		Scene physics = game.getPhysics();
-		Node rootnode = game.getRendering().getRootNode();
+		Node rootnode = game.getRendering().getScene();
 
 		// obtain the transform
 		Vector3 translation = new Vector3();

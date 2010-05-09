@@ -91,7 +91,7 @@ public class BoxPlatform extends Node implements PhysicalActor, ConfigurableActo
 
 	@Override
 	public void create(Game game) {
-		Node rootnode = game.getRendering().getRootNode();
+		Node rootnode = game.getRendering().getScene();
 		this.setName("Actor:Platform");
 
 		platform = new Node();

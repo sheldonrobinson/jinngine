@@ -35,11 +35,12 @@ public class Button extends Node implements SelectableActor, PhysicalActor {
 	protected Body buttonbody;
 	protected Node buttonnode;
 	protected TextureState buttontexture;
+	protected Vector3 initialposition;
 	private boolean pressed = false;
-	
+		
 	@Override
 	public void create(Game game) {
-		Node rootnode = game.getRendering().getRootNode();
+		Node rootnode = game.getRendering().getScene();
 		this.setName("Actor:Button");
 
         // create the outline for this button box
@@ -51,7 +52,7 @@ public class Button extends Node implements SelectableActor, PhysicalActor {
 		final Node body = new Node();
 		final Box box = new Box("mybuttonbox", new Vector3(), scale, scale, scale);
 		box.setModelBound(new BoundingBox());        
-		box.setSolidColor(new ColorRGBA((float)1,(float)1,(float)1,1));		
+		box.setSolidColor(new ColorRGBA((float)1,(float)1,(float)1,1));
         body.setName("mybutton");
         body.attachChild(box);
         
@@ -92,7 +93,10 @@ public class Button extends Node implements SelectableActor, PhysicalActor {
         line.setScale(0.7070 *1.01);
         body.setScale(0.7070);		
 		attachChild(line);
-        attachChild(body);        
+        attachChild(body);
+        
+        this.setTranslation(0, -20, 0);
+        
         rootnode.attachChild(this);
 	}
 	
@@ -118,7 +122,7 @@ public class Button extends Node implements SelectableActor, PhysicalActor {
 		physics.addForce(new GravityForce(buttonbody));
 		buttonbody.setAngularVelocity(new jinngine.math.Vector3(0,0,0));
 
-		Toolbox.setTransformFromNode(buttonnode, buttonbody);
+		Toolbox.setTransformFromNode(this, buttonbody);
 		this.addController(Toolbox.createSpatialControllerForBody(buttonbody));
 	}
 

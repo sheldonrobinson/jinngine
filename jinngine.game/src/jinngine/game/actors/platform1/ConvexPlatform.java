@@ -103,7 +103,7 @@ public class ConvexPlatform extends Node implements PhysicalActor, ConfigurableA
 
 	@Override
 	public void create(Game game) {
-		Node rootnode = game.getRendering().getRootNode();
+		Node rootnode = game.getRendering().getScene();
 		this.setName("Actor:ConvexPlatform");
 
 		platform = new Node();
