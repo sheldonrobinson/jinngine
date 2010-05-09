@@ -126,6 +126,17 @@ public class Button extends Node implements SelectableActor, PhysicalActor {
 		this.addController(Toolbox.createSpatialControllerForBody(buttonbody));
 	}
 
+	@Override
+	public void stop(Game game) {
+		// remove body
+		game.getPhysics().removeBody(buttonbody);
+		
+		//clean shadowing
+		game.getRendering().getPssmPass().remove(buttonnode);
+		game.getRendering().getPssmPass().removeOccluder(buttonnode);
+
+	}
+
 
 	@Override
 	public ActionActor provideActionActor(ActorOwner owner, Actor target, Node picknode,
@@ -152,11 +163,6 @@ public class Button extends Node implements SelectableActor, PhysicalActor {
 	}
 	@Override
 	public void act(Game game) {
-		// TODO Auto-generated method stub
-		
-	}
-	@Override
-	public void stop(Game game) {
 		// TODO Auto-generated method stub
 		
 	}

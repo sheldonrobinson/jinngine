@@ -28,6 +28,7 @@ import com.ardor3d.util.export.OutputCapsule;
 import com.ardor3d.util.export.InputCapsule;
 
 import jinngine.game.Game;
+import jinngine.game.PostponedAction;
 import jinngine.game.Toolbox;
 import jinngine.game.actors.ActionActor;
 import jinngine.game.actors.Actor;
@@ -35,6 +36,7 @@ import jinngine.game.actors.ActorOwner;
 import jinngine.game.actors.ConfigurableActor;
 import jinngine.game.actors.PhysicalActor;
 import jinngine.game.actors.SelectableActor;
+import jinngine.game.actors.logic.FadeOutAndIn;
 
 import jinngine.math.Matrix3;
 import jinngine.math.Quaternion;
@@ -196,7 +198,11 @@ public class SimpleDoor extends Node implements PhysicalActor, SelectableActor {
 	
 	@Override
 	public void stop( Game game ) {
-		// TODO Auto-generated method stub
+		// clean up physics
+		game.getPhysics().removeBody(doorbody);
+		
+		// clean up shadows
+		game.getRendering().getPssmPass().removeOccluder(doornode);
 
 	}
 
@@ -222,15 +228,26 @@ public class SimpleDoor extends Node implements PhysicalActor, SelectableActor {
 	}
 
 	@Override
-	public void setSelected(Game game, boolean selected) {
+	public void setSelected(final Game game, boolean selected) {
 		if (selected) {
 			// play click sound
 			click.playAsSoundEffect(1, 100, false);
 
 //			texturestate.setTexture(selectedtexture);
 			
-			game.unloadCurrentLevel();
-			game.loadLevel("storedlevel.xml");
+			// create action that loads a new scene
+			PostponedAction event = new PostponedAction() {
+				@Override
+				public void perform() {
+					game.unloadCurrentLevel();
+					game.loadLevel("storedlevel.xml");
+				}
+			};
+			
+			// wrap the load scene action in fade-out and in
+			Actor a = new FadeOutAndIn(event);
+			a.create(game);
+			game.addActor(a);
 			
 		} else {
 			click.playAsSoundEffect(1, 100, false);
@@ -240,5 +257,7 @@ public class SimpleDoor extends Node implements PhysicalActor, SelectableActor {
 		}
 
 	}
+	
+	
 	
 }

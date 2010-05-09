@@ -219,7 +219,11 @@ public class HUDActor implements Actor, ActorOwner {
 	}
 
 	@Override
-	public void stop(Game game) {
+	public void stop(Game game) {	
+		// reset selection and action
+		this.selectedactor = null;
+		this.actionactor = null;
+		
 		// remove the mouse click trigger
 		game.getRendering().getLogicalLayer().deregisterTrigger(this.mousetrigger);		
 		game.getRendering().getLogicalLayer().deregisterTrigger(this.mousetrigger2);		

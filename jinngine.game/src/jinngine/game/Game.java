@@ -31,10 +31,14 @@ public class Game {
 	private final List<Actor> startingactors = new ArrayList<Actor>();	
 	private final List<Actor> runningactors = new ArrayList<Actor>();
 	private final List<Actor> stoppingactors = new ArrayList<Actor>();	
+	
+	private final List<PostponedAction> actions = new ArrayList<PostponedAction>();
 
 	//setup rendering stuff
 	private final Rendering rendering = new Rendering();
 	private final DefaultScene jinngine = new DefaultScene();
+	
+	private final HUDActor hudactor;
 	
 
 
@@ -42,10 +46,11 @@ public class Game {
 		jinngine.setTimestep(0.065);
 
 		// always create the HUD actor
-		addActor( new HUDActor() );
+		this.hudactor = new HUDActor();
+		addActor(this.hudactor);
 
-//		setupDemoLevel();
-		loadLevel("storedlevel.xml");
+		setupDemoLevel();
+//		loadLevel("storedlevel.xml");
 		
 		//run forever
 		while(true) { 				
@@ -65,14 +70,24 @@ public class Game {
 			
 			// visit all running actors
 			for (Actor a: runningactors)
-				a.act(this);			
-
+				a.act(this);	
 			
+			//perform postponed actions
+			ListIterator<PostponedAction> iter = actions.listIterator();
+			while(iter.hasNext()) {
+				iter.next().perform();
+				iter.remove();
+			}
+		
 			rendering.draw();
 			Thread.yield();
 		}
 	}
 	
+	public final void restartHudActor() {
+		this.hudactor.stop(this);
+		this.hudactor.start(this);
+	}
 	
 	public final void setupDemoLevel() {
 		//new scene
@@ -201,12 +216,15 @@ public class Game {
 		
 		// remove actors
 		removeAllActorsInScene(scene);
-		
+				
 		// remove scene
 		getRendering().getRootNode().detachChild(scene);
 		
 		// remove scene node
 		getRendering().setScene(null);
+		
+		// restart hud actor
+		restartHudActor();
 
 	}
 	
@@ -260,6 +278,10 @@ public class Game {
 	
 	public final void addActor( Actor a) {
 		startingactors.add(a);		
+	}
+	
+	public final void addPostponedAction( PostponedAction action ) {
+		actions.add(action);
 	}
 	
 	public final void removeActor( Actor a) {

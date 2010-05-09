@@ -57,10 +57,11 @@ public class ConvexPlatform extends Node implements PhysicalActor, ConfigurableA
 	// jinngine
 	private Body platformconvexbody;
 	private jinngine.geometry.Box boxgeometry;
-	private jinngine.geometry.ConvexHull platformhullgeometry;
+	private jinngine.geometry.ConvexHull hull;
 	
 	// ardor3d
 	private Node platform;
+	private Spatial convexplatformfaces;
 	
 	// properties
 	private final jinngine.math.Vector3 pos = new jinngine.math.Vector3();	
@@ -68,8 +69,6 @@ public class ConvexPlatform extends Node implements PhysicalActor, ConfigurableA
 	private String daefilename;
 	private boolean isFixed = false;
 	private UIFrame frame;
-	
-
 
 	public ConvexPlatform() {
 		daefilename = "convexplatform.dae";
@@ -97,8 +96,6 @@ public class ConvexPlatform extends Node implements PhysicalActor, ConfigurableA
 		this.pos.assign(pos);
 		this.shade = (float)shade;
 		this.daefilename = "convexplatform.dae";
-		
-
 	}
 
 	@Override
@@ -131,40 +128,7 @@ public class ConvexPlatform extends Node implements PhysicalActor, ConfigurableA
         // set some color
         ((Mesh)convexplatformfaces).setSolidColor(new ColorRGBA((float)shade,(float)shade,(float)shade,1));
         
-        // load vertices
-        //Mesh convexplatformvertices = (Mesh)convexplatformscene.getChild("ConvexPlatform_001_vertex");
-        
-
-//		Line line = new Line("vector", outline, null, colors, null);
-//		line.setAntialiased(false);
-//		line.setModelBound(new BoundingBox()); 
-//		line.setLineWidth(2.8f);
-//		line.getSceneHints().setLightCombineMode(LightCombineMode.Off);
-//		line.setName("myplatformboxlines");
-		
-
-//        MeshData meshdata       = ((Mesh)convexplatformfaces).getMeshData();
-//        FloatBuffer verticedata = meshdata.getVertexBuffer();
-
-//       // load vertices
-//       // points for the convex hull
-//       List<jinngine.math.Vector3> points = new ArrayList<jinngine.math.Vector3>();
-//       float[] p = new float[3];
-//       verticedata.rewind();
-//       while ( verticedata.hasRemaining()) {
-//    	   verticedata.get(p, 0, 3);
-//    	   points.add(new jinngine.math.Vector3(p[0],p[1],p[2]));
-//       }
-//       
-////        System.out.println(verticedata);
-//        
-//        // do the convex hull and setup mesh 
-//		ConvexHull hull = new ConvexHull(points);
-
-//		Box box = new Box("myplatformbox", new Vector3(), scale, scale, scale);
-//		box.setModelBound(new BoundingBox());        
-//		box.setSolidColor(new ColorRGBA((float)shade,(float)shade,(float)shade,1));
-
+       
 		platform.attachChild(convexplatformfaces);
 		platform.attachChild(outline);
 		platform.setName("myconvexplatform");
@@ -179,7 +143,10 @@ public class ConvexPlatform extends Node implements PhysicalActor, ConfigurableA
 	}
 
 	@Override
-	public void act( Game game ) { } 
+	public void act( Game game ) {
+		
+		
+	} 
 
 	@Override
 	public void start( Game game ) {
@@ -191,7 +158,7 @@ public class ConvexPlatform extends Node implements PhysicalActor, ConfigurableA
 		ReadOnlyVector3 s = platform.getScale();
 		
 		// get the mesh
-		Spatial convexplatformfaces = platform.getChild("ConvexPlatformSolid-Geometry_triangles");
+		convexplatformfaces = platform.getChild("ConvexPlatformSolid-Geometry_triangles");
 		MeshData meshdata  = ((Mesh)convexplatformfaces).getMeshData();
 		FloatBuffer verticedata = meshdata.getVertexBuffer();
 
@@ -219,7 +186,7 @@ public class ConvexPlatform extends Node implements PhysicalActor, ConfigurableA
 		//	        System.out.println(verticedata);
 
 		// do the convex hull and setup mesh 
-		ConvexHull hull = new ConvexHull(points);
+		hull = new ConvexHull(points);
 		
 		System.out.println("ConvexPlatform: final hull vertices " + hull.getNumberOfVertices());
 		
@@ -246,7 +213,14 @@ public class ConvexPlatform extends Node implements PhysicalActor, ConfigurableA
 	}
 
 	@Override
-	public void stop( Game game ) {}
+	public void stop( Game game ) {
+		//clean shadowing
+		game.getRendering().getPssmPass().remove(convexplatformfaces);
+		game.getRendering().getPssmPass().removeOccluder(convexplatformfaces);
+		
+		//clean physics
+		game.getPhysics().removeBody(platformconvexbody);
+	}
 
 	@Override
 	public Body getBodyFromNode(Node node) {

@@ -35,6 +35,7 @@ public class Environment extends Node implements Actor {
 	private Box floorbox;
 	private Quad sky;
 	private Quad hills;
+	private Body floor;
 
 	@Override
 	public void create(Game game) {
@@ -58,22 +59,24 @@ public class Environment extends Node implements Actor {
 		
         Camera cam = game.getRendering().getCamera();
 
-//        hills = new Quad("HillsBackdrop", cam.getWidth() , cam.getHeight() );
-//        hills.setTranslation(cam.getWidth() / 2, cam.getHeight() / 2, -0.99);
-//        hills.getSceneHints().setCullHint(CullHint.Never);
+        hills = new Quad("HillsBackdrop", cam.getWidth() , cam.getHeight() );
+        hills.setTranslation(cam.getWidth() / 2, cam.getHeight() / 2, -0.1);
+        hills.setSolidColor(new ColorRGBA(0.0f,0.0f,0.0f,0.0f));
+        hills.getSceneHints().setCullHint(CullHint.Never);
 //        hills.getSceneHints().setTextureCombineMode(TextureCombineMode.Replace);
-//        hills.getSceneHints().setLightCombineMode(LightCombineMode.Off);
-//        hills.getSceneHints().setRenderBucketType(RenderBucketType.Ortho);
-//        hills.setModelBound(new BoundingBox());
+        hills.getSceneHints().setLightCombineMode(LightCombineMode.Off);
+        hills.getSceneHints().setRenderBucketType(RenderBucketType.Ortho);
+        hills.getSceneHints().setOrthoOrder(0);
+        hills.setModelBound(new BoundingBox());
 //        final TextureState ts3 = new TextureState();
 //        ts3.setEnabled(true);
 //        ts3.setTexture(TextureManager.load("backdrophills.png", 
 //        		MinificationFilter.BilinearNearestMipMap,
 //        		TextureStoreFormat.GuessCompressedFormat, true));
 //        hills.setRenderState(ts3);
-//        hills.getSceneHints().setPickingHint(PickingHint.Pickable, false);
-//        hills.getSceneHints().setPickingHint(PickingHint.Collidable, false);
-//        this.attachChild(hills);
+        hills.getSceneHints().setPickingHint(PickingHint.Pickable, false);
+        hills.getSceneHints().setPickingHint(PickingHint.Collidable, false);
+        this.attachChild(hills);
 
 		
         sky = new Quad("SkyBackdrop", cam.getWidth() , cam.getHeight() );
@@ -82,6 +85,8 @@ public class Environment extends Node implements Actor {
         sky.getSceneHints().setTextureCombineMode(TextureCombineMode.Replace);
         sky.getSceneHints().setLightCombineMode(LightCombineMode.Off);
         sky.getSceneHints().setRenderBucketType(RenderBucketType.Ortho);
+        sky.getSceneHints().setOrthoOrder(1);
+
         sky.setModelBound(new BoundingBox());
         final TextureState ts2 = new TextureState();
         ts2.setEnabled(true);
@@ -115,7 +120,7 @@ public class Environment extends Node implements Actor {
 		game.getRendering().getPssmPass().add(floorbox);
 
 		// make physics box
-		Body floor = new Body("default", new jinngine.geometry.Box(120,10,120));
+		floor = new Body("default", new jinngine.geometry.Box(120,10,120));
 		floor.setPosition(new jinngine.math.Vector3(0,-25 -5,0));
 		floor.setFixed(true);
 		physics.addBody(floor);	
@@ -126,11 +131,16 @@ public class Environment extends Node implements Actor {
         sky.getSceneHints().setTextureCombineMode(TextureCombineMode.Replace);
         sky.getSceneHints().setLightCombineMode(LightCombineMode.Off);
         sky.getSceneHints().setRenderBucketType(RenderBucketType.Ortho);	
+        sky.getSceneHints().setOrthoOrder(1);
 	}
 
 	@Override
 	public void stop( Game game) {
-
+		// remove floor box
+		game.getPhysics().removeBody(floor);
+		
+		// remove shadows
+		game.getRendering().getPssmPass().remove(floorbox);
 	}
 
 }

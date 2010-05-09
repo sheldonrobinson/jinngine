@@ -71,13 +71,12 @@ public class Player extends Node implements PhysicalActor {
     private double jumpconstraintforce = 0;
     private double angularforcelimit = 0.8;
 
-    
-
     private final Vector3 jumpdirection = new Vector3(0,1,0);	
     private final Vector3 heading = new Vector3(1,0,0);
     private final Vector3 upvector = new Vector3(0,1,0);
     private final Vector3 playerdisplace = new Vector3(0,0,0);
     
+    private  Node playermainbody;
     
     private final List<ContactConstraint> contactconstraints = new ArrayList<ContactConstraint>();
 	
@@ -206,9 +205,9 @@ public class Player extends Node implements PhysicalActor {
 	public void start(final Game game) {
 		Scene physics = game.getPhysics();
 		
-        Node body = (Node)getChild("playermainbody");
+        playermainbody = (Node)getChild("playermainbody");
         
-        body.addController(new SpatialController<Spatial>() {
+        playermainbody.addController(new SpatialController<Spatial>() {
             public void update(final double time, final Spatial caller) {
             	Body body = playerbody;
             	Vector3 disp = body.state.position.copy();
@@ -223,14 +222,14 @@ public class Player extends Node implements PhysicalActor {
             }
         });
         
-        body.setScale(0.75);
+        playermainbody.setScale(0.75);
                 
         //connect actor to mesh
-        body.setUserData(this);
+        playermainbody.setUserData(this);
                 
         // setup shadows
-        game.getRendering().getPssmPass().add(body);
-        game.getRendering().getPssmPass().addOccluder(body);
+        game.getRendering().getPssmPass().add(playermainbody);
+        game.getRendering().getPssmPass().addOccluder(playermainbody);
         
         // Physics      
         box = new jinngine.geometry.Box(1,1,1);
@@ -240,7 +239,7 @@ public class Player extends Node implements PhysicalActor {
         box.setEnvelope(0.2);
         playerbody = new Body("default", box);
 //        box.setLocalTransform(jinngine.math.Matrix3.identity(), playerdisplace );
-        Toolbox.setTransformFromNode(body, playerbody);
+        Toolbox.setTransformFromNode(playermainbody, playerbody);
         physics.addBody(playerbody);
         physics.addForce(new GravityForce(playerbody));
         
@@ -550,6 +549,13 @@ public class Player extends Node implements PhysicalActor {
 
 	@Override
 	public void stop(Game game) {
+		// clean shadows
+        game.getRendering().getPssmPass().remove(playermainbody);
+        game.getRendering().getPssmPass().removeOccluder(playermainbody);
+        
+        //clean physics
+        game.getPhysics().removeBody(playerbody);
+        game.getPhysics().removeConstraint(controlconstraint);
 
 	}
 
