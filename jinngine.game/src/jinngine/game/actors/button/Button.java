@@ -95,7 +95,7 @@ public class Button extends Node implements SelectableActor, PhysicalActor {
 		attachChild(line);
         attachChild(body);
         
-        this.setTranslation(0, -20, 0);
+        this.setTranslation(0, -25, 0);
         
         rootnode.attachChild(this);
 	}

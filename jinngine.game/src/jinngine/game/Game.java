@@ -17,6 +17,7 @@ import jinngine.game.actors.button.AxisAllignBodyButton;
 import jinngine.game.actors.button.Button;
 import jinngine.game.actors.button.DeleteActorButton;
 import jinngine.game.actors.button.FixBodyButton;
+import jinngine.game.actors.button.InsertActorButton;
 import jinngine.game.actors.button.PlacementButton;
 import jinngine.game.actors.button.StoreSceneButton;
 import jinngine.game.actors.door.Door;
@@ -53,8 +54,8 @@ public class Game {
 		this.hudactor = new HUDActor();
 		addActor(this.hudactor);
 
-//		setupDemoLevel();
-		loadLevel("storedlevel.xml");
+		setupDemoLevel();
+//		loadLevel("storedlevel.xml");
 		
 		//run forever
 		while(true) { 				
@@ -137,7 +138,7 @@ public class Game {
 //		ConvexPlatform platform6 = new ConvexPlatform(new jinngine.math.Vector3(0,-25+3.5,0), 0.7);
 //		platform6.create(this);
 //
-		ConvexPlatform platform7 = new ConvexPlatform(new jinngine.math.Vector3(0,-25+3.5,0), 0.7);
+		ConvexPlatform platform7 = new ConvexPlatform();
 		platform7.create(this);
 		
 		Player p = new jinngine.game.actors.player.Player();
@@ -160,6 +161,9 @@ public class Game {
 
 		Button deletebutton = new DeleteActorButton();
 		deletebutton.create(this);
+
+		Button insertbutton = new InsertActorButton();
+		insertbutton.create(this);
 
 
 		// add actors in scene

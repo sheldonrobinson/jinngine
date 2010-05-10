@@ -54,7 +54,9 @@ public class Player extends Node implements PhysicalActor {
 	private int contacts = 0;
 	private boolean jumpedinframe = false;
 	private boolean focuscamera = false;
-	private double focusxcoord = 0;
+	
+	private Vector3 camposition = new Vector3();
+	private Vector3 camtargetposition = new Vector3();
 	
 	private double tick = 0;
 
@@ -184,20 +186,28 @@ public class Player extends Node implements PhysicalActor {
  		
 		// get camera
 		ReadOnlyVector3 location = game.getRendering().getCamera().getLocation();
-		double camlocation = location.getX();
 		
+		
+	
 		if (focuscamera) {
-			double cameraycoord = -25;
-			game.getRendering().getCamera().setLocation( (camlocation*0.85+focusxcoord*0.15), cameraycoord+7, -20);
-			game.getRendering().getCamera().lookAt((camlocation*0.85+focusxcoord*0.15), cameraycoord, 0, com.ardor3d.math.Vector3.UNIT_Y);
+
+			camposition.assign( camposition.multiply(0.85).add( camtargetposition.multiply(0.15)));
 			
-			if (Math.abs(camlocation-focusxcoord) < 0.01) {
+			game.getRendering().getCamera().setLocation( camposition.x, camposition.y+7, -20);
+			game.getRendering().getCamera().lookAt(camposition.x, camposition.y, 0, com.ardor3d.math.Vector3.UNIT_Y);
+			
+			if (camposition.minus(camtargetposition).norm() < 0.01) {
 				focuscamera = false;
 			}
 		} else {
 			
-			if (Math.abs(camlocation-playerbody.state.position.x) > 6.0) {
-				focusxcoord = playerbody.state.position.x;
+			if (Math.abs(camposition.x-playerbody.state.position.x) > 6.0 ) {
+				camtargetposition.x = playerbody.state.position.x;
+				focuscamera = true;
+			}
+			
+			if (Math.abs(camposition.y-playerbody.state.position.y) > 2.0 ) {
+				camtargetposition.y = playerbody.state.position.y;
 				focuscamera = true;
 			}
 		}
@@ -464,45 +474,6 @@ public class Player extends Node implements PhysicalActor {
                 	 }  
 
                 	 
-
-                	 //                 
-                	 //                 if (kb.isDown(Key.W) && kb.isDown(Key.D)) {
-                	 ////                	 System.out.println("W and D");
-                	 //                	 movedirection.assign(-0.707106,0,0.707106);
-                	 //                	 velocity.x = walkvelocity;
-                	 //                	 force.x = walkimpulse;                 	 
-                	 //                 } else if (kb.isDown(Key.D) && kb.isDown(Key.S)) {
-                	 //                	 movedirection.assign(-0.707106,0,-0.707106);
-                	 //                	 velocity.x = walkvelocity;
-                	 //                	 force.x = walkimpulse;
-                	 //                 } else if (kb.isDown(Key.S) && kb.isDown(Key.A)) {
-                	 //                	 movedirection.assign(0.707106,0,-0.707106);
-                	 //                	 velocity.x = walkvelocity;
-                	 //                	 force.x = walkimpulse;
-                	 //                 } else if (kb.isDown(Key.A) && kb.isDown(Key.W)) {
-                	 //                	 movedirection.assign(0.707106,0,0.707106);
-                	 //                	 velocity.x = walkvelocity;
-                	 //                	 force.x = walkimpulse;
-                	 //                 }
-                	 //                 } else if (kb.isDown(Key.W)) {
-                	 ////                	 System.out.println("W");
-                	 //                	 movedirection.assign(0,0,1);
-                	 //                	 velocity.x = walkvelocity;
-                	 //                	 force.x = walkimpulse;
-                	 //                 } else if (kb.isDown(Key.D)) {
-                	 //                	 movedirection.assign(-1,0,0);
-                	 //                	 velocity.x = walkvelocity;
-                	 //                	 force.x = walkimpulse;
-                	 //                 } else if (kb.isDown(Key.S)) {
-                	 //                	 movedirection.assign(0,0,-1);
-                	 //                	 velocity.x = walkvelocity;
-                	 //                	 force.x = walkimpulse;
-                	 //                 } else if (kb.isDown(Key.A)) {
-                	 //                	 movedirection.assign(1,0,0);
-                	 //                	 velocity.x = walkvelocity;
-                	 //                	 force.x = walkimpulse;
-                	 //                 }  
-
                 	 if (kb.isDown(Key.SPACE)) {
                 		 if (!jumped && contacts > 0 && !jumpedinframe ) {
                 			 jumped = true;
@@ -534,7 +505,7 @@ public class Player extends Node implements PhysicalActor {
 
                 			 if ( canjump) {
                 				 // impulse.setMagnitude(7);
-                				 velocity.y=5;
+                				 velocity.y=7;
                 				jumpconstraintforce = 20;
                 			 }
                 		 }
@@ -548,7 +519,10 @@ public class Player extends Node implements PhysicalActor {
         InputTrigger mytrigger = new InputTrigger(keysHeld, moveAction);
         game.getRendering().getLogicalLayer().registerTrigger(mytrigger);
         
-	}
+//       focusxcoord = playerbody.state.position.x;
+//       focusycoord = playerbody.state.position.y;
+        
+	} // start
 
 	@Override
 	public void stop(Game game) {

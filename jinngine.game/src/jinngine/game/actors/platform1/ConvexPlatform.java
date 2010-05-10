@@ -64,7 +64,6 @@ public class ConvexPlatform extends Node implements PhysicalActor {
 	private Spatial convexplatformfaces;
 	
 	// properties
-	private final jinngine.math.Vector3 pos = new jinngine.math.Vector3();	
 	private double shade = 0.7;
 	private String daefilename;
 	private boolean isFixed = false;
@@ -92,8 +91,7 @@ public class ConvexPlatform extends Node implements PhysicalActor {
 		oc.write( daefilename, "daefilename", "convexplatform.dae");
 	}
 
-	public ConvexPlatform(jinngine.math.Vector3 pos, double shade) {
-		this.pos.assign(pos);
+	public ConvexPlatform(double shade) {
 		this.shade = (float)shade;
 		this.daefilename = "convexplatform.dae";
 	}
@@ -133,9 +131,11 @@ public class ConvexPlatform extends Node implements PhysicalActor {
 		platform.attachChild(outline);
 		platform.setName("myconvexplatform");
 		this.attachChild(platform);
-		platform.setTranslation(pos.x, pos.y, pos.z);
+//		platform.setTranslation(pos.x, pos.y, pos.z);
 
 
+		this.setTranslation(0,-20,0);
+		
 		// add this to root node
 		scene.attachChild(this);
 	}
@@ -196,12 +196,11 @@ public class ConvexPlatform extends Node implements PhysicalActor {
 		//platformconvexbody.finalize();
 		physics.addBody(platformconvexbody);
 		physics.addForce(new GravityForce(platformconvexbody));
-		platformconvexbody.setPosition(pos);
 		platformconvexbody.setAngularVelocity(new jinngine.math.Vector3(0,0,0));
 		platformconvexbody.setFixed(isFixed);
 
-		Toolbox.setTransformFromNode(platform, platformconvexbody);
-		platform.addController(Toolbox.createSpatialControllerForBody(platformconvexbody));
+		Toolbox.setTransformFromNode(this, platformconvexbody);
+		this.addController(Toolbox.createSpatialControllerForBody(platformconvexbody));
 	}
 	
 	public void update( Game game) {
