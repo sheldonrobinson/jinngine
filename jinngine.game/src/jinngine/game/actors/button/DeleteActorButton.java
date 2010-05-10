@@ -17,22 +17,32 @@ import jinngine.game.Game;
 import jinngine.game.actors.ActionActor;
 import jinngine.game.actors.Actor;
 import jinngine.game.actors.ActorOwner;
+import jinngine.game.actors.PhysicalActor;
+import jinngine.game.actors.interaction.AxisAllignBody;
+import jinngine.game.actors.interaction.BodyPlacement;
+import jinngine.game.actors.interaction.DeleteActor;
+import jinngine.game.actors.interaction.FixUnfixBody;
+import jinngine.game.actors.player.Player;
+
+import jinngine.physics.Body;
 
 
-public class StoreSceneButton extends Button {
+public class DeleteActorButton extends Button {
 	
 	private Texture selectedtexture;
 	private Texture deselectedtexture;	
 	private TextureState texturestate;
+	private final double distancelimit = 2.5;
 	private Audio click;
+	private int audiobufferid = 0;
 	
-	public StoreSceneButton() {
-		
+	public DeleteActorButton() {
 		try {
 			click = SoundStore.get().getWAV(
 					ResourceLocatorTool.locateResource(
 							ResourceLocatorTool.TYPE_AUDIO, "audiodump.wav").openStream());
 
+			System.out.println(click);
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -50,11 +60,11 @@ public class StoreSceneButton extends Button {
 		super.start(game);
 		
 		// load textures
-		selectedtexture = TextureManager.load("selectedstorescene.tga",
+		selectedtexture = TextureManager.load("selecteddeletebody.tga",
 				Texture.MinificationFilter.Trilinear,
 				TextureStoreFormat.GuessNoCompressedFormat, true);
 
-		deselectedtexture = TextureManager.load("deselectedstorescene.tga",
+		deselectedtexture = TextureManager.load("deselecteddeletebody.tga",
 				Texture.MinificationFilter.Trilinear,
 				TextureStoreFormat.GuessNoCompressedFormat, true);
 		
@@ -68,6 +78,20 @@ public class StoreSceneButton extends Button {
 	@Override
 	public ActionActor provideActionActor(ActorOwner owner, Actor target, Node picknode,
 			jinngine.math.Vector3 pickpoint, Vector2 screenpos ) {
+
+		System.out.println(""+this);
+		
+		// spawn a AxisAllignBody actor if possible
+		if (target instanceof PhysicalActor) {
+			PhysicalActor physactor = (PhysicalActor)target;
+			Body body = physactor.getBodyFromNode(picknode);
+		
+			if (body != null)
+				return new DeleteActor(owner, target);
+			
+			else
+				System.out.println("No body recieved from actor");
+		}
 				
 		return null;
 	}
@@ -79,10 +103,9 @@ public class StoreSceneButton extends Button {
 		if (selected) {
 			// play click sound
 			click.playAsSoundEffect(1, 100, false);
-			
-			game.storeCurrentLevel("storedlevel.xml");
 
 			texturestate.setTexture(selectedtexture);
+						
 			
 		} else {
 			click.playAsSoundEffect(1, 100, false);

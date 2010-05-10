@@ -13,6 +13,10 @@ import com.ardor3d.util.export.binary.BinaryImporter;
 import com.ardor3d.util.export.xml.XMLExporter;
 import com.ardor3d.util.export.xml.XMLImporter;
 
+import jinngine.game.actors.button.AxisAllignBodyButton;
+import jinngine.game.actors.button.Button;
+import jinngine.game.actors.button.DeleteActorButton;
+import jinngine.game.actors.button.FixBodyButton;
 import jinngine.game.actors.button.PlacementButton;
 import jinngine.game.actors.button.StoreSceneButton;
 import jinngine.game.actors.door.Door;
@@ -49,8 +53,8 @@ public class Game {
 		this.hudactor = new HUDActor();
 		addActor(this.hudactor);
 
-		setupDemoLevel();
-//		loadLevel("storedlevel.xml");
+//		setupDemoLevel();
+		loadLevel("storedlevel.xml");
 		
 		//run forever
 		while(true) { 				
@@ -92,9 +96,15 @@ public class Game {
 	public final void setupDemoLevel() {
 		//new scene
 		Node scene = new Node();
-		getRendering().setScene(scene);
-		getRendering().getRootNode().attachChild(scene);
+		
 		scene.setName("Game:CurrentLevel");
+
+		
+		// set the scene node
+		getRendering().setScene(scene);
+
+		// attach the scene to the root node
+		getRendering().getRootNode().attachChild(scene);
 		
 		
 		//setup some actors
@@ -130,30 +140,30 @@ public class Game {
 		ConvexPlatform platform7 = new ConvexPlatform(new jinngine.math.Vector3(0,-25+3.5,0), 0.7);
 		platform7.create(this);
 		
-		
-//		Button button = new Button();
-//		button.create(this);
-
 		Player p = new jinngine.game.actors.player.Player();
 		p.create(this);
-//
 		
 		Actor simpledoor = new SimpleDoor();
 		simpledoor.create(this);
-//		
-//		Button button = new Button();
-//		button.create(this);
-//		
+
+		FixBodyButton fixbutton = new FixBodyButton();
+		fixbutton.create(this);
+		
 		PlacementButton button = new PlacementButton();
 		button.create(this);
 		
 		StoreSceneButton button2 = new StoreSceneButton();
 		button2.create(this);
 
+		Button axisbutton = new AxisAllignBodyButton();
+		axisbutton.create(this);
+
+		Button deletebutton = new DeleteActorButton();
+		deletebutton.create(this);
+
 
 		// add actors in scene
-		addActorsInScene(scene);
-		
+		addActorsInScene(scene);		
 	}
 	
 	public final void storeCurrentLevel(String name) {

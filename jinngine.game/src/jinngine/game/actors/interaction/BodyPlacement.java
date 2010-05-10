@@ -31,21 +31,18 @@ public class BodyPlacement implements ActionActor {
 
 	private final Body target;
 	private final Body controller;
-//	private SpringForce force;
 	private BallInSocketJoint force;
 	private final com.ardor3d.math.Vector2 screenpos = new com.ardor3d.math.Vector2();
 	private final Vector3 pickpoint = new Vector3();
-//	private final Vector3 pickdisplacement = new Vector3();
 	private InputTrigger tracktrigger;
 	private InputTrigger modifiertrigger;
 	private final ActorOwner owner;
-	//stored angular properties
+
+	//stored  properties
 	private Matrix3 inertia;
 	private Matrix3 inverse;
-	private boolean modifier = false;
-	private boolean updatepickpoint = false;
 	private final Vector3 planeNormal;
-
+	private boolean wasFixed = false;
 	
 	public BodyPlacement(ActorOwner owner, Body target, Vector3 pickpoint, Vector2 screenpos) {
 		this.target = target;
@@ -103,6 +100,13 @@ public class BodyPlacement implements ActionActor {
 		DefaultScene physics = game.getPhysics();
 		target.updateTransformations();
 		controller.updateTransformations();
+		
+		if (target.isFixed()) {
+			wasFixed = true;
+			physics.fixBody(target, false);
+		} else {
+			wasFixed = false;
+		}
 
 		// set the initial pick-point displacement
 //		pickdisplacement.assign(pickpoint.minus(target.getPosition()));
@@ -198,17 +202,23 @@ public class BodyPlacement implements ActionActor {
 		physics.removeConstraint(force);
 		physics.removeBody(controller);	
 		physics.removeLiveConstraint(this.force);
-
-		
+				
 		// remove angular movement by setting the inverse inertia to zero.
 		// This basically means that the body cannot get into any angular movement,
 		// because it would take an infinite amount of energy to do it
 		Matrix3.set(inertia, target.state.inertia);
 		Matrix3.set(inverse, target.state.inverseinertia );
 
-		//remove velocity  (disabled)
-//		entity.getPrimaryBody().setVelocity(new Vector3());
-//		entity.getPrimaryBody().setAngularVelocity(new Vector3());
+		
+		if (wasFixed) {
+			// remove velocity  (disabled)
+			target.setVelocity(new Vector3());
+			target.setAngularVelocity(new Vector3());
+
+			// unfix body
+			physics.fixBody(target, true);
+		}
+
 
 		
 		//remove mouse tracker

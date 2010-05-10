@@ -26,6 +26,7 @@ import com.ardor3d.scenegraph.Spatial;
 import com.ardor3d.scenegraph.shape.Box;
 import com.ardor3d.util.export.OutputCapsule;
 import com.ardor3d.util.export.InputCapsule;
+import com.ardor3d.util.resource.ResourceLocatorTool;
 
 import jinngine.game.Game;
 import jinngine.game.PostponedAction;
@@ -57,13 +58,11 @@ public class SimpleDoor extends Node implements PhysicalActor, SelectableActor {
 	public SimpleDoor() {
 		
 		try {
-//			SoundStore.get().get
-			click = SoundStore.get().getWAV("door_creak_closing.wav");
-			click.playAsSoundEffect(1, 0, false);
-//			System.out.println(click.getPosition());
-//			audiobufferid = click.getBufferID();
+			// load the audio
+			click = SoundStore.get().getWAV(
+					ResourceLocatorTool.locateResource(
+							ResourceLocatorTool.TYPE_AUDIO, "door_creak_closing.wav").openStream());
 
-			System.out.println(click);
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

@@ -11,6 +11,7 @@ import com.ardor3d.renderer.state.TextureState;
 import com.ardor3d.renderer.state.RenderState.StateType;
 import com.ardor3d.scenegraph.Node;
 import com.ardor3d.util.TextureManager;
+import com.ardor3d.util.resource.ResourceLocatorTool;
 
 import jinngine.game.Game;
 import jinngine.game.actors.ActionActor;
@@ -36,11 +37,9 @@ public class PlacementButton extends Button {
 	public PlacementButton() {
 		
 		try {
-//			SoundStore.get().get
-			click = SoundStore.get().getWAV("audiodump.wav");
-			click.playAsSoundEffect(1, 0, false);
-//			System.out.println(click.getPosition());
-//			audiobufferid = click.getBufferID();
+			click = SoundStore.get().getWAV(
+					ResourceLocatorTool.locateResource(
+							ResourceLocatorTool.TYPE_AUDIO, "audiodump.wav").openStream());
 
 			System.out.println(click);
 		} catch (IOException e) {

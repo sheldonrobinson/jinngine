@@ -59,24 +59,24 @@ public class Environment extends Node implements Actor {
 		
         Camera cam = game.getRendering().getCamera();
 
-        hills = new Quad("HillsBackdrop", cam.getWidth() , cam.getHeight() );
-        hills.setTranslation(cam.getWidth() / 2, cam.getHeight() / 2, -0.1);
-        hills.setSolidColor(new ColorRGBA(0.0f,0.0f,0.0f,0.0f));
-        hills.getSceneHints().setCullHint(CullHint.Never);
-//        hills.getSceneHints().setTextureCombineMode(TextureCombineMode.Replace);
-        hills.getSceneHints().setLightCombineMode(LightCombineMode.Off);
-        hills.getSceneHints().setRenderBucketType(RenderBucketType.Ortho);
-        hills.getSceneHints().setOrthoOrder(0);
-        hills.setModelBound(new BoundingBox());
-//        final TextureState ts3 = new TextureState();
-//        ts3.setEnabled(true);
-//        ts3.setTexture(TextureManager.load("backdrophills.png", 
-//        		MinificationFilter.BilinearNearestMipMap,
-//        		TextureStoreFormat.GuessCompressedFormat, true));
-//        hills.setRenderState(ts3);
-        hills.getSceneHints().setPickingHint(PickingHint.Pickable, false);
-        hills.getSceneHints().setPickingHint(PickingHint.Collidable, false);
-        this.attachChild(hills);
+//        hills = new Quad("HillsBackdrop", cam.getWidth() , cam.getHeight() );
+//        hills.setTranslation(cam.getWidth() / 2, cam.getHeight() / 2, -0.1);
+//        hills.setSolidColor(new ColorRGBA(0.0f,0.0f,0.0f,0.0f));
+//        hills.getSceneHints().setCullHint(CullHint.Never);
+////        hills.getSceneHints().setTextureCombineMode(TextureCombineMode.Replace);
+//        hills.getSceneHints().setLightCombineMode(LightCombineMode.Off);
+//        hills.getSceneHints().setRenderBucketType(RenderBucketType.Ortho);
+//        hills.getSceneHints().setOrthoOrder(0);
+//        hills.setModelBound(new BoundingBox());
+////        final TextureState ts3 = new TextureState();
+////        ts3.setEnabled(true);
+////        ts3.setTexture(TextureManager.load("backdrophills.png", 
+////        		MinificationFilter.BilinearNearestMipMap,
+////        		TextureStoreFormat.GuessCompressedFormat, true));
+////        hills.setRenderState(ts3);
+//        hills.getSceneHints().setPickingHint(PickingHint.Pickable, false);
+//        hills.getSceneHints().setPickingHint(PickingHint.Collidable, false);
+//        this.attachChild(hills);
 
 		
         sky = new Quad("SkyBackdrop", cam.getWidth() , cam.getHeight() );

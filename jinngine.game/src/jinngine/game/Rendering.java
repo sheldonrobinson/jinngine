@@ -1,37 +1,16 @@
 package jinngine.game;
 
-import java.awt.Dimension;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
-import java.net.URI;
 import java.net.URISyntaxException;
-
-import javax.swing.JFrame;
-
-import org.lwjgl.LWJGLException;
-import org.lwjgl.util.Display;
 import org.newdawn.slick.openal.SoundStore;
-
-
-
 import com.ardor3d.extension.shadow.map.ParallelSplitShadowMapPass;
 import com.ardor3d.extension.ui.UIComponent;
 import com.ardor3d.extension.ui.UIHud;
 import com.ardor3d.framework.Canvas;
 import com.ardor3d.framework.DisplaySettings;
-import com.ardor3d.framework.NativeCanvas;
-import com.ardor3d.framework.lwjgl.LwjglAwtCanvas;
 import com.ardor3d.framework.lwjgl.LwjglCanvas;
 import com.ardor3d.framework.lwjgl.LwjglCanvasRenderer;
-import com.ardor3d.image.TextureStoreFormat;
-import com.ardor3d.image.Texture.MinificationFilter;
 import com.ardor3d.image.util.AWTImageLoader;
-import com.ardor3d.input.FocusWrapper;
 import com.ardor3d.input.PhysicalLayer;
-import com.ardor3d.input.awt.AwtFocusWrapper;
-import com.ardor3d.input.awt.AwtKeyboardWrapper;
-import com.ardor3d.input.awt.AwtMouseManager;
-import com.ardor3d.input.awt.AwtMouseWrapper;
 import com.ardor3d.input.logical.DummyControllerWrapper;
 import com.ardor3d.input.logical.LogicalLayer;
 import com.ardor3d.input.lwjgl.LwjglKeyboardWrapper;
@@ -46,25 +25,16 @@ import com.ardor3d.math.Vector3;
 import com.ardor3d.renderer.Camera;
 import com.ardor3d.renderer.Renderer;
 import com.ardor3d.renderer.TextureRendererFactory;
-import com.ardor3d.renderer.lwjgl.LwjglPbufferTextureRenderer;
 import com.ardor3d.renderer.lwjgl.LwjglTextureRendererProvider;
 import com.ardor3d.renderer.pass.BasicPassManager;
 import com.ardor3d.renderer.pass.RenderPass;
-import com.ardor3d.renderer.queue.RenderBucketType;
 import com.ardor3d.renderer.state.BlendState;
 import com.ardor3d.renderer.state.CullState;
-import com.ardor3d.renderer.state.TextureState;
 import com.ardor3d.renderer.state.ZBufferState;
 import com.ardor3d.renderer.state.BlendState.DestinationFunction;
 import com.ardor3d.renderer.state.BlendState.SourceFunction;
 import com.ardor3d.renderer.state.CullState.Face;
 import com.ardor3d.scenegraph.Node;
-import com.ardor3d.scenegraph.hint.CullHint;
-import com.ardor3d.scenegraph.hint.LightCombineMode;
-import com.ardor3d.scenegraph.hint.PickingHint;
-import com.ardor3d.scenegraph.hint.TextureCombineMode;
-import com.ardor3d.scenegraph.shape.Quad;
-import com.ardor3d.util.TextureManager;
 import com.ardor3d.util.Timer;
 import com.ardor3d.util.resource.ResourceLocatorTool;
 import com.ardor3d.util.resource.SimpleResourceLocator;
@@ -85,7 +55,7 @@ public final class Rendering implements com.ardor3d.framework.Scene {
     private final LogicalLayer logicallayer = new LogicalLayer(); 
     private final ParallelSplitShadowMapPass pssm;
     private final PhysicalLayer physicallayer; 
-    private final UIHud hud;
+//    private final UIHud hud;
     private final Camera camera;
     
 	public Rendering() {
@@ -121,10 +91,15 @@ public final class Rendering implements com.ardor3d.framework.Scene {
 
 		// setup resource locator
         try {
-            final SimpleResourceLocator srl = new SimpleResourceLocator(new URI("file:///home/mo/workspace/jinngine.game/"));
+//            final SimpleResourceLocator srl = new SimpleResourceLocator(new URI("file:///home/mo/workspace/jinngine.game/"));
+            final SimpleResourceLocator srl = new SimpleResourceLocator(Rendering.class.getClassLoader().getResource(
+            "jinngine/game/resources/"));
+            
             ResourceLocatorTool.addResourceLocator(ResourceLocatorTool.TYPE_TEXTURE, srl);
             ResourceLocatorTool.addResourceLocator(ResourceLocatorTool.TYPE_MODEL, srl);
             ResourceLocatorTool.addResourceLocator(ResourceLocatorTool.TYPE_SHADER, srl);
+            ResourceLocatorTool.addResourceLocator(ResourceLocatorTool.TYPE_AUDIO, srl);
+
         } catch (final URISyntaxException ex) {
             ex.printStackTrace(); 
         }
@@ -182,8 +157,8 @@ public final class Rendering implements com.ardor3d.framework.Scene {
         
         
         // setup for ui components
-        UIComponent.setUseTransparency(true);
-        hud = new UIHud();
+//        UIComponent.setUseTransparency(true);
+//        hud = new UIHud();
         //hud.setupInput(canvas, physicallayer, logicallayer); 
 	}
 	
@@ -235,10 +210,6 @@ public final class Rendering implements com.ardor3d.framework.Scene {
 	public final Canvas getCanvas() {
 		return canvas;
 	}
-
-	public final UIHud getHud() {
-		return hud;
-	}
 	
 	@Override
 	public PickResults doPick(Ray3 pickRay) {
@@ -252,7 +223,6 @@ public final class Rendering implements com.ardor3d.framework.Scene {
 	@Override
 	public boolean renderUnto(Renderer renderer) {
 		passes.renderPasses(renderer);
-		renderer.draw(hud);
 		return true;
 	}
 

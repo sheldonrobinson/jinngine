@@ -160,9 +160,12 @@ public class Player extends Node implements PhysicalActor {
 
  		// if we are in contact with something, we can only move if we're in 
  		// the right orientation
- 		if (contacts>0 && Math.abs(correctionvelocity)>0.1  ) {
+ 		if (contacts>0 && Math.abs(correctionvelocity)>1.5  ) {
  			walkconstraintforce.assign(0,0,0);
- 			angularforcelimit = 0;
+ 			angularforcelimit = 10;
+ 			
+ 			// remove friction when orientation is bad
+// 			box.setFrictionCoefficient(0);
  		} else {
  			// let the constraint forces work
  			walkconstraintforce.assign(walkforce);
@@ -184,8 +187,8 @@ public class Player extends Node implements PhysicalActor {
 		double camlocation = location.getX();
 		
 		if (focuscamera) {
-			double cameraycoord = -20;
-			game.getRendering().getCamera().setLocation( (camlocation*0.85+focusxcoord*0.15), cameraycoord+5.5, -20);
+			double cameraycoord = -25;
+			game.getRendering().getCamera().setLocation( (camlocation*0.85+focusxcoord*0.15), cameraycoord+7, -20);
 			game.getRendering().getCamera().lookAt((camlocation*0.85+focusxcoord*0.15), cameraycoord, 0, com.ardor3d.math.Vector3.UNIT_Y);
 			
 			if (Math.abs(camlocation-focusxcoord) < 0.01) {
@@ -556,7 +559,9 @@ public class Player extends Node implements PhysicalActor {
         //clean physics
         game.getPhysics().removeBody(playerbody);
         game.getPhysics().removeConstraint(controlconstraint);
-
+        
+		// remove from scene
+		game.getRendering().getScene().detachChild(this);
 	}
 
 	@Override

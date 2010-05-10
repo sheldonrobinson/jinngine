@@ -135,6 +135,8 @@ public class Button extends Node implements SelectableActor, PhysicalActor {
 		game.getRendering().getPssmPass().remove(buttonnode);
 		game.getRendering().getPssmPass().removeOccluder(buttonnode);
 
+		// remove from scene
+		game.getRendering().getScene().detachChild(this);
 	}
 
 
@@ -168,7 +170,7 @@ public class Button extends Node implements SelectableActor, PhysicalActor {
 	}
 	@Override
 	public Body getBodyFromNode(Node node) {
-		return node==buttonnode?buttonbody:null;
+		return node==this?buttonbody:null;
 	}
 
 	@Override
