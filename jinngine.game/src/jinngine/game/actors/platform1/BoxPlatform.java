@@ -34,6 +34,7 @@ import jinngine.game.Toolbox;
 import jinngine.game.actors.Actor;
 import jinngine.game.actors.ConfigurableActor;
 import jinngine.game.actors.PhysicalActor;
+import jinngine.game.actors.ScalableActor;
 import jinngine.game.actors.SelectableActor;
 import jinngine.physics.Body;
 import jinngine.physics.Scene;
@@ -42,7 +43,7 @@ import jinngine.physics.force.GravityForce;
 /**
  * A primitive box platform
  */
-public class BoxPlatform extends Node implements PhysicalActor  {
+public class BoxPlatform extends Node implements PhysicalActor, ScalableActor  {
 
 	// jinngine
 	private Body boxplatformbody;
@@ -53,11 +54,8 @@ public class BoxPlatform extends Node implements PhysicalActor  {
 	
 	// properties
 	private final jinngine.math.Vector3 pos = new jinngine.math.Vector3();	
-	private double shade;	
+	private double shade = 0.7;	
 	private boolean isFixed = false;
-	private UIFrame frame;
-	private double scale = 1.0;
-
 
 
 	public BoxPlatform() {
@@ -68,8 +66,7 @@ public class BoxPlatform extends Node implements PhysicalActor  {
 		super.read(ic);
 		// read some settings
 		isFixed = ic.readBoolean("isFixed", false);
-		shade = (float)ic.readDouble("shade", 0);
-		scale = (double)ic.readDouble("scale", 1.0);
+		shade = (float)ic.readDouble("shade", 1.0);
 
 	}
 
@@ -77,10 +74,8 @@ public class BoxPlatform extends Node implements PhysicalActor  {
 	public void write(final OutputCapsule oc) throws IOException {
 		super.write(oc);		
 		// write some settings
-		oc.write(isFixed, "isFixed", false);
-		oc.write(shade, "shade", 0.0);
-		oc.write(scale, "scale", 1.0);
-
+		oc.write(boxplatformbody.isFixed(), "isFixed", false);
+		oc.write(shade, "shade", 1.0);
 	}
 
 	public BoxPlatform(jinngine.math.Vector3 pos, double shade) {
@@ -99,9 +94,10 @@ public class BoxPlatform extends Node implements PhysicalActor  {
 		// make the outline
 		ColorRGBA[] colors = new ColorRGBA[24];
 		for ( int i=0; i<colors.length; i++)
-			colors[i] = new ColorRGBA(1f,1f,1f,1.0f);
+			colors[i] = new ColorRGBA(0f,0f,0f,1.0f);
 
 		// define outline lines for the box
+		final double scale=0.5;
 		Vector3[] outline = new Vector3[]  { 
 				new Vector3( scale, scale, scale), new Vector3(-scale, scale, scale),
 				new Vector3( scale, scale, scale), new Vector3( scale,-scale, scale),
@@ -156,9 +152,11 @@ public class BoxPlatform extends Node implements PhysicalActor  {
 		game.getRendering().getPssmPass().add(platform);
 		game.getRendering().getPssmPass().addOccluder(platformbox);
 
+		
 		// setup physics with jinngine
 		boxplatformbody = new Body("default");
-		boxgeometry = new jinngine.geometry.Box(scale*2,scale*2,scale*2);
+		// use the node scale as dimentions for the box
+		boxgeometry = new jinngine.geometry.Box(this.getScale().getX(),this.getScale().getY(),this.getScale().getZ());
 		boxplatformbody.addGeometry(boxgeometry);
 		boxplatformbody.finalize();
 		physics.addBody(boxplatformbody);
@@ -168,14 +166,11 @@ public class BoxPlatform extends Node implements PhysicalActor  {
 		boxplatformbody.setFixed(isFixed);
 
 		// create spatial controller
-		Toolbox.setTransformFromNode(platform, boxplatformbody);
-		platform.addController(Toolbox.createSpatialControllerForBody(boxplatformbody));
+		Toolbox.setTransformFromNode(this, boxplatformbody);
+		this.addController(Toolbox.createSpatialControllerForBody(boxplatformbody));
 	}
 	
 	public void update( Game game) {
-		// reflect the change in jinngine geometry
-		ReadOnlyVector3 s = platform.getScale();
-		boxgeometry.setBoxSideLengths(Math.max(0.5,s.getX()),Math.max(0.5,s.getY()),Math.max(0.5,s.getZ()));
 	}
 
 	@Override
@@ -195,5 +190,23 @@ public class BoxPlatform extends Node implements PhysicalActor  {
 	@Override
 	public Body getBodyFromNode(Node node) {
 		return boxplatformbody;
+	}
+
+	@Override
+	public void getScale(jinngine.math.Vector3 scale) {
+		scale.assign(this.getScale().getX(),this.getScale().getY(),this.getScale().getZ());
+	}
+
+	@Override
+	public void setScale(jinngine.math.Vector3 scale) {
+//		System.out.println("setScale()" + scale);
+
+		this.setScale(Math.max(0.5,scale.x),Math.max(0.5,scale.y),Math.max(0.5,scale.z));
+		
+		// reflect the change in jinngine geometry
+		ReadOnlyVector3 s = this.getScale();
+//		System.out.println("setting scale " + s);
+		boxgeometry.setBoxSideLengths(Math.max(0.5,s.getX()),Math.max(0.5,s.getY()),Math.max(0.5,s.getZ()));
+
 	}
 }

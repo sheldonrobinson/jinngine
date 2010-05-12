@@ -43,7 +43,7 @@ public class FixUnfixBody implements ActionActor {
 			game.getPhysics().fixBody(target, false);
 		} else {
 			game.getPhysics().fixBody(target, true);
-		}
+		}		
 		
 		owner.finished(game, this);
 	}

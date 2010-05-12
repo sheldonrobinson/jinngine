@@ -17,26 +17,19 @@ import jinngine.game.Game;
 import jinngine.game.actors.ActionActor;
 import jinngine.game.actors.Actor;
 import jinngine.game.actors.ActorOwner;
-import jinngine.game.actors.PhysicalActor;
-import jinngine.game.actors.interaction.AxisAllignBody;
-import jinngine.game.actors.interaction.BodyPlacement;
+import jinngine.game.actors.ScalableActor;
 import jinngine.game.actors.interaction.DeleteActor;
-import jinngine.game.actors.interaction.FixUnfixBody;
-import jinngine.game.actors.player.Player;
-
-import jinngine.physics.Body;
+import jinngine.game.actors.interaction.ScaleActor;
 
 
-public class DeleteActorButton extends Button {
+public class ScaleActorButton extends Button {
 	
 	private Texture selectedtexture;
 	private Texture deselectedtexture;	
 	private TextureState texturestate;
-	private final double distancelimit = 2.5;
 	private Audio click;
-	private int audiobufferid = 0;
 	
-	public DeleteActorButton() {
+	public ScaleActorButton() {
 		try {
 			click = SoundStore.get().getWAV(
 					ResourceLocatorTool.locateResource(
@@ -60,11 +53,11 @@ public class DeleteActorButton extends Button {
 		super.start(game);
 		
 		// load textures
-		selectedtexture = TextureManager.load("selecteddeletebody.tga",
+		selectedtexture = TextureManager.load("selectedscaleactor.tga",
 				Texture.MinificationFilter.Trilinear,
 				TextureStoreFormat.GuessNoCompressedFormat, true);
 
-		deselectedtexture = TextureManager.load("deselecteddeletebody.tga",
+		deselectedtexture = TextureManager.load("deselectedscaleactor.tga",
 				Texture.MinificationFilter.Trilinear,
 				TextureStoreFormat.GuessNoCompressedFormat, true);
 		
@@ -79,8 +72,12 @@ public class DeleteActorButton extends Button {
 	public ActionActor provideActionActor(ActorOwner owner, Actor target, Node picknode,
 			jinngine.math.Vector3 pickpoint, Vector2 screenpos ) {
 		
+		if (target instanceof ScalableActor ) {
 		// spawn delete actor
-		return new DeleteActor(owner, target);
+			return new ScaleActor(owner, (ScalableActor)target);
+		} else {
+			return null;
+		}
 	}
 	
 	@Override

@@ -19,6 +19,7 @@ import jinngine.game.actors.button.DeleteActorButton;
 import jinngine.game.actors.button.FixBodyButton;
 import jinngine.game.actors.button.InsertActorButton;
 import jinngine.game.actors.button.PlacementButton;
+import jinngine.game.actors.button.ScaleActorButton;
 import jinngine.game.actors.button.StoreSceneButton;
 import jinngine.game.actors.door.Door;
 import jinngine.game.actors.door.SimpleDoor;
@@ -164,6 +165,9 @@ public class Game {
 
 		Button insertbutton = new InsertActorButton();
 		insertbutton.create(this);
+
+		Button scalebutton = new ScaleActorButton();
+		scalebutton.create(this);
 
 
 		// add actors in scene

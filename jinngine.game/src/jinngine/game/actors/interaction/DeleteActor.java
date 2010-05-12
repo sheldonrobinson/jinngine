@@ -3,7 +3,9 @@ package jinngine.game.actors.interaction;
 import jinngine.game.actors.ActionActor;
 import jinngine.game.actors.Actor;
 import jinngine.game.actors.ActorOwner;
+import jinngine.game.actors.ScalableActor;
 import jinngine.game.Game;
+import jinngine.math.Vector3;
 
 public class DeleteActor implements ActionActor {
 
