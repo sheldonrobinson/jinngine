@@ -42,12 +42,11 @@ import jinngine.physics.force.GravityForce;
 /**
  * A primitive box platform
  */
-public class BoxPlatform extends Node implements PhysicalActor, ConfigurableActor {
+public class BoxPlatform extends Node implements PhysicalActor  {
 
 	// jinngine
-	private Body platformbox1body;
+	private Body boxplatformbody;
 	private jinngine.geometry.Box boxgeometry;
-	//private jinngine.geometry.ConvexHull platformhullgeometry;
 	
 	// ardor3d
 	private Node platform;
@@ -100,7 +99,7 @@ public class BoxPlatform extends Node implements PhysicalActor, ConfigurableActo
 		// make the outline
 		ColorRGBA[] colors = new ColorRGBA[24];
 		for ( int i=0; i<colors.length; i++)
-			colors[i] = new ColorRGBA(0f,0f,0f,1.0f);
+			colors[i] = new ColorRGBA(1f,1f,1f,1.0f);
 
 		// define outline lines for the box
 		Vector3[] outline = new Vector3[]  { 
@@ -157,21 +156,20 @@ public class BoxPlatform extends Node implements PhysicalActor, ConfigurableActo
 		game.getRendering().getPssmPass().add(platform);
 		game.getRendering().getPssmPass().addOccluder(platformbox);
 
-		ReadOnlyVector3 s = platform.getScale();
-
-		
-		platformbox1body = new Body("default");
+		// setup physics with jinngine
+		boxplatformbody = new Body("default");
 		boxgeometry = new jinngine.geometry.Box(scale*2,scale*2,scale*2);
-		platformbox1body.addGeometry(boxgeometry);
-		platformbox1body.finalize();
-		physics.addBody(platformbox1body);
-		physics.addForce(new GravityForce(platformbox1body));
-		platformbox1body.setPosition(pos);
-		platformbox1body.setAngularVelocity(new jinngine.math.Vector3(0,0,0));
-		platformbox1body.setFixed(isFixed);
+		boxplatformbody.addGeometry(boxgeometry);
+		boxplatformbody.finalize();
+		physics.addBody(boxplatformbody);
+		physics.addForce(new GravityForce(boxplatformbody));
+		boxplatformbody.setPosition(pos);
+		boxplatformbody.setAngularVelocity(new jinngine.math.Vector3(0,0,0));
+		boxplatformbody.setFixed(isFixed);
 
-		Toolbox.setTransformFromNode(platform, platformbox1body);
-		platform.addController(Toolbox.createSpatialControllerForBody(platformbox1body));
+		// create spatial controller
+		Toolbox.setTransformFromNode(platform, boxplatformbody);
+		platform.addController(Toolbox.createSpatialControllerForBody(boxplatformbody));
 	}
 	
 	public void update( Game game) {
@@ -181,149 +179,21 @@ public class BoxPlatform extends Node implements PhysicalActor, ConfigurableActo
 	}
 
 	@Override
-	public void stop( Game game ) {}
+	public void stop( Game game ) {
+		// clean out physics
+		game.getPhysics().removeBody(boxplatformbody);
+		
+		// clean out shadowing
+		final Spatial platformbox = this.getChild("myplatformbox");
+		game.getRendering().getPssmPass().remove(platform);
+		game.getRendering().getPssmPass().removeOccluder(platformbox);
+
+		// remove our selves 
+		game.getRendering().getScene().detachChild(this);
+	}
 
 	@Override
 	public Body getBodyFromNode(Node node) {
-		if (node == platform)
-			return platformbox1body;
-		else
-			return null;
+		return boxplatformbody;
 	}
-
-	@Override
-	public void configure(final Game game) {
-			final UIPanel panel = new UIPanel();
-			panel.setForegroundColor(ColorRGBA.DARK_GRAY);
-			panel.setLayout(new BorderLayout());
-
-			final RowLayout rowLay = new RowLayout(false, false, false);
-			final UIPanel centerPanel = new UIPanel(rowLay);
-			centerPanel.setLayoutData(BorderLayoutData.CENTER);
-			panel.add(centerPanel);
-			
-			final double dv = 0.5;
-			
-			final UIButton plusx = new UIButton("+X");
-			plusx.setEnabled(true);
-			centerPanel.add(plusx); 
-			plusx.addActionListener(new ActionListener() {
-				public void actionPerformed(final ActionEvent event) {
-					platform.setScale(platform.getScale().add(dv, 0, 0, null));
-
-					System.out.println("pressed state " + event);
-				}
-			});
-
-			final UIButton minusx = new UIButton("-X");
-			minusx.setEnabled(true);
-			centerPanel.add(minusx);
-			minusx.addActionListener(new ActionListener() {
-				public void actionPerformed(final ActionEvent event) {
-					platform.setScale(platform.getScale().add(-dv, 0, 0, null));
-					update(game);
-					System.out.println("pressed state " + event);
-				}
-			});
-
-			final UIButton plusy = new UIButton("+Y");
-			plusy.setEnabled(true);
-			centerPanel.add(plusy); 
-			plusy.addActionListener(new ActionListener() {
-				public void actionPerformed(final ActionEvent event) {
-					platform.setScale(platform.getScale().add(0, dv, 0, null));
-					update(game);
-					System.out.println("pressed state " + event);
-				}
-			});
-
-			final UIButton minusy = new UIButton("-Y");
-			minusy.setEnabled(true);
-			centerPanel.add(minusy);
-			minusy.addActionListener(new ActionListener() {
-				public void actionPerformed(final ActionEvent event) {
-					platform.setScale(platform.getScale().add(0, -dv, 0, null));
-					update(game);
-					System.out.println("pressed state " + event);
-				}
-			});
-			
-			final UIButton plusz = new UIButton("+Z");
-			plusz.setEnabled(true);
-			centerPanel.add(plusz); 
-			plusz.addActionListener(new ActionListener() {
-				public void actionPerformed(final ActionEvent event) {
-					platform.setScale(platform.getScale().add(0, 0, dv, null));
-					update(game);
-					System.out.println("pressed state " + event);
-				}
-			});
-
-			final UIButton minusz = new UIButton("-Z");
-			minusz.setEnabled(true);
-			centerPanel.add(minusz);
-			minusz.addActionListener(new ActionListener() {
-				public void actionPerformed(final ActionEvent event) {
-					platform.setScale(platform.getScale().add(0, 0, -dv, null));
-					update(game);
-					System.out.println("pressed state " + event);
-				}
-			});
-			
-			
-			final UIButton shadebuttonplus = new UIButton("+shade");
-			shadebuttonplus.setEnabled(true);
-			centerPanel.add(shadebuttonplus); 
-			shadebuttonplus.addActionListener(new ActionListener() {
-				public void actionPerformed(final ActionEvent event) {
-					shade = shade + 0.1;
-					((Box)getChild("myplatformbox")).setSolidColor(new ColorRGBA((float)shade,(float)shade,(float)shade,1.0f));
-				}
-			});
-
-			final UIButton shadebuttonminus = new UIButton("-shade");
-			shadebuttonminus.setEnabled(true);
-			centerPanel.add(shadebuttonminus);
-			shadebuttonminus.addActionListener(new ActionListener() {
-				public void actionPerformed(final ActionEvent event) {
-					shade = shade - 0.1;
-					((Box)getChild("myplatformbox")).setSolidColor(new ColorRGBA((float)shade,(float)shade,(float)shade,1.0f));
-				}
-			});
-			
-			final UICheckBox fixedsetting = new UICheckBox("fixed");
-			fixedsetting.setSelected(isFixed);
-			fixedsetting.setEnabled(true);
-			centerPanel.add(fixedsetting);
-			fixedsetting.addActionListener(new ActionListener() {
-				public void actionPerformed(final ActionEvent event) {
-					boolean state = ((UICheckBox)event.getSource()).isSelected();
-					//remove velocity from body
-					platformbox1body.setVelocity(0,0,0);
-					platformbox1body.setAngularVelocity(0, 0, 0);
-					game.getPhysics().fixBody(platformbox1body, state);
-					isFixed = state;				
-					System.out.println("setting state " + state);
-				}
-			});
-
-			frame = new UIFrame("Platform1");
-			frame.setContentPanel(panel);
-			frame.updateMinimumSizeFromContents();
-			frame.layout();
-			frame.pack();
-			frame.setUseStandin(false);
-			frame.setOpacity(0.75f);
-			frame.setLocationRelativeTo(game.getRendering().getCamera());
-			frame.setName("sample");
-
-			game.getRendering().getHud().add(frame);
-			
-//			game.getRendering().getHud().remove(frame);
-	}
-
-
-
-
-
 }
