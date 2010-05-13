@@ -123,6 +123,15 @@ public final class Vector3 implements Serializable {
 	public final Vector3 multiply( double s ) {
 		return new Vector3( x*s, y*s, z*s);
 	}
+	
+	/**
+	 * Scale vector in scale matrix given by s
+	 * @param s
+	 * @return
+	 */
+	public final Vector3 scale( Vector3 s) {
+		return new Vector3(x*s.x, y*s.y, z*s.z);
+	}
 
 	public static final void  multiply( Vector3 v, double s) {
 		v.x*=s; v.y*=s; v.z*=s;

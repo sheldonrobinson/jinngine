@@ -14,7 +14,6 @@ import jinngine.physics.constraint.contact.ContactConstraintManager;
 import jinngine.physics.constraint.contact.DefaultContactConstraintManager;
 import jinngine.physics.solver.*;
 import jinngine.physics.solver.Solver.NCPConstraint;
-import jinngine.physics.solver.experimental.NonsmoothNonlinearConjugateGradientOld;
 import jinngine.collision.*;
 import jinngine.geometry.*;
 import jinngine.math.*;
@@ -155,7 +154,7 @@ public final class DefaultScene implements Scene {
 		this.broadphase = new SweepAndPrune();
 //		this.solver = new ProjectedGaussSeidel(55);
 //		this.solver = new NonsmoothNonlinearConjugateGradient(55);
-		this.solver = new NonsmoothNonlinearConjugateGradient(35);
+		this.solver = new NonsmoothNonlinearConjugateGradient(75);
 		
 		// start the new contact constraint manager
 		this.contactmanager = new DefaultContactConstraintManager( broadphase, constraintGraph);

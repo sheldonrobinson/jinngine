@@ -197,11 +197,24 @@ public class Matrix3 {
    * @param s
    * @return
    */
-  public Matrix3 multiply( double s) {
+  public final Matrix3 multiply( double s) {
 	  Matrix3 A = new Matrix3();
 	  A.a11 = a11*s; A.a12 = a12*s; A.a13 = a13*s;
 	  A.a21 = a21*s; A.a22 = a22*s; A.a23 = a23*s;
 	  A.a31 = a31*s; A.a32 = a32*s; A.a33 = a33*s;	  
+	  return A;
+  }
+  
+  /**
+   * Right-multiply by a scaling matrix given by s, so M.scale(s) = M S(s)
+   * @param s
+   * @return
+   */
+  public final Matrix3 scale( Vector3 s ) {
+	  Matrix3 A = new Matrix3();
+	  A.a11 = a11*s.x; A.a12 = a12*s.y; A.a13 = a13*s.z;
+	  A.a21 = a21*s.x; A.a22 = a22*s.y; A.a23 = a23*s.z;
+	  A.a31 = a31*s.x; A.a32 = a32*s.y; A.a33 = a33*s.z;	  
 	  return A;
   }
   
