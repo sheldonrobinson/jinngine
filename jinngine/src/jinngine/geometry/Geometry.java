@@ -53,6 +53,14 @@ public interface Geometry extends BoundingBox {
 	 */
 	public void getLocalTranslation( Vector3 t ) ;
 	
+	
+	/**
+	 * Set the local scale. Not all geometries will support scaling and/or non-uniform scaling
+	 * @param s
+	 */
+	public void setLocalScale( Vector3 s);
+	
+	
 	/** 
 	 * Get the amount of mass for this geometry
 	 */

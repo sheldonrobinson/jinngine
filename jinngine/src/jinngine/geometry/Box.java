@@ -358,4 +358,9 @@ public class Box implements SupportMap3, Geometry, Material {
 		return new Vector3(xs,ys,zs);
 	}
 
+	@Override
+	public void setLocalScale(Vector3 s) {
+		throw new UnsupportedOperationException();
+	}
+
 }

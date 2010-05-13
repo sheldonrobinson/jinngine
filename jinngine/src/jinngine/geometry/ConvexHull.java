@@ -158,13 +158,13 @@ public class ConvexHull implements SupportMap3, Geometry, Material {
 		dualadjacent = adjacencyList(dualhull.getFaces(), dualvertices.size());			
 		
 		//search vertices to find extremal bounds
-		Vector3 extremal = new Vector3();
+		extremalpoint.assignZero();
 		for ( Vector3 v: vertices) {
-			if (extremal.norm() < v.norm()) extremal.assign(v);
+			if (extremalpoint.norm() < v.norm()) extremalpoint.assign(v);
 		}
 		
-		// assign max extends
-		double max = extremal.norm();
+		// assign max extends ( assume identity scale at this point)
+		double max = extremalpoint.norm();
 		bounds.assign(max,max,max);
 				
 		// perform approximate mass calculation
@@ -214,12 +214,15 @@ public class ConvexHull implements SupportMap3, Geometry, Material {
 	private Object auxiliary;
 	private Body body = new Body("default");
 	private double envelope = 0.125;
-	private Matrix3 localtransform = Matrix3.identity(new Matrix3());
+	private Matrix3 localrotation = Matrix3.identity(new Matrix3());
 	private Matrix4 localtransform4 = Matrix4.identity(new Matrix4());
-	private final Vector3 localdisplacement = new Vector3();
+	private final Vector3 localtranslation = new Vector3();
 	private final Vector3 displacement = new Vector3();
+	private final Vector3 localscale = new Vector3(1,1,1);
+	private final Vector3 inverselocalscale = new Vector3(1,1,1);
 
 	// AxisAlignedBoundingBox
+	private final Vector3 extremalpoint = new Vector3();
 	private final Vector3 bounds = new Vector3();
 //	private final Vector3 minBounds = new Vector3();
 //	private final Vector3 maxBounds = new Vector3();
@@ -232,10 +235,11 @@ public class ConvexHull implements SupportMap3, Geometry, Material {
 	
 	@Override
 	public Vector3 supportPoint(Vector3 direction) {
-		Vector3 v = body.state.rotation.multiply(localtransform).transpose().multiply(direction);
+		// normals are transformed (RS^-1)
+		Vector3 v = body.state.rotation.multiply(localrotation).scale(localscale).transpose().multiply(direction);
 		
 		// do hill climbing if the hull has a considerable number of vertices
-		if (numberOfVertices > 32 || true) {
+//		if (numberOfVertices > 32) {
 			//hill climb along v
 			int index = cachedVertex;
 			double value = v.dot(vertices.get(index));
@@ -258,22 +262,22 @@ public class ConvexHull implements SupportMap3, Geometry, Material {
 			cachedVertex = index;
 			
 			// return the final support point in world space
-			return body.state.rotation.multiply(localtransform.multiply(vertices.get(index)).add(localdisplacement)).add(body.state.position);
+			return body.state.rotation.multiply(localrotation.scale(localscale).multiply(vertices.get(index)).add(localtranslation)).add(body.state.position);
 
-		} else {
-			// if not, just check each vertex
-			double value = Double.NEGATIVE_INFINITY;
-			Vector3 best = null;
-			for (Vector3 p: vertices) {
-				if (v.dot(p) > value || best == null) {
-					best = p;
-					value = v.dot(p);
-				}
-			}
-			
-			// return final support point in world space
-			return body.state.rotation.multiply(localtransform.multiply(best).add(localdisplacement)).add(body.state.position);			
-		}
+//		} else {
+//			// if not, just check each vertex
+//			double value = Double.NEGATIVE_INFINITY;
+//			Vector3 best = null;
+//			for (Vector3 p: vertices) {
+//				if (v.dot(p) > value || best == null) {
+//					best = p;
+//					value = v.dot(p);
+//				}
+//			}
+//			
+//			// return final support point in world space
+//			return body.state.rotation.multiply(localrotation.multiply(best).add(localtranslation)).add(body.state.position);			
+//		}
 
 	}
 
@@ -283,7 +287,7 @@ public class ConvexHull implements SupportMap3, Geometry, Material {
 		// given support direction. This is accomplished by hill-climbing the dual hull, that
 		// maps a vertex onto a face in the original convex hull. Therefore, this method will 
 		// return a face at all times
-		Vector3 v = body.state.rotation.multiply(localtransform).transpose().multiply(direction);
+		Vector3 v = body.state.rotation.multiply(localrotation).scale(localscale).transpose().multiply(direction);
 		// hill climb the dual hull to find face 
 		int index = 0;
 		double value = v.dot(dualvertices.get(index));
@@ -304,7 +308,7 @@ public class ConvexHull implements SupportMap3, Geometry, Material {
 		
 		// output the face according to the dual hull index
 		for (Vector3 p: faces.get(index)) 
-			returnface.add( body.state.rotation.multiply(localtransform.multiply(p).add(localdisplacement)).add(body.state.position) );
+			returnface.add( body.state.rotation.multiply(localrotation.scale(localscale).multiply(p).add(localtranslation)).add(body.state.position) );
 	}
 
 	
@@ -344,9 +348,9 @@ public class ConvexHull implements SupportMap3, Geometry, Material {
 
 	@Override
 	public void setLocalTransform(Matrix3 B, Vector3 displacement) {
-		this.localdisplacement.assign(displacement);
-		Matrix3.set(B, this.localtransform); 
-		Matrix4.set(Transforms.transformAndTranslate4(localtransform, localdisplacement), localtransform4);
+		this.localtranslation.assign(displacement);
+		Matrix3.set(B, this.localrotation); 
+		Matrix4.set(Transforms.transformAndTranslate4(localrotation, localtranslation), localtransform4);
 	}
 	
 	@Override
@@ -364,8 +368,8 @@ public class ConvexHull implements SupportMap3, Geometry, Material {
 
 	@Override
 	public void getLocalTransform(Matrix3 R, Vector3 b) {
-		R.assign(this.localtransform);
-		b.assign(this.localdisplacement);		
+		R.assign(this.localrotation);
+		b.assign(this.localtranslation);		
 	}
 
 	@Override
@@ -379,7 +383,7 @@ public class ConvexHull implements SupportMap3, Geometry, Material {
 
 	@Override
 	public void getLocalTranslation(Vector3 t) {
-		t.assign(localdisplacement);
+		t.assign(localtranslation);
 	}
 	
 	@Override
@@ -416,5 +420,22 @@ public class ConvexHull implements SupportMap3, Geometry, Material {
 	public void setRestitution(double e) {
 		// TODO Auto-generated method stub
 		
+	}
+
+	@Override
+	public void setLocalScale(Vector3 s) {
+		localscale.assign(s);
+		inverselocalscale.assign(1/s.x,1/s.y,1/s.z);
+		
+		//re-assign bounds by scaling the previous extremal point TODO not sure this is tight
+		//search vertices to find extremal bounds
+		extremalpoint.assignZero();
+		for ( Vector3 v: vertices) {
+			if (extremalpoint.norm() < v.scale(localscale).norm()) extremalpoint.assign(v.scale(localscale));
+		}
+		
+		double max = extremalpoint.norm();
+		bounds.assign(max,max,max);
+
 	}
 }

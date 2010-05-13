@@ -169,5 +169,10 @@ public class Sphere implements SupportMap3, Geometry, Material {
 		this.mass = mass;
 	}
 
+	@Override
+	public void setLocalScale(Vector3 s) {
+		throw new UnsupportedOperationException();
+	}
+
 
 }
