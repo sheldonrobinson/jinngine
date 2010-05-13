@@ -22,6 +22,7 @@ import jinngine.game.actors.Actor;
 import jinngine.game.actors.ActorOwner;
 import jinngine.game.actors.ConfigurableActor;
 import jinngine.game.actors.PhysicalActor;
+import jinngine.game.actors.ScalableActor;
 import jinngine.game.actors.SelectableActor;
 import jinngine.game.actors.interaction.ConfigureActor;
 import jinngine.geometry.Geometry;
@@ -30,10 +31,11 @@ import jinngine.physics.Scene;
 import jinngine.physics.force.GravityForce;
 
 
-public class Button extends Node implements SelectableActor, PhysicalActor {
+public class Button extends Node implements SelectableActor, PhysicalActor, ScalableActor {
 
 	protected Body buttonbody;
 	protected Node buttonnode;
+	protected jinngine.geometry.Box buttongeometry;
 	protected TextureState buttontexture;
 	protected Vector3 initialposition;
 	private boolean pressed = false;
@@ -115,7 +117,7 @@ public class Button extends Node implements SelectableActor, PhysicalActor {
 		System.out.println("s="+s);
 		
 		buttonbody = new Body("default");
-		Geometry buttongeometry = new jinngine.geometry.Box(s.getX(),s.getY(),s.getZ());
+		buttongeometry = new jinngine.geometry.Box(s.getX(),s.getY(),s.getZ());
 		buttonbody.addGeometry(buttongeometry);
 		buttonbody.finalize();
 		physics.addBody(buttonbody);
@@ -176,5 +178,23 @@ public class Button extends Node implements SelectableActor, PhysicalActor {
 	@Override
 	public boolean canBeSelected() {
 		return true;
+	}
+
+	@Override
+	public void getScale(jinngine.math.Vector3 scale) {
+		scale.assign(this.getScale().getX(),this.getScale().getY(),this.getScale().getZ());
+	}
+
+	@Override
+	public void setScale(jinngine.math.Vector3 scale) {
+//		System.out.println("setScale()" + scale);
+
+		this.setScale(Math.max(0.5,scale.x),Math.max(0.5,scale.y),Math.max(0.5,scale.z));
+		
+		// reflect the change in jinngine geometry
+		ReadOnlyVector3 s = this.getScale();
+//		System.out.println("setting scale " + s);
+		buttongeometry.setBoxSideLengths(Math.max(0.5,s.getX()),Math.max(0.5,s.getY()),Math.max(0.5,s.getZ()));
+
 	}
 }

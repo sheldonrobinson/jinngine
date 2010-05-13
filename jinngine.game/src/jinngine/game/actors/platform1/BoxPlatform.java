@@ -152,7 +152,6 @@ public class BoxPlatform extends Node implements PhysicalActor, ScalableActor  {
 		game.getRendering().getPssmPass().add(platform);
 		game.getRendering().getPssmPass().addOccluder(platformbox);
 
-		
 		// setup physics with jinngine
 		boxplatformbody = new Body("default");
 		// use the node scale as dimentions for the box

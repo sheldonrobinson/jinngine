@@ -19,7 +19,9 @@ public class ScaleActor implements ActionActor {
 	private final ActorOwner owner;
 	private InputTrigger tracktrigger;
 	private final Vector2 drag = new Vector2();
-	private final Vector2 reference = new Vector2();
+	private final Vector2 referencepoint = new Vector2();
+	private final Vector3 referencescale = new Vector3();
+	
 	
 	private boolean firstevent = true;
 	
@@ -36,7 +38,12 @@ public class ScaleActor implements ActionActor {
 	}
 	
 	public final void act( Game game ) {
-		target.setScale(new Vector3((drag.getY()-reference.getY())/10,1,(drag.getX()-reference.getX())/10));
+		Vector2 displace = new Vector2();
+		drag.subtract(referencepoint, displace);
+//		target.setScale(referencescale.add(new Vector3((drag.getX()-referencepoint.getX())/10,1,(drag.getY()-referencepoint.getY())/10)));
+
+		double s = displace.length();
+		target.setScale(new Vector3(s/10,1,s/5));
 	}
 
 	@Override
@@ -51,8 +58,12 @@ public class ScaleActor implements ActionActor {
 					TwoInputStates inputState, double tpf) {
 				
 				if (firstevent) {
-					reference.set(inputState.getCurrent().getMouseState().getX(),
+					referencepoint.set(inputState.getCurrent().getMouseState().getX(),
 							inputState.getCurrent().getMouseState().getY());
+					
+					// set the initial scale
+					target.getScale(referencescale);
+					
 					firstevent = false;
 				}
 				

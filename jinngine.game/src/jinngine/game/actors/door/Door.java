@@ -244,7 +244,7 @@ public class Door extends Node implements PhysicalActor, ConfigurableActor {
 		frame.setLocationRelativeTo(game.getRendering().getCamera());
 		frame.setName("sample");
 
-		game.getRendering().getHud().add(frame);
+//		game.getRendering().getHud().add(frame);
 		
 //		game.getRendering().getHud().remove(frame);
 	

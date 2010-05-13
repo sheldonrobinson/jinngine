@@ -3,48 +3,29 @@ package jinngine.game.actors.platform1;
 import java.io.IOException;
 import java.nio.FloatBuffer;
 import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
 
-import javax.tools.Tool;
-
-import com.ardor3d.bounding.BoundingBox;
 
 import com.ardor3d.extension.model.collada.jdom.ColladaImporter;
 import com.ardor3d.extension.model.collada.jdom.data.ColladaStorage;
-import com.ardor3d.extension.ui.UIButton;
-import com.ardor3d.extension.ui.UICheckBox;
 import com.ardor3d.extension.ui.UIFrame;
-import com.ardor3d.extension.ui.UIPanel;
 
-import com.ardor3d.extension.ui.event.ActionEvent;
-import com.ardor3d.extension.ui.event.ActionListener;
-import com.ardor3d.extension.ui.layout.BorderLayout;
-import com.ardor3d.extension.ui.layout.BorderLayoutData;
-import com.ardor3d.extension.ui.layout.RowLayout;
 import com.ardor3d.math.ColorRGBA;
-import com.ardor3d.math.Vector2;
-import com.ardor3d.math.Vector3;
 import com.ardor3d.math.type.ReadOnlyVector3;
 import com.ardor3d.scenegraph.Line;
 import com.ardor3d.scenegraph.Mesh;
 import com.ardor3d.scenegraph.MeshData;
 import com.ardor3d.scenegraph.Node;
 import com.ardor3d.scenegraph.Spatial;
-import com.ardor3d.scenegraph.hint.LightCombineMode;
-import com.ardor3d.scenegraph.shape.Box;
 import com.ardor3d.util.export.InputCapsule;
 import com.ardor3d.util.export.OutputCapsule;
-import com.ardor3d.util.geom.BufferUtils;
 
 import jinngine.game.Game;
 import jinngine.game.Toolbox;
-import jinngine.game.actors.Actor;
-import jinngine.game.actors.ConfigurableActor;
 import jinngine.game.actors.PhysicalActor;
-import jinngine.game.actors.SelectableActor;
+import jinngine.game.actors.ScalableActor;
 import jinngine.geometry.ConvexHull;
+import jinngine.math.Vector3;
 import jinngine.physics.Body;
 import jinngine.physics.Scene;
 import jinngine.physics.force.GravityForce;
@@ -52,7 +33,7 @@ import jinngine.physics.force.GravityForce;
 /**
  * A primitive convex platform
  */
-public class ConvexPlatform extends Node implements PhysicalActor {
+public class ConvexPlatform extends Node implements PhysicalActor, ScalableActor {
 
 	// jinngine
 	private Body platformconvexbody;
@@ -103,7 +84,7 @@ public class ConvexPlatform extends Node implements PhysicalActor {
 
 		platform = new Node();
 
-		// load door asset
+		// load the geometry
         final ColladaImporter colladaImporter = new ColladaImporter();
         final ColladaStorage storage = colladaImporter.load(daefilename);
         Node convexplatformscene = storage.getScene();
@@ -184,7 +165,8 @@ public class ConvexPlatform extends Node implements PhysicalActor {
 		//	        System.out.println(verticedata);
 
 		// do the convex hull and setup mesh 
-		hull = new ConvexHull(points);
+		hull = new ConvexHull(points);	
+		hull.setLocalScale(new Vector3(this.getScale().getX(), this.getScale().getY(), this.getScale().getZ()));
 		
 		System.out.println("ConvexPlatform: final hull vertices " + hull.getNumberOfVertices());
 		
@@ -229,5 +211,21 @@ public class ConvexPlatform extends Node implements PhysicalActor {
 			return platformconvexbody;
 		else
 			return null;
+	}
+
+	@Override
+	public void getScale(jinngine.math.Vector3 scale) {
+		scale.assign(this.getScale().getX(),this.getScale().getY(),this.getScale().getZ());
+	}
+
+	@Override
+	public void setScale(jinngine.math.Vector3 scale) {
+		this.setScale(Math.max(0.5,scale.x),Math.max(0.5,scale.y),Math.max(0.5,scale.z));
+		
+		// reflect the change in jinngine geometry
+		ReadOnlyVector3 s = this.getScale();
+
+		// scale jinngine geometry
+		hull.setLocalScale(new Vector3(s.getX(),s.getY(),s.getZ()));
 	}
 }
