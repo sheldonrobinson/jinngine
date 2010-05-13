@@ -92,8 +92,7 @@ public class Button extends Node implements SelectableActor, PhysicalActor, Scal
         buttontexture.setEnabled(true);
         box.setRenderState(buttontexture);
 		
-        line.setScale(0.7070 *1.01);
-        body.setScale(0.7070);		
+        line.setScale(1.01);
 		attachChild(line);
         attachChild(body);
         
@@ -107,13 +106,13 @@ public class Button extends Node implements SelectableActor, PhysicalActor, Scal
 		System.out.println("Button started");																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																																					
 		Scene physics = game.getPhysics();
 		buttonnode = (Node)this.getChild("mybutton");
-        buttonnode.setUserData(this);
+//        buttonnode.setUserData(this);
 
 		//setup shadowing
 		game.getRendering().getPssmPass().add(buttonnode);
 		game.getRendering().getPssmPass().addOccluder(buttonnode);
 
-		ReadOnlyVector3 s = buttonnode.getScale();
+		ReadOnlyVector3 s = this.getScale();
 		System.out.println("s="+s);
 		
 		buttonbody = new Body("default");

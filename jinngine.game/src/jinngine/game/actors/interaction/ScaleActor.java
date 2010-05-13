@@ -38,12 +38,7 @@ public class ScaleActor implements ActionActor {
 	}
 	
 	public final void act( Game game ) {
-		Vector2 displace = new Vector2();
-		drag.subtract(referencepoint, displace);
-//		target.setScale(referencescale.add(new Vector3((drag.getX()-referencepoint.getX())/10,1,(drag.getY()-referencepoint.getY())/10)));
 
-		double s = displace.length();
-		target.setScale(new Vector3(s/10,1,s/5));
 	}
 
 	@Override
@@ -70,6 +65,15 @@ public class ScaleActor implements ActionActor {
 				// update the screen position
 				drag.set(inputState.getCurrent().getMouseState().getX(),
 						inputState.getCurrent().getMouseState().getY() );
+				
+				
+				
+				Vector2 displace = new Vector2();
+				drag.subtract(referencepoint, displace);
+//				target.setScale(referencescale.add(new Vector3((drag.getX()-referencepoint.getX())/10,1,(drag.getY()-referencepoint.getY())/10)));
+
+				double s = displace.length();
+				target.setScale(referencescale.add(new Vector3(displace.getX()*0.1,displace.getY()*0.1,displace.getX()*0.1)));
 
 			}
 		});

@@ -115,7 +115,7 @@ public class ConvexPlatform extends Node implements PhysicalActor, ScalableActor
 //		platform.setTranslation(pos.x, pos.y, pos.z);
 
 
-		this.setTranslation(0,-20,0);
+		this.setTranslation(3,-20,0);
 		
 		// add this to root node
 		scene.attachChild(this);

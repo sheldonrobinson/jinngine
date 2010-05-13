@@ -8,36 +8,11 @@
 			<copyright></copyright>
 			<source_data>file:///home/mo/workspace/jinngine.game/convexplatform.blend</source_data>
 		</contributor>
-		<created>2010-04-27T11:26:17.586311</created>
-		<modified>2010-04-27T11:26:17.586369</modified>
+		<created>2010-05-14T00:58:51.045976</created>
+		<modified>2010-05-14T00:58:51.046070</modified>
 		<unit meter="0.01" name="centimeter"/>
 		<up_axis>Z_UP</up_axis>
 	</asset>
-	<library_cameras>
-		<camera id="Camera-Camera" name="Camera-Camera">
-			<optics>
-				<technique_common>
-					<perspective>
-						<yfov>49.13434</yfov>
-						<znear>0.1</znear>
-						<zfar>100.0</zfar>
-					</perspective>
-				</technique_common>
-			</optics>
-		</camera>
-	</library_cameras>
-	<library_lights>
-		<light id="Spot" name="Spot">
-			<technique_common>
-				<point>
-					<color>1.00000 1.00000 1.00000</color>
-					<constant_attenuation>1.0</constant_attenuation>
-					<linear_attenuation>0.0</linear_attenuation>
-					<quadratic_attenuation>0.0</quadratic_attenuation>
-				</point>
-			</technique_common>
-		</light>
-	</library_lights>
 	<library_geometries>
 		<geometry id="ConvexPlatformOut" name="ConvexPlatformOut">
 			<mesh>
@@ -120,22 +95,6 @@
 				<rotate sid="rotateX">1 0 0 0.00000</rotate>
 				<scale sid="scale">1.00000 1.00000 1.00000</scale>
 				<instance_geometry url="#ConvexPlatformSolid-Geometry"/>
-			</node>
-			<node layer="L1" id="Lamp" name="Lamp">
-				<translate sid="translate">4.07625 1.00545 5.90386</translate>
-				<rotate sid="rotateZ">0 0 1 106.93632</rotate>
-				<rotate sid="rotateY">0 1 0 3.16371</rotate>
-				<rotate sid="rotateX">1 0 0 37.26105</rotate>
-				<scale sid="scale">1.00000 1.00000 1.00000</scale>
-				<instance_light url="#Spot"/>
-			</node>
-			<node layer="L1" id="Camera" name="Camera">
-				<translate sid="translate">7.48113 -6.50764 5.34367</translate>
-				<rotate sid="rotateZ">0 0 1 46.69194</rotate>
-				<rotate sid="rotateY">0 1 0 0.61977</rotate>
-				<rotate sid="rotateX">1 0 0 63.55930</rotate>
-				<scale sid="scale">1.00000 1.00000 1.00000</scale>
-				<instance_camera url="#Camera-Camera"/>
 			</node>
 		</visual_scene>
 	</library_visual_scenes>
