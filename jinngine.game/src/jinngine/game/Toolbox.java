@@ -46,9 +46,21 @@ public final class Toolbox {
 		ReadOnlyVector3 dis = transform.getTranslation();
 		ReadOnlyMatrix3 or = transform.getMatrix();
 		body.setPosition(dis.getX(), dis.getY(), dis.getZ());
+		
+		if (body.getPosition().isNaN()) {
+			body.setPosition(0,0,0);
+			System.err.println("Warning, node translation contained NaN");
+		}
+		
 		body.setOrientation( new jinngine.math.Matrix3(or.getValue(0,0), or.getValue(0,1), or.getValue(0,2),  
 				or.getValue(1,0), or.getValue(1,1), or.getValue(1,2), 
 				or.getValue(2,0), or.getValue(2,1), or.getValue(2,2)) );
+		
+		if (body.getOrientation().isNaN()) {
+			body.setOrientation(jinngine.math.Matrix3.identity());
+			System.err.println("Warning, node rotation contained NaN");
+
+		}
 	}
 	
 	public static final void getNodeTransform( Node node, jinngine.math.Vector3 translation, Quaternion orientation) {

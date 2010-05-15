@@ -19,9 +19,15 @@ import com.ardor3d.scenegraph.Node;
 import com.ardor3d.scenegraph.Spatial;
 import com.ardor3d.util.export.InputCapsule;
 import com.ardor3d.util.export.OutputCapsule;
+import com.ardor3d.util.geom.ClonedCopyLogic;
+import com.ardor3d.util.geom.CopyLogic;
+import com.ardor3d.util.geom.SceneCopier;
+import com.ardor3d.util.geom.SharedCopyLogic;
 
 import jinngine.game.Game;
 import jinngine.game.Toolbox;
+import jinngine.game.actors.Actor;
+import jinngine.game.actors.ClonableActor;
 import jinngine.game.actors.PhysicalActor;
 import jinngine.game.actors.ScalableActor;
 import jinngine.geometry.ConvexHull;
@@ -33,22 +39,21 @@ import jinngine.physics.force.GravityForce;
 /**
  * A primitive convex platform
  */
-public class ConvexPlatform extends Node implements PhysicalActor, ScalableActor {
+public class ConvexPlatform extends Node implements PhysicalActor, ScalableActor, ClonableActor {
 
 	// jinngine
 	private Body platformconvexbody;
-	private jinngine.geometry.Box boxgeometry;
 	private jinngine.geometry.ConvexHull hull;
 	
 	// ardor3d
 	private Node platform;
-	private Spatial convexplatformfaces;
+//	private Spatial convexplatformfaces;
+//	private Line convecplatformlines;
 	
 	// properties
 	private double shade = 0.7;
 	private String daefilename;
 	private boolean isFixed = false;
-	private UIFrame frame;
 
 	public ConvexPlatform() {
 		daefilename = "convexplatform.dae";
@@ -94,11 +99,11 @@ public class ConvexPlatform extends Node implements PhysicalActor, ScalableActor
         platform.setTransform(convexplatformscene.getChild("ConvexPlatformSolid").getTransform());
         
         // load the outline
-        Line outline = (Line)convexplatformscene.getChild("ConvexPlatformOut_lines");
-		outline.setLineWidth(4);
-		outline.setDefaultColor(new ColorRGBA(0,0,0,1));
-		outline.setScale(1.01);
-        platform.attachChild(outline);
+        Line convecplatformlines = (Line)convexplatformscene.getChild("ConvexPlatformOut_lines");
+		convecplatformlines.setLineWidth(4);
+		convecplatformlines.setDefaultColor(new ColorRGBA(0,0,0,1));
+		convecplatformlines.setScale(1.01);
+        platform.attachChild(convecplatformlines);
         
         // load faces
         Spatial convexplatformfaces = convexplatformscene.getChild("ConvexPlatformSolid-Geometry_triangles");
@@ -109,7 +114,7 @@ public class ConvexPlatform extends Node implements PhysicalActor, ScalableActor
        
         
 		platform.attachChild(convexplatformfaces);
-		platform.attachChild(outline);
+		platform.attachChild(convecplatformlines);
 		platform.setName("myconvexplatform");
 		this.attachChild(platform);
 //		platform.setTranslation(pos.x, pos.y, pos.z);
@@ -137,7 +142,7 @@ public class ConvexPlatform extends Node implements PhysicalActor, ScalableActor
 		ReadOnlyVector3 s = platform.getScale();
 		
 		// get the mesh
-		convexplatformfaces = platform.getChild("ConvexPlatformSolid-Geometry_triangles");
+		Spatial convexplatformfaces = platform.getChild("ConvexPlatformSolid-Geometry_triangles");
 		MeshData meshdata  = ((Mesh)convexplatformfaces).getMeshData();
 		FloatBuffer verticedata = meshdata.getVertexBuffer();
 
@@ -173,9 +178,6 @@ public class ConvexPlatform extends Node implements PhysicalActor, ScalableActor
 
 		
 		platformconvexbody = new Body("convexplatform", hull);
-		//boxgeometry = new jinngine.geometry.Box(s.getX(),s.getY(),s.getZ());
-		//platformconvexbody.addGeometry(boxgeometry);
-		//platformconvexbody.finalize();
 		physics.addBody(platformconvexbody);
 		physics.addForce(new GravityForce(platformconvexbody));
 		platformconvexbody.setAngularVelocity(new jinngine.math.Vector3(0,0,0));
@@ -193,6 +195,9 @@ public class ConvexPlatform extends Node implements PhysicalActor, ScalableActor
 
 	@Override
 	public void stop( Game game ) {
+		// get the mesh
+		Spatial convexplatformfaces = platform.getChild("ConvexPlatformSolid-Geometry_triangles");
+
 		//clean shadowing
 		game.getRendering().getPssmPass().remove(convexplatformfaces);
 		game.getRendering().getPssmPass().removeOccluder(convexplatformfaces);
@@ -227,5 +232,21 @@ public class ConvexPlatform extends Node implements PhysicalActor, ScalableActor
 
 		// scale jinngine geometry
 		hull.setLocalScale(new Vector3(s.getX(),s.getY(),s.getZ()));
+	}
+
+	@Override
+	public Actor getCopy(Game game) {
+		// try to make a copy of the scene and spawn a new ConvexPlatform actora
+		ConvexPlatform newplatform = new ConvexPlatform();		
+		Node newplatformnode = (Node)SceneCopier.makeCopy(platform, new ClonedCopyLogic());
+		
+		newplatform.platform = newplatformnode;
+		newplatform.platform.setName("myconvexplatform");
+		newplatform.attachChild(newplatform.platform);
+		newplatform.setName("Actor:ConvexPlatform");
+
+		game.getRendering().getScene().attachChild(newplatform);
+		
+		return newplatform;
 	}
 }

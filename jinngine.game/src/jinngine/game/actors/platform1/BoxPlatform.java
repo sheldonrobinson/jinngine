@@ -36,6 +36,7 @@ import jinngine.game.actors.ConfigurableActor;
 import jinngine.game.actors.PhysicalActor;
 import jinngine.game.actors.ScalableActor;
 import jinngine.game.actors.SelectableActor;
+import jinngine.math.Matrix3;
 import jinngine.physics.Body;
 import jinngine.physics.Scene;
 import jinngine.physics.force.GravityForce;
@@ -135,6 +136,8 @@ public class BoxPlatform extends Node implements PhysicalActor, ScalableActor  {
 		// connect the node with this actor
 		platform.setUserData(this);
 
+		this.setTranslation(0,-20,0);
+		
 		// add this to root node
 		rootnode.attachChild(this);
 	}
@@ -144,6 +147,7 @@ public class BoxPlatform extends Node implements PhysicalActor, ScalableActor  {
 
 	@Override
 	public void start( Game game ) {
+		System.out.println("Starting BoxPlatform, translation:" +this.getTranslation());
 		Scene physics = game.getPhysics();
 		platform = (Node)this.getChild("myplatform");
 		final Spatial platformbox = this.getChild("myplatformbox");
@@ -153,7 +157,7 @@ public class BoxPlatform extends Node implements PhysicalActor, ScalableActor  {
 		game.getRendering().getPssmPass().addOccluder(platformbox);
 
 		// setup physics with jinngine
-		boxplatformbody = new Body("default");
+		boxplatformbody = new Body("BoxPlatform"+this);
 		// use the node scale as dimentions for the box
 		boxgeometry = new jinngine.geometry.Box(this.getScale().getX(),this.getScale().getY(),this.getScale().getZ());
 		boxplatformbody.addGeometry(boxgeometry);
@@ -164,8 +168,12 @@ public class BoxPlatform extends Node implements PhysicalActor, ScalableActor  {
 		boxplatformbody.setAngularVelocity(new jinngine.math.Vector3(0,0,0));
 		boxplatformbody.setFixed(isFixed);
 
+		
+		
 		// create spatial controller
 		Toolbox.setTransformFromNode(this, boxplatformbody);
+		
+//		Matrix3.print(boxplatformbody.state.rotation);
 		this.addController(Toolbox.createSpatialControllerForBody(boxplatformbody));
 	}
 	

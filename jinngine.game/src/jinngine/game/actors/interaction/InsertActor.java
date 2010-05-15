@@ -5,6 +5,7 @@ import jinngine.game.actors.ActionActor;
 import jinngine.game.actors.Actor;
 import jinngine.game.actors.ActorOwner;
 import jinngine.game.Game;
+import jinngine.game.PostponedAction;
 import jinngine.math.Vector3;
 
 public class InsertActor implements ActionActor {
@@ -27,7 +28,21 @@ public class InsertActor implements ActionActor {
 	}
 
 	@Override
-	public final void start( Game game) {
+	public final void start( final Game game) {
+		game.addPostponedAction(new PostponedAction() {
+			@Override
+			public void perform() {
+				// create the new actor
+				target.create(game);
+				
+				// insert it into game
+				game.addActor(target);						
+			}
+		});
+		
+		// tell owner that were done
+		owner.finished(game, this);
+
 	}
 
 	@Override
@@ -36,15 +51,8 @@ public class InsertActor implements ActionActor {
 	}
 
 	@Override
-	public void mousePressed(Game game) {
-		// create the new actor
-		target.create(game);
+	public void mousePressed(final Game game) {
 		
-		// insert it into game
-		game.addActor(target);		
-		
-		// tell owner that were done
-		owner.finished(game, this);
 	}
 
 	@Override

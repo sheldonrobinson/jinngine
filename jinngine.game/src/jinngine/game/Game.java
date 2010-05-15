@@ -15,6 +15,7 @@ import com.ardor3d.util.export.xml.XMLImporter;
 
 import jinngine.game.actors.button.AxisAllignBodyButton;
 import jinngine.game.actors.button.Button;
+import jinngine.game.actors.button.CopyActorButton;
 import jinngine.game.actors.button.DeleteActorButton;
 import jinngine.game.actors.button.FixBodyButton;
 import jinngine.game.actors.button.InsertActorButton;
@@ -67,23 +68,25 @@ public class Game {
 				a.start(this);
 				runningactors.add(a);
 			} startingactors.clear();
-
-			// stop actors
-			for (Actor a: stoppingactors) {
-				a.stop(this);
-				runningactors.remove(a);
-			} stoppingactors.clear();
 			
 			// visit all running actors
 			for (Actor a: runningactors)
 				a.act(this);	
-			
+
 			//perform postponed actions
 			ListIterator<PostponedAction> iter = actions.listIterator();
 			while(iter.hasNext()) {
 				iter.next().perform();
 				iter.remove();
 			}
+		
+			// stop actors
+			for (Actor a: stoppingactors) {
+				a.stop(this);
+				runningactors.remove(a);
+			} stoppingactors.clear();
+
+			
 		
 			rendering.draw();
 			Thread.yield();
@@ -139,6 +142,9 @@ public class Game {
 //		ConvexPlatform platform6 = new ConvexPlatform(new jinngine.math.Vector3(0,-25+3.5,0), 0.7);
 //		platform6.create(this);
 //
+		
+		
+		
 		ConvexPlatform platform7 = new ConvexPlatform();
 		platform7.create(this);
 		
@@ -169,6 +175,9 @@ public class Game {
 		Button scalebutton = new ScaleActorButton();
 		scalebutton.create(this);
 
+		Button copybutton = new CopyActorButton();
+		copybutton.create(this);
+
 
 		// add actors in scene
 		addActorsInScene(scene);		
@@ -183,8 +192,8 @@ public class Game {
 		}
 		
 		try {
-			BinaryExporter.getInstance().save(scene, new File(name));
-//			XMLExporter.getInstance().save(scene, new File(name));
+//			BinaryExporter.getInstance().save(scene, new File(name));
+			XMLExporter.getInstance().save(scene, new File(name));
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -202,8 +211,8 @@ public class Game {
 		
 		try {
 			
-//			scene = (Node)XMLImporter.getInstance().load( new File(name));
-			scene = (Node)BinaryImporter.getInstance().load( new File(name));
+			scene = (Node)XMLImporter.getInstance().load( new File(name));
+//			scene = (Node)BinaryImporter.getInstance().load( new File(name));
 
 			scene.setName("Game:CurrentLevel");
 
@@ -251,11 +260,17 @@ public class Game {
 		// get actors in scene
 		List<Actor> foundactors = getActorsInScene(scene);
 
-		//remove all actors in list
+		//remove all actors in list (directly)
 		for (Actor a: foundactors)  {
-			removeActor(a);
-			System.out.println("Removing: "+a);
+			a.stop(this);
+			runningactors.remove(a);
+//			removeActor(a);
+			System.out.println("Removed: "+a);
 		}
+		
+		getPhysics().getBroadphase().run();
+		
+		System.out.println("o*) pairs after removal of scene = " +getPhysics().getBroadphase().getOverlappingPairs().size() );
 
 	}	
 	
