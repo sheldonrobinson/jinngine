@@ -491,6 +491,15 @@ public class Matrix3 {
     System.out.println("[ "+A.a31+" , " + A.a32 + " , " + A.a33 + " ]" );
   }
   
+  /**
+   * Check matrix for NaN values 
+   */
+  public final boolean isNaN() {
+	  return Double.isNaN(a11)||Double.isNaN(a12)||Double.isNaN(a13)
+	  || Double.isNaN(a21)||Double.isNaN(a22)||Double.isNaN(a23)
+	  || Double.isNaN(a31)||Double.isNaN(a32)||Double.isNaN(a33);
+  }
+  
   public static final double[] pack( Matrix3 M ) {
 	  double[] array = new double[3*3];
 	  array[0] = M.a11;

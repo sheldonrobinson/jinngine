@@ -10,6 +10,7 @@ package jinngine.physics;
 
 import java.util.Iterator;
 
+import jinngine.collision.BroadphaseCollisionDetection;
 import jinngine.physics.Body;
 import jinngine.physics.constraint.Constraint;
 import jinngine.physics.constraint.contact.ContactConstraintManager;
@@ -132,5 +133,8 @@ public interface Scene {
 	 */
 	public ContactConstraintManager getContactConstraintManager();
 	
-	
+	/**
+	 * Get the broadphase collision detection system
+	 */
+	public BroadphaseCollisionDetection getBroadphase();
 }

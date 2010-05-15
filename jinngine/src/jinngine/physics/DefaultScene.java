@@ -151,7 +151,10 @@ public final class DefaultScene implements Scene {
 		
 		// some default choises
 		this.policy = new DefaultDeactivationPolicy();
-		this.broadphase = new SweepAndPrune();
+//		this.broadphase = new SweepAndPrune();
+//		this.broadphase = new ExhaustiveSearch();
+		this.broadphase = new SAP2();
+		
 //		this.solver = new ProjectedGaussSeidel(55);
 //		this.solver = new NonsmoothNonlinearConjugateGradient(55);
 		this.solver = new NonsmoothNonlinearConjugateGradient(75);
@@ -174,8 +177,7 @@ public final class DefaultScene implements Scene {
 		// run the broad-phase collision detection (this automatically updates the contactGraph,
 		// through the BroadfaseCollisionDetection.Handler type)
 		broadphase.run();
-		
-		
+				
 		// clear acting forces and delta velocities
 		for (Body bi:bodies) {
 			bi.clearForces();
@@ -333,6 +335,11 @@ public final class DefaultScene implements Scene {
 		for (Body body: bodies) {
 			if ( !body.deactivated ) {
 				if ( !body.isFixed() ) {
+					if (body.deltavelocity.isNaN() || body.deltaomega.isNaN() ) 
+						System.exit(0);
+					if (body.externaldeltavelocity.isNaN() || body.externaldeltaomega.isNaN() ) 
+						System.exit(0);
+
 					// apply delta velocities
 					body.state.velocity.assign( body.state.velocity.add( body.deltavelocity).add(body.externaldeltavelocity) );
 					body.state.omega.assign( body.state.omega.add( body.deltaomega).add(body.externaldeltaomega));
@@ -487,6 +494,11 @@ public final class DefaultScene implements Scene {
 	@Override
 	public ContactConstraintManager getContactConstraintManager() {
 		return this.contactmanager;
+	}
+	
+	@Override
+	public BroadphaseCollisionDetection getBroadphase() {
+		return this.broadphase;
 	}
 
 }

@@ -262,6 +262,14 @@ public final class Body {
 	}
 	
 	/**
+	 * Return a copy of the rotation matrix
+	 * @return
+	 */
+	public final Matrix3 getOrientation() {
+		return new Matrix3(state.rotation);
+	}
+	
+	/**
 	 * Get reference point of this body. This will be the centre of mass 
 	 * of the body, unless manual modifications has been made
 	 * @return reference position

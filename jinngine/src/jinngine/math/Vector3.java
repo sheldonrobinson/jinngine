@@ -60,6 +60,10 @@ public final class Vector3 implements Serializable {
 	public final Vector3 negate() {
 		return new Vector3(-x,-y,-z);
 	}
+	
+	public final boolean isNaN() {
+		return Double.isNaN(x)||Double.isNaN(y)||Double.isNaN(z);
+	}
 
 	public double get( int i ) {
 		return i>0?(i>1?z:y):x; 
