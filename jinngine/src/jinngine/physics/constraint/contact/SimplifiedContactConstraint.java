@@ -111,8 +111,8 @@ public final class SimplifiedContactConstraint implements ContactConstraint {
 						b1,	b2, 
 						basis.column(1).multiply(1/b1.state.mass), Vector3.zero, basis.column(1).multiply(-1/b2.state.mass), Vector3.zero, 
 						basis.column(1),                        Vector3.zero, basis.column(1).multiply(-1), Vector3.zero,
-						-5,
-						5,
+						-15,
+						15,
 						null,
 						basis.column(1).dot(u), 0 );
 
@@ -122,8 +122,8 @@ public final class SimplifiedContactConstraint implements ContactConstraint {
 						b1,	b2, 
 						basis.column(2).multiply(1/b1.state.mass), Vector3.zero, basis.column(2).multiply(-1/b2.state.mass), Vector3.zero, 
 						basis.column(2),                        Vector3.zero, basis.column(2).multiply(-1), Vector3.zero,
-						-5,
-						5,
+						-15,
+						15,
 						null,
 						basis.column(2).dot(u), 0 );
 
@@ -143,8 +143,8 @@ public final class SimplifiedContactConstraint implements ContactConstraint {
 						b1,	b2, 
 						new Vector3(), b1.state.inverseinertia.multiply(axis), new Vector3(), b2.state.inverseinertia.multiply(axis.multiply(-1)), 
 						new Vector3(), axis, new Vector3(), axis.multiply(-1), 
-						-5,
-						5,
+						-15,
+						15,
 						null,
 						axis.dot(b1.state.omega)-axis.dot(b2.state.omega), 0 );
 
