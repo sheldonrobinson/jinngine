@@ -80,6 +80,37 @@ public class ORourkeTest extends TestCase {
 		assertTrue( ORourke.isInHalfplane(p, p1, p2));
 	}
 	
+	public void testIsContained() {
+		// one 1 by 1 box and a point x
+	    //                    
+		//       ------z      
+		//       |     |   y   
+	    //       |  x  |      
+        // (0,0) -------      
+		
+		final List<Vector3> box1 = new ArrayList<Vector3>();
+		
+		// build each box, counter clock wise		
+		box1.add( new Vector3(0,0,0));
+		box1.add( new Vector3(1,0,0));
+		box1.add( new Vector3(1,1,0));
+		box1.add( new Vector3(0,1,0));
+		
+		// a point that's inside the box
+		final Vector3 x = new Vector3(0.5,0.5,0);
+		
+		// a point that's outside the box
+		final Vector3 y = new Vector3(2,0.5,0);
+		
+		// point that's on the cornor of the box ( should be classified as inside)
+		final Vector3 z = new Vector3(1,1,0);
+		
+		// perform tests
+		assertTrue( ORourke.isContained(x, box1.iterator()));		
+		assertFalse( ORourke.isContained(y, box1.iterator()));
+		assertTrue( ORourke.isContained(z, box1.iterator()));
+	}
+	
 	
 	public void testBoxBox() {
 		// build a two simple 1 by 1 boxes
@@ -115,8 +146,8 @@ public class ORourkeTest extends TestCase {
 		ORourke.run(box1, box2, result);
 		
 		// write out the returned polygon
-		for (Vector3 p: result)
-			System.out.println(""+p);
+//		for (Vector3 p: result)
+//			System.out.println(""+p);
 		
 		// check result by first searching for the first vertex.
 		// When found, we traverse the result again to verify the 
@@ -249,9 +280,49 @@ public class ORourkeTest extends TestCase {
 		// rest of the vertices, in order.
 		assertTrue( verifyPolygon(result, expected));
 	}
+	
+	public void testBoxBox5() {
+		// two 1 by 1 boxes, the second contained in the first
+		//       -----------
+		//       |  -----  |
+		//       |  |   |  |
+		//       |  |   |  |
+	    //       |  -----  |
+        // (0,0) -----------      
+		
+		List<Vector3> box1 = new ArrayList<Vector3>();
+		List<Vector3> box2 = new ArrayList<Vector3>();
+		List<Vector3> result = new ArrayList<Vector3>();
+		List<Vector3> expected = new ArrayList<Vector3>();
+		
+		// build each box, counter clock wise		
+		box1.add( new Vector3(-1,-1,0));
+		box1.add( new Vector3(1,-1,0));
+		box1.add( new Vector3(1,1,0));
+		box1.add( new Vector3(-1,1,0));
+
+		box2.add( new Vector3(-0.5,-0.5,0));
+		box2.add( new Vector3(0.5,-0.5,0));
+		box2.add( new Vector3(0.5,0.5,0));
+		box2.add( new Vector3(-0.5,0.5,0));
+
+		// we expect box2 to be returned
+		expected.addAll(box2);
+
+		// run intersection
+		ORourke.run(box1, box2, result);
+		
+		
+		// check result by first searching for the first vertex.
+		// When found, we traverse the result again to verify the 
+		// rest of the vertices, in order.
+		assertTrue( verifyPolygon(result, expected));
+	}
 
 	
 	private boolean verifyPolygon( List<Vector3> poly1, List<Vector3> poly2) {
+		// this is an auxiliary method that poly1 contains the same sequence of points 
+		// as poly2, and vice versa. 
 		if (poly1.size() == 0 && poly2.size() == 0)
 			return true;
 		

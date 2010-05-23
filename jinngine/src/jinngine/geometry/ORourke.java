@@ -83,13 +83,13 @@ public class ORourke {
 		// run iterations
 		while (true) {
 			iter = iter+1;
-			System.out.println("iteration " + iter);
+//			System.out.println("iteration " + iter);
 
 			// if intersection is in the interior of the lines
 			if (intersect(pm,p,qm,q,parameter,epsilon) ) {				
 				if (parameter.x >= 0 && parameter.x <= 1 && parameter.y >= 0 && parameter.y <= 1 ) {
 					final Vector3 ip = pm.add( pd.multiply(parameter.x));
-					System.out.println("computed intersection="+ip);
+//					System.out.println("computed intersection="+ip);
 
 					// check if intersection is the same point
 					// as first time an intersection was encountered. This
@@ -182,8 +182,24 @@ public class ORourke {
 				break;
 		} // while true
  		
-		System.out.println("degenerate case");
 		
+		// if we end up here, the polygons is either 
+		// separated or contained inside each other
+		if ( isContained(p, poly2.iterator())) {
+//			System.out.println("p is contained in Q");
+			// add all points from P as intersection
+			intersection.addAll(poly1);
+			return;
+		} else if ( isContained(q, poly1.iterator())) {
+//			System.out.println("q is contained in P");	
+			// add all points from Q as intersection
+			intersection.addAll(poly2);
+			return;
+		}
+		
+		// P and Q are separated
+//		System.out.println("separated case");
+		return;
 	}
 	
 	/**
@@ -195,6 +211,34 @@ public class ORourke {
 	 */
 	public static final boolean isInHalfplane(final Vector3 a, final Vector3 bs, final Vector3 bt) {
 		return (bt.minus(bs)).cross(a.minus(bs)).z >= 0;
+	}
+	
+	/**
+	 * Return true if p is contained inside poly. Poly is required to contain at least 3 affine independent points
+	 * @param p
+	 * @param poly
+	 * @return
+	 */
+	public static final boolean isContained( final Vector3 p, final Iterator<Vector3> poly ) {
+		Vector3 p0 = poly.next();
+		Vector3 pm = p0;
+		
+		// test each edge
+		while(poly.hasNext()) {
+			Vector3 pi = poly.next();
+			if (!isInHalfplane(p, pm, pi))
+				return false;
+			
+			pm = pi;
+		}
+		
+		// test last edge from final vertex to 
+		// the first vertex, closing the polygon
+		if (!isInHalfplane(p, pm, p0))
+			return false;
+		
+		// all tests passed
+		return true;
 	}
 	
 	/**
@@ -250,7 +294,7 @@ public class ORourke {
 		// determinant calculation
 		double det =  pd.x*qd.y-pd.y*qd.x;		
 		
-		// ill posed problem?
+		// ill-posed problem?
 		if (Math.abs(det)<epsilon)
 			return false;
 		 
