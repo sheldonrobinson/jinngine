@@ -205,6 +205,11 @@ public final class Vector3 implements Serializable {
 		return this;
 	}
 
+	public final Vector3 add( double t1, double t2, double t3 ) {
+		return new Vector3( x+t1, y+t2, z+t3);
+	}
+
+	
 	public final Vector3 assign( Vector3 v ) {
 		double t1 =v.x;
 		double t2 =v.y;
@@ -229,6 +234,10 @@ public final class Vector3 implements Serializable {
 
 	public final double norm() {
 		return (double)Math.sqrt( x*x + y*y + z*z );
+	}
+	
+	public final double xynorm() {
+		return (double)Math.sqrt( x*x + y*y );
 	}
 
 	public final double infnorm() {
