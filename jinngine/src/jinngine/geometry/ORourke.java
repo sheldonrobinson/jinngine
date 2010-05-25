@@ -87,6 +87,8 @@ public class ORourke {
 		Iterator<Vector3> poly1points = poly1.iterator();
 		Iterator<Vector3> poly2points = poly2.iterator();
 		
+		System.out.println(N+","+M);
+		
 		// trival cases
 		// if any one polygon is empty, so is intersection
 		if (N == 0 || M == 0)
@@ -108,9 +110,10 @@ public class ORourke {
 			Vector3 x = poly1points.next();
 			Vector3 p1 = poly2points.next();
 			Vector3 p2 = poly2points.next();
+			Vector3 lp = new Vector3();
 
-			if ( pointLineIntersection(x, p1, p2))
-				result.intersection(x, null);
+			if ( pointLineIntersection(x, p1, p2, lp))
+				result.intersection(x, lp);
 			
 			return;
 		}
@@ -119,9 +122,10 @@ public class ORourke {
 			Vector3 x = poly2points.next();
 			Vector3 p1 = poly1points.next();
 			Vector3 p2 = poly1points.next();
+			Vector3 lp = new Vector3();
 
-			if ( pointLineIntersection(x, p1, p2))
-				result.intersection(null, x);
+			if ( pointLineIntersection(x, p1, p2, lp))
+				result.intersection(lp, x);
 			
 			return;
 		}
@@ -130,7 +134,13 @@ public class ORourke {
 		if (N==1 && M > 2) {
 			Vector3 x = poly1points.next();
 			if (isContained(x, poly2points)) {
-				result.intersection(x, null);				
+				// polygon normal in 3d
+				Vector3 polypoint = poly2.get(0);
+				final Vector3 poly2normal = new Vector3();
+				polyNormal(poly2, poly2normal);
+
+				// report
+				result.intersection(x, projectToPlane(x, poly2normal, polypoint));				
 			}
 			
 			return;
@@ -140,7 +150,12 @@ public class ORourke {
 		if (N>2 && M==1) {
 			Vector3 x = poly2points.next();
 			if (isContained(x, poly1points)) {
-				result.intersection(null, x);				
+				// polygon normal in 3d
+				Vector3 polypoint = poly1.get(0);
+				final Vector3 poly1normal = new Vector3();
+				polyNormal(poly1, poly1normal);
+				// report
+				result.intersection(projectToPlane(x, poly1normal, polypoint),x);	
 			}
 			return;
 		}
@@ -250,6 +265,7 @@ public class ORourke {
 		}
 		// poly-line
 		if (N>2 && M==2) {
+			System.out.println("switch");
 			// turn arguments around and wrap result
 			final Vector3 p1 = poly2points.next();
 			final Vector3 p2 = poly2points.next();
@@ -298,7 +314,7 @@ public class ORourke {
 		// run iterations
 		while (true) {
 			iter = iter+1;
-//			System.out.println("iteration " + iter);
+			//System.out.println("iteration " + iter);
 
 			// if intersection is in the interior of the lines
 			if (lineLineIntersection(pm,p,qm,q,parameter,epsilon) ) {				
@@ -316,6 +332,7 @@ public class ORourke {
 						// degenerate cases, as treated in the O'Rourke paper
 						if (firstIntersection.minus(ipp).xynorm() < epsilon && firstIntersectionIter!=iter-1) {
 							// termination 
+							//System.out.println("intersection termination");
 							return;
 						}
 					} else {
@@ -417,6 +434,7 @@ public class ORourke {
 				break;
 		} // while true
  		
+		//System.out.println("separation or inclusion termination");
 		
 		// if we end up here, the polygons is either 
 		// separated or contained inside each other
@@ -465,7 +483,7 @@ public class ORourke {
 		}
 	}
 
-	private static final boolean pointLineIntersection( Vector3 x, Vector3 p1, Vector3 p2) {
+	private static final boolean pointLineIntersection( Vector3 x, Vector3 p1, Vector3 p2, Vector3 intPoint) {
 		// check point line-intersection
 		// l(t) = p1 + (p2-p1)t
 		// (l(t)-x)T(p2-p1) = 0
@@ -480,8 +498,10 @@ public class ORourke {
 		if (t>= 0 && t <= 1) {
 			// closest point on line
 			Vector3 lp = p1.add(p2.minus(p1).multiply(t));
-			if (  lp.minus(x).xynorm() < epsilon ) 
+			if (  lp.minus(x).xynorm() < epsilon ) {
+				intPoint.assign(lp);
 				return true;
+			}
 		}
 		
 		return false;

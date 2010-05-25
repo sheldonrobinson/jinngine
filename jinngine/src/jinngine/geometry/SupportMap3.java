@@ -31,9 +31,10 @@ public interface SupportMap3  {
 	public Vector3 supportPoint( Vector3 direction );
 
 	/**
-	 * Return the feature that supports the direction d. This could be either a point, line segment, or a 
-	 * face. In case of a face, the points must appear in clock-wise order with respect to the direction 
-	 * of d.
+	 * Return the feature that supports the direction d. This could be either a point, 
+	 * line segment, or a face. In case of a face, the points must appear in counter 
+	 * clock-wise order with respect to the direction of d.
+	 * 
 	 * @param epsilon a positive tolerance
 	 * @param direction
 	 * @return list of points that constitute either a point, line or a face

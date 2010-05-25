@@ -280,9 +280,12 @@ public class Box implements SupportMap3, Geometry, Material {
 			Vector3 p4 = new Vector3(v.x<0?-0.5:0.5, v.y<0?-0.5:0.5, v.z<0?-0.5:0.5 );
 
 
+			System.out.println("axis = " + zeroAxisIndices[0] + "," + zeroAxisIndices[1] );
 			
 			//make face turn counter-clock wise
-			if ( v.get(nonZeroAxisIndices[0]) > 0 ) { 
+			if ( v.get(nonZeroAxisIndices[0]) < 0 ) { 
+				
+				
 				p1.set( zeroAxisIndices[0], 0.5);
 				p1.set( zeroAxisIndices[1], 0.5);
 

@@ -9,6 +9,7 @@
 package jinngine.geometry.contact;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -124,11 +125,11 @@ public class SupportMapContactGenerator implements ContactGenerator {
 			raycast.run(Sa, Sb, new Vector3(), direction, pa, pb, lambda, envelope, epsilon);
 			
 			// generate contact points
-			generate(pa, pb, pa.minus(pb).normalize() );
+			generate2(pa, pb, pa.minus(pb).normalize() );
 			
 		} else if ( d > epsilon*epsilon && d < envelope*envelope) {
 			// generate contact points
-			generate(pa, pb, pa.minus(pb).normalize() );	
+			generate2(pa, pb, pa.minus(pb).normalize() );	
 		} else {
 			// outside envelope
 			contacts.clear();
@@ -139,6 +140,20 @@ public class SupportMapContactGenerator implements ContactGenerator {
 		contacts.clear(); faceA.clear(); faceB.clear();
 		Sa.supportFeature(v.multiply(-1), 0.09, faceA);
 		Sb.supportFeature(v.multiply(1), 0.09, faceB);
+		
+		// reverse the points in face A, so they will be in counter-clock-wise order
+		// wrt. the normal direction
+		Collections.reverse(faceA);
+		
+		List<Vector3> tempA = new ArrayList<Vector3>();
+		List<Vector3> tempB = new ArrayList<Vector3>();
+		for (Vector3 p: faceA)
+			tempA.add(p.copy());
+		for (Vector3 p: faceB)
+			tempB.add(p.copy());
+		
+		
+		
 		final Vector3 direction = v.normalize();
 		final Vector3 midpoint = a.add(b).multiply(0.5);
 		
@@ -146,13 +161,17 @@ public class SupportMapContactGenerator implements ContactGenerator {
 		final Matrix3 M = GramSchmidt.run(direction);
 		// make sure the normal direction is in the z-component
 		final Matrix3 B = new Matrix3(M.column(1),M.column(2),M.column(0));
+		System.out.println("axis:");
+		M.column(1).cross(M.column(2)).print();
+		M.column(0).print();
+		//System.out.println("determinant(B)="+B.determinant(B));
 		final Matrix3 Binv = B.transpose();
 		
 		boolean track = false;
-		if (ga instanceof ConvexHull && gb instanceof ConvexHull ) {
-			System.out.println("instance!");
-			track = true;
-		}
+//		if (ga instanceof ConvexHull && gb instanceof ConvexHull ) {
+//			System.out.println("instance!");
+//			track = true;
+//		}
 		
 		final ORourke.ResultHandler handler = new ORourke.ResultHandler() {
 			public final void intersection(final Vector3 p, final Vector3 q) {				
@@ -164,14 +183,18 @@ public class SupportMapContactGenerator implements ContactGenerator {
 				cp.normal.assign(direction);
 				cp.point.assign( B.multiply(new Vector3(p.x,p.y,0)).add(midpoint) );
 				
-				
+				// distance along the z axis in contact space
 				cp.distance = p.z-q.z;
-				//if (cp.distance < envelope ) {
+				if (cp.distance < envelope ) {
+					if (Math.abs(cp.distance)>1) {
+						System.out.println("dist="+cp.distance);
+					}
 					cp.depth = shell-cp.distance;
+					cp.envelope = envelope;
 					cp.restitution = restitution;
 					cp.friction = friction;
 					contacts.add(cp);
-				//}
+				}
 			}
 		};
 		
@@ -185,24 +208,10 @@ public class SupportMapContactGenerator implements ContactGenerator {
 		}
 		
 		// run 2d intersection
-		ORourke.run(faceA, faceB, handler);
+		ORourke.run(faceA, faceB, handler);		
 		
-		
-		if (track && contacts.isEmpty()) {
-			System.out.println("**************************");
-		}
-		
-		if (track)
-			for (ContactPoint cpi: contacts) {
-				cpi.point.print();
-				System.out.println("distance="+cpi.distance);
-			}
-		
-		Iterator<ContactPoint> i = contacts.iterator();
-		while(i.hasNext()) {
-			if (i.next().distance > envelope)
-				i.remove();
-		}
+		if (contacts.size()<1)
+			System.out.println("******************");
 	}
 	
 	

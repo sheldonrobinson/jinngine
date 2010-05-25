@@ -168,7 +168,7 @@ public class ConvexHull implements SupportMap3, Geometry, Material {
 		bounds.assign(max,max,max);
 				
 		// perform approximate mass calculation
-		MassProperties masscalculation = new MassProperties( this, 0.1 );
+		MassProperties masscalculation = new MassProperties( this, 0.01 );
 		
 		// set propperties
 		mass = referenceMass = masscalculation.getMass();
@@ -217,7 +217,7 @@ public class ConvexHull implements SupportMap3, Geometry, Material {
 	private Matrix3 localrotation = Matrix3.identity(new Matrix3());
 	private Matrix4 localtransform4 = Matrix4.identity(new Matrix4());
 	private final Vector3 localtranslation = new Vector3();
-	private final Vector3 displacement = new Vector3();
+//	private final Vector3 displacement = new Vector3();
 	private final Vector3 localscale = new Vector3(1,1,1);
 	private final Vector3 inverselocalscale = new Vector3(1,1,1);
 
@@ -357,14 +357,14 @@ public class ConvexHull implements SupportMap3, Geometry, Material {
 	@Override
 	public Vector3 getMaxBounds() {
 		// return the max bounds in world space
-		return bounds.add(displacement).add(body.state.position);
+		return bounds.add(localtranslation).add(body.state.position);
 
 	}
 
 	@Override
 	public Vector3 getMinBounds() {
 		// return the min bounds in world space
-		return displacement.add(body.state.position).minus(bounds);
+		return localtranslation.add(body.state.position).minus(bounds);
 	}
 
 	@Override
