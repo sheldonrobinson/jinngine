@@ -138,7 +138,7 @@ public class BulletNativeContactGenerator implements ContactGenerator {
 				contacts[c].pbw.x = pbws[i*3];
 				contacts[c].pbw.y = pbws[i*3+1];
 				contacts[c].pbw.z = pbws[i*3+2];
-				contacts[c].midpoint.assign( contacts[c].paw.add(contacts[c].pbw).multiply(0.5) );
+				contacts[c].point.assign( contacts[c].paw.add(contacts[c].pbw).multiply(0.5) );
 				contacts[c].distance = dists[i];
 				//			contacts[i].depth = -dists[i];
 				contacts[c].depth = 0.125*0.5-dists[i]; // Math.max(0,-dists[i]);//

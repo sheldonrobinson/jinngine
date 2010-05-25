@@ -1,7 +1,6 @@
 package jinngine.test.unit;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
 
@@ -24,7 +23,7 @@ public class ORourkeTest extends TestCase {
 		Vector3 p4 = new Vector3(1,0,0);
 		Vector3 result = new Vector3();
 
-		ORourke.intersect(p1, p2, p3, p4, result, epsilon);
+		ORourke.lineLineIntersection(p1, p2, p3, p4, result, epsilon);
 		
 		// we expect lines to intersect at their centre points
 		assertTrue( Math.abs(result.x-0.5) < epsilon );
@@ -40,7 +39,7 @@ public class ORourkeTest extends TestCase {
 		Vector3 result = new Vector3();
 
 		// Expect false, because result is non-unique
-		assertFalse(ORourke.intersect(p1, p2, p3, p4, result, 1e-7) );		
+		assertFalse(ORourke.lineLineIntersection(p1, p2, p3, p4, result, 1e-7) );		
 	}
 	
 	public void testIntersection3() {
@@ -53,7 +52,7 @@ public class ORourkeTest extends TestCase {
 		Vector3 result = new Vector3();
 
 		// compute 2d intersection
-		ORourke.intersect(p1, p2, p3, p4, result, epsilon);
+		ORourke.lineLineIntersection(p1, p2, p3, p4, result, epsilon);
 		
 		// we expect lines to intersect t=0.25 and s= 0.5
 		assertTrue( Math.abs(result.x-0.25) < epsilon );
@@ -388,7 +387,7 @@ public class ORourkeTest extends TestCase {
 		expected.add(new Vector3(1.0,0.5,0));
 		
 		// run intersection
-		ORourke.run(box1, line, result);	
+		ORourke.run(line, box1, result);	
 
 		System.out.println("line box case");
 		
@@ -430,7 +429,7 @@ public class ORourkeTest extends TestCase {
 		expected.add(new Vector3(1.0,0.5,0));
 		
 		// run intersection
-		ORourke.run(box1, line, result);	
+		ORourke.run(line, box1, result);	
 
 		System.out.println("line box case");
 		
@@ -454,26 +453,26 @@ public class ORourkeTest extends TestCase {
 		//   \  /
 		//    \/
 
-		List<Vector3> box1 = new ArrayList<Vector3>();
+		List<Vector3> diamond1 = new ArrayList<Vector3>();
 		List<Vector3> line = new ArrayList<Vector3>();
 		List<Vector3> result = new ArrayList<Vector3>();
 		List<Vector3> expected = new ArrayList<Vector3>();
 		
 		// build a diamond, counter clock wise		
-		box1.add( new Vector3(0,1,0));
-		box1.add( new Vector3(-1,0,0));
-		box1.add( new Vector3(0,-1,0));
-		box1.add( new Vector3(1,0,0));
+		diamond1.add( new Vector3(0,1,0));
+		diamond1.add( new Vector3(-1,0,0));
+		diamond1.add( new Vector3(0,-1,0));
+		diamond1.add( new Vector3(1,0,0));
 
 		// a line intersecting only in (0,1)
-		line.add( new Vector3(0,1,0));
-		line.add( new Vector3(0,2,0));
+		line.add( new Vector3(1,0,0));
+		line.add( new Vector3(2,0,0));
 
-		// we intersection in a single point
-		expected.add(new Vector3(0,1,0));
+		// we intersection in a single point (1,0)
+		expected.add(new Vector3(1,0,0));
 		
 		// run intersection
-		ORourke.run(box1, line, result);	
+		ORourke.run(line, diamond1, result);	
 
 		System.out.println("line diamond case");
 		
@@ -487,6 +486,267 @@ public class ORourkeTest extends TestCase {
 		// rest of the vertices, in order.
 		assertTrue( verifyPolygon(result, expected));
 	}
+	
+	public void testLineDiamond9() {
+		// A line intersecting a diamond in a single point
+		//
+		//    /\ |
+		//   /  \|
+		//  <    x
+		//   \  /|
+		//    \/ |
+
+		List<Vector3> diamond1 = new ArrayList<Vector3>();
+		List<Vector3> line = new ArrayList<Vector3>();
+		List<Vector3> result = new ArrayList<Vector3>();
+		List<Vector3> expected = new ArrayList<Vector3>();
+		
+		// build a diamond, counter clock wise		
+		diamond1.add( new Vector3(0,1,0));
+		diamond1.add( new Vector3(-1,0,0));
+		diamond1.add( new Vector3(0,-1,0));
+		diamond1.add( new Vector3(1,0,0));
+
+		// a line intersecting only in (0,1)
+		line.add( new Vector3(1, 1,0));
+		line.add( new Vector3(1,-1,0));
+
+		// we intersection in a single point
+		expected.add(new Vector3(1,0,0));
+		
+		// run intersection
+		ORourke.run(line, diamond1, result);	
+
+		System.out.println("line diamond case");
+		
+		// write out the returned polygon
+		for (Vector3 p: result)
+			System.out.println(""+p);
+
+		
+		// check result by first searching for the first vertex.
+		// When found, we traverse the result again to verify the 
+		// rest of the vertices, in order.
+		assertTrue( verifyPolygon(result, expected));
+	}
+
+	public void testLineDiamond10() {
+		// A line intersecting a diamond along one of its edges
+		//    \ 
+		//    /x  
+		//   /  \ 
+		//  <    x 
+		//   \  / \
+		//    \/   \
+
+		List<Vector3> diamond = new ArrayList<Vector3>();
+		List<Vector3> line = new ArrayList<Vector3>();
+		List<Vector3> result = new ArrayList<Vector3>();
+		List<Vector3> expected = new ArrayList<Vector3>();
+		
+		// build a diamond, counter clock wise		
+		diamond.add( new Vector3(0,1,0));
+		diamond.add( new Vector3(-1,0,0));
+		diamond.add( new Vector3(0,-1,0));
+		diamond.add( new Vector3(1,0,0));
+
+		//f(x) = -1 x +1 
+		
+		// a line coinciding with the edge (0,1)->(1,0)
+//		line.add( new Vector3( 2, -1, 0));
+//		line.add( new Vector3(-1, 2, 0));
+		line.add( new Vector3(-1, 2, 0));
+		line.add( new Vector3( 2, -1, 0));
+
+		// we intersection in two points
+		expected.add(new Vector3(1,0,0));
+		expected.add(new Vector3(0,1,0));		
+		
+		// run intersection
+		ORourke.run(line, diamond, result);	
+
+		System.out.println("line diamond case");
+		
+		// write out the returned polygon
+		for (Vector3 p: result)
+			System.out.println(""+p);
+
+		
+		// check result by first searching for the first vertex.
+		// When found, we traverse the result again to verify the 
+		// rest of the vertices, in order.
+		assertTrue( verifyPolygon(result, expected));
+	}
+	
+	public void testLineLine11() {
+		// Two lines crossing at (0,0)
+        //  (-1,1) (1,1)
+		//     o    o
+		//      \  /
+		//       \/
+		//       /\  
+		//      /  \
+		//     o    o
+		// (-1,-1)  (1,-1)
+
+		List<Vector3> line1 = new ArrayList<Vector3>();
+		List<Vector3> line2 = new ArrayList<Vector3>();
+		List<Vector3> result = new ArrayList<Vector3>();
+		List<Vector3> expected = new ArrayList<Vector3>();
+		
+		// build lines		
+		line1.add( new Vector3(1,1,0));
+		line1.add( new Vector3(-1,-1,0));
+
+		line2.add( new Vector3( 1, -1, 0));
+		line2.add( new Vector3(-1,  1, 0));
+
+		// we intersection in two points
+		expected.add(new Vector3(0,0,0));
+		
+		// run intersection
+		ORourke.run(line1, line2, result);	
+
+		System.out.println("line line case");
+		
+		// write out the returned polygon
+		for (Vector3 p: result)
+			System.out.println(""+p);
+
+		
+		// check result by first searching for the first vertex.
+		// When found, we traverse the result again to verify the 
+		// rest of the vertices, in order.
+		assertTrue( verifyPolygon(result, expected));
+	}
+
+	public void testLineLine12() {
+		// coincident lines. 2. line is contained in the 1. line
+        //               
+		//        (-0.5,0)       
+		//        
+		//(-1,0) o----x----x----0  (0,1)      
+		//           
+		//              (0,0.5)  
+		//           
+		//                  
+
+		List<Vector3> line1 = new ArrayList<Vector3>();
+		List<Vector3> line2 = new ArrayList<Vector3>();
+		List<Vector3> result = new ArrayList<Vector3>();
+		List<Vector3> expected = new ArrayList<Vector3>();
+		
+		// build lines		
+		line1.add( new Vector3(-1,0,0));
+		line1.add( new Vector3( 1, 0,0));
+
+		line2.add( new Vector3( -0.5, 0, 0));
+		line2.add( new Vector3(  0.5, 0, 0));
+
+		// we intersection in two points
+		expected.add(new Vector3(-0.5,0,0));
+		expected.add(new Vector3( 0.5,0,0));
+		
+		// run intersection
+		ORourke.run(line1, line2, result);	
+
+		System.out.println("coincident line line case");
+		
+		// write out the returned polygon
+		for (Vector3 p: result)
+			System.out.println(""+p);
+
+		
+		// check result by first searching for the first vertex.
+		// When found, we traverse the result again to verify the 
+		// rest of the vertices, in order.
+		assertTrue( verifyPolygon(result, expected));
+	}
+	
+	public void testLineLine13() {
+		// co-incident lines. Lines are overlapping
+        //               
+		//        (-0.5,0)       
+		//        
+		//(-1,0) o----x----o----x  (0,1)      
+		//           
+		//              (0,0.5)  
+		//           
+		//                  
+
+		List<Vector3> line1 = new ArrayList<Vector3>();
+		List<Vector3> line2 = new ArrayList<Vector3>();
+		List<Vector3> result = new ArrayList<Vector3>();
+		List<Vector3> expected = new ArrayList<Vector3>();
+		
+		// build lines		
+		line1.add( new Vector3(-1,0,0));
+		line1.add( new Vector3( 0.5, 0,0));
+
+		line2.add( new Vector3( -0.5, 0, 0));
+		line2.add( new Vector3(  1, 0, 0));
+
+		// we intersection in two points
+		expected.add(new Vector3(-0.5,0,0));
+		expected.add(new Vector3( 0.5,0,0));
+		
+		// run intersection
+		ORourke.run(line1, line2, result);	
+
+		System.out.println("coincident line line case");
+		
+		// write out the returned polygon
+		for (Vector3 p: result)
+			System.out.println(""+p);
+
+		
+		// check result by first searching for the first vertex.
+		// When found, we traverse the result again to verify the 
+		// rest of the vertices, in order.
+		assertTrue( verifyPolygon(result, expected));
+	}
+	
+	public void testLineLine14() {
+		//  Equivalent lines
+        //               
+		//              
+		//       x--------------x 
+		//(-1,5) o--------------o  (-5,1)      
+		//           
+		//                
+		//           
+		//                  
+		List<Vector3> line1    = new ArrayList<Vector3>();
+		List<Vector3> line2    = new ArrayList<Vector3>();
+		List<Vector3> result   = new ArrayList<Vector3>();
+		List<Vector3> expected = new ArrayList<Vector3>();
+		
+		// build lines		
+		line1.add( new Vector3( -1, 5,0));
+		line1.add( new Vector3( -5, 1,0));
+		line2.add( new Vector3( -1, 5,0));
+		line2.add( new Vector3( -5, 1,0));
+
+		// we intersection in two points
+		expected.add(new Vector3(-1, 5, 0));
+		expected.add(new Vector3(-5, 1, 0));
+		
+		// run intersection
+		ORourke.run(line1, line2, result);	
+
+		System.out.println("coincident line line case");
+		
+		// write out the returned polygon
+		for (Vector3 p: result)
+			System.out.println(""+p);
+
+		
+		// check result by first searching for the first vertex.
+		// When found, we traverse the result again to verify the 
+		// rest of the vertices, in order.
+		assertTrue( verifyPolygon(result, expected));
+	}
+
 
 	
 	private boolean verifyPolygon( List<Vector3> poly1, List<Vector3> poly2) {

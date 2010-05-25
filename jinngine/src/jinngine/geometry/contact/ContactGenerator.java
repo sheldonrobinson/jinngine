@@ -59,7 +59,7 @@ public interface ContactGenerator {
 		/**
 		 * Interaction point in world space
 		 */
-		public final Vector3 midpoint = new Vector3();
+		public final Vector3 point = new Vector3();
 
 		/**
 		 * Contact normal in world space

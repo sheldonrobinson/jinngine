@@ -109,7 +109,7 @@ public final class FrictionalContactConstraint implements ContactConstraint {
 			while (i.hasNext()) {
 				ContactGenerator.ContactPoint cp = i.next();
 				
-				createFrictionalContactConstraint(cp, b1, b2, cp.midpoint, cp.normal, cp.depth, dt, constraintIterator);				
+				createFrictionalContactConstraint(cp, b1, b2, cp.point, cp.normal, cp.depth, dt, constraintIterator);				
 			}
 		}
 		

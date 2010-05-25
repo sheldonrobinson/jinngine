@@ -172,6 +172,12 @@ public final class Vector3 implements Serializable {
 	public final double dot( Vector3 v ) {
 		return this.x*v.x+this.y*v.y+this.z*v.z;
 	}
+	
+	// truncate the z-component
+	public final double xydot( Vector3 v ) {
+		return this.x*v.x+this.y*v.y;
+	}
+
 
 	public static final double dot(Vector3 v1,Vector3 v2) {
 		return v1.x*v2.x+v1.y*v2.y+v1.z*v2.z;

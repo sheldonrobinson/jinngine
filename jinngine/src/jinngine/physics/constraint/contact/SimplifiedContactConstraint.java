@@ -96,7 +96,7 @@ public final class SimplifiedContactConstraint implements ContactConstraint {
 				ContactGenerator.ContactPoint cp = i.next();
 				
 				axis = cp.normal.copy();
-				createFrictionalContactConstraint(cp, b1, b2, cp.midpoint, cp.normal, cp.depth, dt, constraintIterator);				
+				createFrictionalContactConstraint(cp, b1, b2, cp.point, cp.normal, cp.depth, dt, constraintIterator);				
 			}
 			
 			

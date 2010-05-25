@@ -158,7 +158,7 @@ public final class SupportMapSphereContactGenerator implements ContactGenerator 
 
 		// find contact distance and interaction point
 		cp.distance = cp.paw.minus(cp.pbw).dot(cp.normal);
-		cp.midpoint.assign( cp.paw.add(cp.pbw).multiply(0.5));
+		cp.point.assign( cp.paw.add(cp.pbw).multiply(0.5));
 
 		//invert the normal if geometries came in reverse order
 		if (invertnormal)

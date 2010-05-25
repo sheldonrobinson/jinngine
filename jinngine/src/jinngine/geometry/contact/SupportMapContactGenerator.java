@@ -15,11 +15,14 @@ import java.util.List;
 
 import jinngine.collision.GJK;
 import jinngine.collision.RayCast;
+import jinngine.geometry.ConvexHull;
 import jinngine.geometry.Geometry;
 import jinngine.geometry.Material;
+import jinngine.geometry.ORourke;
 import jinngine.geometry.SupportMap3;
 import jinngine.math.Matrix3;
 import jinngine.math.Vector3;
+import jinngine.util.GramSchmidt;
 
 public class SupportMapContactGenerator implements ContactGenerator {
 	// data
@@ -131,8 +134,79 @@ public class SupportMapContactGenerator implements ContactGenerator {
 			contacts.clear();
 		}
 	}
+
+	private final void generate2(final Vector3 a, final Vector3 b, final Vector3 v ) {
+		contacts.clear(); faceA.clear(); faceB.clear();
+		Sa.supportFeature(v.multiply(-1), 0.09, faceA);
+		Sb.supportFeature(v.multiply(1), 0.09, faceB);
+		final Vector3 direction = v.normalize();
+		final Vector3 midpoint = a.add(b).multiply(0.5);
+		
+		// basis
+		final Matrix3 M = GramSchmidt.run(direction);
+		// make sure the normal direction is in the z-component
+		final Matrix3 B = new Matrix3(M.column(1),M.column(2),M.column(0));
+		final Matrix3 Binv = B.transpose();
+		
+		boolean track = false;
+		if (ga instanceof ConvexHull && gb instanceof ConvexHull ) {
+			System.out.println("instance!");
+			track = true;
+		}
+		
+		final ORourke.ResultHandler handler = new ORourke.ResultHandler() {
+			public final void intersection(final Vector3 p, final Vector3 q) {				
+				final ContactPoint cp = new ContactPoint();
+
+				cp.b1 = ga.getBody();
+				cp.b2 = gb.getBody();
+				
+				cp.normal.assign(direction);
+				cp.point.assign( B.multiply(new Vector3(p.x,p.y,0)).add(midpoint) );
+				
+				
+				cp.distance = p.z-q.z;
+				//if (cp.distance < envelope ) {
+					cp.depth = shell-cp.distance;
+					cp.restitution = restitution;
+					cp.friction = friction;
+					contacts.add(cp);
+				//}
+			}
+		};
+		
+		
+		// apply transform to all points
+		for (Vector3 p: faceA) {
+			p.assign( Binv.multiply(p.minus(midpoint)));
+		}
+		for (Vector3 p: faceB) {
+			p.assign( Binv.multiply(p.minus(midpoint)));
+		}
+		
+		// run 2d intersection
+		ORourke.run(faceA, faceB, handler);
+		
+		
+		if (track && contacts.isEmpty()) {
+			System.out.println("**************************");
+		}
+		
+		if (track)
+			for (ContactPoint cpi: contacts) {
+				cpi.point.print();
+				System.out.println("distance="+cpi.distance);
+			}
+		
+		Iterator<ContactPoint> i = contacts.iterator();
+		while(i.hasNext()) {
+			if (i.next().distance > envelope)
+				i.remove();
+		}
+	}
 	
-	private void generate(Vector3 a, Vector3 b, Vector3 v ) {
+	
+	private final void generate(final Vector3 a, final Vector3 b, final Vector3 v ) {
 		contacts.clear(); faceA.clear(); faceB.clear();
 		Sa.supportFeature(v.multiply(-1), 0.09, faceA);
 		Sb.supportFeature(v.multiply(1), 0.09, faceB);
@@ -238,7 +312,7 @@ public class SupportMapContactGenerator implements ContactGenerator {
 //						cp.pa.assign(ga.getBody().toModel(pbw));
 //						cp.pb.assign(gb.getBody().toModel(paw));
 
-						cp.midpoint.assign(S.multiply(p1tp).add(midpoint));
+						cp.point.assign(S.multiply(p1tp).add(midpoint));
 						cp.normal.assign(direction);
 						contacts.add(cp);
 					} 
@@ -313,7 +387,7 @@ public class SupportMapContactGenerator implements ContactGenerator {
 						cp.pbw.assign(p1);
 //						cp.pa.assign(ga.getBody().toModel(paw));
 //						cp.pb.assign(gb.getBody().toModel(p1));
-						cp.midpoint.assign(S.multiply(p1tp).add(midpoint));
+						cp.point.assign(S.multiply(p1tp).add(midpoint));
 						cp.normal.assign(direction);
 						contacts.add(cp);
 					} 
@@ -385,7 +459,7 @@ public class SupportMapContactGenerator implements ContactGenerator {
 //								cp.pa.assign(ga.getBody().toModel(paw));
 //								cp.pb.assign(gb.getBody().toModel(pbw));
 								
-								cp.midpoint.assign(S.multiply(p1pt.add(d1t.multiply(alpha))).add(midpoint)  );
+								cp.point.assign(S.multiply(p1pt.add(d1t.multiply(alpha))).add(midpoint)  );
 								cp.normal.assign(direction);
 								contacts.add(cp);
 							}

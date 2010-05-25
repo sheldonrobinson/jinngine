@@ -107,7 +107,7 @@ public class SphereContactGenerator implements ContactGenerator {
 //		cp.pb.assign(b2.toModel(cp.pbw));
 				
 		// world space interaction point
-		cp.midpoint.assign(cp.paw.add(cp.pbw).multiply(0.5));
+		cp.point.assign(cp.paw.add(cp.pbw).multiply(0.5));
 
 		// distance between closest points
 		double d = caw.minus(cbw).norm() - (s1.getRadius()+s2.getRadius());  
