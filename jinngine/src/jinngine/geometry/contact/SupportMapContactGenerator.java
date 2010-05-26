@@ -145,15 +145,6 @@ public class SupportMapContactGenerator implements ContactGenerator {
 		// wrt. the normal direction
 		Collections.reverse(faceA);
 		
-		List<Vector3> tempA = new ArrayList<Vector3>();
-		List<Vector3> tempB = new ArrayList<Vector3>();
-		for (Vector3 p: faceA)
-			tempA.add(p.copy());
-		for (Vector3 p: faceB)
-			tempB.add(p.copy());
-		
-		
-		
 		final Vector3 direction = v.normalize();
 		final Vector3 midpoint = a.add(b).multiply(0.5);
 		
