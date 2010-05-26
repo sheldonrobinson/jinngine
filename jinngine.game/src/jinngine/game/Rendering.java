@@ -3,8 +3,6 @@ package jinngine.game;
 import java.net.URISyntaxException;
 import org.newdawn.slick.openal.SoundStore;
 import com.ardor3d.extension.shadow.map.ParallelSplitShadowMapPass;
-import com.ardor3d.extension.ui.UIComponent;
-import com.ardor3d.extension.ui.UIHud;
 import com.ardor3d.framework.Canvas;
 import com.ardor3d.framework.DisplaySettings;
 import com.ardor3d.framework.lwjgl.LwjglCanvas;
@@ -129,7 +127,7 @@ public final class Rendering implements com.ardor3d.framework.Scene {
         
         // define some light
         final DirectionalLight light = new DirectionalLight();
-        light.setDirection(-0.1, -0.1, 0.1);
+        light.setDirection(-0.1, -0.3, -0.1);
         light.setDiffuse(new ColorRGBA(0.0f, 0.0f, 0.0f, 1.0f));
         light.setAmbient(new ColorRGBA(0.0f, 0.0f, 0.0f, 1.0f));
         light.setSpecular(new ColorRGBA(1.0f, 1.0f, 1.0f, 1.0f));

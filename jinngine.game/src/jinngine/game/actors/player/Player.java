@@ -147,8 +147,6 @@ public class Player extends Node implements PhysicalActor {
 		jumpconstraintforce = 0;
 
 		
-
-		
  		// handle deviations thats more than 90 degrees        	
  		Vector3 axis = playerbody.state.rotation.multiply(new Vector3(0,1,0));
  		double correctionvelocity = axis.cross(upvector).x;
@@ -171,7 +169,7 @@ public class Player extends Node implements PhysicalActor {
  		} else {
  			// let the constraint forces work
  			walkconstraintforce.assign(walkforce);
- 			angularforcelimit = 0.8;
+ 			angularforcelimit = 10;
 
  			// movement motion only if movement keys are down
  			if (movingkeyspressed) 

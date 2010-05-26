@@ -175,7 +175,7 @@ public class SimpleDoor extends Node implements PhysicalActor, SelectableActor {
         //game.getRendering().getPssmPass().addOccluder(doorfaces);
        
         // door
-        jinngine.geometry.Box doorbox = new jinngine.geometry.Box(2,2,1);
+        jinngine.geometry.Box doorbox = new jinngine.geometry.Box(2.0,2.2,0.5);
         doorbox.setFrictionCoefficient(0.5);
         doorbody = new Body("SimpleDoorBox", doorbox);
         physics.addBody(doorbody);

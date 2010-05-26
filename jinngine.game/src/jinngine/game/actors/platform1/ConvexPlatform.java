@@ -91,22 +91,24 @@ public class ConvexPlatform extends Node implements PhysicalActor, ScalableActor
 
 		// load the geometry
         final ColladaImporter colladaImporter = new ColladaImporter();
-        final ColladaStorage storage = colladaImporter.load(daefilename);
+        final ColladaStorage storage = colladaImporter.load("roundcornerplatform.dae");
         Node convexplatformscene = storage.getScene();
+        
+        Toolbox.writeOutScene(convexplatformscene);
 
         
         // set the transform of the collada file to the new platform node
         platform.setTransform(convexplatformscene.getChild("ConvexPlatformSolid").getTransform());
         
         // load the outline
-        Line convecplatformlines = (Line)convexplatformscene.getChild("ConvexPlatformOut_lines");
+        Line convecplatformlines = (Line)convexplatformscene.getChild("ConvexPlatformOut_001_lines");
 		convecplatformlines.setLineWidth(4);
 		convecplatformlines.setDefaultColor(new ColorRGBA(0,0,0,1));
 		convecplatformlines.setScale(1.01);
         platform.attachChild(convecplatformlines);
         
         // load faces
-        Spatial convexplatformfaces = convexplatformscene.getChild("ConvexPlatformSolid-Geometry_triangles");
+        Spatial convexplatformfaces = convexplatformscene.getChild("ConvexPlatformSol_triangles");
         platform.attachChild(convexplatformfaces);
 	
         // set some color
@@ -142,7 +144,7 @@ public class ConvexPlatform extends Node implements PhysicalActor, ScalableActor
 		ReadOnlyVector3 s = platform.getScale();
 		
 		// get the mesh
-		Spatial convexplatformfaces = platform.getChild("ConvexPlatformSolid-Geometry_triangles");
+		Spatial convexplatformfaces = platform.getChild("ConvexPlatformSol_triangles");
 		MeshData meshdata  = ((Mesh)convexplatformfaces).getMeshData();
 		FloatBuffer verticedata = meshdata.getVertexBuffer();
 
@@ -196,7 +198,7 @@ public class ConvexPlatform extends Node implements PhysicalActor, ScalableActor
 	@Override
 	public void stop( Game game ) {
 		// get the mesh
-		Spatial convexplatformfaces = platform.getChild("ConvexPlatformSolid-Geometry_triangles");
+		Spatial convexplatformfaces = platform.getChild("ConvexPlatformSol_triangles");
 
 		//clean shadowing
 		game.getRendering().getPssmPass().remove(convexplatformfaces);
