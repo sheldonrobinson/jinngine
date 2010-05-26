@@ -161,9 +161,6 @@ public class SupportMapContactGenerator implements ContactGenerator {
 		final Matrix3 M = GramSchmidt.run(direction);
 		// make sure the normal direction is in the z-component
 		final Matrix3 B = new Matrix3(M.column(1),M.column(2),M.column(0));
-		System.out.println("axis:");
-		M.column(1).cross(M.column(2)).print();
-		M.column(0).print();
 		//System.out.println("determinant(B)="+B.determinant(B));
 		final Matrix3 Binv = B.transpose();
 		
@@ -210,8 +207,8 @@ public class SupportMapContactGenerator implements ContactGenerator {
 		// run 2d intersection
 		ORourke.run(faceA, faceB, handler);		
 		
-		if (contacts.size()<1)
-			System.out.println("******************");
+//		if (contacts.size()<1)
+//			System.out.println("******************");
 	}
 	
 	

@@ -278,38 +278,79 @@ public class Box implements SupportMap3, Geometry, Material {
 			Vector3 p2 = new Vector3(v.x<0?-0.5:0.5, v.y<0?-0.5:0.5, v.z<0?-0.5:0.5 );
 			Vector3 p3 = new Vector3(v.x<0?-0.5:0.5, v.y<0?-0.5:0.5, v.z<0?-0.5:0.5 );
 			Vector3 p4 = new Vector3(v.x<0?-0.5:0.5, v.y<0?-0.5:0.5, v.z<0?-0.5:0.5 );
-
-
-			System.out.println("axis = " + zeroAxisIndices[0] + "," + zeroAxisIndices[1] );
 			
-			//make face turn counter-clock wise
-			if ( v.get(nonZeroAxisIndices[0]) < 0 ) { 
-				
-				
-				p1.set( zeroAxisIndices[0], 0.5);
-				p1.set( zeroAxisIndices[1], 0.5);
-
-				p2.set( zeroAxisIndices[0], -0.5);
-				p2.set( zeroAxisIndices[1],  0.5);
-
-				p3.set( zeroAxisIndices[0], -0.5);
-				p3.set( zeroAxisIndices[1], -0.5);     
-
-				p4.set( zeroAxisIndices[0],  0.5);      
-				p4.set( zeroAxisIndices[1], -0.5);
-			} else {
-				p1.set( zeroAxisIndices[0], 0.5);
-				p1.set( zeroAxisIndices[1], 0.5);
-
-				p2.set( zeroAxisIndices[0],  0.5);
-				p2.set( zeroAxisIndices[1],  -0.5);
-
-				p3.set( zeroAxisIndices[0], -0.5);
-				p3.set( zeroAxisIndices[1], -0.5);
-
-				p4.set( zeroAxisIndices[0],  -0.5);
-				p4.set( zeroAxisIndices[1],   0.5);				
+			// this makes sure that the returned set of points is always in counter
+			// clock-wise order wrt. the non zero axis direction. 
+			switch( nonZeroAxisIndices[0]) {
+			case 0:
+				if (v.x > 0) {
+					p1.y =  0.5; p1.z =  0.5;
+					p2.y = -0.5; p2.z =  0.5;
+					p3.y = -0.5; p3.z = -0.5;
+					p4.y =  0.5; p4.z = -0.5;
+				} else {
+					p1.y =  0.5; p1.z =  0.5;
+					p2.y =  0.5; p2.z = -0.5;
+					p3.y = -0.5; p3.z = -0.5;
+					p4.y = -0.5; p4.z =  0.5;	
+				}
+				break;
+			case 1:
+				if (v.y > 0) {
+					p1.z =  0.5; p1.x =  0.5;
+					p2.z = -0.5; p2.x =  0.5;
+					p3.z = -0.5; p3.x = -0.5;
+					p4.z =  0.5; p4.x = -0.5;
+				} else {
+					p1.z =  0.5; p1.x =  0.5;
+					p2.z =  0.5; p2.x = -0.5;
+					p3.z = -0.5; p3.x = -0.5;
+					p4.z = -0.5; p4.x =  0.5;	
+				}
+				break;
+			case 2:
+				if (v.z > 0) {
+					p1.x =  0.5; p1.y =  0.5;
+					p2.x = -0.5; p2.y =  0.5;
+					p3.x = -0.5; p3.y = -0.5;
+					p4.x =  0.5; p4.y = -0.5;
+				} else {
+					p1.x =  0.5; p1.y =  0.5;
+					p2.x =  0.5; p2.y = -0.5;
+					p3.x = -0.5; p3.y = -0.5;
+					p4.x = -0.5; p4.y =  0.5;	
+				}
+				break;
 			}
+			
+//			//make face turn counter-clock wise
+//			if ( v.get(nonZeroAxisIndices[0]) < 0 ) { 
+//				
+//				
+//				p1.set( zeroAxisIndices[0], 0.5);
+//				p1.set( zeroAxisIndices[1], 0.5);
+//
+//				p2.set( zeroAxisIndices[0], -0.5);
+//				p2.set( zeroAxisIndices[1],  0.5);
+//
+//				p3.set( zeroAxisIndices[0], -0.5);
+//				p3.set( zeroAxisIndices[1], -0.5);     
+//
+//				p4.set( zeroAxisIndices[0],  0.5);      
+//				p4.set( zeroAxisIndices[1], -0.5);
+//			} else {
+//				p1.set( zeroAxisIndices[0], 0.5);
+//				p1.set( zeroAxisIndices[1], 0.5);
+//
+//				p2.set( zeroAxisIndices[0],  0.5);
+//				p2.set( zeroAxisIndices[1],  -0.5);
+//
+//				p3.set( zeroAxisIndices[0], -0.5);
+//				p3.set( zeroAxisIndices[1], -0.5);
+//
+//				p4.set( zeroAxisIndices[0],  -0.5);
+//				p4.set( zeroAxisIndices[1],   0.5);				
+//			}
 			
 			//return transformed vertices
 			featureList.add( body.state.rotation.multiply(localtransform.multiply(p1).add(localdisplacement)).add(body.state.position) );

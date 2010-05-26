@@ -87,7 +87,7 @@ public class ORourke {
 		Iterator<Vector3> poly1points = poly1.iterator();
 		Iterator<Vector3> poly2points = poly2.iterator();
 		
-		System.out.println(N+","+M);
+//		System.out.println(N+","+M);
 		
 		// trival cases
 		// if any one polygon is empty, so is intersection
@@ -265,8 +265,8 @@ public class ORourke {
 		}
 		// poly-line
 		if (N>2 && M==2) {
-			System.out.println("switch");
-			// turn arguments around and wrap result
+//			System.out.println("switch");
+			// turn arguments around and wrap result TODO, could be more effective? 
 			final Vector3 p1 = poly2points.next();
 			final Vector3 p2 = poly2points.next();
 			final Vector3 p3 = poly1points.next();
