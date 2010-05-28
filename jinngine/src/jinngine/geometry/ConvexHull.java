@@ -15,6 +15,7 @@ import java.util.List;
 import quickhull3d.Point3d;
 import quickhull3d.QuickHull3D;
 
+import jinngine.geometry.util.MassProperties;
 import jinngine.math.InertiaMatrix;
 import jinngine.math.Matrix3;
 import jinngine.math.Matrix4;
@@ -22,6 +23,9 @@ import jinngine.math.Transforms;
 import jinngine.math.Vector3;
 import jinngine.physics.Body;
 
+/**
+ * Convex hull geometry implementation, given by a user defined set of points
+ */
 public class ConvexHull implements SupportMap3, Geometry, Material {
 
 	private final List<Vector3[]> faces = new ArrayList<Vector3[]>();

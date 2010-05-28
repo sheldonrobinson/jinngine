@@ -6,7 +6,7 @@
  * Jinngine is published under the GPL license, available 
  * at http://www.gnu.org/copyleft/gpl.html. 
  */
-package jinngine.geometry;
+package jinngine.geometry.util;
 
 import java.util.Iterator;
 import java.util.List;

@@ -1,6 +1,7 @@
-package jinngine.geometry;
+package jinngine.geometry.util;
 
 import java.util.List;
+import jinngine.geometry.*;
 import jinngine.collision.GJK;
 import jinngine.math.InertiaMatrix;
 import jinngine.math.Matrix3;

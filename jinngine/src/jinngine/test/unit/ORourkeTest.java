@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.ListIterator;
 
-import jinngine.geometry.ORourke;
+import jinngine.geometry.util.ORourke;
 import jinngine.math.Vector3;
 
 import junit.framework.TestCase;

@@ -18,7 +18,7 @@ import jinngine.collision.GJK;
 import jinngine.collision.RayCast;
 import jinngine.geometry.Geometry;
 import jinngine.geometry.Material;
-import jinngine.geometry.ORourke;
+import jinngine.geometry.util.ORourke;
 import jinngine.geometry.SupportMap3;
 import jinngine.math.Matrix3;
 import jinngine.math.Vector3;
