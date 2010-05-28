@@ -15,8 +15,6 @@ import jinngine.util.Pair;
 
 /**
  * Better Sweep-and-prune implementation, replacing the old SweepAndPrune.java
- * @author mo
- *
  */
 public class SAP2 implements BroadphaseCollisionDetection {
 
