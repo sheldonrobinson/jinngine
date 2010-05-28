@@ -8,6 +8,9 @@
  */
 package jinngine.physics;
 
+/**
+ * Triggers are inserted into {@link Scene} to monitor events in animation
+ */
 public interface Trigger {
 	
 	/**

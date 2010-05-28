@@ -17,8 +17,8 @@ import jinngine.physics.constraint.contact.ContactConstraintManager;
 import jinngine.physics.force.Force;
 
 /**
- *  Interface for creating a new physics scene. One should implement this interface, and pass it onto some 
- *  class that is able to generate the scene. This could be a Collada loader.   
+ *  Main interface for using Jinngine. Use Scene to insert and remove triggers, bodies, geometries, forces,
+ *  and constraints.  
  */
 public interface Scene {
 
