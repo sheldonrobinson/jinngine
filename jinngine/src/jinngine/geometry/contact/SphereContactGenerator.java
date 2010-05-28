@@ -12,9 +12,6 @@ import java.util.Iterator;
 import jinngine.geometry.Material;
 import jinngine.geometry.Sphere;
 import jinngine.math.*;
-import jinngine.physics.Body;
-
-//import jinngine.physics.Body;
 
 /**
  * Simple, fast, sphere-sphere contact generator.
@@ -25,8 +22,8 @@ public class SphereContactGenerator implements ContactGenerator {
 	private final ContactPoint cp = new ContactPoint();
 	private final Sphere s1;
 	private final Sphere s2;
-	private final Body b1;
-	private final Body b2;
+//	private final Body b1;
+//	private final Body b2;
 	private boolean incontact = false;
     private final double envelope = 0.125;
 	private final double shell = envelope*0.75;
@@ -36,8 +33,8 @@ public class SphereContactGenerator implements ContactGenerator {
 	public SphereContactGenerator(Sphere a, Sphere b) {
 		this.s1 = a; 
 		this.s2 = b;
-		this.b1 = a.getBody(); 
-		this.b2 = b.getBody();
+//		this.b1 = a.getBody(); 
+//		this.b2 = b.getBody();
 		//System.out.println("created");
 		
 		//select the smallest restitution and friction coefficients 

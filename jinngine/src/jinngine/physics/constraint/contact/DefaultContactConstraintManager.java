@@ -57,7 +57,7 @@ public class DefaultContactConstraintManager implements ContactConstraintManager
 	// the default contact constraint creator
 	private final ContactConstraintCreator defaultcreator = new ContactConstraintCreator() {
 		public final ContactConstraint createContactConstraint(Body b1, Body b2, ContactGenerator g) {
-			return new FrictionalContactConstraint(b1,b2,g,this);
+			return new FrictionalContactConstraint(b1,b2,g);
 //			return new SimplifiedContactConstraint(b1,b2,g,this);
 			
 		}

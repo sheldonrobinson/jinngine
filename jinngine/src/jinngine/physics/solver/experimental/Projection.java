@@ -12,7 +12,6 @@ import java.util.List;
 import jinngine.math.Vector3;
 import jinngine.physics.Body;
 import jinngine.physics.solver.Solver;
-import jinngine.physics.solver.Solver.NCPConstraint;
 
 /**
  * This is not a real solver, it can simply project the given constraints into their proper limits,
@@ -48,6 +47,5 @@ public class Projection implements Solver {
 
 	@Override
 	public void setMaximumIterations(int n) {
-		// TODO Auto-generated method stub
 	}
 }

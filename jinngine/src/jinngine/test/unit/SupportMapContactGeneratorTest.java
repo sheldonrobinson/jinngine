@@ -13,6 +13,7 @@ import jinngine.math.Vector3;
 import jinngine.physics.Body;
 import junit.framework.TestCase;
 
+@SuppressWarnings("unused")
 public class SupportMapContactGeneratorTest extends TestCase {
 	
 	private static final double epsilon = 1e-10;

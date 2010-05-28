@@ -13,7 +13,6 @@ import java.util.List;
 
 import jinngine.math.Vector3;
 import jinngine.physics.Body;
-import jinngine.physics.solver.Solver.NCPConstraint;
 import jinngine.physics.solver.Solver;
 
 /**
@@ -63,7 +62,6 @@ public class FischerNewton implements Solver {
 	private int linemax =25;
 	private int imax = 25;
 	private int cgmax = 25;
-	private double frictiondamp = 0;
 	private double epsilon = 1e-29;
 	 double damper =0.000000;
 	
@@ -486,7 +484,6 @@ public class FischerNewton implements Solver {
 	}
 
 	
-	@SuppressWarnings("unused")
 	public static void printA(List<NCPConstraint> constraints) {
 		System.out.println("A = [ ");
 

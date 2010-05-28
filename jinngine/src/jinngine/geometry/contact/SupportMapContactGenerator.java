@@ -16,7 +16,6 @@ import java.util.List;
 
 import jinngine.collision.GJK;
 import jinngine.collision.RayCast;
-import jinngine.geometry.ConvexHull;
 import jinngine.geometry.Geometry;
 import jinngine.geometry.Material;
 import jinngine.geometry.ORourke;
@@ -64,8 +63,6 @@ public class SupportMapContactGenerator implements ContactGenerator {
 			envelope = ga.getEnvelope();
 			shell = envelope*0.5;			
 		}
-
-
 	}
 	
 	@Override
@@ -155,12 +152,7 @@ public class SupportMapContactGenerator implements ContactGenerator {
 		//System.out.println("determinant(B)="+B.determinant(B));
 		final Matrix3 Binv = B.transpose();
 		
-		boolean track = false;
-//		if (ga instanceof ConvexHull && gb instanceof ConvexHull ) {
-//			System.out.println("instance!");
-//			track = true;
-//		}
-		
+		// create a result handler for the intersection algorithm
 		final ORourke.ResultHandler handler = new ORourke.ResultHandler() {
 			public final void intersection(final Vector3 p, final Vector3 q) {				
 				final ContactPoint cp = new ContactPoint();
@@ -173,10 +165,9 @@ public class SupportMapContactGenerator implements ContactGenerator {
 				
 				// distance along the z axis in contact space
 				cp.distance = p.z-q.z;
+				
+				// if contact is within the envelope size
 				if (cp.distance < envelope ) {
-					if (Math.abs(cp.distance)>1) {
-						System.out.println("dist="+cp.distance);
-					}
 					cp.depth = shell-cp.distance;
 					cp.envelope = envelope;
 					cp.restitution = restitution;
@@ -197,12 +188,16 @@ public class SupportMapContactGenerator implements ContactGenerator {
 		
 		// run 2d intersection
 		ORourke.run(faceA, faceB, handler);		
-		
-//		if (contacts.size()<1)
-//			System.out.println("******************");
 	}
 	
-	
+
+	/**
+	 *  method is not used anymore
+	 * @param a
+	 * @param b
+	 * @param v
+	 */
+	@SuppressWarnings("unused")
 	private final void generate(final Vector3 a, final Vector3 b, final Vector3 v ) {
 		contacts.clear(); faceA.clear(); faceB.clear();
 		Sa.supportFeature(v.multiply(-1), 0.09, faceA);

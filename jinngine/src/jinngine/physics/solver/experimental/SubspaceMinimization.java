@@ -10,18 +10,12 @@ package jinngine.physics.solver.experimental;
 
 import java.io.PrintStream;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
-import java.util.Random;
-
 import java.util.ListIterator;
-import jinngine.math.Vector3;
-import jinngine.physics.Body;
-import jinngine.physics.solver.Solver.NCPConstraint;
-import jinngine.physics.solver.*;
-import jinngine.physics.solver.experimental.*;
 
-import Jama.*;
+import jinngine.physics.Body;
+import jinngine.physics.solver.*;
+
 
 /**
  * The PGS-Subspace Minimisation method. Method is based on using PGS to guess f
@@ -32,18 +26,13 @@ public class SubspaceMinimization implements Solver {
 	//private final Solver newton = new FischerNewtonConjugateGradients();
 	private final Solver cg  = new ConjugateGradients();
 	private final Solver projection = new Projection();
-	private final Solver gs = new GaussSeidel();
 	//private final Solver cg  = new FischerNewtonConjugateGradients();	
 	private final List<NCPConstraint> inactive = new ArrayList<NCPConstraint>();
-	private final List<NCPConstraint> active = new ArrayList<NCPConstraint>();
 	private final List<NCPConstraint> normals = new ArrayList<NCPConstraint>();
-	private final List<NCPConstraint> frictions = new ArrayList<NCPConstraint>();
-	
 	private final double epsilon = 1e-6;
 	private  int pgsmin = 25;
 	private final ProjectedGaussSeidel pgs = new ProjectedGaussSeidel();
 	private double phi;
-	private final Random rand = new Random();
 	private final boolean debug;
 	private final PrintStream stream;
 	
@@ -67,17 +56,6 @@ public class SubspaceMinimization implements Solver {
 		return 0;
 	}
 	
-	private void solvePlain(List<NCPConstraint> constraints, List<Body> bodies) {
-//	   	normals.clear();
-//    	for (constraint ci: constraints) 
-//    		if (ci.coupling == null)
-//    			normals.add(ci);
-//    	
-//		solveInternal(normals, bodies,true);
-		
-		solveInternal(constraints, bodies,true);
-	}
-
 	private double solveMLCP(List<NCPConstraint> constraints, List<Body> bodies) {
 	   	normals.clear();
     	for (NCPConstraint ci: constraints) 
@@ -102,65 +80,6 @@ public class SubspaceMinimization implements Solver {
 		return 0;
 	}
 	
-	private double solveStaggered(List<NCPConstraint> constraints, List<Body> bodies) {
-	   	normals.clear();
-	   	frictions.clear();
-    	for (NCPConstraint ci: constraints) 
-    		if (rand.nextBoolean())
-    			normals.add(ci);
-    		else
-    			frictions.add(ci);
-    	
-		solveInternal(normals, bodies, true);
-//		
-////		//compute bounds
-//		for (constraint ci: constraints) {
-//			if (ci.coupling != null) {
-//				//if the constraint is coupled, allow only lambda <= coupled lambda
-//				ci.lower = -Math.abs(ci.coupling.lambda)*ci.coupling.mu;
-//				ci.upper =  Math.abs(ci.coupling.lambda)*ci.coupling.mu;
-//			} 
-//		}
-		
-		solveInternal(frictions,bodies,true);
-		
-		
-	   	normals.clear();
-	   	frictions.clear();
-    	for (NCPConstraint ci: constraints) 
-    		if (rand.nextBoolean())
-    			normals.add(ci);
-    		else
-    			frictions.add(ci);
-    	
-		solveInternal(normals, bodies, true);
-//		
-////		//compute bounds
-//		for (constraint ci: constraints) {
-//			if (ci.coupling != null) {
-//				//if the constraint is coupled, allow only lambda <= coupled lambda
-//				ci.lower = -Math.abs(ci.coupling.lambda)*ci.coupling.mu;
-//				ci.upper =  Math.abs(ci.coupling.lambda)*ci.coupling.mu;
-//			} 
-//		}
-		
-		solveInternal(frictions,bodies,true);
-
-//	    solveInternal(normals, bodies,true);
-//
-//		solveInternal(frictions,bodies,true);
-//
-//	    solveInternal(normals, bodies,true);
-//		
-//		solveInternal(frictions,bodies,true);
-//
-//	    solveInternal(normals, bodies,true);
-
-		
-		return 0;
-	}
-	
-	
 	public double solveInternal(List<NCPConstraint> constraints, List<Body> bodies, boolean bounds) {
 		int productcount =0;
 		//set damping
@@ -178,11 +97,7 @@ public class SubspaceMinimization implements Solver {
     	
     	//newton.solve(normals,bodies);
 
-		//track best solution
-    	double best_phi = Double.POSITIVE_INFINITY;
-    	double[] best_lambda = new double[constraints.size()];
-
-    	if (debug)
+		if (debug)
     		stream.println(productcount+"  "+FischerNewton.fischerMerit(constraints, bodies));
 
     	
@@ -387,11 +302,6 @@ public class SubspaceMinimization implements Solver {
 
 				
 			} //sub space
-
-			
-			double prevphi = phi;
-			
-
 
 			
 			phi = FischerNewton.fischerMerit(constraints, bodies);

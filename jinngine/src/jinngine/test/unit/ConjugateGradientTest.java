@@ -14,8 +14,6 @@ import java.util.List;
 import jinngine.math.Vector3;
 import jinngine.physics.Body;
 import jinngine.physics.solver.ConjugateGradients;
-import jinngine.physics.solver.experimental.FischerNewton;
-import jinngine.physics.solver.ProjectedGaussSeidel;
 import jinngine.physics.solver.Solver;
 import jinngine.physics.solver.Solver.NCPConstraint;
 import junit.framework.TestCase;

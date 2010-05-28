@@ -7,7 +7,6 @@
  * at http://www.gnu.org/copyleft/gpl.html. 
  */
 package jinngine.test.unit;
-import jinngine.collision.ExhaustiveSearch;
 import jinngine.collision.BroadphaseCollisionDetection;
 import jinngine.collision.SweepAndPrune;
 import jinngine.collision.BroadphaseCollisionDetection.Handler;
@@ -30,6 +29,7 @@ public class SweepAndPruneTest extends TestCase {
 		
 		//create two cubes
 		Box box1 = new Box(1,1,1);
+		@SuppressWarnings("unused")
 		Body b1 = new Body("Box 1", box1);
 		Box box2 = new Box(1,1,1);
 		Body b2 = new Body("Box 2", box2);

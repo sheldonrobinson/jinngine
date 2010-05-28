@@ -12,7 +12,6 @@ import java.util.*;
 
 import jinngine.geometry.BoundingBox;
 import jinngine.geometry.Geometry;
-import jinngine.geometry.Sphere;
 import jinngine.math.Vector3;
 import jinngine.util.Pair;
 

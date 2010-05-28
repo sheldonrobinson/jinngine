@@ -27,6 +27,7 @@ import jinngine.physics.Body;
  */
 public final class SupportMapSphereContactGenerator implements ContactGenerator {
 	// data
+	@SuppressWarnings("unused")
 	private final Body b1, b2;
 	private final Geometry g1;
 	private final SupportMap3 convex;
@@ -110,19 +111,18 @@ public final class SupportMapSphereContactGenerator implements ContactGenerator 
 
 	@Override
 	public final void run() {
-		boolean penetrating = false;
+		//boolean penetrating = false;
 		// assign the centre of mass position of the sphere in world space
 		sphere.getLocalTranslation(spherecentreworld);
 		Matrix3.multiply(b2.state.rotation, spherecentreworld, spherecentreworld);
 		Vector3.add(spherecentreworld, b2.state.position);
 
 		// run GJK
-		Vector3 v = new Vector3();
 		closest.run(convex, pointmap, cp.paw, cp.pbw, sphere.getRadius()+envelope, epsilon, 31); //notice the envelope size
 				
 		// penetration
 		if ( closest.getState().simplexSize > 3  || cp.paw.minus(cp.pbw).norm() < 1e-7 ) {
-			penetrating = false;
+			//penetrating = false;
 			System.out.println("SupportMap-sphere: penetration");
 			// we perform a raycast, that is equivalent to
 			// finding the growth distance between Sa and Sb. 

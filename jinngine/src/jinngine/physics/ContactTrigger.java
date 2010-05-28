@@ -33,7 +33,6 @@ public class ContactTrigger implements Trigger {
 
 	// helper variables
 	private double totalforce = 0;		
-	private double timestep;
 	private int numberOfNcpConstraints = 0;
 
 	// handler to install in the contact constraint manager
@@ -64,7 +63,7 @@ public class ContactTrigger implements Trigger {
 	
 	@Override
 	public void update(Scene s) {
-		timestep = s.getTimestep();
+//		timestep = s.getTimestep();
 
 		// see if the monitored constraints can trigger an event
 		ListIterator<ContactConstraint> monitored = monitoredconstraints.listIterator(); 

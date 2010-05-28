@@ -5,7 +5,6 @@ import java.util.Iterator;
 import jinngine.geometry.Box;
 import jinngine.geometry.ConvexHull;
 import jinngine.geometry.Geometry;
-import jinngine.geometry.SupportMap3;
 import jinngine.math.Matrix3;
 import jinngine.math.Vector3;
 import jinngine.physics.Body;

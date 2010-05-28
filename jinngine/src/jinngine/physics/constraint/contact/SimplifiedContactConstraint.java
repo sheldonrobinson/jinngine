@@ -14,7 +14,6 @@ import jinngine.geometry.contact.*;
 import jinngine.math.Matrix3;
 import jinngine.math.Vector3;
 import jinngine.physics.Body;
-import jinngine.physics.solver.*;
 import jinngine.physics.solver.Solver.NCPConstraint;
 import jinngine.util.GramSchmidt;
 import jinngine.util.Pair;
@@ -36,7 +35,6 @@ public final class SimplifiedContactConstraint implements ContactConstraint {
 	private final Body b1, b2;                  //bodies in constraint
 	private final List<ContactGenerator> generators = new ArrayList<ContactGenerator>();
 	private final List<NCPConstraint>       ncpconstraints = new ArrayList<NCPConstraint>();
-	private final ContactConstraintCreator creator;
 	
 	/**
 	 * Create a new ContactConstraint, using one initial ContactGenerator
@@ -44,12 +42,11 @@ public final class SimplifiedContactConstraint implements ContactConstraint {
 	 * @param b2
 	 * @param generator
 	 */
-	public SimplifiedContactConstraint(Body b1, Body b2, ContactGenerator generator, ContactConstraintCreator creator ) {
+	public SimplifiedContactConstraint(Body b1, Body b2, ContactGenerator generator ) {
 		super();
 		this.b1 = b1;
 		this.b2 = b2;
 		this.generators.add(generator);
-		this.creator = creator;
 		
 	}
 

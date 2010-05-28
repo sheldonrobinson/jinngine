@@ -10,8 +10,6 @@ package jinngine.physics.solver;
 import java.util.*;
 import jinngine.math.Vector3;
 import jinngine.physics.Body;
-import jinngine.physics.solver.Solver.NCPConstraint;
-import jinngine.physics.solver.experimental.FischerNewton;
 
 /**
  * Implementation of the PGS solver. 

@@ -10,8 +10,6 @@ package jinngine.test.unit;
 
 import jinngine.collision.GJK;
 import jinngine.geometry.Sphere;
-import jinngine.geometry.SupportMap3;
-import jinngine.math.Matrix3;
 import jinngine.math.Vector3;
 import jinngine.physics.Body;
 import junit.framework.TestCase;

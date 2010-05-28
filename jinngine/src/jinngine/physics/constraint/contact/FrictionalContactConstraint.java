@@ -35,7 +35,6 @@ public final class FrictionalContactConstraint implements ContactConstraint {
 	private final Body b1, b2;                  //bodies in constraint
 	private final List<ContactGenerator> generators = new ArrayList<ContactGenerator>();
 	private final List<NCPConstraint>       ncpconstraints = new ArrayList<NCPConstraint>();
-	private final ContactConstraintCreator creator;
 	private double frictionBoundMagnitude = Double.POSITIVE_INFINITY;
 	
 	private boolean enableCoupling = true;
@@ -46,12 +45,11 @@ public final class FrictionalContactConstraint implements ContactConstraint {
 	 * @param b2
 	 * @param generator
 	 */
-	public FrictionalContactConstraint(Body b1, Body b2, ContactGenerator generator, ContactConstraintCreator creator) {
+	public FrictionalContactConstraint(Body b1, Body b2, ContactGenerator generator) {
 		super();
 		this.b1 = b1;
 		this.b2 = b2;
 		this.generators.add(generator);
-		this.creator = creator;
 	}
 
 	// some experimental methods

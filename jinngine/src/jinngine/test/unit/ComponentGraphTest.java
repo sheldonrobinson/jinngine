@@ -16,6 +16,7 @@ import jinngine.util.ComponentGraph.ComponentHandler;
 import jinngine.util.ComponentGraph.NodeClassifier;
 import junit.framework.TestCase;
 
+@SuppressWarnings("unused")
 public class ComponentGraphTest extends TestCase {
 
 	/**

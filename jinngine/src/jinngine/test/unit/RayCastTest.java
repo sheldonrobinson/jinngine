@@ -16,6 +16,7 @@ import jinngine.math.Vector3;
 import jinngine.physics.Body;
 import junit.framework.TestCase;
 
+@SuppressWarnings("unused")
 public class RayCastTest extends TestCase {
 	
 	// epsilon is the allowed error in the 
