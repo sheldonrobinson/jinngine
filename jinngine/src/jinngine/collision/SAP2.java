@@ -13,6 +13,11 @@ import java.util.Map.Entry;
 import jinngine.geometry.Geometry;
 import jinngine.util.Pair;
 
+/**
+ * Better Sweep-and-prune implementation, replacing the old SweepAndPrune.java
+ * @author mo
+ *
+ */
 public class SAP2 implements BroadphaseCollisionDetection {
 
 	private final class SweepPoint {
