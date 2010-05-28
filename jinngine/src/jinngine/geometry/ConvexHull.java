@@ -156,19 +156,10 @@ public class ConvexHull implements SupportMap3, Geometry, Material {
 		
 		// create an adjacency list for the dual hull
 		dualadjacent = adjacencyList(dualhull.getFaces(), dualvertices.size());			
+			
 		
-		//search vertices to find extremal bounds
-		extremalpoint.assignZero();
-		for ( Vector3 v: vertices) {
-			if (extremalpoint.norm() < v.norm()) extremalpoint.assign(v);
-		}
-		
-		// assign max extends ( assume identity scale at this point)
-		double max = extremalpoint.norm();
-		bounds.assign(max,max,max);
-				
 		// perform approximate mass calculation
-		MassProperties masscalculation = new MassProperties( this, 0.01 );
+		MassProperties masscalculation = new MassProperties( this, 0.05 );
 		
 		// set propperties
 		mass = referenceMass = masscalculation.getMass();
@@ -180,10 +171,24 @@ public class ConvexHull implements SupportMap3, Geometry, Material {
 		for ( Vector3 p: vertices)
 			Vector3.add( p, centreOfMass.multiply(-1) );
 		
-		for ( Vector3[] f: faces) 
-			for (Vector3 p: f)
-				Vector3.add( p, centreOfMass.multiply(-1));
+//		for ( Vector3[] f: faces) 
+//			for (Vector3 p: f)
+//				Vector3.add( p, centreOfMass.multiply(-1));
+
 		
+		//search vertices to find extremal bounds
+		extremalpoint.assignZero();
+		for ( Vector3 v: vertices) {
+			if (extremalpoint.norm() < v.norm()) extremalpoint.assign(v);
+		}
+		
+		// assign max extends ( assume identity scale at this point)
+		double max = extremalpoint.norm();
+		bounds.assign(max,max,max);
+
+		
+
+
 	}
 	
 	/**
@@ -357,14 +362,15 @@ public class ConvexHull implements SupportMap3, Geometry, Material {
 	@Override
 	public Vector3 getMaxBounds() {
 		// return the max bounds in world space
-		return bounds.add(localtranslation).add(body.state.position);
+//		return bounds.add(localtranslation).add(body.state.position);		
+		return body.state.rotation.multiply(localtranslation).add(body.state.position).add(bounds);
 
 	}
 
 	@Override
 	public Vector3 getMinBounds() {
 		// return the min bounds in world space
-		return localtranslation.add(body.state.position).minus(bounds);
+		return body.state.rotation.multiply(localtranslation).add(body.state.position).minus(bounds);
 	}
 
 	@Override
@@ -432,11 +438,12 @@ public class ConvexHull implements SupportMap3, Geometry, Material {
 		//search vertices to find extremal bounds
 		extremalpoint.assignZero();
 		for ( Vector3 v: vertices) {
-			if (extremalpoint.norm() < v.scale(localscale).norm()) extremalpoint.assign(v.scale(localscale));
+			if (extremalpoint.norm() < v.scale(localscale).norm()) 
+				extremalpoint.assign(v.scale(localscale));
 		}
-		
 		double max = extremalpoint.norm();
 		bounds.assign(max,max,max);
+		System.out.println("max="+max);
 
 	}
 }
