@@ -128,7 +128,7 @@ public class Box implements SupportMap3, Geometry, Material {
 		this.localdisplacement.assign(displacement);
 		this.localrotation.assign(rotation);
 
-		//set the local transform (including scaling)
+		//set the local transform 
 		localtransform.assign( localrotation.multiply(new Matrix3(new Vector3(xs,0,0), new Vector3(0,ys,0), new Vector3(0,0,zs))));
 		
 		//extremal point on box

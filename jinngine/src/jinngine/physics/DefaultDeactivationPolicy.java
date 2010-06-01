@@ -8,6 +8,9 @@
  */
 package jinngine.physics;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import jinngine.math.Vector3;
 
 /**
@@ -15,6 +18,8 @@ import jinngine.math.Vector3;
  * energy to reason about the activity of a body. 
  */
 public class DefaultDeactivationPolicy implements DeactivationPolicy {
+	private final List<Body> forced = new ArrayList<Body>();
+	
 	@Override
 	public boolean shouldBeDeactivated(Body b) {
 		double accel = b.deltavelocity.add(b.externaldeltavelocity).squaredNorm();
@@ -26,6 +31,14 @@ public class DefaultDeactivationPolicy implements DeactivationPolicy {
 	
 	@Override
 	public boolean shouldBeActivated(Body b) {
+		
+		if (forced.size() > 0) {
+			if (forced.contains(b)) {
+				forced.remove(b);
+				return true;
+			}
+		}
+		
 		//double accel = b.deltavelocity.dot(b.deltavelocity) + b.deltaomega.dot(b.deltaomega);
 		
 //		Vector3 forcedeviation = b.state.force.minus(b.deactivatedexternalforce);
@@ -54,6 +67,11 @@ public class DefaultDeactivationPolicy implements DeactivationPolicy {
 		b.state.velocity.assign(Vector3.zero);
 		b.state.omega.assign(Vector3.zero);
 		
+	}
+
+	@Override
+	public void forceActivate(Body b) {
+		forced.add(b);
 	}
 
 }

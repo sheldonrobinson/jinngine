@@ -38,4 +38,11 @@ public interface DeactivationPolicy {
 	 * Activate the body b. See {@link deactivation}. 
 	 */
 	public void activate( Body b);
+	
+	
+	/** 
+	 * Force the next call to shouldBeActivated() to return true for the given body
+	 * @param b
+	 */
+	public void forceActivate( Body b);
 }

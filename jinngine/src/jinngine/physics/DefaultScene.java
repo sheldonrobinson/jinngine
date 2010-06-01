@@ -157,7 +157,7 @@ public final class DefaultScene implements Scene {
 		
 //		this.solver = new ProjectedGaussSeidel(55);
 //		this.solver = new NonsmoothNonlinearConjugateGradient(55);
-		this.solver = new NonsmoothNonlinearConjugateGradient(75);
+		this.solver = new NonsmoothNonlinearConjugateGradient(35);
 		
 		// start the new contact constraint manager
 		this.contactmanager = new DefaultContactConstraintManager( broadphase, constraintGraph);
@@ -190,6 +190,10 @@ public final class DefaultScene implements Scene {
 //			System.out.println(""+f);
 			fi.apply(timestep);
 		}
+		
+		
+		
+
 				
 		// Process live constraints. Live constraints are constraints which is not purely
 		// a function of the velocities in the system, such as user controlled motors.
@@ -201,10 +205,19 @@ public final class DefaultScene implements Scene {
 			ncpconstraints.clear(); ncpbodies.clear();
 			Pair<Body> bodies = live.getBodies();
 			ncpbodies.add(bodies.getFirst());
-			ncpbodies.add(bodies.getSecond());			
+			ncpbodies.add(bodies.getSecond());		
+			
+//			System.out.println(""+live);
 			live.applyConstraints(ncpconstraints.listIterator(), timestep);
+//			Iterator<NCPConstraint> iter = live.getNcpConstraints();
+//			while(iter.hasNext())
+//				ncpconstraints.add(iter.next());
+			
 			pgs.solve(ncpconstraints, ncpbodies , 1e-7);
+			
 		} 
+		
+		
 
 		// create a special iterator to be used with constraints. Each constraint will
 		// insert its ncp-constraints into this list
@@ -403,6 +416,12 @@ public final class DefaultScene implements Scene {
 	public final void removeConstraint(Constraint c) {
 		if (c!=null) {
 			constraintGraph.removeEdge(c.getBodies());
+			
+			// force activation for affected bodies
+			Pair<Body> pair = c.getBodies();
+			policy.forceActivate(pair.getFirst());
+			policy.forceActivate(pair.getSecond());
+			
 		} else {
 			System.out.println("Engine: attempt to remove null constraint");
 		}
