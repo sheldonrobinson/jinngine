@@ -157,7 +157,7 @@ public final class DefaultScene implements Scene {
 		
 //		this.solver = new ProjectedGaussSeidel(55);
 //		this.solver = new NonsmoothNonlinearConjugateGradient(55);
-		this.solver = new NonsmoothNonlinearConjugateGradient(35);
+		this.solver = new NonsmoothNonlinearConjugateGradient(45);
 		
 		// start the new contact constraint manager
 		this.contactmanager = new DefaultContactConstraintManager( broadphase, constraintGraph);
