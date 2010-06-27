@@ -14,6 +14,7 @@ import java.util.List;
 import jinngine.collision.GJK;
 import jinngine.collision.RayCast;
 import jinngine.geometry.Geometry;
+import jinngine.geometry.Material;
 import jinngine.geometry.Sphere;
 import jinngine.geometry.SupportMap3;
 import jinngine.math.Matrix3;
@@ -43,6 +44,7 @@ public final class SupportMapSphereContactGenerator implements ContactGenerator 
 	private static double epsilon = 1e-7;
     private static double envelope = 0.125*0.5;
 	private static double shell = envelope*0.75;
+
 
 	// algorithms
 	private final GJK closest = new GJK();
@@ -111,6 +113,28 @@ public final class SupportMapSphereContactGenerator implements ContactGenerator 
 
 	@Override
 	public final void run() {
+		
+		//select the smallest restitution and friction coefficients 
+		if ( g1 instanceof Material && sphere instanceof Material) {
+			double ea = ((Material)g1).getRestitution();
+			double fa = ((Material)g1).getFrictionCoefficient();
+			double eb = ((Material)sphere).getRestitution();
+			double fb = ((Material)sphere).getFrictionCoefficient();
+			//pick smallest values
+			cp.restitution = ea > eb ? eb : ea;
+			cp.friction    = fa > fb ? fb : fa;
+
+		} else if ( g1 instanceof Material ) {
+			cp.restitution = ((Material)g1).getRestitution();
+			cp.friction    = ((Material)g1).getFrictionCoefficient();
+		} else if ( sphere instanceof Material ) {
+			cp.restitution = ((Material)sphere).getRestitution();
+			cp.friction    = ((Material)sphere).getFrictionCoefficient();
+		} else { // default values
+			cp.restitution = 0.7;
+			cp.friction = 0.5;
+		}
+
 		//boolean penetrating = false;
 		// assign the centre of mass position of the sphere in world space
 		sphere.getLocalTranslation(spherecentreworld);
