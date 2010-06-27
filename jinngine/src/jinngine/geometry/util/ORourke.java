@@ -16,9 +16,7 @@ import jinngine.math.Vector3;
  * 2D convex convex intersection. Algorithm due to O'Rourke et al. 1981 "A New Linear 
  * Algorithm for Intersecting Polygons". Intersection is done in the XY plane, the Z component
  * is completely ignored. However, the returned intersection will contain the appropriate Z values
- * for each vertex of the returned polygon. 
- * @author mo 
- *
+ * for each vertex of the returned polygon, including vertices originating from edge-edge intersections. 
  */
 public class ORourke {
 	
@@ -37,6 +35,9 @@ public class ORourke {
 	
 	private final static double epsilon = 1e-8;
 	
+	/**
+	 *  Internal algorithm state
+	 */
 	private enum State { 
 		none,
 		P,
@@ -44,15 +45,19 @@ public class ORourke {
 	};
 	
 	
-	
+	/**
+	 * Perform XY-plane intersection of poly1 and poly2. The given polygons must be in counter clockwise order.
+	 * @param poly1 A closed polygon in the XY plane
+	 * @param poly2 A closed polygon in the XY plane
+	 * @param result Intersection of poly1 and poly2 in counter clock wise order
+	 */
 	public static void run( final List<Vector3> poly1, final List<Vector3> poly2, final List<Vector3> result ) {
 		run( poly1, poly2, new ResultHandler() {
 			public void intersection(Vector3 arg0, Vector3 arg1) {
-				// here, we don't care about the z value
 				if (arg1 == null)
-					result.add( new Vector3( arg0.x, arg0.y,0));
+					result.add( new Vector3( arg0.x, arg0.y, arg0.z));
 				else 
-					result.add( new Vector3( arg1.x, arg1.y,0));
+					result.add( new Vector3( arg1.x, arg1.y, arg1.z));
 					
 			}
 		});
