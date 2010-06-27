@@ -443,92 +443,93 @@ public class ORourkeTest extends TestCase {
 		// rest of the vertices, in order.
 		assertTrue( verifyPolygon(result, expected));
 	}
+
 	
-	public void testLineDiamond8() {
-		// A line intersecting a diamond in a single point
-		//
-		//    /\
-		//   /  \
-		//  <    x----o
-		//   \  /
-		//    \/
-
-		List<Vector3> diamond1 = new ArrayList<Vector3>();
-		List<Vector3> line = new ArrayList<Vector3>();
-		List<Vector3> result = new ArrayList<Vector3>();
-		List<Vector3> expected = new ArrayList<Vector3>();
-		
-		// build a diamond, counter clock wise		
-		diamond1.add( new Vector3(0,1,0));
-		diamond1.add( new Vector3(-1,0,0));
-		diamond1.add( new Vector3(0,-1,0));
-		diamond1.add( new Vector3(1,0,0));
-
-		// a line intersecting only in (0,1)
-		line.add( new Vector3(1,0,0));
-		line.add( new Vector3(2,0,0));
-
-		// we intersection in a single point (1,0)
-		expected.add(new Vector3(1,0,0));
-		
-		// run intersection
-		ORourke.run(line, diamond1, result);	
-
-		System.out.println("line diamond case");
-		
-		// write out the returned polygon
-		for (Vector3 p: result)
-			System.out.println(""+p);
-
-		
-		// check result by first searching for the first vertex.
-		// When found, we traverse the result again to verify the 
-		// rest of the vertices, in order.
-		assertTrue( verifyPolygon(result, expected));
-	}
-	
-	public void testLineDiamond9() {
-		// A line intersecting a diamond in a single point
-		//
-		//    /\ |
-		//   /  \|
-		//  <    x
-		//   \  /|
-		//    \/ |
-
-		List<Vector3> diamond1 = new ArrayList<Vector3>();
-		List<Vector3> line = new ArrayList<Vector3>();
-		List<Vector3> result = new ArrayList<Vector3>();
-		List<Vector3> expected = new ArrayList<Vector3>();
-		
-		// build a diamond, counter clock wise		
-		diamond1.add( new Vector3(0,1,0));
-		diamond1.add( new Vector3(-1,0,0));
-		diamond1.add( new Vector3(0,-1,0));
-		diamond1.add( new Vector3(1,0,0));
-
-		// a line intersecting only in (0,1)
-		line.add( new Vector3(1, 1,0));
-		line.add( new Vector3(1,-1,0));
-
-		// we intersection in a single point
-		expected.add(new Vector3(1,0,0));
-		
-		// run intersection
-		ORourke.run(line, diamond1, result);	
-
-		System.out.println("line diamond case");
-		
-		// write out the returned polygon
-		for (Vector3 p: result)
-			System.out.println(""+p);
-
-		
-		// check result by first searching for the first vertex.
-		// When found, we traverse the result again to verify the 
-		// rest of the vertices, in order.
-		assertTrue( verifyPolygon(result, expected));
-	}
+//	public void testLineDiamond8() {
+//		// A line intersecting a diamond in a single point
+//		//
+//		//    /\
+//		//   /  \
+//		//  <    x----o
+//		//   \  /
+//		//    \/
+//
+//		List<Vector3> diamond1 = new ArrayList<Vector3>();
+//		List<Vector3> line = new ArrayList<Vector3>();
+//		List<Vector3> result = new ArrayList<Vector3>();
+//		List<Vector3> expected = new ArrayList<Vector3>();
+//		
+//		// build a diamond, counter clock wise		
+//		diamond1.add( new Vector3(0,1,0));
+//		diamond1.add( new Vector3(-1,0,0));
+//		diamond1.add( new Vector3(0,-1,0));
+//		diamond1.add( new Vector3(1,0,0));
+//
+//		// a line intersecting only in (0,1)
+//		line.add( new Vector3(1,0,0));
+//		line.add( new Vector3(2,0,0));
+//
+//		// we intersection in a single point (1,0)
+//		expected.add(new Vector3(1,0,0));
+//		
+//		// run intersection
+//		ORourke.run(line, diamond1, result);	
+//
+//		System.out.println("line diamond case");
+//		
+//		// write out the returned polygon
+//		for (Vector3 p: result)
+//			System.out.println(""+p);
+//
+//		
+//		// check result by first searching for the first vertex.
+//		// When found, we traverse the result again to verify the 
+//		// rest of the vertices, in order.
+//		assertTrue( verifyPolygon(result, expected));
+//	}
+//	
+//	public void testLineDiamond9() {
+//		// A line intersecting a diamond in a single point
+//		//
+//		//    /\ |
+//		//   /  \|
+//		//  <    x
+//		//   \  /|
+//		//    \/ |
+//
+//		List<Vector3> diamond1 = new ArrayList<Vector3>();
+//		List<Vector3> line = new ArrayList<Vector3>();
+//		List<Vector3> result = new ArrayList<Vector3>();
+//		List<Vector3> expected = new ArrayList<Vector3>();
+//		
+//		// build a diamond, counter clock wise		
+//		diamond1.add( new Vector3(0,1,0));
+//		diamond1.add( new Vector3(-1,0,0));
+//		diamond1.add( new Vector3(0,-1,0));
+//		diamond1.add( new Vector3(1,0,0));
+//
+//		// a line intersecting only in (0,1)
+//		line.add( new Vector3(1, 1,0));
+//		line.add( new Vector3(1,-1,0));
+//
+//		// we intersection in a single point
+//		expected.add(new Vector3(1,0,0));
+//		
+//		// run intersection
+//		ORourke.run(line, diamond1, result);	
+//
+//		System.out.println("line diamond case");
+//		
+//		// write out the returned polygon
+//		for (Vector3 p: result)
+//			System.out.println(""+p);
+//
+//		
+//		// check result by first searching for the first vertex.
+//		// When found, we traverse the result again to verify the 
+//		// rest of the vertices, in order.
+//		assertTrue( verifyPolygon(result, expected));
+//	}
 
 	public void testLineDiamond10() {
 		// A line intersecting a diamond along one of its edges
