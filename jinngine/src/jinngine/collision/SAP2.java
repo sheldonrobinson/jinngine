@@ -1,9 +1,9 @@
 package jinngine.collision;
 
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
@@ -49,7 +49,7 @@ public class SAP2 implements BroadphaseCollisionDetection {
 	
 	private ArrayList<Handler> handlers = new ArrayList<Handler>();
 	private ArrayList<Pair<Geometry>> overlaps = new ArrayList<Pair<Geometry>>();
-	private Map<Pair<Geometry>,Counter> counters = new HashMap<Pair<Geometry>, Counter>();
+	private Map<Pair<Geometry>,Counter> counters = new LinkedHashMap<Pair<Geometry>, Counter>();
 	private ArrayList<Geometry> geometries = new ArrayList<Geometry>();
 	private ArrayList<SweepPoint> axis1 = new ArrayList<SweepPoint>();
 	private ArrayList<SweepPoint> axis2 = new ArrayList<SweepPoint>();
@@ -127,7 +127,7 @@ public class SAP2 implements BroadphaseCollisionDetection {
 
 	@Override
 	public Set<Pair<Geometry>> getOverlappingPairs() {
-		return new HashSet<Pair<Geometry>>(overlaps);
+		return new LinkedHashSet<Pair<Geometry>>(overlaps);
 	}
 
 	@Override

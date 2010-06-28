@@ -9,7 +9,7 @@
 package jinngine.physics.constraint.contact;
 
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -48,8 +48,8 @@ public class DefaultContactConstraintManager implements ContactConstraintManager
 	private final List<ContactConstraintCreator> contactConstraintCreators = new ArrayList<ContactConstraintCreator>();
 
 	// set of maintained contact constraints and generators
-	private final Map<Pair<Body>,ContactConstraint> contactConstraints = new HashMap<Pair<Body>,ContactConstraint>();
-	private final Map<Pair<Geometry>,ContactGenerator> contactGenerators = new HashMap<Pair<Geometry>,ContactGenerator>();
+	private final Map<Pair<Body>,ContactConstraint> contactConstraints = new LinkedHashMap<Pair<Body>,ContactConstraint>();
+	private final Map<Pair<Geometry>,ContactGenerator> contactGenerators = new LinkedHashMap<Pair<Geometry>,ContactGenerator>();
 		
 	// the constraint graph to be updated by this contact constraint manager
 	private final ComponentGraph<Body,Constraint, DefaultScene.ConstraintGroup> constraintGraph;
@@ -78,27 +78,30 @@ public class DefaultContactConstraintManager implements ContactConstraintManager
 				public final void overlap(Pair<Geometry> inputpair) {
 //					System.out.println("overlap");
 					//retrieve the bodies associated with overlapping geometries
-					Body a = inputpair.getFirst().getBody();
-					Body b = inputpair.getSecond().getBody();
+					Body b1 = inputpair.getFirst().getBody();
+					Body b2 = inputpair.getSecond().getBody();
 					
 					//ignore overlaps stemming from the same body				
-					if ( a == b) return;
+					if ( b1 == b2) return;
 					//ignore overlaps for non-body geometries
-					if ( a == null || b == null) return;
+					if ( b1 == null || b2 == null) return;
 					//ignore overlaps of fixed bodies
-					if ( a.isFixed() && b.isFixed() ) return;
+					if ( b1.isFixed() && b2.isFixed() ) return;
 					
 					//always order bodies and geometries the same way, so that normals 
 					//will be pointing the right direction
 					Pair<Body> bodypair;
 					Pair<Geometry> geometrypair;
-					if ( a.hashCode() > b.hashCode() ) {
-						bodypair = new Pair<Body>(a,b);
-						geometrypair = new Pair<Geometry>(inputpair.getFirst(), inputpair.getSecond());
-					} else {
-						bodypair = new Pair<Body>(b,a);
-						geometrypair = new Pair<Geometry>(inputpair.getSecond(), inputpair.getFirst());
-					}
+					
+					bodypair = new Pair<Body>(b1,b2);
+					
+//					if ( b1.hashCode() > b2.hashCode() ) {
+//						bodypair = new Pair<Body>(b1,b2);
+//						geometrypair = new Pair<Geometry>(inputpair.getFirst(), inputpair.getSecond());
+//					} else {
+//						bodypair = new Pair<Body>(b2,b1);
+//						geometrypair = new Pair<Geometry>(inputpair.getSecond(), inputpair.getFirst());
+//					}
 					
 					
 					ContactConstraint contactConstraint = null;
@@ -106,6 +109,19 @@ public class DefaultContactConstraintManager implements ContactConstraintManager
 					//a contact constraint already exists 
 					if (contactConstraints.containsKey(bodypair)) {
 						contactConstraint = contactConstraints.get(bodypair);
+						
+						// order the geometry pair to match the order of the contact constraint. 
+						// this is necessary to keep normals pointing in the right direction when 
+						// contact constraints have more than one contact generator
+						Pair<Body> orderedpair = contactConstraint.getBodies();
+						if (orderedpair.getFirst() == bodypair.getFirst()) {
+							// same order
+							geometrypair = inputpair;
+						} else {
+							// swap
+							geometrypair = new Pair<Geometry>(inputpair.getSecond(),inputpair.getFirst());						
+						}
+						
 																
 						//add a new contact generator to this contact constraint
 						ContactGenerator generator = getContactGenerator(geometrypair);
@@ -118,7 +134,7 @@ public class DefaultContactConstraintManager implements ContactConstraintManager
 						//in the contact graph
 						if (constraintGraph.getEdge(bodypair) == null)  {
 							//create a new contact generator
-							ContactGenerator generator = getContactGenerator(geometrypair);
+							ContactGenerator generator = getContactGenerator(inputpair);
 							
 							// try custom contact constraint generators
 							for ( ContactConstraintCreator c : contactConstraintCreators) {
@@ -134,7 +150,7 @@ public class DefaultContactConstraintManager implements ContactConstraintManager
 									
 							//insert into data structures
 							contactConstraints.put(bodypair, contactConstraint);
-							contactGenerators.put(geometrypair, generator);
+							contactGenerators.put(inputpair, generator);
 							constraintGraph.addEdge( bodypair, contactConstraint);
 							
 							// signal handlers

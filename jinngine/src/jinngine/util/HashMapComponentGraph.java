@@ -67,16 +67,13 @@ public class HashMapComponentGraph<T,U,V> implements ComponentGraph<T,U,V> {
 	// this would ideally be a Set, but the HashSet implementation doesn't allow one to get the
 	// actual reference to a specific object in the set. This means that we can't keep our Node objects
 	// unique, which we would like to do
-	private final Map<Node,Node>               allnodes = new HashMap<Node,Node>();
-
-	private final Set<Node>		               freenodes = new HashSet<Node>();//	
-	private final Map<Node,Set<Node>>          edges = new HashMap<Node,Set<Node>>();
-	private final Map<Node,Component>       component = new HashMap<Node,Component>();
-
-	private final Map<Pair<T>,U>               edgeData = new HashMap<Pair<T>,U>();//
-
-	private final Map<Component,Set<Node>>     componentNodes = new HashMap<Component,Set<Node>>();//
-	private final Map<Component,Set<Pair<T>>>  componentEdges = new HashMap<Component,Set<Pair<T>>>();//
+	private final LinkedHashMap<Node,Node>               allnodes = new LinkedHashMap<Node,Node>();
+	private final LinkedHashSet<Node>		               freenodes = new LinkedHashSet<Node>();//	
+	private final Map<Node,Set<Node>>            edges = new LinkedHashMap<Node,Set<Node>>();
+	private final Map<Node,Component>            component = new LinkedHashMap<Node,Component>();
+	private final Map<Pair<T>,U>                 edgeData = new LinkedHashMap<Pair<T>,U>();//
+	private final Map<Component,Set<Node>>       componentNodes = new LinkedHashMap<Component,Set<Node>>();//
+	private final Map<Component,Set<Pair<T>>>    componentEdges = new LinkedHashMap<Component,Set<Pair<T>>>();//
 
 	
 	private final NodeClassifier<T> nodeClassifier;
@@ -118,7 +115,6 @@ public class HashMapComponentGraph<T,U,V> implements ComponentGraph<T,U,V> {
 	 */
 	@Override
 	public final void addEdge( Pair<T> pair, U edgeelement) { 
-		
 		//do not act if edge is already present
 		if (edgeData.containsKey(pair)) {
 			// update the edge data user reference
@@ -154,8 +150,8 @@ public class HashMapComponentGraph<T,U,V> implements ComponentGraph<T,U,V> {
 		}
 		
 		//add edge to nodes. First create hash sets, and then add the nodes to them
-		if (!edges.containsKey(a)) edges.put(a, new HashSet<Node>());
-		if (!edges.containsKey(b)) edges.put(b, new HashSet<Node>());
+		if (!edges.containsKey(a)) edges.put(a, new LinkedHashSet<Node>());
+		if (!edges.containsKey(b)) edges.put(b, new LinkedHashSet<Node>());
 		edges.get(b).add(a);
 		edges.get(a).add(b);
 		
@@ -193,7 +189,7 @@ public class HashMapComponentGraph<T,U,V> implements ComponentGraph<T,U,V> {
 				
 				// add b to the new group
 				component.put(b, g);
-				componentNodes.put(g, new HashSet<Node>());
+				componentNodes.put(g, new LinkedHashSet<Node>());
 				componentNodes.get(g).add(b);
 				
 				// notify handler
@@ -203,7 +199,7 @@ public class HashMapComponentGraph<T,U,V> implements ComponentGraph<T,U,V> {
 				freenodes.remove(b);
 
 				//add to pairs
-				componentEdges.put(g, new HashSet<Pair<T>>());
+				componentEdges.put(g, new LinkedHashSet<Pair<T>>());
 				componentEdges.get(g).add(pair);
 				
 				//return;
@@ -286,7 +282,7 @@ public class HashMapComponentGraph<T,U,V> implements ComponentGraph<T,U,V> {
 				Component newGroup = new Component(componenthandler.newComponent());
 				component.put(a, newGroup); 
 				component.put(b, newGroup);
-				componentNodes.put(newGroup, new HashSet<Node>());
+				componentNodes.put(newGroup, new LinkedHashSet<Node>());
 				componentNodes.get(newGroup).add(a);
 				componentNodes.get(newGroup).add(b);
 				
@@ -294,7 +290,7 @@ public class HashMapComponentGraph<T,U,V> implements ComponentGraph<T,U,V> {
 				componenthandler.nodeAddedToComponent(newGroup.element, a.element);
 				componenthandler.nodeAddedToComponent(newGroup.element, b.element);
 				
-				componentEdges.put(newGroup, new HashSet<Pair<T>>());
+				componentEdges.put(newGroup, new LinkedHashSet<Pair<T>>());
 				componentEdges.get(newGroup).add(pair);
 				
 				//both a and b are not free now
@@ -305,43 +301,43 @@ public class HashMapComponentGraph<T,U,V> implements ComponentGraph<T,U,V> {
 						
 		}
 		
-//		System.out.println("After add: " + 		groups.keySet().size() + " groups with " + group.size() + " bodies"  );
-		Iterator<Component> groupiter = componentNodes.keySet().iterator();
-
-		Set<Pair<T>> allpairs = new HashSet<Pair<T>>();
-		Set<Node> allnodes = new HashSet<Node>();
-		while(groupiter.hasNext()){
-			Component g = groupiter.next();
-			//System.out.println( "Group " + g + " : " + groupPairs.get(g).size() + " pairs " );
-			
-			Iterator<Pair<T>> pairiter = componentEdges.get(g).iterator(); 
-			while (pairiter.hasNext()) {
-				Pair<T> thispair = pairiter.next();
-				//System.out.println( "    pair:"+thispair.hashCode());
-				if (allpairs.contains(thispair)) {
-					System.out.println("Duplicates!!!!");
-					System.exit(0);
-				}
-				allpairs.add(thispair);	
-
-			}
-
-			
-			Iterator<Node> nodeiter = componentNodes.get(g).iterator(); 
-			while (nodeiter.hasNext()) {
-				Node node = nodeiter.next();
-				//System.out.println( "     Node:"+node);
-				if (allnodes.contains(node)) {
-					System.out.println("Duplicates!!!!");
-					System.exit(0);
-				}
-				allnodes.add(node);	
-
-			}
-
-			
-			
-		}
+////		System.out.println("After add: " + 		groups.keySet().size() + " groups with " + group.size() + " bodies"  );
+//		Iterator<Component> groupiter = componentNodes.keySet().iterator();
+//
+//		Set<Pair<T>> allpairs = new HashSet<Pair<T>>();
+//		Set<Node> allnodes = new HashSet<Node>();
+//		while(groupiter.hasNext()){
+//			Component g = groupiter.next();
+//			//System.out.println( "Group " + g + " : " + groupPairs.get(g).size() + " pairs " );
+//			
+//			Iterator<Pair<T>> pairiter = componentEdges.get(g).iterator(); 
+//			while (pairiter.hasNext()) {
+//				Pair<T> thispair = pairiter.next();
+//				//System.out.println( "    pair:"+thispair.hashCode());
+//				if (allpairs.contains(thispair)) {
+//					System.out.println("Duplicates!!!!");
+//					System.exit(0);
+//				}
+//				allpairs.add(thispair);	
+//
+//			}
+//
+//			
+//			Iterator<Node> nodeiter = componentNodes.get(g).iterator(); 
+//			while (nodeiter.hasNext()) {
+//				Node node = nodeiter.next();
+//				//System.out.println( "     Node:"+node);
+//				if (allnodes.contains(node)) {
+//					System.out.println("Duplicates!!!!");
+//					System.exit(0);
+//				}
+//				allnodes.add(node);	
+//
+//			}
+//
+//			
+//			
+//		}
 	}
 	/**
 	 * Remove an edge. If the removal results in one or more isolated nodes, these will be removed 
@@ -504,7 +500,7 @@ public class HashMapComponentGraph<T,U,V> implements ComponentGraph<T,U,V> {
 				// to determine if group has become disjoint
 				boolean disjoint = true;
 				Queue<Node> queue = new LinkedList<Node>();
-				Set<Pair<T>> blueEdges = new HashSet<Pair<T>>();
+				Set<Pair<T>> blueEdges = new LinkedHashSet<Pair<T>>();
 				a.color = RED;
 				b.color = BLUE;
 				queue.add(a); queue.add(b);
@@ -547,7 +543,7 @@ public class HashMapComponentGraph<T,U,V> implements ComponentGraph<T,U,V> {
 					//new group
 					Component newgroup = new Component(componenthandler.newComponent());
 
-					Set<Node> blues = new HashSet<Node>();
+					Set<Node> blues = new LinkedHashSet<Node>();
 
 					//find all blue nodes
 					Iterator<Node> iter = componentNodes.get(oldgroup).iterator();
@@ -809,8 +805,8 @@ public class HashMapComponentGraph<T,U,V> implements ComponentGraph<T,U,V> {
 		System.out.println("Status: " + 		componentNodes.keySet().size() + " components with " + component.size() + " bodies, " + getNumberOfFreeNodes() + " free ");
 		Iterator<Component> groupiter = componentNodes.keySet().iterator();
 
-		Set<Pair<T>> allpairs = new HashSet<Pair<T>>();
-		Set<Node> allnodes = new HashSet<Node>();
+		Set<Pair<T>> allpairs = new LinkedHashSet<Pair<T>>();
+		Set<Node> allnodes = new LinkedHashSet<Node>();
 		while(groupiter.hasNext()){
 			Component g = groupiter.next();
 			System.out.println( "Group " + g.element + " : " + componentEdges.get(g).size() + " pairs, " + componentNodes.get(g).size() + " nodes "  );

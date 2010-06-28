@@ -147,7 +147,7 @@ public final class SupportMapSphereContactGenerator implements ContactGenerator 
 		// penetration
 		if ( closest.getState().simplexSize > 3  || cp.paw.minus(cp.pbw).norm() < 1e-7 ) {
 			//penetrating = false;
-			System.out.println("SupportMap-sphere: penetration");
+//			System.out.println("SupportMap-sphere: penetration");
 			// we perform a raycast, that is equivalent to
 			// finding the growth distance between Sa and Sb. 
 			// by that we obtain a contact normal at the 
