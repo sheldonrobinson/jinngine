@@ -31,10 +31,12 @@ public final class HingeJoint implements Constraint {
 	public double upperLimit = Double.POSITIVE_INFINITY;
 	public double lowerLimit = Double.NEGATIVE_INFINITY;
 	private double motor  = 0;
+	private double motorTargetVelocity = 0;
 	private double theta = 0;
 	private double velocity = 0;
 	private double friction = 0.0;
-	private final double shell = 0.05;
+	private final double shell = 0.09;
+	private boolean enableLimits = true;
 	
 	// constraint entries
 	private NCPConstraint linear1 = new NCPConstraint();
@@ -43,7 +45,9 @@ public final class HingeJoint implements Constraint {
 	private NCPConstraint angular1 = new NCPConstraint();
 	private NCPConstraint angular2 = new NCPConstraint();
 	private NCPConstraint angular3 = new NCPConstraint();
-			
+	private NCPConstraint extra = new NCPConstraint();
+
+	
 	/**
 	 * Get the axis controller for the hinge joint. Use this controller to adjust joint limits, motor and friction
 	 * @return A controller for this hinge joint
@@ -100,6 +104,12 @@ public final class HingeJoint implements Constraint {
 
 			@Override
 			public void setLimits(double thetaMin, double thetaMax) {
+				if (thetaMin < -Math.PI || thetaMin > 0)
+					throw new IllegalArgumentException("HingeJoint: JointAxisController: thetaMin must be in [-PI,0]");
+				
+				if ( thetaMax < 0 || thetaMax > Math.PI  )
+					throw new IllegalArgumentException("HingeJoint: JointAxisController: thetaMax must be in [0,PI]");
+
 				upperLimit = thetaMax;
 				lowerLimit = thetaMin;
 			}
@@ -116,55 +126,17 @@ public final class HingeJoint implements Constraint {
 			}
 
 			@Override
-			public void setMotorForce(double force) {
-				motor = force;
-			}		
-		};
-		
-	}
-
-	//hack, TODO remove
-	public HingeJoint(Body b1, Body b2, Vector3 pi, Vector3 ni, Vector3 t2i, Vector3 t3i, Vector3 pj, Vector3 nj, Vector3 t2j, double lower, double upper) {
-		this.b1 = b1;
-		this.b2 = b2;		
-		//anchor points on bodies
-		this.pi = pi;
-		this.ni = ni;
-		this.pj = pj;
-		this.nj = nj;
-		this.upperLimit = upper;
-		this.lowerLimit = lower;
-		this.t2i = t2i;
-		this.t3i = t3i;
-		this.t2j = t2j;
+			public void setMotorForce(double maxForceMagnitude, double targetVelocity) {
+				if (maxForceMagnitude<0) 
+					throw new IllegalArgumentException("HingeJoint: JointAxisController: force magnitude must be positive");
 				
-		// create the controller
-		this.controler = new JointAxisController() {
-			@Override
-			public double getPosition() {
-				return theta;
+				motor = maxForceMagnitude;
+				motorTargetVelocity = targetVelocity;
 			}
 
 			@Override
-			public void setLimits(double thetaMin, double thetaMax) {
-				upperLimit = thetaMax;
-				lowerLimit = thetaMin;
-			}
-
-			@Override
-			public double getVelocity() {
-				return velocity;
-			}
-
-			@Override
-			public void setFrictionMagnitude(double magnitude) {
-				friction = magnitude;
-				
-			}
-
-			@Override
-			public void setMotorForce(double force) {
-				motor = force;
+			public void enableLimits(boolean enable) {
+				enableLimits = enable;	
 			}		
 		};
 		
@@ -195,7 +167,7 @@ public final class HingeJoint implements Constraint {
 		Matrix3 Bj = b2.isFixed()? new Matrix3() : MjInv.multiply(Jj.transpose());
 		Matrix3 Bangj = b2.isFixed()? new Matrix3() : b2.state.inverseinertia.multiply(Jangj.transpose());
 
-		double Kcor = 1.0;
+		double Kcor = 0.9;
 		
 //		Vector3 u = b1.state.velocity.minus( ri.cross(b1.state.omega)).minus(b2.state.velocity).add(rj.cross(b2.state.omega));
 		Vector3 u = b1.state.velocity.add( b1.state.omega.cross(ri)).minus(b2.state.velocity.add(b2.state.omega.cross(rj)));
@@ -233,50 +205,89 @@ public final class HingeJoint implements Constraint {
 				u.z, 0 );	
 
 	
-		//handle the constraint modelling joint limits and motor
+		// handle the constraint modelling joint limits and motor
 		double low = 0;
 		double high = 0;
 		double correction = 0;
 		Vector3 axis = tn1;		
 		double sign = tt2i.cross(tt2j).dot(tn1)>0?1:-1;
 		double product = tt2i.dot(tt2j);
+		// make sure product is excatly in [-1,1]
+		product = Math.max( Math.min( product, 1), -1);		
 		theta = -Math.acos( product )*sign;
-
-		//set the motor limits
-		double motorHigh = motor>0?motor:0;
-		double motorLow = motor<0?motor:0;
 		
-		//angular velocity along axis 
-		velocity = axis.dot(b1.state.omega)-axis.dot(b2.state.omega);
+		// angular velocity along axis 
+		this.velocity = axis.dot(b1.state.omega)-axis.dot(b2.state.omega);
 		double bvalue = 0;
-		double e = 0;
 		
-		//if joint is stretched upper
-		if ( theta > upperLimit  ) {
-			correction = (theta - (upperLimit+shell) )*(1/dt)*Kcor;
-			high = motorHigh;
+		// if limits are clamped together
+		if ( Math.abs( lowerLimit - upperLimit) < shell && enableLimits) {
+			correction = (theta - (upperLimit) )*(1/dt)*Kcor;
+			high = Double.POSITIVE_INFINITY;
+			low = Double.NEGATIVE_INFINITY;
+			bvalue = velocity + correction ;					
+		// if joint is stretched upper
+		} else if ( theta >= upperLimit-shell && enableLimits ) {
+			correction = (theta - (upperLimit) )*(1/dt)*Kcor;
+//			correction = Math.min( correction, 0.9);
+			high = motorTargetVelocity>=0?motor:0; // motor is pressing against limit?
 			low = Double.NEGATIVE_INFINITY;// + motorLow;
-			bvalue = (1+e)*velocity + correction ;		
-		//if joint is stretched lower
-		} else if ( theta < lowerLimit ) {
-			correction = (theta - (lowerLimit-shell) )*(1/dt)*Kcor;
+			bvalue = velocity + correction;
+			
+			// if motor is working to leave the limit, we need an extra 
+			// velocity constraint to model the motors contribution at the limit
+			if ( motorTargetVelocity<0 && motor>0) {
+				extra.assign( 
+						b1,	b2, 
+						new Vector3(), b1.isFixed()? new Vector3():b1.state.inverseinertia.multiply(axis), new Vector3(), b2.isFixed()? new Vector3() : b2.state.inverseinertia.multiply(axis.multiply(-1)), 
+						new Vector3(), axis, new Vector3(), axis.multiply(-1), 
+						-this.motor,
+						0,
+						null,
+						this.velocity-this.motorTargetVelocity, 0 );
+				// add the motor constraint
+				iterator.add(extra);
+			}
+		// if joint is stretched lower
+		} else if ( theta <= lowerLimit+shell && enableLimits ) {
+			correction = (theta - (lowerLimit) )*(1/dt)*Kcor;
+//			correction = Math.max( correction, -0.9);
 			high = Double.POSITIVE_INFINITY;// + motorHigh;
-			low = motorLow;
-			bvalue = ((1+e)*velocity + correction) ;
-		//not at limits (motor is working)
-		}else if (motor!=0 ){
-			high = motorHigh;
-			low = motorLow;
-			//motor tries to accelerate joint to the maximum velocity possible
-			bvalue = Math.signum(motor)>0? Double.POSITIVE_INFINITY: Double.NEGATIVE_INFINITY;
-		// not at limits and motor is not working
-		} else {
+			low = motorTargetVelocity<=0?-motor:0; // motor is pressing against limit?
+			bvalue = (velocity + correction) ;
+			
+			// if motor is working to leave the limit, we need an extra 
+			// velocity constraint to model the motors contribution at the limit
+			if ( motorTargetVelocity>0 && motor>0) {
+				extra.assign( 
+						b1,	b2, 
+						new Vector3(), b1.isFixed()? new Vector3():b1.state.inverseinertia.multiply(axis), new Vector3(), b2.isFixed()? new Vector3() : b2.state.inverseinertia.multiply(axis.multiply(-1)), 
+						new Vector3(), axis, new Vector3(), axis.multiply(-1), 
+						0,
+						this.motor,
+						null,
+						this.velocity-this.motorTargetVelocity, 0 );
+
+				// add the motor constraint
+				iterator.add(extra);
+			}
+		// not at limits, motor working 
+		} else if (motor!=0 ){
+			high = motor;
+			low = -motor;
+			// motor tries to achieve the target velocity using the motor force available
+			bvalue = velocity-this.motorTargetVelocity;
+		// not at limits, no motor. friction is working
+		} else if ( friction!=0) {
 			high = friction;
 			low = -friction;
-
 			//friction tries to prevent motion along the joint axis
 			bvalue = velocity;			
 		}
+		// unlimited joint axis
+		
+		
+		
 		
 		angular1.assign( 
 				b1,	b2, 
@@ -286,6 +297,7 @@ public final class HingeJoint implements Constraint {
 				high,
 				null,
 				bvalue, 0 );
+
 		
 		//keep bodies aligned to the axis
 		angular2.assign( 
@@ -315,6 +327,9 @@ public final class HingeJoint implements Constraint {
 		iterator.add(angular1);
 		iterator.add(angular2);
 		iterator.add(angular3);
+		
+
+
 	}
 
 	@Override

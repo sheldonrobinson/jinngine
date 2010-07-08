@@ -12,6 +12,7 @@ import java.util.Iterator;
 
 import jinngine.math.Vector3;
 import jinngine.physics.Body;
+import jinngine.physics.solver.Solver.NCPConstraint;
 
 /**
  * A contact generator is used by the {@link ContactConstraint} to generate its contact information. ContactGenerator 
@@ -75,7 +76,7 @@ public interface ContactGenerator {
 		public double distance;
 		public double envelope;
 		public double restitution;
-		public double friction;
+		public double friction;		
 	}
 	
 	/**

@@ -31,7 +31,14 @@ public interface JointAxisController {
 	public double getVelocity();
 		
 	/**
-	 * Set the position limits for the joint along this joint axis. 
+	 * Specify whether or not joint limits should be enforced for this joint axis.
+	 * @param enable
+	 */
+	public void enableLimits( boolean enable);
+	
+	/**
+	 * Set the position limits for the joint along this joint axis. For an angular joint axis the values must be in 
+	 * [-PI,0] and [0,PI] for thetaMin and thetaMax respectively.
 	 * @param thetaMin
 	 * @param thetaMax
 	 */
@@ -44,11 +51,11 @@ public interface JointAxisController {
 	public void setFrictionMagnitude( double magnitude );
 	
 	/**
-	 * Set the joint motor force. Using the available force, the motor will try to accelerate 
-	 * the joint to the highest possible velocity. When this setting is non-zero, the friction force 
-	 * of this joint axis is turned off.
+	 * Set the joint motor force magnitude and target velocity. Using the available force, the motor will try to accelerate 
+	 * the joint to the desired velocity. 
 	 * 
-	 * @param force
+	 * @param maxForceMagnitude maximum force magnitude in [0, oo)
+	 * @param targetVelocity target velocity of the joint axis. Do not use Inf for this value. 
 	 */
-	public void setMotorForce( double force );
+	public void setMotorForce( double maxForceMagnitude, double targetVelocity );
 }

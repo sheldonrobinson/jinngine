@@ -51,6 +51,7 @@ public class ProjectedGaussSeidel implements Solver {
 			   	+ ci.j2.dot(ci.body1.deltaomega)
 				+ ci.j3.dot(ci.body2.deltavelocity) 
 				+ ci.j4.dot(ci.body2.deltaomega) + ci.lambda*ci.damper + ci.Fext;
+				
 
 //				final double w = 
 //				  ci.j1.x*(ci.body1.deltavelocity.x+ci.body1.externaldeltavelocity.x) 

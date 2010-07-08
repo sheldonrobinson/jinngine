@@ -51,22 +51,6 @@ public final class FrictionalContactConstraint implements ContactConstraint {
 		this.b2 = b2;
 		this.generators.add(generator);
 	}
-
-	// some experimental methods
-	private Vector3 xvel = new Vector3();
-	public void setTangentialVelocityX( Vector3 x) {
-		this.xvel.assign(x);
-	}
-
-	private Vector3 yvel = new Vector3();
-	public void setTangentialVelocityY( Vector3 y) {
-		this.yvel.assign(y);
-	}
-	
-	private double multiplier = 1;
-	public final void setTangentialVelocityMultiplier( double multiplier) {	
-		this.multiplier = multiplier;
-	}
 	
 	/**
 	 * Add a new ContactGenerator for generating contact points and normal vectors
@@ -255,8 +239,8 @@ public final class FrictionalContactConstraint implements ContactConstraint {
 		//then the tangential friction constraints 
 		double ut1i = relativeVelocity(b1,b2,p,t2);
 		double ut2i = relativeVelocity(b1,b2,p,t3);
-		double ut1f = t2.dot(xvel.add(yvel))*multiplier; 
-		double ut2f = t3.dot(xvel.add(yvel))*multiplier;
+		double ut1f = 0;
+		double ut2f = 0;
 		
 		//first tangent
 		Vector3 t2B1 = b1.isFixed()? Vector3.zero: t2.multiply(1/m1);
@@ -270,8 +254,8 @@ public final class FrictionalContactConstraint implements ContactConstraint {
 				t2, r1.cross(t2), t2.multiply(-1),	r2.cross(t2).multiply(-1),
 				-frictionBoundMagnitude, frictionBoundMagnitude,
 				coupling,
-				-(ut1f-ut1i)  //+ t2Fext*dt*0
-, 0
+				-(ut1f-ut1i),
+				0
 		);
 		
 		//second tangent

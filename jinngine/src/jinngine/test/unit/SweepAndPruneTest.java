@@ -8,6 +8,7 @@
  */
 package jinngine.test.unit;
 import jinngine.collision.BroadphaseCollisionDetection;
+import jinngine.collision.SAP2;
 import jinngine.collision.SweepAndPrune;
 import jinngine.collision.BroadphaseCollisionDetection.Handler;
 import jinngine.geometry.Box;
@@ -47,8 +48,9 @@ public class SweepAndPruneTest extends TestCase {
 			}
 		};
 
-		//create the detector with handler
-		BroadphaseCollisionDetection sweep = new SweepAndPrune(handler);
+		//create the detector with handler 
+		BroadphaseCollisionDetection sweep = new SAP2();
+		sweep.addHandler(handler);
 
 		//add both boxes
 		sweep.add(box1);

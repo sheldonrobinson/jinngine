@@ -59,7 +59,9 @@ public class DefaultContactConstraintManager implements ContactConstraintManager
 		public final ContactConstraint createContactConstraint(Body b1, Body b2, ContactGenerator g) {
 			return new FrictionalContactConstraint(b1,b2,g);
 //			return new SimplifiedContactConstraint(b1,b2,g,this);
-			
+//			return new StabilisationContactConstraint(b1,b2,g);
+//			return new BaumgardeContactConstraint(b1,b2,g);
+//			
 		}
 		public void removeContactConstraint(ContactConstraint constraint) {}
 	};
@@ -209,8 +211,7 @@ public class DefaultContactConstraintManager implements ContactConstraintManager
 									
 						} else { 
 							// attempt to remove a contact generator that was not there
-							System.out.println("missing contact generator");
-							System.exit(0);
+							throw new IllegalStateException("DefaultContactConstraintManager: contact generator missing from ContactConstraint?");
 						}
 					} else {
 						// no contact constraint present

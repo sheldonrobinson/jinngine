@@ -38,6 +38,10 @@ public class ConvexHull implements SupportMap3, Geometry, Material {
 	private final int numberOfVertices;
 	private int cachedVertex = 0;
 	
+	// Material
+	private double friction = 0.5;
+	private double restitution = 0.7;
+	
 	/**
 	 * Computes vertex adjacency lists. Method simply runs through all faces, which are given as lists of vertex indices, and fills out 
 	 * adjacency lists along the way. It also roots out duplicate adjacency entries, arising from the same pair of vertices being present
@@ -413,24 +417,22 @@ public class ConvexHull implements SupportMap3, Geometry, Material {
 
 	@Override
 	public double getFrictionCoefficient() {
-		return 0.5;
+		return this.friction;
 	}
 
 	@Override
 	public double getRestitution() {
-		return 0.7;
+		return this.restitution;
 	}
 
 	@Override
 	public void setFrictionCoefficient(double f) {
-		// TODO Auto-generated method stub
-		
+		this.friction = f;
 	}
 
 	@Override
 	public void setRestitution(double e) {
-		// TODO Auto-generated method stub
-		
+		this.restitution = e;
 	}
 
 	@Override
