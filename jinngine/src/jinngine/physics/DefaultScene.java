@@ -349,9 +349,9 @@ public final class DefaultScene implements Scene {
 			if ( !body.deactivated ) {
 				if ( !body.isFixed() ) {
 					if (body.deltavelocity.isNaN() || body.deltaomega.isNaN() ) 
-						System.exit(0);
+						throw new IllegalStateException("DefaultScene: delta velocities containes NaN");
 					if (body.externaldeltavelocity.isNaN() || body.externaldeltaomega.isNaN() ) 
-						System.exit(0);
+						throw new IllegalStateException("DefaultScene: external delta velocities containes NaN");
 
 					// apply delta velocities
 					body.state.velocity.assign( body.state.velocity.add( body.deltavelocity).add(body.externaldeltavelocity) );
