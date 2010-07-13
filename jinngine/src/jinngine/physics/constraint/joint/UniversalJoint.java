@@ -293,11 +293,12 @@ public final class UniversalJoint implements Constraint {
 			bvalue = joint.velocity + correction ;					
 		// if joint is stretched upper
 		} else if ( joint.theta >= joint.upperLimit-joint.shell && joint.enableLimits ) {
-			correction = (joint.theta - (joint.upperLimit) )*(1/dt)*Kcor;
+			correction = -(joint.theta - (joint.upperLimit) )*(1/dt)*Kcor;
 //			correction = Math.min( correction, 0.9);
 			high = joint.motorTargetVelocity>=0?joint.motor:0; // motor is pressing against limit?
 			low = Double.NEGATIVE_INFINITY;// + motorLow;
-			bvalue = joint.velocity + correction;
+			
+
 			
 			// if motor is working to leave the limit, we need an extra 
 			// velocity constraint to model the motors contribution at the limit
@@ -312,30 +313,47 @@ public final class UniversalJoint implements Constraint {
 						joint.velocity-joint.motorTargetVelocity, 0 );
 				// add the motor constraint
 				iterator.add(joint.extra);
+			} else {
+				// clamp correction velocity to motor target when motor is pressing against limit
+				if (correction > 0)
+					correction = Math.min(correction, joint.motorTargetVelocity);
 			}
-		// if joint is stretched lower
+
+			
+			bvalue = joint.velocity - correction;
+
+
+			// if joint is stretched lower
 		} else if ( joint.theta <= joint.lowerLimit+joint.shell && joint.enableLimits ) {
-			correction = (joint.theta - (joint.lowerLimit) )*(1/dt)*Kcor;
-//			correction = Math.max( correction, -0.9);
+			correction = -(joint.theta - (joint.lowerLimit) )*(1/dt)*Kcor;
+			//			correction = Math.max( correction, -0.9);
 			high = Double.POSITIVE_INFINITY;// + motorHigh;
 			low = joint.motorTargetVelocity<=0?-joint.motor:0; // motor is pressing against limit?
-			bvalue = (joint.velocity + correction) ;
-			
+
+
+
 			// if motor is working to leave the limit, we need an extra 
 			// velocity constraint to model the motors contribution at the limit
 			if ( joint.motorTargetVelocity>0 && joint.motor>0) {
 				joint.extra.assign( 
 						bi,	bj, 
 						new Vector3(), bi.isFixed()? new Vector3():bi.state.inverseinertia.multiply(axis), new Vector3(), bj.isFixed()? new Vector3() : bj.state.inverseinertia.multiply(axis.multiply(-1)), 
-						new Vector3(), axis, new Vector3(), axis.multiply(-1), 
-						0,
-						joint.motor,
-						null,
-						joint.velocity-joint.motorTargetVelocity, 0 );
+								new Vector3(), axis, new Vector3(), axis.multiply(-1), 
+								0,
+								joint.motor,
+								null,
+								joint.velocity-joint.motorTargetVelocity, 0 );
 
 				// add the motor constraint
 				iterator.add(joint.extra);
+			} else {
+				// clamp correction velocity to motor target when motor is pressing against limit
+				if (correction < 0)
+					correction = Math.max(correction, joint.motorTargetVelocity);
 			}
+
+			bvalue = joint.velocity-correction;
+		
 		// not at limits, motor working 
 		} else if (joint.motor!=0 ){
 			high = joint.motor;
