@@ -9,13 +9,22 @@
 package jinngine.rendering;
 
 import jinngine.geometry.Geometry;
+import jinngine.math.Vector3;
 
 public interface Rendering {
 
 	public interface Callback {
-		public void callback();
+		public void tick();
 	}
-
+	
+	public interface EventCallback {
+		public void mousePressed(double x, double y, Vector3 point, Vector3 direction);
+		public void mouseDragged(double x, double y, Vector3 point, Vector3 direction);
+		public void mouseReleased();		
+		public void spacePressed();
+		public void spaceReleased();
+	}
+	
 	public void drawMe( Geometry g);
 	public void start();
 	

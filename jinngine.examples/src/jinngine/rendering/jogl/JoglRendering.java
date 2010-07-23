@@ -9,6 +9,11 @@
 package jinngine.rendering.jogl;
 
 import java.awt.Frame;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
+import java.awt.event.MouseMotionListener;
 import java.awt.event.WindowAdapter;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -30,18 +35,19 @@ import jinngine.math.Vector3;
 import jinngine.physics.Body;
 import jinngine.rendering.Rendering;
 
-public class JoglRendering extends Frame implements Rendering, GLEventListener {
+public class JoglRendering extends Frame implements Rendering, GLEventListener, MouseListener, MouseMotionListener, KeyListener {
 	private static final long serialVersionUID = 1L;
 	public List<DrawShape> toDraw = new ArrayList<DrawShape>();
 	private final Callback callback;
+	private final EventCallback mouseCallback;
 	private final GLCanvas canvas = new GLCanvas();
 	private Animator animator = new Animator(this.canvas);
 	private final GLU glu = new GLU();	
 	private double width;
 	private double height;
 	private double drawHeight;
-	private final Vector3 cameraTo = new Vector3(-12,-4,0).multiply(1);	
-	private final Vector3 cameraFrom = cameraTo.add(new Vector3(0,0.5,1).multiply(1));
+	private final Vector3 cameraTo = new Vector3(-12,-3,0).multiply(1);	
+	private final Vector3 cameraFrom = cameraTo.add(new Vector3(0,0.5,1).multiply(5));
 	//camera transform
 	public double[] proj = new double[16];
 	public double[] camera = new double[16];
@@ -53,8 +59,9 @@ public class JoglRendering extends Frame implements Rendering, GLEventListener {
 		public Body getReferenceBody();
 	}
 	
-	public JoglRendering(Callback callback) {
+	public JoglRendering(Callback callback, EventCallback mouseCallback) {
 		this.callback = callback;
+		this.mouseCallback = mouseCallback;
 		setTitle("jinngine.example");
 		setSize(1024,(int)(1024/(1.77777)));
 		canvas.setIgnoreRepaint( true );
@@ -67,10 +74,9 @@ public class JoglRendering extends Frame implements Rendering, GLEventListener {
 
 		add(canvas, java.awt.BorderLayout.CENTER);
 		setVisible(true);
-//		canvas.addMouseListener(callback);
-//		canvas.addMouseMotionListener(callback);
-//		//canvas.addMouseWheelListener(callback);
-//		canvas.addKeyListener(callback);
+		canvas.addMouseListener(this);
+		canvas.addMouseMotionListener(this);
+		canvas.addKeyListener(this);
 	}
 	
 	@Override
@@ -129,7 +135,7 @@ public class JoglRendering extends Frame implements Rendering, GLEventListener {
 
 	public void display(GLAutoDrawable drawable) {
 		// Perform ratio time-steps on the model
-		callback.callback();
+		callback.tick();
 
 		// Clear buffer, etc.
 		GL gl = drawable.getGL();
@@ -216,35 +222,6 @@ public class JoglRendering extends Frame implements Rendering, GLEventListener {
 			gl.glEnable(GL.GL_LIGHTING);
 
 			
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			
 			gl.glPopMatrix();
 			gl.glPopAttrib();
 		}
@@ -315,9 +292,7 @@ public class JoglRendering extends Frame implements Rendering, GLEventListener {
 		// init some lighting
 		gl.glEnable(GL.GL_LIGHTING);
 		gl.glEnable(GL.GL_LIGHT0);
-
 		//gl.glShadeModel(GL.GL_FLAT);
-
 
 		// Create light components
 		float ambientLight[] = { 2.0f, 2.0f, 2.0f, 1.0f };
@@ -330,8 +305,6 @@ public class JoglRendering extends Frame implements Rendering, GLEventListener {
 		gl.glLightfv(GL.GL_LIGHT0, GL.GL_DIFFUSE, diffuseLight,0);
 		gl.glLightfv(GL.GL_LIGHT0, GL.GL_SPECULAR, specularLight,0);
 		gl.glLightfv(GL.GL_LIGHT0, GL.GL_POSITION, position,0);
-
-
 	}
 
 	@Override
@@ -348,36 +321,37 @@ public class JoglRendering extends Frame implements Rendering, GLEventListener {
 		gl.glGetDoublev(GL.GL_PROJECTION_MATRIX, proj, 0);
 	}
 	
-//	public void getPointerRay(Vector3 p, Vector3 d) {
-//		double x = callback.mouse.x;
-//		double y = callback.mouse.y;
-////		gl.glVertex3d(x/(double)width,-(y-((height-drawHeight)*0.5))/(double)drawHeight, 0);
-//		Vector3 near = new Vector3(2*x/(double)width-1,-2*(y-((height-drawHeight)*0.5))/(double)drawHeight+1, 0.7);
-//		Vector3 far = new Vector3(2*x/(double)width-1,-2*(y-((height-drawHeight)*0.5))/(double)drawHeight+1, 0.9);
-//
-//		//inverse transform
-//		Matrix4 T = getProjectionMatrix().multiply(getCameraMatrix());
-//		Matrix4.invert(T);
-//		
-//		Vector3 p1 = new Vector3();
-//		Vector3 p2 = new Vector3();
-//		
-//		Matrix4.multiply(T,near,p1);
-//		Matrix4.multiply(T,far,p2);
-//		
-//		p.assign(p1);
-//		d.assign(p2.minus(p1).normalize());
-//
-////		this.p1.assign(p1);
-////		this.p2.assign(p1.add(d.multiply(450)).add(new Vector3(0,0,0)));
-//				
-//		
-////		p1.print();
-////		p2.print();
-//		
-////		p.print();
-////		d.print();
-//	}
+	
+	private Matrix4 getCameraMatrix() {
+		Matrix4 M = new Matrix4();
+		Matrix4.set(M, camera);
+		return M;
+	}
+
+	private Matrix4 getProjectionMatrix() {
+		Matrix4 M = new Matrix4();
+		Matrix4.set(M, proj);
+		return M;
+	}
+	
+	public void getPointerRay(Vector3 p, Vector3 d, double x, double y) {
+		// clipping planes
+		Vector3 near = new Vector3(2*x/(double)width-1,-2*(y-((height-drawHeight)*0.5))/(double)drawHeight+1, 0.7);
+		Vector3 far = new Vector3(2*x/(double)width-1,-2*(y-((height-drawHeight)*0.5))/(double)drawHeight+1, 0.9);
+
+		//inverse transform
+		Matrix4 T = getProjectionMatrix().multiply(getCameraMatrix());
+		Matrix4.invert(T);
+		
+		Vector3 p1 = new Vector3();
+		Vector3 p2 = new Vector3();
+		
+		Matrix4.multiply(T,near,p1);
+		Matrix4.multiply(T,far,p2);
+		
+		p.assign(p1);
+		d.assign(p2.minus(p1).normalize());
+	}
 	
 	/**
 	 * This is where the "magic" is done:
@@ -435,5 +409,75 @@ public class JoglRendering extends Frame implements Rendering, GLEventListener {
 		from.assign(cameraFrom);
 		to.assign(cameraTo);
 	}
+
+
+	@Override
+	public void mouseClicked(MouseEvent e) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void mouseEntered(MouseEvent e) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void mouseExited(MouseEvent e) {
+		// TODO Auto-generated method stub
+		
+	} 
+
+	@Override
+	public void mousePressed(MouseEvent e) {
+		Vector3 p = new Vector3();
+		Vector3 d = new Vector3();
+		getPointerRay(p, d, e.getX(), e.getY());		
+		mouseCallback.mousePressed((double)e.getX(), (double)e.getY(), p, d );
+	}
+
+	@Override
+	public void mouseReleased(MouseEvent e) {
+		mouseCallback.mouseReleased();
+	}
+
+	@Override
+	public void mouseDragged(MouseEvent e) {
+		Vector3 p = new Vector3();
+		Vector3 d = new Vector3();
+		getPointerRay(p, d, e.getX(), e.getY());		
+		mouseCallback.mouseDragged((double)e.getX(), (double)e.getY(), p, d );
+	}
+
+	@Override
+	public void mouseMoved(MouseEvent e) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void keyPressed(KeyEvent arg0) {
+		if (arg0.getKeyChar()==' ') {
+			mouseCallback.spacePressed();
+		}
+	}
+
+	@Override
+	public void keyReleased(KeyEvent arg0) {
+		if (arg0.getKeyChar()==' ') {
+			mouseCallback.spaceReleased();
+		}
+	}
+
+	@Override
+	public void keyTyped(KeyEvent arg0) {
+		// TODO Auto-generated method stub
+		
+	}
+
+
+
+
 
 }

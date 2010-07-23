@@ -66,7 +66,7 @@ public class BasicExample implements Rendering.Callback {
 	}
 
 	@Override
-	public void callback() {
+	public void tick() {
 		// each frame, to a time step on the Scene
 		scene.tick();
 	}
