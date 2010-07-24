@@ -12,6 +12,7 @@ import jinngine.geometry.Box;
 import jinngine.math.Vector3;
 import jinngine.physics.*;
 import jinngine.physics.force.GravityForce;
+import jinngine.rendering.Interaction;
 import jinngine.rendering.Rendering;
 
 public class BasicExample implements Rendering.Callback {	
@@ -21,6 +22,7 @@ public class BasicExample implements Rendering.Callback {
 		
 		// start jinngine 
 		scene = new DefaultScene();
+		scene.setTimestep(0.1);
 		
 		// add boxes to bound the world
 		Body floor = new Body("floor", new Box(1500,20,1500));
@@ -60,7 +62,7 @@ public class BasicExample implements Rendering.Callback {
 		scene.addForce( new GravityForce(box));		
 		
 		// handle drawing
-		Rendering rendering = new jinngine.rendering.jogl.JoglRendering(this);
+		Rendering rendering = new jinngine.rendering.jogl.JoglRendering(this, new Interaction(scene));
 		rendering.drawMe(boxgeometry);
 		rendering.start();
 	}

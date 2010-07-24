@@ -28,6 +28,7 @@ public class RagdollExample implements Rendering.Callback {
 		
 		// start jinngine 
 		scene = new DefaultScene(new SAP2(), new NonsmoothNonlinearConjugateGradient(75), new DisabledDeactivationPolicy());
+		scene.setTimestep(0.08);
 		
 		// add boxes to bound the world
 		Body floor = new Body("floor", new Box(1500,20,1500));
@@ -205,18 +206,18 @@ public class RagdollExample implements Rendering.Callback {
 		
 		
 //		 put gravity on limbs
-//		scene.addForce( new GravityForce(head));		
-//		scene.addForce( new GravityForce(torso1));		
-//		scene.addForce( new GravityForce(torso2));		
-//		scene.addForce( new GravityForce(torso3));		
-//		scene.addForce( new GravityForce(upleftarm));		
-//		scene.addForce( new GravityForce(lowerleftarm));		
-//		scene.addForce( new GravityForce(uprightarm));		
-//		scene.addForce( new GravityForce(lowerrightarm));		
-//		scene.addForce( new GravityForce(leftthigh));		
-//		scene.addForce( new GravityForce(lefttaiba));		
-//		scene.addForce( new GravityForce(rightthigh));		
-//		scene.addForce( new GravityForce(righttaiba));		
+		scene.addForce( new GravityForce(head));		
+		scene.addForce( new GravityForce(torso1));		
+		scene.addForce( new GravityForce(torso2));		
+		scene.addForce( new GravityForce(torso3));		
+		scene.addForce( new GravityForce(upleftarm));		
+		scene.addForce( new GravityForce(lowerleftarm));		
+		scene.addForce( new GravityForce(uprightarm));		
+		scene.addForce( new GravityForce(lowerrightarm));		
+		scene.addForce( new GravityForce(leftthigh));		
+		scene.addForce( new GravityForce(lefttaiba));		
+		scene.addForce( new GravityForce(rightthigh));		
+		scene.addForce( new GravityForce(righttaiba));		
 
 		
 		// handle drawing
