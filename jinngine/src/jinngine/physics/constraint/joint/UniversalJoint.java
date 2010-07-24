@@ -196,7 +196,7 @@ public final class UniversalJoint implements Constraint {
 		Matrix3 Bj = bj.isFixed()? new Matrix3() : MjInv.multiply(Jj.transpose());
 		Matrix3 Bangj = bj.isFixed()? new Matrix3() : bj.state.inverseinertia.multiply(Jangj.transpose());
 
-		double Kcor = 0.9;
+		double Kcor = 0.8;
 		
 //		Vector3 u = b1.state.velocity.minus( ri.cross(b1.state.omega)).minus(b2.state.velocity).add(rj.cross(b2.state.omega));
 		Vector3 u = bi.state.velocity.add( bi.state.omega.cross(riw)).minus(bj.state.velocity.add(bj.state.omega.cross(rjw)));
