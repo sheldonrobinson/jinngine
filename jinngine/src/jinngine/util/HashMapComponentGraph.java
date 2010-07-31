@@ -10,6 +10,7 @@ package jinngine.util;
 import java.util.*;
 
 
+
 /**
  * An undirected graph that keeps track of connected components (groups). Each time an edge is added or removed 
  * from the graph, data structures are maintained, reflecting connected components in the graph. This means, 
@@ -119,6 +120,7 @@ public class HashMapComponentGraph<T,U,V> implements ComponentGraph<T,U,V> {
 		if (edgeData.containsKey(pair)) {
 			// update the edge data user reference
 			edgeData.put(pair,edgeelement);
+//			System.out.println("Edge already present");
 			return;
 		}
 		
@@ -352,21 +354,30 @@ public class HashMapComponentGraph<T,U,V> implements ComponentGraph<T,U,V> {
 	@Override
 	public final boolean removeEdge( Pair<T> pair) {
 		//don't act if edge is not  present
-		if (!edgeData.containsKey(pair))
+		if (!edgeData.containsKey(pair)) {
+//			System.out.println("Edge NOT present");
 			return false; 
-		else 
+		} else { 
 			edgeData.remove(pair);
-
+		}
 		
-		// get the node out of the node hash map ( at this point we acually know that the nodes must
+		// get the node out of the node adjacency hash map ( at this point we know that the nodes must
 		// exist, because the edge exists 
 		Node a = new Node(pair.getFirst());
-		if ( allnodes.containsKey(a)) 
-			a = allnodes.get(a); else allnodes.put(a,a);		
-		Node b = new Node(pair.getSecond());
-		if ( allnodes.containsKey(b)) 
-			b = allnodes.get(b); else allnodes.put(b,b);
+		if ( allnodes.containsKey(a)) { 
+			a = allnodes.get(a); 
+		} else { 
+			// not possible
+			throw new IllegalStateException("ComponentGraph.removeEdge(): Node did not have an adjacency entry. ComponentGraph corrupted.");
+		}
 		
+		Node b = new Node(pair.getSecond());
+		if ( allnodes.containsKey(b)) { 
+			b = allnodes.get(b); 
+		} else { 
+			// this is not possible
+			throw new IllegalStateException("ComponentGraph.removeEdge(): Node did not have an adjacency entry. ComponentGraph corrupted.");
+		}
 
 		//if b is fixed, interchange a and b ( now, if b is fixed, both a and b are fixed)
 		if (nodeClassifier.isDelimitor(b.element)) {
@@ -374,9 +385,11 @@ public class HashMapComponentGraph<T,U,V> implements ComponentGraph<T,U,V> {
 			a = b; b = t;
 		}
 
-		//remove edge from nodes O(k)
+		// remove references to each node, in each nodes
+		// connected node sets
 		edges.get(a).remove(b);
 		edges.get(b).remove(a);
+			
 
 		// if no edges left in set, remove the set
 		if (edges.get(a).isEmpty())
@@ -435,6 +448,7 @@ public class HashMapComponentGraph<T,U,V> implements ComponentGraph<T,U,V> {
 						System.out.println("ALARM");
 						System.exit(0);
 					}
+					
 					//remove group if empty
 					if (s.isEmpty()) {
 						//System.out.println("groups entry removed");
@@ -446,8 +460,7 @@ public class HashMapComponentGraph<T,U,V> implements ComponentGraph<T,U,V> {
 
 					}
 				} else {
-					//System.out.println("b has edges left, and is part of a group");
-
+					// b has edges left, and is part of a group. Were done
 				}
 
 
@@ -462,8 +475,7 @@ public class HashMapComponentGraph<T,U,V> implements ComponentGraph<T,U,V> {
 				}
 
 			} else {
-				System.out.println("HashMapComponentGraph.removeEdge(): A connected non-delimiter node was not in a component!");
-				System.exit(0);
+				throw new IllegalStateException("HashMapComponentGraph.removeEdge(): A connected non-delimiter node was not in a component. ComponentGraph corrupted.");
 			}
 			//return;
 			//none is fixed

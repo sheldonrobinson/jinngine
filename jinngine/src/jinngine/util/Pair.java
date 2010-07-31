@@ -24,15 +24,21 @@ public final class Pair<T>  {
   //the same hash code for interchanced objects
   @Override
   public final int hashCode() {
-	  //TODO this is not all correct. Different code pairs may have same product!
-    return o1.hashCode()*o2.hashCode();
+	  return o1.hashCode()*o2.hashCode();
   }
 
+  @SuppressWarnings("unchecked")
   @Override
   public final boolean equals( Object other ) {
-	    if (this == other) return true;
-	    if (other == null ) return false;
-	    return this.hashCode() == other.hashCode();
+	  if (this == other) return true;
+	  if (other == null ) return false;
+	  if ( other instanceof Pair) {
+		  final Pair<T> otherpair = (Pair<T>)other;
+		  return ( ( o1.equals( otherpair.o1 ) && o2.equals( otherpair.o2 ) )
+				  || ( o1.equals( otherpair.o2 ) && o2.equals( otherpair.o1 ) ) );
+	  } else {
+		  return false;
+	  }
   }
   
   public final T getFirst()  { return o1;}
