@@ -25,7 +25,7 @@ public class Interaction implements Rendering.EventCallback {
 	
 	public Interaction( Scene scene) {
 		this.scene = scene;
-		this.controller.state.mass = 1; // hope to prevent bugs
+		this.controller.state.anisotropicmass.assignScale(1); // hope to prevent bugs
 		this.controller.setFixed(true);
 	}
 	

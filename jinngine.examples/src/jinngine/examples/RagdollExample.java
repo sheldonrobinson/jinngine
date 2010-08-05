@@ -27,8 +27,8 @@ public class RagdollExample implements Rendering.Callback {
 	public RagdollExample() {
 		
 		// start jinngine 
-		scene = new DefaultScene(new SAP2(), new NonsmoothNonlinearConjugateGradient(75), new DisabledDeactivationPolicy());
-		scene.setTimestep(0.08);
+		scene = new DefaultScene(new SAP2(), new NonsmoothNonlinearConjugateGradient(75), new DefaultDeactivationPolicy());
+		scene.setTimestep(0.1);
 		
 		// add boxes to bound the world
 		Body floor = new Body("floor", new Box(1500,20,1500));

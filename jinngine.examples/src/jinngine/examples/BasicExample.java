@@ -8,7 +8,9 @@
  */
 package jinngine.examples;
 
+
 import jinngine.geometry.Box;
+import jinngine.math.Matrix3;
 import jinngine.math.Vector3;
 import jinngine.physics.*;
 import jinngine.physics.force.GravityForce;
@@ -49,7 +51,7 @@ public class BasicExample implements Rendering.Callback {
 		Box boxgeometry = new Box(2,2,2);
 		Body box = new Body( "box", boxgeometry );
 		box.setPosition(new Vector3(-10,-11,-25));
-		
+				
 		// add all to scene
 		scene.addBody(floor);
 		scene.addBody(back);
