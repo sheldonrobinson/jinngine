@@ -10,11 +10,9 @@ package jinngine.geometry;
 import jinngine.math.Vector3;
 
 /**
- * A shape that encapsulates, or geometricaly bounds a given, usually more complex geometry. All geometries
+ * A shape that encapsulates, or bounds a given, usually more complex geometry. All geometries
  * used in jinngine are required to supply an axis aligned bounding box (AABB), because it will be used when 
  * performing broad-phase collision detection 
- * @author mo
- *
  */
 public interface BoundingBox {
 	/**

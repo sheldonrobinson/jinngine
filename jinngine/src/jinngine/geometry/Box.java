@@ -223,7 +223,7 @@ public class Box implements SupportMap3, Geometry, Material {
 	}	
 
 	@Override
-	public void supportFeature(Vector3 d, double epsilon, List<Vector3> featureList) {
+	public void supportFeature(final Vector3 d, final double epsilon, final List<Vector3> featureList) {
 		//final double epsilon = 0.03;  //123+132  213 231 312+321   
 		//get d into the canonical box space
 		Vector3 v = body.state.rotation.multiply(localrotation).transpose().multiply(d);
@@ -232,9 +232,9 @@ public class Box implements SupportMap3, Geometry, Material {
 		//List<Vector3> featureList = new ArrayList<Vector3>();
 
 		int numberOfZeroAxis = 0;
-		int[] zeroAxisIndices = new int[3];
+		final int[] zeroAxisIndices = new int[3];
 		int numberOfNonZeroAxis = 0;
-		int[] nonZeroAxisIndices = new int[3];
+		final int[] nonZeroAxisIndices = new int[3];
 		
 		if (Math.abs(v.x) < epsilon ) {
 			zeroAxisIndices[numberOfZeroAxis++]=0;
@@ -250,9 +250,9 @@ public class Box implements SupportMap3, Geometry, Material {
 		if (numberOfZeroAxis == 0) {
 			//eight possible points
 
-			double sv1 = v.x<0?-0.5:0.5;
-			double sv2 = v.y<0?-0.5:0.5;
-			double sv3 = v.z<0?-0.5:0.5;
+			final double sv1 = v.x<0?-0.5:0.5;
+			final double sv2 = v.y<0?-0.5:0.5;
+			final double sv3 = v.z<0?-0.5:0.5;
 			//return Matrix4.multiply(transform4, new Vector3(sv1, sv2, sv3), new Vector3());
 			featureList.add( body.state.rotation.multiply(localtransform.multiply(new Vector3(sv1, sv2, sv3)).add(localdisplacement)).add(body.state.position) );
 		}
@@ -261,8 +261,8 @@ public class Box implements SupportMap3, Geometry, Material {
 			//System.out.println("edge case");
 
 			//four possible edges
-			Vector3 p1 = new Vector3(v.x<0?-0.5:0.5, v.y<0?-0.5:0.5, v.z<0?-0.5:0.5 );
-			Vector3 p2 = new Vector3(v.x<0?-0.5:0.5, v.y<0?-0.5:0.5, v.z<0?-0.5:0.5 );
+			final Vector3 p1 = new Vector3(v.x<0?-0.5:0.5, v.y<0?-0.5:0.5, v.z<0?-0.5:0.5 );
+			final Vector3 p2 = new Vector3(v.x<0?-0.5:0.5, v.y<0?-0.5:0.5, v.z<0?-0.5:0.5 );
 			p1.set( zeroAxisIndices[0], 0.5);
 			p2.set( zeroAxisIndices[0], -0.5);
 			
@@ -274,10 +274,10 @@ public class Box implements SupportMap3, Geometry, Material {
 			//System.out.println("face case");
 			//two possible faces
 			//four possible edges
-			Vector3 p1 = new Vector3(v.x<0?-0.5:0.5, v.y<0?-0.5:0.5, v.z<0?-0.5:0.5 );
-			Vector3 p2 = new Vector3(v.x<0?-0.5:0.5, v.y<0?-0.5:0.5, v.z<0?-0.5:0.5 );
-			Vector3 p3 = new Vector3(v.x<0?-0.5:0.5, v.y<0?-0.5:0.5, v.z<0?-0.5:0.5 );
-			Vector3 p4 = new Vector3(v.x<0?-0.5:0.5, v.y<0?-0.5:0.5, v.z<0?-0.5:0.5 );
+			final Vector3 p1 = new Vector3(v.x<0?-0.5:0.5, v.y<0?-0.5:0.5, v.z<0?-0.5:0.5 );
+			final Vector3 p2 = new Vector3(v.x<0?-0.5:0.5, v.y<0?-0.5:0.5, v.z<0?-0.5:0.5 );
+			final Vector3 p3 = new Vector3(v.x<0?-0.5:0.5, v.y<0?-0.5:0.5, v.z<0?-0.5:0.5 );
+			final Vector3 p4 = new Vector3(v.x<0?-0.5:0.5, v.y<0?-0.5:0.5, v.z<0?-0.5:0.5 );
 			
 			// this makes sure that the returned set of points is always in counter
 			// clock-wise order wrt. the non zero axis direction. 
@@ -323,35 +323,6 @@ public class Box implements SupportMap3, Geometry, Material {
 				break;
 			}
 			
-//			//make face turn counter-clock wise
-//			if ( v.get(nonZeroAxisIndices[0]) < 0 ) { 
-//				
-//				
-//				p1.set( zeroAxisIndices[0], 0.5);
-//				p1.set( zeroAxisIndices[1], 0.5);
-//
-//				p2.set( zeroAxisIndices[0], -0.5);
-//				p2.set( zeroAxisIndices[1],  0.5);
-//
-//				p3.set( zeroAxisIndices[0], -0.5);
-//				p3.set( zeroAxisIndices[1], -0.5);     
-//
-//				p4.set( zeroAxisIndices[0],  0.5);      
-//				p4.set( zeroAxisIndices[1], -0.5);
-//			} else {
-//				p1.set( zeroAxisIndices[0], 0.5);
-//				p1.set( zeroAxisIndices[1], 0.5);
-//
-//				p2.set( zeroAxisIndices[0],  0.5);
-//				p2.set( zeroAxisIndices[1],  -0.5);
-//
-//				p3.set( zeroAxisIndices[0], -0.5);
-//				p3.set( zeroAxisIndices[1], -0.5);
-//
-//				p4.set( zeroAxisIndices[0],  -0.5);
-//				p4.set( zeroAxisIndices[1],   0.5);				
-//			}
-			
 			//return transformed vertices
 			featureList.add( body.state.rotation.multiply(localtransform.multiply(p1).add(localdisplacement)).add(body.state.position) );
 			featureList.add( body.state.rotation.multiply(localtransform.multiply(p2).add(localdisplacement)).add(body.state.position) );
@@ -361,6 +332,7 @@ public class Box implements SupportMap3, Geometry, Material {
 
 		else if (numberOfZeroAxis == 3) {
 			//should never happen, undefinded result
+			assert false;
 		}
 	}
 

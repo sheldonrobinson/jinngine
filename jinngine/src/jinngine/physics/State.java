@@ -31,7 +31,9 @@ public final class State  {
 	/** Moment of inertia inverse */
 	public final Matrix3             inverseinertia  = new Matrix3();
 	/** Total mass */
-	public double                    mass         = 1;                                         
+	//public double                    mass         = 1;
+	public final Matrix3               anisotropicmass         = new Matrix3();
+	public final Matrix3               inverseanisotropicmass  = new Matrix3();
 
 	/** Angular momentum */
 	public final Vector3             L       = new Vector3(0,0,0);
@@ -77,7 +79,7 @@ public final class State  {
 		Matrix3.set(t.inverseinertia, s.inverseinertia);
 		s.L.assign(t.L);
 		s.P.assign(t.P);
-		s.mass = t.mass;
+		s.anisotropicmass.assign(t.anisotropicmass);
 
 		s.velocity.assign(t.velocity);
 		s.acceleration.assign(t.acceleration);

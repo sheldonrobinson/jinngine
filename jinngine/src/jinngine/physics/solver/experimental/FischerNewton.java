@@ -9,6 +9,7 @@
 package jinngine.physics.solver.experimental;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 import jinngine.math.Vector3;
@@ -487,7 +488,7 @@ public class FischerNewton implements Solver {
 	public static void printA(List<NCPConstraint> constraints) {
 		System.out.println("A = [ ");
 
-		//int i = 0; 
+		// int i = 0; 
 		int k =0;
 		for (NCPConstraint ci: constraints) {
 			System.out.println("");
@@ -495,11 +496,11 @@ public class FischerNewton implements Solver {
 			//v[i] = -ci.b;
 			double ai[] = new double[10000];
 
-			//velocity pass
+			// velocity pass
 			int j=0;
 			for (NCPConstraint cj: constraints) {
 				k++;
-				//for each interacting constraint
+				// for each interacting constraint
 				ai[j] = 0;
 				if( ci.body1 == cj.body1) {
 					ai[j] = ci.j1.dot(cj.b1) + ci.j2.dot(cj.b2);
@@ -536,9 +537,9 @@ public class FischerNewton implements Solver {
 
 		System.out.println("]\n b = [ ");
 		for (NCPConstraint ci: constraints) {
-			System.out.print( (-ci.b) + " ");
+			System.out.print( (ci.b-ci.c + ci.Fext) + " ");
 		}		
-		System.out.println("]");
+		System.out.println("];");
 			
 	}
 	

@@ -336,7 +336,7 @@ public final class DefaultScene implements Scene {
 		
 		// run the solver (compute delta velocities) for all 
 		// components in the constraint graph
-		solver.solve( ncpconstraints, bodies, 1e-7 );
+		solver.solve( ncpconstraints, bodies, 1e-5 );
 		
 		
 		// update triggers
@@ -359,7 +359,7 @@ public final class DefaultScene implements Scene {
 
 					// update angular and linear momentums
 					Matrix3.multiply(body.state.inertia, body.state.omega, body.state.L);
-					body.state.P.assign(body.state.velocity.multiply(body.state.mass));
+					body.state.P.assign(body.state.anisotropicmass.multiply(body.state.velocity));
 				}
 
 				// integrate forward on positions

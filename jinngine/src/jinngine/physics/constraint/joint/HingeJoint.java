@@ -154,18 +154,21 @@ public final class HingeJoint implements Constraint {
 		Vector3 tn2 = Matrix3.multiply(b2.state.rotation, nj, new Vector3());
 		
 		//jacobians on matrix form
-		Matrix3 Ji = Matrix3.identity().multiply(1);
-		Matrix3 Jangi = ri.crossProductMatrix3().multiply(-1);
-		Matrix3 Jj = Matrix3.identity().multiply(-1);
-		Matrix3 Jangj = rj.crossProductMatrix3().multiply(1);
+		final Matrix3 Ji = Matrix3.identity().multiply(1);
+		final Matrix3 Jangi = ri.crossProductMatrix3().multiply(-1);
+		final Matrix3 Jj = Matrix3.identity().multiply(-1);
+		final Matrix3 Jangj = rj.crossProductMatrix3().multiply(1);
 
-		Matrix3 MiInv = Matrix3.identity().multiply(1/b1.state.mass);
-		Matrix3 MjInv = Matrix3.identity().multiply(1/b2.state.mass);
+//		Matrix3 MiInv = Matrix3.identity().multiply(1/b1.state.mass);
+//		Matrix3 MjInv = Matrix3.identity().multiply(1/b2.state.mass);
+		final Matrix3 MiInv = b1.state.inverseanisotropicmass;
+		final Matrix3 MjInv = b2.state.inverseanisotropicmass;
+		
 
-		Matrix3 Bi = b1.isFixed()? new Matrix3() : MiInv.multiply(Ji.transpose());
-		Matrix3 Bangi = b1.isFixed()? new Matrix3() : b1.state.inverseinertia.multiply(Jangi.transpose());
-		Matrix3 Bj = b2.isFixed()? new Matrix3() : MjInv.multiply(Jj.transpose());
-		Matrix3 Bangj = b2.isFixed()? new Matrix3() : b2.state.inverseinertia.multiply(Jangj.transpose());
+		final Matrix3 Bi = b1.isFixed()? new Matrix3() : MiInv.multiply(Ji.transpose());
+		final Matrix3 Bangi = b1.isFixed()? new Matrix3() : b1.state.inverseinertia.multiply(Jangi.transpose());
+		final Matrix3 Bj = b2.isFixed()? new Matrix3() : MjInv.multiply(Jj.transpose());
+		final Matrix3 Bangj = b2.isFixed()? new Matrix3() : b2.state.inverseinertia.multiply(Jangj.transpose());
 
 		double Kcor = 0.9;
 		

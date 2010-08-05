@@ -188,8 +188,11 @@ public final class UniversalJoint implements Constraint {
 		Matrix3 Jj = Matrix3.identity().multiply(-1);
 		Matrix3 Jangj = rjw.crossProductMatrix3().multiply(1);
 
-		Matrix3 MiInv = Matrix3.identity().multiply(1/bi.state.mass);
-		Matrix3 MjInv = Matrix3.identity().multiply(1/bj.state.mass);
+//		Matrix3 MiInv = Matrix3.identity().multiply(1/bi.state.mass);
+//		Matrix3 MjInv = Matrix3.identity().multiply(1/bj.state.mass);
+		final Matrix3 MiInv = bi.state.inverseanisotropicmass;
+		final Matrix3 MjInv = bj.state.inverseanisotropicmass;
+
 
 		Matrix3 Bi = bi.isFixed()? new Matrix3() : MiInv.multiply(Ji.transpose());
 		Matrix3 Bangi = bi.isFixed()? new Matrix3() : bi.state.inverseinertia.multiply(Jangi.transpose());

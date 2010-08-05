@@ -58,7 +58,8 @@ public final class Body {
 		Matrix4.identity(state.transform);
 		Matrix3.identity(state.rotation);
 		updateTransformations();	
-		this.state.mass=0;
+		this.state.anisotropicmass.assignZero();
+		this.state.inverseanisotropicmass.assignZero();
 		Matrix3.set(new Matrix3(), state.inertia);
 	}
 	
@@ -75,9 +76,10 @@ public final class Body {
 		updateTransformations();
 		
 		//some default properties
-		this.state.mass=1;
-		Matrix3.set(new Matrix3(), state.inertia);
-		Matrix3.set(new Matrix3(), state.inverseinertia);
+		this.state.anisotropicmass.assignScale(1);
+		this.state.inverseanisotropicmass.assignScale(1);
+		this.state.inertia.assignZero();
+		this.state.inverseinertia.assignZero();
 				
 		addGeometry(g);
 		
@@ -93,14 +95,15 @@ public final class Body {
 	 */
 	public Body( String identifier, Iterator<Geometry> i) {
 		this.identifier = new String(identifier);
-		Matrix4.identity(state.transform);
-		Matrix3.identity(state.rotation);
+		this.state.transform.assignIdentity();
+		this.state.rotation.assignIdentity();
 		updateTransformations();
 				
 		//some default properties
-		this.state.mass=1;
-		Matrix3.set(new Matrix3(), state.inertia);
-		Matrix3.set(new Matrix3(), state.inverseinertia);
+		this.state.anisotropicmass.assignScale(1);
+		this.state.inverseanisotropicmass.assignScale(1);		
+		this.state.inertia.assignZero();
+		this.state.inverseinertia.assignZero();
 				
 		while (i.hasNext()) {
 			addGeometry(i.next());
@@ -127,9 +130,10 @@ public final class Body {
 		final Vector3 cm = state.centreofmass;
 		
 		//reset body properties
-		this.state.mass=0;
-		Matrix3.set(new Matrix3(), state.inertia);
-		Matrix3.set(new Matrix3(), state.inverseinertia);
+		this.state.anisotropicmass.assignZero();
+		this.state.inverseanisotropicmass.assignZero();
+		this.state.inertia.assignZero();
+		this.state.inverseinertia.assignZero();
 
 		//if any geometry
 		if ( geometries.size() > 0 ) {
@@ -158,7 +162,8 @@ public final class Body {
 			
 			// cm = cm / total mass
 			cm.assign( cm.multiply(1/totalMass));
-			this.state.mass = totalMass;
+			this.state.anisotropicmass.assignScale(totalMass);
+			this.state.inverseanisotropicmass.assignScale(1/totalMass);
 
 			//translate all geometries so centre of mass will become the origin
 			for (Geometry g: geometries) {
@@ -183,7 +188,8 @@ public final class Body {
 
 		} else {
 			//fall-back on something, in case no geometries were given
-			this.state.mass = 1;
+			this.state.anisotropicmass.assignScale(1);
+			this.state.inverseanisotropicmass.assignScale(1);
 			this.state.inertia.assign(InertiaMatrix.identity());
 			//this.state.Iinverse.identity();
 		}
@@ -198,28 +204,6 @@ public final class Body {
 		return geometries.iterator();
 	}
 	
-	public final void applyImpulseToMomentums(Vector3 r, Vector3 J) {
-		//                P
-		// P = Mv => v = ---
-		//                M
-
-		//I-1  Lcm = I-1(r x F) = omega
-
-		if (!isFixed()) {
-			Vector3.add(this.state.P, J);
-			Vector3.add(this.state.L, r.cross(J));
-
-			//recalculate linear and angular velocities
-			Matrix3.multiply(this.state.inverseinertia, state.L, this.state.omega);
-			this.state.velocity.assign(state.P.multiply(1/this.state.mass));
-		}
-	}
-	
-	public void updateMomentums() {
-		Matrix3.multiply(state.inertia, state.omega, state.L);
-		state.P.assign(state.velocity.multiply(state.mass));
-	}
-
 	public final boolean isFixed() {
 		return fixed;
 	}
@@ -231,13 +215,13 @@ public final class Body {
 	public final void setVelocity( Vector3 v ) {
 		state.velocity.assign(v);
 		//Recalculate linear momentum
-		state.P.assign( this.state.velocity.multiply(this.state.mass));
+		state.P.assign( this.state.anisotropicmass.multiply(this.state.velocity) );
 	}
 	
 	public final void setVelocity( double x, double y, double z ) {
 		state.velocity.assign(x,y,z);
 		//Recalculate linear momentum
-		state.P.assign( this.state.velocity.multiply(this.state.mass));
+		state.P.assign( this.state.anisotropicmass.multiply(this.state.velocity) );
 	}
 
 	public final Vector3 getVelocity() {
@@ -309,23 +293,29 @@ public final class Body {
 		state.omega.assign(omega);
 		//recalculate the angular momentum
 		Matrix3.multiply(state.inertia, state.omega, state.L);
-
 	}
 	
 	public final void setAngularVelocity( double x, double y, double z ) {
 		state.omega.assign(x,y,z);
 		//recalculate the angular momentum
 		Matrix3.multiply(state.inertia, state.omega, state.L);
-
 	}
-
 
 	public final Vector3 getAngularVelocity() {
 		return new Vector3(state.omega);
 	}
-
+	
 	public final double getMass() {
-		return this.state.mass;
+		// return the length of the unit axis vector scaled by the mass matrix
+		return this.state.anisotropicmass.multiply(Vector3.unit).norm();
+	}
+
+	public final Matrix3 getAnisotopicMass() {
+		return this.state.anisotropicmass.copy();
+	}
+	
+	public final Matrix3 getInverseAnisotropicMass() {
+		return this.state.inverseanisotropicmass.copy();
 	}
 
 	/**
@@ -337,29 +327,41 @@ public final class Body {
 	}
 
 	/**
-	 * Apply force to delta velocities
+	 * Apply external force to delta velocities
 	 *  
-	 * @param point
-	 * @param F
-	 * @param dt
+	 * @param interaction point relative to centre of mass
+	 * @param f force
+	 * @param dt time-step size
 	 */
-	public final void applyForce( Vector3 point, Vector3 F, double dt ) {
+	public final void applyForce( Vector3 point, Vector3 f, double dt ) {
 		// fixed bodies are unaffected by external forces
 		if (!isFixed()) { 
-			Vector3.add(this.state.torque, point.cross(F));
-			Vector3.add(this.state.force, F );	  
-			Vector3.multiply(this.state.force, 1.0/this.state.mass, this.state.acceleration );
-
-			//apply directly to delta velocities
-//			Vector3.add(this.deltavelocity, F.multiply(dt/this.state.mass));
-//			Vector3.add(this.deltaomega, state.inverseinertia.multiply(point.cross(F)).multiply(dt));
+			Vector3.add(this.state.torque, point.cross(f));
+			Vector3.add(this.state.force, f );	  
+//			Vector3.multiply(this.state.force, 1.0/this.state.mass, this.state.acceleration );
+			state.acceleration.assign( state.inverseanisotropicmass.multiply(state.force));
 			
 			//apply directly to delta velocities
-			Vector3.add(this.externaldeltavelocity, F.multiply(dt/this.state.mass));
-			Vector3.add(this.externaldeltaomega, state.inverseinertia.multiply(point.cross(F)).multiply(dt));
-
+			Vector3.add(this.externaldeltavelocity, state.inverseanisotropicmass.multiply(f.multiply(dt)));
+			Vector3.add(this.externaldeltaomega, state.inverseinertia.multiply(point.cross(f)).multiply(dt));
 		}
 	}
+	
+	/**
+	 * Apply external force and torque to delta velocities
+	 * @param f linear force
+	 * @param tau angular force
+	 * @param dt time-step size
+	 */	
+	public final void applyGeneralizedForce( Vector3 f, Vector3 tau, double dt ) {
+		// fixed bodies are unaffected by external forces
+		if (!isFixed()) { 
+			//apply directly to delta velocities
+			Vector3.add(this.externaldeltavelocity, state.inverseanisotropicmass.multiply(f.multiply(dt)));
+			Vector3.add(this.externaldeltaomega, state.inverseinertia.multiply(tau.multiply(dt)));
+		}
+	}
+
 
 	/**
 	 * Calculate the total kinetic energy of this body. This is the some of both translational 
@@ -372,13 +374,30 @@ public final class Body {
 
 		//Calculate the rotational kinetic energy
 		// T = (1/2) omega * I * omega,
-		Matrix3.multiply(state.inverseinertia, state.L, state.omega);
+//		Matrix3.multiply(state.inverseinertia, state.L, state.omega);
 		res  = Matrix3.transposeVectorAndMultiply( state.omega, state.inertia , res);
 		eKin = res.dot( state.omega )*0.5f;
 
 		//Translational energy E = m*(1/2)*v^2
-		Vector3.multiply(this.state.P, 1.0/this.state.mass, this.state.velocity );
-		eKin += state.velocity.dot(state.velocity)*state.mass*0.5f;
+//		Vector3.multiply(this.state.P, 1.0/this.state.mass, this.state.velocity );
+//		this.state.velocity.assign( this.state.inversemass.multiply( this.state.P));
+		eKin += state.velocity.dot(this.state.anisotropicmass.multiply(state.velocity))*0.5f;
+
+		return Math.abs(eKin);
+	}
+
+	/**
+	 * Calculate the kinetic energy, not scaling in linear and angular mass
+	 * @return
+	 */
+	public final double totalKineticNormalized() {
+		double eKin;
+
+		//Calculate the rotational kinetic energy
+		eKin = state.omega.dot( state.omega )*0.5f;
+
+		//Translational energy E = m*(1/2)*v^2
+		eKin += state.velocity.dot(state.velocity)*0.5f;
 
 		return Math.abs(eKin);
 	}
@@ -390,7 +409,8 @@ public final class Body {
 	public final void advanceVelocities( double dt ) {
 		//take one explicit euler-step, and integrate forward on the linear momentum
 		Vector3.add(this.state.P, this.state.force.multiply(dt));
-		Vector3.multiply(this.state.P, 1.0/this.state.mass, this.state.velocity );
+//		Vector3.multiply(this.state.P, 1.0/this.state.mass, this.state.velocity );
+		state.velocity.assign(this.state.inverseanisotropicmass.multiply(state.P));
 
 		//Integrate the angular momentum forward taking an explicit euler step
 		//and calculate the angular velocity from the angular momentum

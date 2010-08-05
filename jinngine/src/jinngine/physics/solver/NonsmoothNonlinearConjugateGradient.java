@@ -15,6 +15,7 @@ import jinngine.physics.Body;
 
 public class NonsmoothNonlinearConjugateGradient implements Solver {
 	int max = 10000;
+	private final double eps = 1e-7;
 	
 	public double[] pgsiters = new double[max];
 	public double[] errors = new double[max];
@@ -40,9 +41,11 @@ public class NonsmoothNonlinearConjugateGradient implements Solver {
 		double rold = 0;
 		double beta= 0;		
 		int iter = 0;
+		int restarts = 0;
 		
 		
-		// compute external force contribution, clear direction and residual
+		// compute external force contribution, clear direction and residual, compute b vector norm
+		double bnorm = 0;
 		for (NCPConstraint ci: constraints) {
 			ci.Fext = ci.j1.dot(ci.body1.externaldeltavelocity)
 			+ ci.j2.dot(ci.body1.externaldeltaomega)
@@ -51,10 +54,15 @@ public class NonsmoothNonlinearConjugateGradient implements Solver {
 			
 			ci.d = 0; ci.residual = 0;
 			
+			bnorm += Math.pow(ci.b+ci.Fext,2);
+			
 //			if ( ci.coupling != null) {
 //				ci.lower = 0;  ci.upper = 0;
 //			}
 		}
+		bnorm = Math.sqrt(bnorm);
+//		bnorm=1;
+//		System.out.println("bnorm="+bnorm);
 		
 		// reset search direction
 		for (Body b: bodies) {
@@ -84,12 +92,17 @@ public class NonsmoothNonlinearConjugateGradient implements Solver {
 				         + ci.j2.dot(ci.body1.deltaomega)
 				         + ci.j3.dot(ci.body2.deltavelocity) 
 				         + ci.j4.dot(ci.body2.deltaomega) 
-				         + ci.lambda*ci.damper + ci.Fext;
+				         + ci.lambda*ci.damper ;
 				
 			    
-			    double deltaLambda = (-ci.b-w)/(ci.diagonal + ci.damper );
+			    double deltaLambda = -((ci.b+ci.Fext)/bnorm+w)/(ci.diagonal + ci.damper );
 				final double lambda0 = ci.lambda;
 
+//				if (Math.abs(ci.diagonal) < 1e-7 ) {
+//					deltaLambda = 0;
+//					ci.lambda = 0;
+//				}
+				
 				//Clamp the lambda[i] value to the constraints
 				if (ci.coupling != null) {
 					//if the constraint is coupled, allow only lambda <= coupled lambda
@@ -112,16 +125,18 @@ public class NonsmoothNonlinearConjugateGradient implements Solver {
 				// update the V vector
 				deltaLambda = (newlambda - lambda0);
 				
+//				if (Math.abs(deltaLambda)>eps) {
+					// apply to delta velocities
+					Vector3.multiplyAndAdd( ci.b1, deltaLambda, ci.body1.deltavelocity );
+					Vector3.multiplyAndAdd( ci.b2, deltaLambda, ci.body1.deltaomega );
+					Vector3.multiplyAndAdd( ci.b3, deltaLambda, ci.body2.deltavelocity );
+					Vector3.multiplyAndAdd( ci.b4, deltaLambda, ci.body2.deltaomega );
+					ci.lambda += deltaLambda;
 
-				// apply to delta velocities
-				Vector3.multiplyAndAdd( ci.b1, deltaLambda, ci.body1.deltavelocity );
-				Vector3.multiplyAndAdd( ci.b2, deltaLambda, ci.body1.deltaomega );
-				Vector3.multiplyAndAdd( ci.b3, deltaLambda, ci.body2.deltavelocity );
-				Vector3.multiplyAndAdd( ci.b4, deltaLambda, ci.body2.deltaomega );
-				ci.lambda += deltaLambda;
+					// update residual and squared gradient
+					rnew += deltaLambda*deltaLambda;
+//				}
 				
-				// update residual and squared gradient
-				rnew += deltaLambda*deltaLambda;
 				ci.residual = deltaLambda;
 			} //for constraints	
 
@@ -130,16 +145,17 @@ public class NonsmoothNonlinearConjugateGradient implements Solver {
 			}	
 			
 			// iteration limit
-			if (iter>max)
+			if (iter>max || restarts > 17 )
 				break;
 
 			//compute beta
 			beta = rnew/rold;
 
-			if ( beta > 1 || iter == 0)  {
-				beta = 0.0;
+			if ( beta > 1.0 || iter == 0 )  {
+				beta = 0;
+				restarts = restarts+1;
 //				System.out.println("restart");
-			}
+			} 
 				
 			for (Body bi: bodies) {
 				// compute residual in body space
@@ -162,6 +178,18 @@ public class NonsmoothNonlinearConjugateGradient implements Solver {
 //			System.out.println("rnew="+rnew);
 
 		} // while true
+//		System.out.println("rnew="+rnew+", iters="+iter);
+		
+		// scale lambda in the bnorm. This is unnecessary if bnorm is set to 1
+		for (NCPConstraint ci: constraints) {
+			final double factor = (bnorm-1)*ci.lambda;
+			Vector3.add( ci.body1.deltavelocity, ci.b1.multiply(factor));
+			Vector3.add( ci.body1.deltaomega, ci.b2.multiply(factor));
+			Vector3.add( ci.body2.deltavelocity, ci.b3.multiply(factor));
+			Vector3.add( ci.body2.deltaomega, ci.b4.multiply(factor));
+		}
+		
+		
 		return 0;
 	}
 	

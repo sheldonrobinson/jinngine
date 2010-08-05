@@ -257,7 +257,7 @@ public class Matrix4 {
 		  double[][] M = new double[4][4];
 		  M = Matrix4.pack2(S);
 
-		  //code borrowed from OpenTissue (thanks kenny :)
+		  //code borrowed from OpenTissue (thanks to Kenny Erleben:)
 		  double a00 = M[0][0]; double a01 = M[0][1]; double a02 = M[0][2]; double a03 = M[0][3];
 		  double a10 = M[1][0]; double a11 = M[1][1]; double a12 = M[1][2]; double a13 = M[1][3];
 		  double a20 = M[2][0]; double a21 = M[2][1]; double a22 = M[2][2]; double a23 = M[2][3];
@@ -300,6 +300,17 @@ public class Matrix4 {
 		  
 		  return S;
 
+	  }
+	  
+	  /**
+	   * Assign the identity matrix to this matrix4
+	   */
+	  public final void assignIdentity() {
+		  final Matrix4 M = this;
+		  M.a11=1; M.a12=0; M.a13=0; M.a14=0;
+		  M.a21=0; M.a22=1; M.a23=0; M.a24=0;
+		  M.a31=0; M.a32=0; M.a33=1; M.a34=0;
+		  M.a41=0; M.a42=0; M.a43=0; M.a44=1;  
 	  }
 		
 }

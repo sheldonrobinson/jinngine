@@ -164,8 +164,7 @@ public class ConvexHull implements SupportMap3, Geometry, Material {
 		
 		// create an adjacency list for the dual hull
 		dualadjacent = adjacencyList(dualhull.getFaces(), dualvertices.size());			
-			
-		
+					
 		// perform approximate mass calculation
 		MassProperties masscalculation = new MassProperties( this, 0.05 );
 		
@@ -193,9 +192,6 @@ public class ConvexHull implements SupportMap3, Geometry, Material {
 		// assign max extends ( assume identity scale at this point)
 		double max = extremalpoint.norm();
 		bounds.assign(max,max,max);
-
-		
-
 
 	}
 	

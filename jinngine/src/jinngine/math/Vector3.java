@@ -25,7 +25,9 @@ public final class Vector3 implements Serializable {
 	public transient final static Vector3 i    = new Vector3(1,0,0);
 	public transient final static Vector3 j    = new Vector3(0,1,0);
 	public transient final static Vector3 k    = new Vector3(0,0,1);
+	public transient final static Vector3 unit = new Vector3(1/Math.sqrt(3),1/Math.sqrt(3),1/Math.sqrt(3));
 
+	
 	public Vector3 () {
 		x=0; y=0; z=0;
 	}
@@ -111,6 +113,10 @@ public final class Vector3 implements Serializable {
 
 	public final Vector3 minus( Vector3 v) {
 		return new Vector3( x-v.x, y-v.y, z-v.z );
+	}
+	
+	public final double sum() {
+		return x+y+z;
 	}
 	
 	/**

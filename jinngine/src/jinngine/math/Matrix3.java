@@ -90,10 +90,48 @@ public class Matrix3 {
    * assign the value of B to this Matrix3
    * @param B 
    */
-  public void assign(Matrix3 B) {
+  public final void assign(Matrix3 B) {
 	  this.a11 = B.a11; this.a12 = B.a12; this.a13 = B.a13;
 	  this.a21 = B.a21; this.a22 = B.a22; this.a23 = B.a23;
 	  this.a31 = B.a31; this.a32 = B.a32; this.a33 = B.a33;	  
+  }
+  
+  /**
+   * Assign the zero matrix to this matrix
+   */
+  public final void assignZero() {
+	  this.a11 = 0; this.a12 = 0; this.a13 = 0;
+	  this.a21 = 0; this.a22 = 0; this.a23 = 0;
+	  this.a31 = 0; this.a32 = 0; this.a33 = 0;	  
+  }
+  
+  /**
+   * Assign the scale matrix given by s, to this matrix
+   */
+  public final void assignScale(double s) {
+	  this.a11 = s; this.a12 = 0; this.a13 = 0;
+	  this.a21 = 0; this.a22 = s; this.a23 = 0;
+	  this.a31 = 0; this.a32 = 0; this.a33 = s;	  
+  }
+
+  /**
+   * Assign the non-uniform scale matrix given by s1, s2 and s3, to this matrix
+   */
+  public final Matrix3 assignScale(double s1, double s2, double s3) {
+	  this.a11 = s1; this.a12 = 0; this.a13 = 0;
+	  this.a21 = 0; this.a22 = s2; this.a23 = 0;
+	  this.a31 = 0; this.a32 = 0; this.a33 = s3;
+	  return this;
+  }
+
+  
+  /**
+   * Assign the identity matrix to this matrix
+   */
+  public final void assignIdentity() {
+	  this.a11 = 1; this.a12 = 0; this.a13 = 0;
+	  this.a21 = 0; this.a22 = 1; this.a23 = 0;
+	  this.a31 = 0; this.a32 = 0; this.a33 = 1;	  
   }
   
   /**
@@ -101,7 +139,7 @@ public class Matrix3 {
    * @param n
    * @return
    */
-  public Vector3 column(int n) {
+  public final Vector3 column(int n) {
 	  switch (n) {
 	  case 0:
 		  return new Vector3(a11,a21,a31);
@@ -514,5 +552,12 @@ public class Matrix3 {
 	  return array;
   }
 
+  /**
+   * Return the Frobenius norm of this Matrix3
+   * @return
+   */
+  public final double fnorm() {
+	  return Math.sqrt(	a11*a11 + a12*a12 + a13*a13  + a21*a21 + a22*a22  + a23*a23  + a31*a31 + a32*a32 + a33*a33 ); 
+  }
 
 }
