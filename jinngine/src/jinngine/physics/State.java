@@ -35,10 +35,10 @@ public final class State  {
 	public final Matrix3               anisotropicmass         = new Matrix3();
 	public final Matrix3               inverseanisotropicmass  = new Matrix3();
 
-	/** Angular momentum */
-	public final Vector3             L       = new Vector3(0,0,0);
-	/** Linear momentum */
-	public final Vector3             P         = new Vector3(0,0,0);                        
+//	/** Angular momentum */
+//	public final Vector3             L       = new Vector3(0,0,0);
+//	/** Linear momentum */
+//	public final Vector3             P         = new Vector3(0,0,0);                        
 
 	//Time derivatives
 	/** Center of mass velocity */
@@ -47,14 +47,14 @@ public final class State  {
 	public final Vector3             omega   = new Vector3(0.0f,0.0f,0.0f);
 	/** Quaternion first order time derivative  */
 	public final Quaternion          orientationderivative        = new Quaternion( 0.0f, new Vector3(0,0,0));   
-	/** Linear acceleration */
-	final public Vector3             acceleration       = new Vector3(0,0,0);                          // Linear acceleration
-	/** Angular acceleration */
-	public final Vector3             alpha     = new Vector3(0,0,0);                          // Angular acceleration 
-	/** total torque, dL/dt, change in angular momentum */
-	public final Vector3             torque     = new Vector3(0,0,0);                          // total torque, dL/dt change in angular momentum
-	/** total force, change in linear momentum dP/dt */
-	public final Vector3             force       = new Vector3(0,0,0);                          // total force, change in linear momentum dP/dt
+//	/** Linear acceleration */
+//	final public Vector3             acceleration       = new Vector3(0,0,0);                          // Linear acceleration
+//	/** Angular acceleration */
+//	public final Vector3             alpha     = new Vector3(0,0,0);                          // Angular acceleration 
+//	/** total torque, dL/dt, change in angular momentum */
+//	public final Vector3             torque     = new Vector3(0,0,0);                          // total torque, dL/dt change in angular momentum
+//	/** total force, change in linear momentum dP/dt */
+//	public final Vector3             force       = new Vector3(0,0,0);                          // total force, change in linear momentum dP/dt
 
 	//transforms
 	/** Transformation matrix, how to get from object space to world */
@@ -66,30 +66,30 @@ public final class State  {
 	/** The centre of mass displacement found by finalize() **/
 	public final Vector3             centreofmass    = new Vector3();
 
-	/**
-	 * Assign this state the fields in the State t
-	 * @param t State to be copied
-	 */
-	public void  assign( State t) {
-		State s = this;
-		s.position.assign(t.position);
-		s.orientation.assign(t.orientation);
-		s.omega.assign(t.omega);
-		Matrix3.set(t.inertia, s.inertia);
-		Matrix3.set(t.inverseinertia, s.inverseinertia);
-		s.L.assign(t.L);
-		s.P.assign(t.P);
-		s.anisotropicmass.assign(t.anisotropicmass);
-
-		s.velocity.assign(t.velocity);
-		s.acceleration.assign(t.acceleration);
-		s.alpha.assign(t.alpha);
-		s.torque.assign(t.torque);
-		s.force.assign(t.force);
-		
-		Matrix4.set(t.transform, s.transform);
-		Matrix3.set(t.rotation, s.rotation);
-		Matrix3.set(t.inverserotation, s.inverserotation);
-	}
+//	/**
+//	 * Assign this state the fields in the State t
+//	 * @param t State to be copied
+//	 */
+//	public void  assign( State t) {
+//		State s = this;
+//		s.position.assign(t.position);
+//		s.orientation.assign(t.orientation);
+//		s.omega.assign(t.omega);
+//		Matrix3.set(t.inertia, s.inertia);
+//		Matrix3.set(t.inverseinertia, s.inverseinertia);
+////		s.L.assign(t.L);
+////		s.P.assign(t.P);
+//		s.anisotropicmass.assign(t.anisotropicmass);
+//
+//		s.velocity.assign(t.velocity);
+////		s.acceleration.assign(t.acceleration);
+////		s.alpha.assign(t.alpha);
+////		s.torque.assign(t.torque);
+////		s.force.assign(t.force);
+//		
+//		Matrix4.set(t.transform, s.transform);
+//		Matrix3.set(t.rotation, s.rotation);
+//		Matrix3.set(t.inverserotation, s.inverserotation);
+//	}
 }
 

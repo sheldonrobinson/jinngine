@@ -226,7 +226,7 @@ public final class Quaternion implements Serializable {
 	/**
 	 * Normalise this quaternion
 	 */
-	public void normalize() {
+	public void assignNormalized() {
 		double l = (double)Math.sqrt( s*s + v.x*v.x + v.y*v.y + v.z*v.z );
 		s = s/l;
 		v.x = v.x/l;

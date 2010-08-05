@@ -21,10 +21,12 @@ public final class Body {
 	// global public name
 	public final String identifier;
 
-	// auxiliary members
-	public final Vector3               deltavelocity = new Vector3(0,0,0);
-	public final Vector3               deltaomega    = new Vector3(0,0,0);
-	
+	// delta velocities. these vectors contains the time integrated force
+	// contributions for the current time-step. The first two is the internal
+	// forces computed by the constraint solver. The later two is the contributions
+	// from external forces.
+	public final Vector3               deltavelocity = new Vector3();
+	public final Vector3               deltaomega    = new Vector3();
 	public final Vector3               externaldeltavelocity = new Vector3();
 	public final Vector3               externaldeltaomega = new Vector3();
 	
@@ -47,7 +49,6 @@ public final class Body {
 	
 	// fixed setting
 	private boolean fixed = false;
-	
 			
 	/**
 	 * Create a now body with no geometry
@@ -191,13 +192,12 @@ public final class Body {
 			this.state.anisotropicmass.assignScale(1);
 			this.state.inverseanisotropicmass.assignScale(1);
 			this.state.inertia.assign(InertiaMatrix.identity());
-			//this.state.Iinverse.identity();
 		}
 	}
 
 	
     /**
-     * Get geoemtry instances attached to this Body.
+     * Get geometry instances attached to this Body.
      * @return iterator containing geometry instances attached to this body
      */
 	public Iterator<Geometry> getGeometries() {
@@ -212,27 +212,38 @@ public final class Body {
 		fixed = value;
 	}
 
+	/**
+	 * Set the linear velocity of this body
+	 */
 	public final void setVelocity( Vector3 v ) {
 		state.velocity.assign(v);
-		//Recalculate linear momentum
-		state.P.assign( this.state.anisotropicmass.multiply(this.state.velocity) );
 	}
 	
+	/**
+	 * Set the linear velocity of this body
+	 */
 	public final void setVelocity( double x, double y, double z ) {
 		state.velocity.assign(x,y,z);
-		//Recalculate linear momentum
-		state.P.assign( this.state.anisotropicmass.multiply(this.state.velocity) );
 	}
 
+	/**
+	 * Get the linear velocity of this body
+	 */
 	public final Vector3 getVelocity() {
 		return new Vector3(state.velocity);
 	}
 
+	/**
+	 * Set position of this body
+	 */
 	public final void setPosition( Vector3 r ) {
 		state.position.assign(r);
 		updateTransformations();
 	}
 	
+	/**
+	 * Set position of this body
+	 */
 	public final void setPosition( double x, double y, double z) {
 		state.position.x = x;
 		state.position.y = y;
@@ -240,6 +251,9 @@ public final class Body {
 		updateTransformations();
 	}
 	
+	/**
+	 * Set orientation matrix
+	 */
 	public final void setOrientation( Matrix3 orientation) {
 		state.orientation.assign(orientation);
 		updateTransformations();
@@ -247,7 +261,6 @@ public final class Body {
 	
 	/**
 	 * Return a copy of the rotation matrix
-	 * @return
 	 */
 	public final Matrix3 getOrientation() {
 		return new Matrix3(state.rotation);
@@ -255,7 +268,7 @@ public final class Body {
 	
 	/**
 	 * Get reference point of this body. This will be the centre of mass 
-	 * of the body, unless manual modifications has been made
+	 * of the body, unless manual modifications has been made.
 	 * @return reference position
 	 */
 	public final Vector3 getPosition() {
@@ -271,59 +284,64 @@ public final class Body {
 		Matrix3.identity(state.rotation);
 		Matrix4.identity(state.transform);
 
-		//Matrix3.multiply(state.q.rotationMatrix3(), state.rotation, state.rotation);
+		// quaternion to rotation matrix
 		Matrix3.set(state.orientation.toRotationMatrix3(), state.rotation);
-
-		//affine transform
-		Matrix4.multiply(Transforms.rotateAndTranslate4( state.orientation, state.position), state.transform, state.transform);
-
-		//inverse rotations (for normals)
+		
+		// inverse rotations (for normals)
 		Matrix3.inverse(state.rotation, state.inverserotation);
+
+		// affine transform
+		Matrix4.multiply(Transforms.rotateAndTranslate4( state.orientation, state.position), state.transform, state.transform);
 	}
 	
 	/**
-	 * Return the 4 by 4 transformation matrix of this body
-	 * @return
+	 * Return the internal 4 by 4 transformation matrix of this body
 	 */
 	public final Matrix4 getTransform() {
 		return state.transform;
 	}
 
+	/**
+	 * Set the angular velocity of this body
+	 */
 	public final void setAngularVelocity( Vector3 omega ) {
 		state.omega.assign(omega);
-		//recalculate the angular momentum
-		Matrix3.multiply(state.inertia, state.omega, state.L);
-	}
-	
-	public final void setAngularVelocity( double x, double y, double z ) {
-		state.omega.assign(x,y,z);
-		//recalculate the angular momentum
-		Matrix3.multiply(state.inertia, state.omega, state.L);
 	}
 
+	/**
+	 * Set the angular velocity of this body
+	 */
+	public final void setAngularVelocity( double x, double y, double z ) {
+		state.omega.assign(x,y,z);
+	}
+
+	/**
+	 * Get the angular velocity of this body
+	 */
 	public final Vector3 getAngularVelocity() {
 		return new Vector3(state.omega);
 	}
 	
+	/**
+	 * Get the mass of this body. 
+	 */
 	public final double getMass() {
-		// return the length of the unit axis vector scaled by the mass matrix
+		// return the length of the unit axis vector scaled by the anisotropic mass matrix
 		return this.state.anisotropicmass.multiply(Vector3.unit).norm();
 	}
 
+	/**
+	 * Get a copy of the anisotropic mass matrix of this body
+	 */
 	public final Matrix3 getAnisotopicMass() {
 		return this.state.anisotropicmass.copy();
 	}
-	
-	public final Matrix3 getInverseAnisotropicMass() {
-		return this.state.inverseanisotropicmass.copy();
-	}
 
 	/**
-	 * Clear acting forces
+	 * Get a copy of the inverse anisotropic mass matrix of this body
 	 */
-	public final void clearForces() {
-		this.state.force.assign(new Vector3(0,0,0));
-		this.state.torque.assign(new Vector3(0,0,0));	  
+	public final Matrix3 getInverseAnisotropicMass() {
+		return this.state.inverseanisotropicmass.copy();
 	}
 
 	/**
@@ -336,11 +354,6 @@ public final class Body {
 	public final void applyForce( Vector3 point, Vector3 f, double dt ) {
 		// fixed bodies are unaffected by external forces
 		if (!isFixed()) { 
-			Vector3.add(this.state.torque, point.cross(f));
-			Vector3.add(this.state.force, f );	  
-//			Vector3.multiply(this.state.force, 1.0/this.state.mass, this.state.acceleration );
-			state.acceleration.assign( state.inverseanisotropicmass.multiply(state.force));
-			
 			//apply directly to delta velocities
 			Vector3.add(this.externaldeltavelocity, state.inverseanisotropicmass.multiply(f.multiply(dt)));
 			Vector3.add(this.externaldeltaomega, state.inverseinertia.multiply(point.cross(f)).multiply(dt));
@@ -365,22 +378,18 @@ public final class Body {
 
 	/**
 	 * Calculate the total kinetic energy of this body. This is the some of both translational 
-	 * and angular kinetec energy
-	 * @return
+	 * and angular kinetic energy
 	 */
 	public final double totalKinetic() {
 		double eKin;
 		Vector3 res = new Vector3();
 
-		//Calculate the rotational kinetic energy
+		// calculate the rotational kinetic energy
 		// T = (1/2) omega * I * omega,
-//		Matrix3.multiply(state.inverseinertia, state.L, state.omega);
 		res  = Matrix3.transposeVectorAndMultiply( state.omega, state.inertia , res);
 		eKin = res.dot( state.omega )*0.5f;
 
-		//Translational energy E = m*(1/2)*v^2
-//		Vector3.multiply(this.state.P, 1.0/this.state.mass, this.state.velocity );
-//		this.state.velocity.assign( this.state.inversemass.multiply( this.state.P));
+		// translational energy E = m*(1/2)*v^2
 		eKin += state.velocity.dot(this.state.anisotropicmass.multiply(state.velocity))*0.5f;
 
 		return Math.abs(eKin);
@@ -390,7 +399,7 @@ public final class Body {
 	 * Calculate the kinetic energy, not scaling in linear and angular mass
 	 * @return
 	 */
-	public final double totalKineticNormalized() {
+	public final double totalScaledKinetic() {
 		double eKin;
 
 		//Calculate the rotational kinetic energy
@@ -402,21 +411,6 @@ public final class Body {
 		return Math.abs(eKin);
 	}
 
-	/**
-	 * Integrate velocities forward using an explicit Euler step of dt
-	 * @param dt
-	 */
-	public final void advanceVelocities( double dt ) {
-		//take one explicit euler-step, and integrate forward on the linear momentum
-		Vector3.add(this.state.P, this.state.force.multiply(dt));
-//		Vector3.multiply(this.state.P, 1.0/this.state.mass, this.state.velocity );
-		state.velocity.assign(this.state.inverseanisotropicmass.multiply(state.P));
-
-		//Integrate the angular momentum forward taking an explicit euler step
-		//and calculate the angular velocity from the angular momentum
-		Vector3.add(state.L, state.torque.multiply(dt));    
-		Matrix3.multiply(state.inverseinertia, state.L, state.omega);
-	}
 
 	/**
 	 * Integrate forward on position using an explicit Euler step of dt
@@ -432,34 +426,34 @@ public final class Body {
 		Quaternion.add( state.orientation, (state.orientationderivative.multiply(dt) ));
 
 		//apply to body
-		state.orientation.normalize();  // keep q normalized   
+		state.orientation.assignNormalized();  // keep q normalized   
 		updateTransformations();
 	}
 	
-	//Go from world to model
+	// go from world to model
 	public final Vector3 toModel( final Vector3 v) {
 		// apply inverse rotation and translate backwards
 		return state.rotation.transpose().multiply(v.minus(state.position));
 	}
 
-	//Go from world to model without translating
+	// go from world to model without translating
 	public final Vector3 toModelNoTranslation( final Vector3 v) {
 		// apply inverse rotation 
 		return Matrix3.multiply(state.inverserotation, v, new Vector3() );
 	}
 	
-	//Go to world coordinates from model coordinates
+	// go to world coordinates from model coordinates
 	public final Vector3 toWorld( final Vector3 v) {
 		//apply complete transform
 		return state.rotation.multiply(v).add(state.position);
 	}
 
-	//Go from model to rotated model
+	// go from model to rotated model
 	public final Vector3 toWorldNoTranslation(final Vector3 v) {
 		return Matrix3.multiply(this.state.rotation, v, new Vector3());
 	}
 
-	//translate (no local rotation) 
+	// translate (no local rotation) 
 	public final Vector3 translate( final Vector3 v) {
 		return v.add(state.position);
 	}

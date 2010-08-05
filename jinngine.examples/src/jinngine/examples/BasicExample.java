@@ -10,7 +10,6 @@ package jinngine.examples;
 
 
 import jinngine.geometry.Box;
-import jinngine.math.Matrix3;
 import jinngine.math.Vector3;
 import jinngine.physics.*;
 import jinngine.physics.force.GravityForce;

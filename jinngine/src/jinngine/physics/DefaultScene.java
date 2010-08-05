@@ -16,7 +16,6 @@ import jinngine.physics.solver.*;
 import jinngine.physics.solver.Solver.NCPConstraint;
 import jinngine.collision.*;
 import jinngine.geometry.*;
-import jinngine.math.*;
 import jinngine.physics.force.*;
 import jinngine.util.*;
 
@@ -101,7 +100,7 @@ public final class DefaultScene implements Scene {
 		}
 
 		public void nodeRemovedFromComponent(ConstraintGroup component, Body node) {
-			// TODO Auto-generated method stub
+			// no need for action here
 		}
 	};
 
@@ -149,7 +148,7 @@ public final class DefaultScene implements Scene {
 	 */
 	public DefaultScene() {	
 		
-		// some default choises
+		// some default choices
 		this.policy = new DefaultDeactivationPolicy();
 //		this.broadphase = new SweepAndPrune();
 //		this.broadphase = new ExhaustiveSearch();
@@ -166,8 +165,6 @@ public final class DefaultScene implements Scene {
 
 	@Override
 	public final void tick() {
-//		System.out.println("tick();");
-				
 		// since an awful lot of things are going on in this method, a summarising explanation will be
 		// given here. First, the broad phase collision detection is executed. Since the ContactConstraintManager
 		// has installed event handlers into the BPC, allot of things will happen during the call to broadphase.run(), 
@@ -180,21 +177,16 @@ public final class DefaultScene implements Scene {
 				
 		// clear acting forces and delta velocities
 		for (Body bi:bodies) {
-			bi.clearForces();
 			bi.externaldeltavelocity.assignZero();
 			bi.externaldeltaomega.assignZero();
 
 		}
-        // apply all forces	to external delta velocities
+
+		// apply all forces	to external delta velocities
 		for (Force fi: forces) {
-//			System.out.println(""+f);
 			fi.apply(timestep);
 		}
-		
-		
-		
-
-				
+						
 		// Process live constraints. Live constraints are constraints which is not purely
 		// a function of the velocities in the system, such as user controlled motors.
 		// The behaviour of such constraints cannot be predicted by the deactivation system, 
@@ -207,23 +199,17 @@ public final class DefaultScene implements Scene {
 			ncpbodies.add(bodies.getFirst());
 			ncpbodies.add(bodies.getSecond());		
 			
-//			System.out.println(""+live);
+			// apply the live constraints and run a single pgs iteration to reveal 
+			// any change in force contribution
 			live.applyConstraints(ncpconstraints.listIterator(), timestep);
-//			Iterator<NCPConstraint> iter = live.getNcpConstraints();
-//			while(iter.hasNext())
-//				ncpconstraints.add(iter.next());
-			
 			pgs.solve(ncpconstraints, ncpbodies , 1e-7);
 			
 		} 
-		
-		
 
 		// create a special iterator to be used with constraints. Each constraint will
 		// insert its ncp-constraints into this list
 		ncpconstraints.clear();
 		ListIterator<NCPConstraint> constraintIterator = ncpconstraints.listIterator();
-
 		
 		// iterate through groups/components in the constraint graph
 		Iterator<ConstraintGroup> components = 
@@ -320,7 +306,6 @@ public final class DefaultScene implements Scene {
 				}
 			}
 		}
-
 		
 		// clear acting forces and delta velocities
 		for (Body c:bodies) {
@@ -332,19 +317,17 @@ public final class DefaultScene implements Scene {
 				c.deltaomega.assignZero();
 			}
 		}
-
 		
 		// run the solver (compute delta velocities) for all 
 		// components in the constraint graph
 		solver.solve( ncpconstraints, bodies, 1e-5 );
-		
 		
 		// update triggers
 		for (Trigger trigger: triggers) {
 			trigger.update(this);
 		}
 		
-		// go thru bodies to advance velocities and positions
+		// go through bodies to advance velocities and positions
 		for (Body body: bodies) {
 			if ( !body.deactivated ) {
 				if ( !body.isFixed() ) {
@@ -357,18 +340,12 @@ public final class DefaultScene implements Scene {
 					body.state.velocity.assign( body.state.velocity.add( body.deltavelocity).add(body.externaldeltavelocity) );
 					body.state.omega.assign( body.state.omega.add( body.deltaomega).add(body.externaldeltaomega));
 
-					// update angular and linear momentums
-					Matrix3.multiply(body.state.inertia, body.state.omega, body.state.L);
-					body.state.P.assign(body.state.anisotropicmass.multiply(body.state.velocity));
 				}
 
 				// integrate forward on positions
 				body.advancePositions(timestep);
 			}
 		}
-		
-		// debugging constraint graph
-		//((HashMapComponentGraph<Body, Constraint, ConstraintGroup>)constraintGraph).print();
 	} //time-step
 
 
@@ -387,7 +364,7 @@ public final class DefaultScene implements Scene {
 		bodies.add(c);
 		c.updateTransformations();
 		
-		//install geometries into the broad-phase collision detection
+		// install geometries into the broad-phase collision detection
 		Iterator<Geometry> i = c.getGeometries();
 		while (i.hasNext()) {
 			Geometry g = i.next();
@@ -423,7 +400,7 @@ public final class DefaultScene implements Scene {
 			policy.forceActivate(pair.getSecond());
 			
 		} else {
-			System.out.println("Engine: attempt to remove null constraint");
+			throw new IllegalArgumentException("DefaultScene: attempt to remove null constraint");
 		}
 	}
 	
