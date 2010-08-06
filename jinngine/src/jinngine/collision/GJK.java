@@ -30,13 +30,19 @@ public class GJK {
 		public final Vector3 w = new Vector3();
 		public final Vector3 p = new Vector3();
 		public final Vector3 q = new Vector3();
-		public final  Vector3[][] simplices = new Vector3[4][4]; //contains 3 simplices for A-B, Sa, Sb
+		public final Vector3[][] simplices = new Vector3[4][4]; //contains 3 simplices for A-B, Sa, Sb
 		public final double[] lambda = new double[] {1,0,0,0};
 		public final int[] permutation = new int[] {0,1,2,3};
 		public int simplexSize;	
 		public int iterations = 0;
 		public boolean intersection = false;
-		//public boolean initialized = false;
+		//public boolean initialised = false;
+		public State() {
+			// fill out the simplices table with vectors
+			for (int i=0;i<4;i++)
+				for (int j=0;j<4;j++)
+					simplices[i][j] = new Vector3();
+		}
 	}
 
 	private final State state = new State();
@@ -110,10 +116,10 @@ public class GJK {
 						
 			//add w to the simplices
 			Vector3[] row = state.simplices[state.permutation[state.simplexSize]];
-			row[0] = w.copy();
-			row[1] = sa.copy();
-			row[2] = sb.copy();
-			row[3] = v.copy();
+			row[0].assign(w);
+			row[1].assign(sa);
+			row[2].assign(sb);
+			row[3].assign(v);
 			state.simplexSize++;
 			
 			if ( !reduceSimplex( state ) ) {
@@ -129,7 +135,7 @@ public class GJK {
 			}
 
 			//Check for a penetrating state
-			if ( v.cutOff(epsilon).equals(Vector3.zero) || state.simplexSize > 3 ) {
+			if ( v.norm() < epsilon || state.simplexSize > 3 ) {
 //				System.out.println("penetration");
 				break;				
 			}
@@ -148,7 +154,7 @@ public class GJK {
 		vb.assign(state.q);
 		
 		// check for intersection
-		if ( va.minus(vb).norm() < epsilon || state.simplexSize > 3)
+		if ( v.norm() < epsilon || va.minus(vb).norm() < epsilon || state.simplexSize > 3)
 			state.intersection = true;
 	}
 	
@@ -169,9 +175,9 @@ public class GJK {
 			Vector3[] row = state.simplices[state.permutation[i]];
 
 			//store points of convex objects a and b, and A-B (in A space)
-			row[1] = Sa.supportPoint(state.simplices[i][3].multiply(-1));
-			row[2] = Sb.supportPoint(state.simplices[i][3].multiply(1));	    							
-			row[0] = row[1].minus(row[2]);
+			row[1].assign(Sa.supportPoint(state.simplices[i][3].multiply(-1)));
+			row[2].assign(Sb.supportPoint(state.simplices[i][3].multiply(1)));	    							
+			row[0].assign(row[1].minus(row[2]));
 			//row[4] = v.copy(); not needed
 			//state.simplexSize = ++state.permutation[4];
 		}
