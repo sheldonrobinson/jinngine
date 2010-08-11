@@ -174,5 +174,10 @@ public class Sphere implements SupportMap3, Geometry, Material {
 		throw new UnsupportedOperationException();
 	}
 
+	@Override
+	public double sphereSweepRadius() {
+		return 0;
+	}
+
 
 }

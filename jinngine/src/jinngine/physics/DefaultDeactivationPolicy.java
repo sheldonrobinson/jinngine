@@ -26,7 +26,7 @@ public class DefaultDeactivationPolicy implements DeactivationPolicy {
 		accel += b.deltaomega.add(b.externaldeltaomega).squaredNorm();		
 //		double accel = b.deltavelocity.dot(b.deltavelocity) + b.deltaomega.dot(b.deltaomega);
 //		return b.totalKinetic()/b.state.mass + accel < 1e-3;
-		return b.totalScaledKinetic() + accel < 1e-2;
+		return b.totalScaledKinetic() + accel < 1e-3;
 
 //		return false;
 	}
@@ -50,7 +50,7 @@ public class DefaultDeactivationPolicy implements DeactivationPolicy {
 		accel += b.deltaomega.add(b.externaldeltaomega).squaredNorm();		
 
 		
-		return accel > 1e-2;
+		return accel > 1e-1;
 	} 
 	
 	@Override

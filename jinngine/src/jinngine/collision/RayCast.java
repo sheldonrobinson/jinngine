@@ -33,6 +33,7 @@ public final class RayCast {
 	 * @param lambda starting ray parameter. Defaults to zero
 	 * @param envelope they ray is defined to hit the object if it is within this distance
 	 * @param epsilon the desired accuracy (directly passed to gjk)
+	 * @param sweep TODO
 	 * @return t such that c = direction t + point, where c is the point of collision. If the ray does not intersect the 
 	 * convex shape for any positive t, then positive infinity is returned
 	 */
@@ -44,7 +45,7 @@ public final class RayCast {
 			Vector3 pb, 
 			Vector3 pc, 
 			double lambda, 
-			double envelope, double epsilon) {
+			double envelope, double epsilon, boolean sweep) {
 		
 		int iterations = 0; final Vector3 x = point.add(direction.multiply(lambda));
 		
@@ -56,6 +57,8 @@ public final class RayCast {
 				public final Vector3 supportPoint(Vector3 direction) { return x.copy(); }
 				@Override
 				public final void supportFeature(Vector3 d, double epsilon, List<Vector3> returnList) {}
+				@Override
+				public final double sphereSweepRadius() {return 0;}
 			};
 		} else {
 			// if Sc is given, add it to the second support map
@@ -64,6 +67,9 @@ public final class RayCast {
 				public final Vector3 supportPoint(Vector3 direction) { return x.add(Sc.supportPoint(direction)); }
 				@Override
 				public final void supportFeature(Vector3 d, double epsilon, List<Vector3> returnList) {}
+				@Override
+				public final double sphereSweepRadius() {return 0;}
+				
 			};			
 		}
 		

@@ -53,13 +53,14 @@ public class MassProperties {
 		
 		// create a support map for this box
 		SupportMap3 Sb = new SupportMap3() {
-			public Vector3 supportPoint(Vector3 v) {
+			public final Vector3 supportPoint(Vector3 v) {
 				double sv1 = v.x<0?xmin:xmax;
 				double sv2 = v.y<0?ymin:ymax;
 				double sv3 = v.z<0?zmin:zmax;
 				return new Vector3(sv1, sv2, sv3);
 			}
-			public void supportFeature(Vector3 d, double epsilon,List<Vector3> face) {}
+			public final void supportFeature(Vector3 d, double epsilon,List<Vector3> face) {}
+			public final double sphereSweepRadius() {return 0;}
 		};
 		
 		// find out if separated using gjk
@@ -122,8 +123,9 @@ public class MassProperties {
 		// create a point support map
 		final Vector3 point = new Vector3();
 		SupportMap3 Sb = new SupportMap3() {
-			public Vector3 supportPoint(Vector3 v) { return point; }
-			public void supportFeature(Vector3 d, double epsilon,List<Vector3> face) {}
+			public final Vector3 supportPoint(Vector3 v) { return point; }
+			public final void supportFeature(Vector3 d, double epsilon,List<Vector3> face) {}
+			public final double sphereSweepRadius() {return 0;}
 		};
 		
         // perform intersection test on each corner point

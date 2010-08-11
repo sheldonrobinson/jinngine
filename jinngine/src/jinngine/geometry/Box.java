@@ -24,6 +24,8 @@ public class Box implements SupportMap3, Geometry, Material {
 	private final Vector3 localdisplacement = new Vector3();
 	private final Vector3 bounds = new Vector3();
 	private double envelope = 0.125;
+//	private final double sweep = 1.05;
+//	private final double extra = 2;
 	
 	// box properties
 	private double xs,ys,zs;
@@ -45,7 +47,7 @@ public class Box implements SupportMap3, Geometry, Material {
 	public Box(double x, double y, double z) {
 		this.xs = x; this.ys = y; this.zs = z;
 		mass = xs*ys*zs;
-		
+				
 		//set the local transform
 		setLocalTransform( Matrix3.identity(), new Vector3() );
 	}
@@ -176,7 +178,7 @@ public class Box implements SupportMap3, Geometry, Material {
 		Vector3 rx = new Vector3(), ry = new Vector3(), rz = new Vector3();
 		Tb.getRowVectors(rx, ry, rz);
 		
-		// return the final bounds, adding the envelope size
+		// return the final bounds, adding the envelope and sweep size
 		return new Vector3(rx.dot(px)+envelope, ry.dot(py)+envelope, rz.dot(pz)+envelope).add(body.state.position);
 	}
 
@@ -213,7 +215,7 @@ public class Box implements SupportMap3, Geometry, Material {
 		Vector3 rx = new Vector3(), ry = new Vector3(), rz = new Vector3();
 		Tb.getRowVectors(rx, ry, rz);
 
-		// return final bounds, subtracting the envelope size
+		// return final bounds, subtracting the envelope size and sphere sweep size
 		return new Vector3(rx.dot(px)-envelope, ry.dot(py)-envelope, rz.dot(pz)-envelope).add(body.state.position);		
 	}
 
@@ -323,7 +325,7 @@ public class Box implements SupportMap3, Geometry, Material {
 				break;
 			}
 			
-			//return transformed vertices
+			// return transformed vertices
 			featureList.add( body.state.rotation.multiply(localtransform.multiply(p1).add(localdisplacement)).add(body.state.position) );
 			featureList.add( body.state.rotation.multiply(localtransform.multiply(p2).add(localdisplacement)).add(body.state.position) );
 			featureList.add( body.state.rotation.multiply(localtransform.multiply(p3).add(localdisplacement)).add(body.state.position) );
@@ -377,6 +379,11 @@ public class Box implements SupportMap3, Geometry, Material {
 	@Override
 	public void setLocalScale(Vector3 s) {
 		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public double sphereSweepRadius() {
+		return 0.0;
 	}
 
 }

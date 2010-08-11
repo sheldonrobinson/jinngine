@@ -9,7 +9,6 @@
 package jinngine.geometry;
 
 import java.util.List;
-
 import jinngine.math.Vector3;
 
 /**
@@ -25,7 +24,6 @@ import jinngine.math.Vector3;
 public interface SupportMap3  {
 	/**
 	 * Compute a support point of this geometry, in the given direction 
-	 * @param direction
 	 * @return The farthest point, in the given direction, existing on this geometry
 	 */
 	public Vector3 supportPoint( Vector3 direction );
@@ -36,10 +34,16 @@ public interface SupportMap3  {
 	 * clock-wise order with respect to the direction of d.
 	 * 
 	 * @param epsilon a positive tolerance
-	 * @param direction
 	 * @return list of points that constitute either a point, line or a face
 	 */
-	public void supportFeature( Vector3 d, double epsilon, List<Vector3> face );
+	public void supportFeature( Vector3 direction, double epsilon, List<Vector3> face );
+		
+	/**
+	 * Return the radius of the sweeping sphere for this support mapping. Sphere swept shapes
+	 * are useful in modelling collision geometry, and they can be handled particularly efficient 
+	 * by support mappings. 
+	 */
+	public double sphereSweepRadius();
 
 }
 

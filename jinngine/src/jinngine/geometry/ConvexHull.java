@@ -448,4 +448,9 @@ public class ConvexHull implements SupportMap3, Geometry, Material {
 		System.out.println("max="+max);
 
 	}
+
+	@Override
+	public double sphereSweepRadius() {
+		return 0;
+	}
 }

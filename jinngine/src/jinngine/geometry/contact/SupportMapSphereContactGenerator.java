@@ -61,6 +61,7 @@ public final class SupportMapSphereContactGenerator implements ContactGenerator 
 		this.pointmap = new SupportMap3() {
 			public final Vector3 supportPoint(Vector3 direction) { return spherecentreworld.copy(); }
 			public final void supportFeature(Vector3 d, double epsilon, List<Vector3> face) {}
+			public final double sphereSweepRadius() {return 0;}
 		};
 		
 		cp.restitution = 0.7;
@@ -85,6 +86,7 @@ public final class SupportMapSphereContactGenerator implements ContactGenerator 
 		this.pointmap = new SupportMap3() {
 			public final Vector3 supportPoint(Vector3 direction) { return spherecentreworld.copy(); }
 			public final void supportFeature(Vector3 d, double epsilon, List<Vector3> face) {}
+			public final double sphereSweepRadius() { return 0; }
 		};
 		
 		// default material settings
@@ -162,7 +164,7 @@ public final class SupportMapSphereContactGenerator implements ContactGenerator 
 			// the support of A-B along the ray direction
 			Vector3 sp = convex.supportPoint(direction.negate()).minus(pointmap.supportPoint(direction));
 			double lambda = direction.dot(sp)/direction.dot(direction)-envelope/direction.norm();
-			raycast.run(convex, pointmap, new Vector3(), direction, cp.paw, cp.pbw, lambda, sphere.getRadius()+envelope, epsilon);
+			raycast.run(convex, pointmap, new Vector3(), direction, cp.paw, cp.pbw, lambda, sphere.getRadius()+envelope, epsilon, false);
 
 			// cp.paw is the point on the convex shape
 			// pb-pa is the normal direction
