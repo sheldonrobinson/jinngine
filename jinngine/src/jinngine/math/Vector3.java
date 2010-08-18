@@ -108,7 +108,7 @@ public final class Vector3 implements Serializable {
 		return new Vector3(this);
 	}
         /**
-         * Substract adds a provided vector to this vector creating a resultant
+         * Adds a provided vector to this vector creating a resultant
          * vector which is returned.
          * Neither <code>this</code> nor <code>v</code> is modified.
          *
@@ -407,9 +407,10 @@ public final class Vector3 implements Serializable {
          * @return the normalized vector
          */
 	public final Vector3 normalize() {
-		double l = (double)Math.sqrt(x*x+y*y+z*z);
-		if ( l == 0.0 ) {/* System.err.println("Division by zero");*/ /*Thread.dumpStack(); System.exit(-1);*/ return new Vector3(1,0,0); } 
-		return new Vector3( x/l, y/l, z/l);
+		double l = Math.sqrt(x*x+y*y+z*z);
+		if ( l == 0.0 ) {return new Vector3(1,0,0); }
+                l=1./l;
+		return new Vector3( x*l, y*l, z*l);
 	}
         /**
          * Sets the value of this <code>Vector3</code> to the specified x, y and  coordinates.
@@ -463,24 +464,7 @@ public final class Vector3 implements Serializable {
 		z = 0;
 		return this;
 	}
-    /**
-     * Compare the coordinated of two vectors
-     * @param o a reference to be compared with
-     * @return true when all crordinates are equal
-     */
-    @Override
-    public final boolean equals( Object o ) {
-                if(o==this)
-                    return true;
-                if(o==null || o instanceof Vector3==false){
-                    return false;
-                }
-                final Vector3 v=(Vector3) o;
-		return (x==v.x && y==v.y && z==v.z );
-	}
-
-   
-
+ 
         /**
          * Returns the length of this vector.
          * <code>this</code> vector is not modified.

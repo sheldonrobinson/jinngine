@@ -319,11 +319,17 @@ public class Vector3Test {
     public void testSet() {
         final Vector3 a = new Vector3(1., 2., 3.);
         a.set(0, 0.);
-        assertEquals(new Vector3(0., 2., 3.), a);
+        assertEquals(0., a.x);
+        assertEquals(2., a.y);
+        assertEquals(3., a.z);
         a.set(1, 0.);
-        assertEquals(new Vector3(0., 0., 3.), a);
+        assertEquals(0., a.x);
+        assertEquals(0., a.y);
+        assertEquals(3., a.z);
         a.set(2, 0.);
-        assertEquals(new Vector3(0., 0., 0.), a);
+        assertEquals(0., a.x);
+        assertEquals(0., a.y);
+        assertEquals(0., a.z);
     }
 
     @Test
@@ -331,7 +337,12 @@ public class Vector3Test {
         final Vector3 a = new Vector3(1., 2., 3.);
         final Vector3 b = new Vector3(10., 20., 30.);
         a.assign(b);
-        assertEquals(b, a);
+        assertEquals(10., a.x);
+        assertEquals(20., a.y);
+        assertEquals(30., a.z);
+        assertEquals(10., b.x);
+        assertEquals(20., b.y);
+        assertEquals(30., b.z);
     }
 
     @Test(expected = NullPointerException.class)
@@ -343,22 +354,11 @@ public class Vector3Test {
     public void testAssignZero() {
         final Vector3 a = new Vector3(1., 2., 3.);
         a.assignZero();
-        assertEquals(new Vector3(), a);
+        assertEquals(0., a.x);
+        assertEquals(0., a.y);
+        assertEquals(0., a.z);
     }
 
-    @Test
-    public void testEquals01() {
-        assertTrue(new Vector3(1., 2., 3.).equals(new Vector3(1., 2., 3.)));
-        assertFalse(new Vector3(1., 2., 3.).equals(new Vector3(0., 2., 3.)));
-        assertFalse(new Vector3(1., 2., 3.).equals(new Vector3(1., 0., 3.)));
-        assertFalse(new Vector3(1., 2., 3.).equals(new Vector3(1., 2., 0.)));
-        assertFalse(new Vector3(Double.NaN, 2., 3.).equals(new Vector3(Double.NaN, 2., 3.)));
-        assertFalse(new Vector3(1., Double.NaN, 3.).equals(new Vector3(1., Double.NaN, 3.)));
-        assertFalse(new Vector3(1., 2., Double.NaN).equals(new Vector3(1., 2., Double.NaN)));
-        final Vector3 a = new Vector3(Double.NaN, Double.NaN, Double.NaN);
-        assertTrue(a.equals(a));
-        assertFalse(a.equals(null));
-    }
 
     @Test
     public void testNorm() {
