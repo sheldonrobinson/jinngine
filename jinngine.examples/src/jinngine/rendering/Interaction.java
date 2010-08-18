@@ -60,7 +60,7 @@ public class Interaction implements Rendering.EventCallback {
 
 					RayCast raycast = new RayCast();
 					Vector3 pb = new Vector3(), pc = new Vector3();
-					double t = raycast.run((SupportMap3)gi, null, point, direction, pb, pc, 0, 0.05, 1e-7);
+					double t = raycast.run((SupportMap3)gi, null, point, direction, pb, pc, 0, 0.05, 1e-7, true);
 
 					if (t<parameter) {
 						parameter = t;
@@ -86,7 +86,7 @@ public class Interaction implements Rendering.EventCallback {
 			target.updateTransformations();
 
 			this.force = new BallInSocketJoint(target, controller, controller.getPosition(), new Vector3(0,1,0));
-			this.force.setForceLimit(55*target.getMass());
+			this.force.setForceLimit(1.5*target.getMass());
 			this.force.setCorrectionVelocityLimit(7);
 			
 			// copy angular mass properties
