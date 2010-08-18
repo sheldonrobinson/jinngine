@@ -61,9 +61,9 @@ public class BallInSocketJoint implements Constraint {
 		
 		//jacobians on matrix form
 		final Matrix3 Ji = Matrix3.identity().multiply(1);
-		final Matrix3 Jangi =ri.crossProductMatrix3().multiply(-1);
+		final Matrix3 Jangi =Matrix3.crossProductMatrix(ri).multiply(-1);
 		final Matrix3 Jj = Matrix3.identity().multiply(-1);
-		final Matrix3 Jangj = rj.crossProductMatrix3().multiply(1);
+		final Matrix3 Jangj = Matrix3.crossProductMatrix(rj);
 
 		
 //		final Matrix3 MiInv = Matrix3.identity().multiply(1/b1.state.mass);
@@ -87,10 +87,10 @@ public class BallInSocketJoint implements Constraint {
 		}		
 
 //		Vector3 u = b1.state.velocity.add( b1.state.omega.cross(ri)).minus(b2.state.velocity).add(b2.state.omega.cross(rj));
-		Vector3 u = b1.state.velocity.add( b1.state.omega.cross(ri)).minus(b2.state.velocity.add(b2.state.omega.cross(rj)));
+		Vector3 u = b1.state.velocity.add( b1.state.omega.cross(ri)).sub(b2.state.velocity.add(b2.state.omega.cross(rj)));
 
 //		Vector3 posError = b1.state.rCm.add(b1.state.q.rotate(p1)).minus(b2.state.rCm).minus(b2.state.q.rotate(p2)).multiply(Kcor);
-		Vector3 posError = b1.state.position.add(ri).minus(b2.state.position).minus(rj).multiply(1.0/dt);
+		Vector3 posError = b1.state.position.add(ri).sub(b2.state.position).sub(rj).multiply(1.0/dt);
 		
 		// correction velocity limit
 		if ( posError.norm() > velocitylimit) {

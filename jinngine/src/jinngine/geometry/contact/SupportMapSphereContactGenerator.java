@@ -59,7 +59,7 @@ public final class SupportMapSphereContactGenerator implements ContactGenerator 
 
 		// SupportMap for the sphere centre
 		this.pointmap = new SupportMap3() {
-			public final Vector3 supportPoint(Vector3 direction) { return spherecentreworld.copy(); }
+			public final Vector3 supportPoint(Vector3 direction) { return new Vector3(spherecentreworld); }
 			public final void supportFeature(Vector3 d, double epsilon, List<Vector3> face) {}
 			public final double sphereSweepRadius() {return 0;}
 		};
@@ -84,7 +84,7 @@ public final class SupportMapSphereContactGenerator implements ContactGenerator 
 
 		// SupportMap for the sphere centre
 		this.pointmap = new SupportMap3() {
-			public final Vector3 supportPoint(Vector3 direction) { return spherecentreworld.copy(); }
+			public final Vector3 supportPoint(Vector3 direction) { return new Vector3(spherecentreworld); }
 			public final void supportFeature(Vector3 d, double epsilon, List<Vector3> face) {}
 			public final double sphereSweepRadius() { return 0; }
 		};
@@ -147,7 +147,7 @@ public final class SupportMapSphereContactGenerator implements ContactGenerator 
 		closest.run(convex, pointmap, cp.paw, cp.pbw, sphere.getRadius()+envelope, epsilon, 31); //notice the envelope size
 				
 		// penetration
-		if ( closest.getState().simplexSize > 3  || cp.paw.minus(cp.pbw).norm() < 1e-7 ) {
+		if ( closest.getState().simplexSize > 3  || cp.paw.sub(cp.pbw).norm() < 1e-7 ) {
 			//penetrating = false;
 //			System.out.println("SupportMap-sphere: penetration");
 			// we perform a raycast, that is equivalent to
@@ -158,11 +158,11 @@ public final class SupportMapSphereContactGenerator implements ContactGenerator 
 			
 			// apply body rotation to local displacements (centre of mass of objects)
 			Matrix3.multiply(g1.getBody().state.rotation, convexcentreworld, convexcentreworld);
-			Vector3 direction = g1.getBody().getPosition().add(convexcentreworld).minus(spherecentreworld);
+			Vector3 direction = g1.getBody().getPosition().add(convexcentreworld).sub(spherecentreworld);
 
 			// compute the largest possible starting lambda, based on 
 			// the support of A-B along the ray direction
-			Vector3 sp = convex.supportPoint(direction.negate()).minus(pointmap.supportPoint(direction));
+			Vector3 sp = convex.supportPoint(direction.negate()).sub(pointmap.supportPoint(direction));
 			double lambda = direction.dot(sp)/direction.dot(direction)-envelope/direction.norm();
 			raycast.run(convex, pointmap, new Vector3(), direction, cp.paw, cp.pbw, lambda, sphere.getRadius()+envelope, epsilon, false);
 
@@ -171,19 +171,19 @@ public final class SupportMapSphereContactGenerator implements ContactGenerator 
 			// pa is a point on the convex shape
 			// we project pa onto the direction to approximate real point on convex
 			// p = (pa dot (pb-pa))(pb-pa) 
-			cp.normal.assign(cp.paw.minus(cp.pbw).normalize());
+			cp.normal.assign(cp.paw.sub(cp.pbw).normalize());
 			
 			//project paw onto the normal
 			cp.paw.assign( spherecentreworld.add( cp.normal.multiply(-cp.paw.dot(cp.normal))) );				
 			cp.pbw.assign( spherecentreworld.add( cp.normal.multiply(sphere.getRadius())) );
 			
 		} else {
-			cp.normal.assign( cp.paw.minus(cp.pbw).normalize() );
+			cp.normal.assign( cp.paw.sub(cp.pbw).normalize() );
 			cp.pbw.assign( spherecentreworld.add( cp.normal.multiply(sphere.getRadius())) );			
 		}
 
 		// find contact distance and interaction point
-		cp.distance = cp.paw.minus(cp.pbw).dot(cp.normal);
+		cp.distance = cp.paw.sub(cp.pbw).dot(cp.normal);
 		cp.point.assign( cp.paw.add(cp.pbw).multiply(0.5));
 
 		//invert the normal if geometries came in reverse order

@@ -184,9 +184,9 @@ public final class UniversalJoint implements Constraint {
 		
 		//jacobians on matrix form
 		Matrix3 Ji = Matrix3.identity().multiply(1);
-		Matrix3 Jangi = riw.crossProductMatrix3().multiply(-1);
+		Matrix3 Jangi = Matrix3.crossProductMatrix(riw).multiply(-1);
 		Matrix3 Jj = Matrix3.identity().multiply(-1);
-		Matrix3 Jangj = rjw.crossProductMatrix3().multiply(1);
+		Matrix3 Jangj = Matrix3.crossProductMatrix(rjw);
 
 //		Matrix3 MiInv = Matrix3.identity().multiply(1/bi.state.mass);
 //		Matrix3 MjInv = Matrix3.identity().multiply(1/bj.state.mass);
@@ -202,9 +202,9 @@ public final class UniversalJoint implements Constraint {
 		double Kcor = 0.8;
 		
 //		Vector3 u = b1.state.velocity.minus( ri.cross(b1.state.omega)).minus(b2.state.velocity).add(rj.cross(b2.state.omega));
-		Vector3 u = bi.state.velocity.add( bi.state.omega.cross(riw)).minus(bj.state.velocity.add(bj.state.omega.cross(rjw)));
+		Vector3 u = bi.state.velocity.add( bi.state.omega.cross(riw)).sub(bj.state.velocity.add(bj.state.omega.cross(rjw)));
 
-		Vector3 posError = bi.state.position.add(riw).minus(bj.state.position).minus(rjw).multiply(1/dt);
+		Vector3 posError = bi.state.position.add(riw).sub(bj.state.position).sub(rjw).multiply(1/dt);
 		//error in transformed normal
 		Vector3 nerror = n1iw.cross(n2jw);
 		u.assign( u.add(posError.multiply(Kcor)));

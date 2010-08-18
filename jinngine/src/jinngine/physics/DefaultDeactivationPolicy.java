@@ -66,8 +66,8 @@ public class DefaultDeactivationPolicy implements DeactivationPolicy {
 //		b.deactivatedexternaltorque.assign(b.state.torque);
 		
 		// remove velocity from body
-		b.state.velocity.assign(Vector3.zero);
-		b.state.omega.assign(Vector3.zero);
+		b.state.velocity.assignZero();
+		b.state.omega.assignZero();
 		
 	}
 

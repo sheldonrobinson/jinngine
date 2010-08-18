@@ -174,7 +174,7 @@ public final class Body {
 				g.getLocalTransform(R, b);
 				
 				//align to centre of mass
-				b.assign( b.minus(cm));
+				b.assign( b.sub(cm));
 
 				//rotate the inertia matrix into this frame and add it to the inertia tensor of this body
 				Matrix3 Im = InertiaMatrix.rotate(g.getInertialMatrix(), R).translate(g.getMass(), b);
@@ -326,8 +326,10 @@ public final class Body {
 	 * Get the mass of this body. 
 	 */
 	public final double getMass() {
-		// return the length of the unit axis vector scaled by the anisotropic mass matrix
-		return this.state.anisotropicmass.multiply(Vector3.unit).norm();
+                // return the length of the unit axis vector scaled by the anisotropic mass matrix
+                final double prjLength=1./Math.sqrt(3.);
+                final Vector3 unit=new Vector3(prjLength,prjLength,prjLength);
+		return this.state.anisotropicmass.multiply(unit).norm();
 	}
 
 	/**
@@ -433,7 +435,7 @@ public final class Body {
 	// go from world to model
 	public final Vector3 toModel( final Vector3 v) {
 		// apply inverse rotation and translate backwards
-		return state.rotation.transpose().multiply(v.minus(state.position));
+		return state.rotation.transpose().multiply(v.sub(state.position));
 	}
 
 	// go from world to model without translating

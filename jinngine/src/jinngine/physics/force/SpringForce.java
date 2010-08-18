@@ -33,15 +33,15 @@ public class SpringForce implements Force {
 	public SpringForce(Body a, Vector3 pa,  Body b, Vector3 pb) {		
 		this.a = a;
 		this.b = b;
-		this.pa = pa.copy();
-		this.pb = pb.copy();
+		this.pa = new Vector3(pa);
+		this.pb = new Vector3(pb);
 		this.force = 10;
 		this.damper = 1;
 
 		//calculate the equilibrium length
 		Vector3 paw = a.toWorld(pa);		
 		Vector3 pbw = b.toWorld(pb);		
-		Vector3 x = paw.minus(pbw);		
+		Vector3 x = paw.sub(pbw);
 		this.equilibrium = x.norm();		
 	}
 	
@@ -57,15 +57,15 @@ public class SpringForce implements Force {
 	public SpringForce(Body a, Vector3 pa, Body b, Vector3 pb, double force, double damper ) {
 		this.a = a;
 		this.b = b;
-		this.pa = pa.copy();
-		this.pb = pb.copy();
+		this.pa = new Vector3(pa);
+		this.pb = new Vector3(pb);
 		this.force = force;
 		this.damper = damper;
 
 		//calculate the equilibrium length
 		Vector3 paw = a.toWorld(pa);		
 		Vector3 pbw = b.toWorld(pb);		
-		Vector3 x = paw.minus(pbw);		
+		Vector3 x = paw.sub(pbw);
 		this.equilibrium = x.norm();		
 		
 	}
@@ -91,7 +91,7 @@ public class SpringForce implements Force {
 		Vector3 pbw = prb.add(b.state.position);
 		
 		//Vector3 p2 = toWorldNoTranslation(new Vector3(0,-1,0));
-		Vector3 x = pbw.minus(paw);
+		Vector3 x = pbw.sub(paw);
 
 		Vector3 upa = a.state.velocity.add(a.state.omega.cross(pra));
 		Vector3 upb = b.state.velocity.add(b.state.omega.cross(prb));
@@ -99,8 +99,8 @@ public class SpringForce implements Force {
 		
 		Vector3 n;
 		//normal of spring direction
-		if ( x.abs().lessThan(Vector3.epsilon)) {
-			n = x = Vector3.zero;
+		if ( x.isEpsilon(Vector3.e)) {
+			n = x = new Vector3();
 		} else {
 			n = x.normalize();			
 		}
@@ -115,7 +115,7 @@ public class SpringForce implements Force {
 		double upbx = (n.dot(upb));
 		
 		//Forces
-		Vector3 Fspring = x.minus(n.multiply(equilibrium)).multiply(this.force); //spring force
+		Vector3 Fspring = x.sub(n.multiply(equilibrium)).multiply(this.force); //spring force
 		Vector3 Fdamper = n.multiply( (-upax+upbx) * this.damper  ); //damping force
 		Vector3 Ftotal = Fspring.add( Fdamper );
 				

@@ -43,8 +43,8 @@ public final class Vector3 implements Serializable {
          */
         public double z;
 
-        @Deprecated
-	private transient final static double e = 1e-9f;
+        
+	public transient final static double e = 1e-9f;
         @Deprecated
 	public transient final static Vector3 epsilon = new Vector3(e,e,e) ;
         @Deprecated
@@ -100,6 +100,27 @@ public final class Vector3 implements Serializable {
 		y = m[1];
 		z = m[2];
 	}
+    /**
+     * Create a new unit vector heading positive x
+     * @return a new unit vector heading positive x
+     */
+    public static Vector3 i() {
+        return new Vector3(1., 0., 0.);
+    }
+    /**
+     * Create a new unit vector heading positive y
+     * @return a new unit vector heading positive y
+     */
+    public static Vector3 j() {
+        return new Vector3(0., 1., 0.);
+    }
+    /**
+     * Create a new unit vector heading positive z
+     * @return a new unit vector heading positive z
+     */
+    public static Vector3 k() {
+        return new Vector3(0., 0., 1.);
+    }
 	/**
          * @return
          * @deprecated replaced by  {@link Vector3#Vector3(Vector3)}
@@ -226,13 +247,13 @@ public final class Vector3 implements Serializable {
 	}
 
 
-        /**
+         /**
          * @param v
          * @return
          * @deprecated replaces by {@link Vector3#sub( Vector3 )}
          */
 	public final Vector3 minus( Vector3 v) {
-		return new Vector3( x-v.x, y-v.y, z-v.z );	
+		return new Vector3( x-v.x, y-v.y, z-v.z );
         }
 
         /**
@@ -246,6 +267,8 @@ public final class Vector3 implements Serializable {
         public final Vector3 sub( Vector3 v ) {
 		return new Vector3( x-v.x, y-v.y, z-v.z );
 	}
+
+        
         
         /**
          * @return
@@ -271,7 +294,7 @@ public final class Vector3 implements Serializable {
          * vector which is returned.
          * <code>this</code> vector is not modified.
          *
-         * @param s
+         * @param s multiplication coeficient
          * @return resultant vector
          */
 	public final Vector3 multiply( double s ) {
@@ -279,10 +302,10 @@ public final class Vector3 implements Serializable {
 	}
 	
 	/**
-	 * Scale vector in scale matrix given by s
-         * @deprecated replaced by Vector3.multiply
-	 * @param s
-	 * @return
+	 * Scale vector by the scale matrix given by s.
+         * <code>this</code> vector is not modified.
+	 * @param s scale direction and factor
+	 * @return an new vector
 	 */
 	public final Vector3 scale( Vector3 s) {
 		return new Vector3(x*s.x, y*s.y, z*s.z);
@@ -575,6 +598,23 @@ public final class Vector3 implements Serializable {
 	public final boolean lessThan(Vector3 v) {
 		return (x<v.x)&&(y<v.y)&&(z<v.z);
 	}
+
+    /**
+     * Returns <tt>true</tt> if the absolute value of the three coordinates are
+     * smaller or equal to epsilon.
+     *
+     * @param epsilon positive tolerance around zero
+     * @return true when the coordinates are next to zero
+     *         false in the other cases
+     */
+    public final boolean isEpsilon(double epsilon) {
+        if (epsilon < 0.) {
+            throw new IllegalArgumentException("epsilon must be positive");
+        }
+        return -epsilon <= x && x <= epsilon
+                && -epsilon <= y && y <= epsilon
+                && -epsilon <= z && z <= epsilon;
+    }
         /**
          * @param v
          * @return

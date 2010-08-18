@@ -60,7 +60,7 @@ public class BulletNativeContactGenerator implements ContactGenerator {
 			g.getLocalTransform(T, t);
 	
 			while(iter.hasNext()){
-				Vector3 v = iter.next().copy();
+				Vector3 v = new Vector3(iter.next());
 				
 				//apply any local transform now
 				Matrix3.multiply(T,v,v);
@@ -108,8 +108,8 @@ public class BulletNativeContactGenerator implements ContactGenerator {
 		
 		numberOfContacts = bulletRunContactGeneration(
 				record,
-				Matrix3.pack(A.state.rotation), Vector3.pack(A.state.position), 
-				Matrix3.pack(B.state.rotation), Vector3.pack(B.state.position) );
+				Matrix3.pack(A.state.rotation), A.state.position.pack(),
+				Matrix3.pack(B.state.rotation), B.state.position.pack() );
 		
 //		System.out.println("Contacts from bullet: " + numberOfContacts);
 		

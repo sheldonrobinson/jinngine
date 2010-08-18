@@ -19,12 +19,12 @@ public class GramSchmidt {
 	public static Matrix3 run(Vector3 v) {
 		Vector3 t1 = v.normalize();
 		Vector3 t2 = new Vector3(1,0,0);
-		t2.assign( t2.minus( t1.multiply(t1.dot(t2))));
+		t2.assign( t2.sub( t1.multiply(t1.dot(t2))));
 	
 		//if t1 and t2 is linearly dependent, chose another vector, not aligned with t2
 		if (t2.norm() < 1e-10) {
 			t2.assign( new Vector3(0,0,1));
-			t2.assign( t2.minus( t1.multiply(t1.dot(t2))));
+			t2.assign( t2.sub( t1.multiply(t1.dot(t2))));
 		}
 		
 		t2.assign(t2.normalize());
@@ -37,13 +37,13 @@ public class GramSchmidt {
 	
 	public static Matrix3 run(Vector3 v1, Vector3 v2) {
 		Vector3 t1 = v1.normalize();
-		Vector3 t2 = v2.copy();
-		t2.assign( t2.minus( t1.multiply(t1.dot(t2))));
+		Vector3 t2 = new Vector3(v2);
+		t2.assign( t2.sub( t1.multiply(t1.dot(t2))));
 	
 		//if t1 and t2 is linearly dependent, chose another vector, not aligned with t2
 		if (t2.norm() < 1e-10) {
 			t2.assign( new Vector3(0,0,1));
-			t2.assign( t2.minus( t1.multiply(t1.dot(t2))));
+			t2.assign( t2.sub( t1.multiply(t1.dot(t2))));
 		}
 		
 		t2.assign(t2.normalize());

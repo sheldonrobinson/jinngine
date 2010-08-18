@@ -47,7 +47,7 @@ public class RayCastTest extends TestCase {
 		Vector3 expected = point.normalize();
 		
 		// calculate the deviation of the returned point and the reference point
-		double error = point.add(direction.multiply(lambda)).minus(expected).norm();
+		double error = point.add(direction.multiply(lambda)).sub(expected).norm();
 		
 		// deviation from expected hitpoint should be lower than envelope+epsilon
 		assertTrue(error < envelope+epsilon);
@@ -67,17 +67,17 @@ public class RayCastTest extends TestCase {
 		// pick a point outside the sphere, and let the direction point towards 
 		// the centre of the sphere.
 		Vector3 point = new Vector3(-4, 6, 9);
-		Vector3 direction = b1.getPosition().minus(point);
+		Vector3 direction = b1.getPosition().sub(point);
 		
 		// do the raycast
 		double lambda = raycast.run(s1, null, point, direction, new Vector3(), new Vector3(), 0, envelope, epsilon, false );
 		
 		// we know the exact intersection point ( go from the centre of the sphere
 		// to the boundary along the oposite ray direction )
-		Vector3 expected = b1.getPosition().minus(direction.normalize());
+		Vector3 expected = b1.getPosition().sub(direction.normalize());
 		
 		// calculate the deviation of the returned point and the reference point
-		double error = point.add(direction.multiply(lambda)).minus(expected).norm();
+		double error = point.add(direction.multiply(lambda)).sub(expected).norm();
 		
 		System.out.println("error" + error);
 		
@@ -149,7 +149,7 @@ public class RayCastTest extends TestCase {
 		Vector3 e = new Vector3(0,0.5,0);
 		
 		// the hitpoint must be within the envelope
-		assertTrue( p.minus(e).norm() < envelope+epsilon);		
+		assertTrue( p.sub(e).norm() < envelope+epsilon);
 	}
 
 	/**
@@ -164,7 +164,7 @@ public class RayCastTest extends TestCase {
 
 		// select a point (5,1,0) and the raydirection (-1,0,0)
 		Vector3 point = new Vector3(2, 5, 9);
-		Vector3 direction = new Vector3(0.5,0.5,0.5).minus(point);
+		Vector3 direction = new Vector3(0.5,0.5,0.5).sub(point);
 		
 		// do the raycast
 		double lambda = raycast.run(box, null, point, direction, new Vector3(), new Vector3(), 0, envelope, epsilon, false );
@@ -176,7 +176,7 @@ public class RayCastTest extends TestCase {
 		Vector3 e = new Vector3(0.5,0.5,0.5);
 		
 		// the hitpoint must be within the envelope
-		assertTrue( p.minus(e).norm() < envelope+epsilon);		
+		assertTrue( p.sub(e).norm() < envelope+epsilon);
 	}
 
 	

@@ -144,7 +144,7 @@ public class ConvexHull implements SupportMap3, Geometry, Material {
 			Vector3 v3 = f[2];
 
 			// set normal
-			Vector3 normal = v1.minus(v2).cross(v3.minus(v2)).normalize().multiply(-1);
+			Vector3 normal = v1.sub(v2).cross(v3.sub(v2)).normalize().multiply(-1);
 			
 			// add to the dual polygon vertices (index corresponds to a face)
 			dualvertices.add(normal);
@@ -374,7 +374,7 @@ public class ConvexHull implements SupportMap3, Geometry, Material {
 	@Override
 	public Vector3 getMinBounds() {
 		// return the min bounds in world space
-		return body.state.rotation.multiply(localtranslation).add(body.state.position).minus(bounds);
+		return body.state.rotation.multiply(localtranslation).add(body.state.position).sub(bounds);
 	}
 
 	@Override
@@ -408,7 +408,7 @@ public class ConvexHull implements SupportMap3, Geometry, Material {
 	}
 	
 	public Vector3 getCentreOfMass() {
-		return centreOfMass.copy();
+		return new Vector3(centreOfMass);
 	}
 
 	@Override

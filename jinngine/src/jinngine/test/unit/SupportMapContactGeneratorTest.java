@@ -66,9 +66,9 @@ public class SupportMapContactGeneratorTest extends TestCase {
 		Iterator<ContactPoint> i = g.getContacts();
 		while (i.hasNext()) {
 			ContactPoint cp = i.next();
-			cp.point.print();
+			System.out.println(cp.point);
 			System.out.println("dist="+cp.distance);
-			result.add(cp.point.copy());
+			result.add(new Vector3(cp.point));
 		}
 		
 		// expected contact points, in counter clock-wise order 
@@ -97,9 +97,9 @@ public class SupportMapContactGeneratorTest extends TestCase {
 		i = g.getContacts();
 		while (i.hasNext()) {
 			ContactPoint cp = i.next();
-			cp.point.print();
+			System.out.println(cp.point);
 			System.out.println("dist="+cp.distance);
-			result.add(cp.point.copy());
+			result.add(new Vector3(cp.point));
 		}
 		
 		// expected contact points, in counter clock-wise order 
@@ -128,9 +128,9 @@ public class SupportMapContactGeneratorTest extends TestCase {
 		i = g.getContacts();
 		while (i.hasNext()) {
 			ContactPoint cp = i.next();
-			cp.point.print();
+			System.out.println(cp.point);
 			System.out.println("dist="+cp.distance);
-			result.add(cp.point.copy());
+			result.add(new Vector3(cp.point));
 		}
 		
 		// expected contact points, in counter clock-wise order 
@@ -174,14 +174,14 @@ public class SupportMapContactGeneratorTest extends TestCase {
 					p2 = poly2iter.next();
 					
 					// distance less that epsilon
-					if (p2.minus(p1).norm() >= epsilon) 
+					if (p2.sub(p1).norm() >= epsilon)
 						return false;
 				} else {
 					// no more vertices
 					return true;
 				}		
 			} else {
-				if (p2.minus(p1).norm() < epsilon) { 
+				if (p2.sub(p1).norm() < epsilon) {
 					traversalStarted = true;
 				}
 			}

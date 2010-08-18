@@ -184,7 +184,7 @@ public class JoglRendering extends Frame implements Rendering, GLEventListener, 
 				gl.glBegin(GL.GL_POLYGON);
 				Vector3[] face = i.next();
 				//compute normal
-				Vector3 n =face[1].minus(face[0]).cross(face[2].minus(face[1])).normalize();
+				Vector3 n =face[1].sub(face[0]).cross(face[2].sub(face[1])).normalize();
 				
 				for ( Vector3 v: face) {
 					gl.glNormal3d(n.x, n.y, n.z);
@@ -206,7 +206,7 @@ public class JoglRendering extends Frame implements Rendering, GLEventListener, 
 				gl.glBegin(GL.GL_POLYGON);
 				Vector3[] face = i.next();
 				//compute normal
-				Vector3 n =face[1].minus(face[0]).cross(face[2].minus(face[1])).normalize();
+				Vector3 n =face[1].sub(face[0]).cross(face[2].sub(face[1])).normalize();
 				
 				for ( Vector3 v: face) {
 					gl.glNormal3d(n.x, n.y, n.z);
@@ -350,7 +350,7 @@ public class JoglRendering extends Frame implements Rendering, GLEventListener, 
 		Matrix4.multiply(T,far,p2);
 		
 		p.assign(p1);
-		d.assign(p2.minus(p1).normalize());
+		d.assign(p2.sub(p1).normalize());
 	}
 	
 	/**

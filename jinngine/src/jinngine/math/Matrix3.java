@@ -559,5 +559,16 @@ public class Matrix3 {
   public final double fnorm() {
 	  return Math.sqrt(	a11*a11 + a12*a12 + a13*a13  + a21*a21 + a22*a22  + a23*a23  + a31*a31 + a32*a32 + a33*a33 ); 
   }
-
+    /**
+     *
+     * @param v
+     * @return
+     * @throws NullPointerException
+     */
+    public static final Matrix3 crossProductMatrix(Vector3 v) {
+        return new Matrix3(
+                0., -v.z, v.y,
+                v.z, 0., -v.x,
+                -v.y, v.x, 0.);
+    }
 }

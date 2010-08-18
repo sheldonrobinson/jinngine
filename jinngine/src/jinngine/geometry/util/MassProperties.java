@@ -178,7 +178,7 @@ public class MassProperties {
 	 * @return
 	 */
 	public Vector3 getCentreOfMass() {
-		return centreofmass.copy();
+		return new Vector3(centreofmass);
 	}
 	
 	/**

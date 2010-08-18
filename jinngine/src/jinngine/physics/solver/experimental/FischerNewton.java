@@ -137,8 +137,8 @@ public class FischerNewton implements Solver {
 				if (besterror < error) {
 					//copy best solution to delta velocities
 					for (Body b: bodies) {
-						Vector3.assign(b.deltavelocity, b.auxDeltav2);
-						Vector3.assign(b.deltaomega,b.auxDeltaOmega2);				
+						b.deltavelocity.assign( b.auxDeltav2);
+						b.deltaomega.assign(b.auxDeltaOmega2);
 					}
 					
 					return besterror;
@@ -357,8 +357,8 @@ public class FischerNewton implements Solver {
 				besterror = error;
 				//copy the best solution
 				for (Body b: bodies) {
-					Vector3.assign(b.auxDeltav2, b.deltavelocity);
-					Vector3.assign(b.auxDeltaOmega2, b.deltaomega);				
+					b.auxDeltav2.assign(b.deltavelocity);
+					b.auxDeltaOmega2.assign(b.deltaomega);
 				}
 			}
 

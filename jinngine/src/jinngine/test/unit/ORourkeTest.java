@@ -59,12 +59,12 @@ public class ORourkeTest extends TestCase {
 		assertTrue( Math.abs(result.y-0.5) < epsilon );
 		
 		// calculate the points given by the returned parameter values
-		Vector3 point1 = p1.add( p2.minus(p1).multiply(result.x));
-		Vector3 point2 = p3.add( p4.minus(p3).multiply(result.y));
+		Vector3 point1 = p1.add( p2.sub(p1).multiply(result.x));
+		Vector3 point2 = p3.add( p4.sub(p3).multiply(result.y));
 		
 		// we expect the intersection point to be (0.5,0.5) for both lines		
-		assertTrue( point1.minus(new Vector3(0.5,0.5,0)).xynorm() < epsilon );
-		assertTrue( point2.minus(new Vector3(0.5,0.5,0)).xynorm() < epsilon );
+		assertTrue( point1.sub(new Vector3(0.5,0.5,0)).xynorm() < epsilon );
+		assertTrue( point2.sub(new Vector3(0.5,0.5,0)).xynorm() < epsilon );
 	}
 
 
@@ -777,14 +777,14 @@ public class ORourkeTest extends TestCase {
 					p2 = poly2iter.next();
 					
 					// distance less that epsilon
-					if (p2.minus(p1).xynorm() >= epsilon) 
+					if (p2.sub(p1).xynorm() >= epsilon)
 						return false;
 				} else {
 					// no more vertices
 					return true;
 				}		
 			} else {
-				if (p2.minus(p1).xynorm() < epsilon) { 
+				if (p2.sub(p1).xynorm() < epsilon) {
 					traversalStarted = true;
 				}
 			}

@@ -66,16 +66,16 @@ public final class HingeJoint implements Constraint {
 		nj = b2.toModelNoTranslation(n);
 				
 		//Use a Gram-Schmidt process to create a orthonormal basis for the impact space
-		Vector3 v1 = n.normalize(); Vector3 v2 = Vector3.i; Vector3 v3 = Vector3.k;    
+		Vector3 v1 = n.normalize(); Vector3 v2 = Vector3.i(); Vector3 v3 = Vector3.k();
 		Vector3 t1 = v1.normalize(); 
-		t2i = v2.minus( t1.multiply(t1.dot(v2)) );
+		t2i = v2.sub( t1.multiply(t1.dot(v2)) );
 		
-		t2i.print();
+		System.out.println(t2i);
 		
 		//in case v1 and v2 are parallel
-		if ( t2i.abs().lessThan( Vector3.epsilon ) ) {
-			v2 = Vector3.j; v3 = Vector3.k;
-			t2i.assign(v2.minus( t1.multiply(t1.dot(v2)) ).normalize());    
+		if ( t2i.isEpsilon(Vector3.e) ) {
+			v2 = Vector3.j(); v3 = Vector3.k();
+			t2i.assign(v2.sub( t1.multiply(t1.dot(v2)) ).normalize());
 		} else {
 			t2i.assign(t2i.normalize());
 		}
@@ -83,17 +83,17 @@ public final class HingeJoint implements Constraint {
 		//tangent 2 in j body space
 		t2j = b2.toModelNoTranslation(b1.toWorldNoTranslation(t2i));
 		
-		t2j.print();
+		System.out.println(t2j);
 		
 		//v1 parallel with v3
-		if( v1.cross(v3).abs().lessThan( Vector3.epsilon ) ) {
-			v3 = Vector3.j;
+		if( v1.cross(v3).isEpsilon(Vector3.e) ) {
+			v3 = Vector3.j();
 		}
 		//finally calculate t3
-		t3i = v3.minus( t1.multiply(t1.dot(v3)).minus( t2i.multiply(t2i.dot(v3)) )).normalize();
+		t3i = v3.sub( t1.multiply(t1.dot(v3)).sub( t2i.multiply(t2i.dot(v3)) )).normalize();
 		
 		
-		t3i.print();
+		System.out.println(t3i);
 		
 		// create the controller
 		this.controler = new JointAxisController() {
@@ -155,9 +155,9 @@ public final class HingeJoint implements Constraint {
 		
 		//jacobians on matrix form
 		final Matrix3 Ji = Matrix3.identity().multiply(1);
-		final Matrix3 Jangi = ri.crossProductMatrix3().multiply(-1);
+		final Matrix3 Jangi = Matrix3.crossProductMatrix(ri).multiply(-1);
 		final Matrix3 Jj = Matrix3.identity().multiply(-1);
-		final Matrix3 Jangj = rj.crossProductMatrix3().multiply(1);
+		final Matrix3 Jangj = Matrix3.crossProductMatrix(rj);
 
 //		Matrix3 MiInv = Matrix3.identity().multiply(1/b1.state.mass);
 //		Matrix3 MjInv = Matrix3.identity().multiply(1/b2.state.mass);
@@ -173,9 +173,9 @@ public final class HingeJoint implements Constraint {
 		double Kcor = 0.9;
 		
 //		Vector3 u = b1.state.velocity.minus( ri.cross(b1.state.omega)).minus(b2.state.velocity).add(rj.cross(b2.state.omega));
-		Vector3 u = b1.state.velocity.add( b1.state.omega.cross(ri)).minus(b2.state.velocity.add(b2.state.omega.cross(rj)));
+		Vector3 u = b1.state.velocity.add( b1.state.omega.cross(ri)).sub(b2.state.velocity.add(b2.state.omega.cross(rj)));
 
-		Vector3 posError = b1.state.position.add(ri).minus(b2.state.position).minus(rj).multiply(1/dt);
+		Vector3 posError = b1.state.position.add(ri).sub(b2.state.position).sub(rj).multiply(1/dt);
 		//error in transformed normal
 		Vector3 nerror = tn1.cross(tn2);
 		u.assign( u.add(posError.multiply(Kcor)));

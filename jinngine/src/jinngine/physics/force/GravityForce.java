@@ -43,6 +43,6 @@ public final class GravityForce implements Force {
 
 	@Override
 	public final void apply(double dt) {
-		a.applyForce(Vector3.zero, a.state.anisotropicmass.multiply(d.multiply(9.8)), dt );		
+		a.applyForce(new Vector3(), a.state.anisotropicmass.multiply(d.multiply(9.8)), dt );
 	}
 }

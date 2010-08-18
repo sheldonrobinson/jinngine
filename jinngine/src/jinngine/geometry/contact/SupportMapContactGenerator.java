@@ -122,25 +122,25 @@ public final class SupportMapContactGenerator implements ContactGenerator {
 			// apply body rotation to local displacements (centre of mass of objects)
 			Matrix3.multiply(ga.getBody().state.rotation, gadisp, gadisp);
 			Matrix3.multiply(gb.getBody().state.rotation, gbdisp, gbdisp);
-			Vector3 direction = ga.getBody().getPosition().add(gadisp).minus(gb.getBody().getPosition().add(gbdisp));
+			Vector3 direction = ga.getBody().getPosition().add(gadisp).sub(gb.getBody().getPosition().add(gbdisp));
 
 			// compute the largest possible starting lambda, based on 
 			// the support of A-B along the ray direction
-			Vector3 sp = Sa.supportPoint(direction.negate()).minus(Sb.supportPoint(direction));
+			Vector3 sp = Sa.supportPoint(direction.negate()).sub(Sb.supportPoint(direction));
 			double lambda = direction.dot(sp)/direction.dot(direction)-envelope/direction.norm();
 			raycast.run(Sa, Sb, new Vector3(), direction, pa, pb, lambda, envelope, epsilon, false);
 			
 			// generate contact points
-			generate(pa, pb, pa.minus(pb).normalize() );
+			generate(pa, pb, pa.sub(pb).normalize() );
 			
 		} else {
 			// A and B was initially separated. We determine the distance and taking into account
 			// that A and/or B can be sphere swept 
-			final double d = pa.minus(pb).norm() - spa - spb;
+			final double d = pa.sub(pb).norm() - spa - spb;
 
 			// if distance is less that the envelope, generate contact points
 			if (d<envelope) {
-				generate(pa, pb, pa.minus(pb).normalize() );	
+				generate(pa, pb, pa.sub(pb).normalize() );
 			// or outside envelope
 			} else {
 				contacts.clear();	
@@ -213,10 +213,10 @@ public final class SupportMapContactGenerator implements ContactGenerator {
 		
 		// apply transform to all points
 		for (Vector3 p: faceA) {
-			p.assign( Binv.multiply(p.minus(midpoint)));
+			p.assign( Binv.multiply(p.sub(midpoint)));
 		}
 		for (Vector3 p: faceB) {
-			p.assign( Binv.multiply(p.minus(midpoint)));
+			p.assign( Binv.multiply(p.sub(midpoint)));
 		}
 		
 		// run 2d intersection

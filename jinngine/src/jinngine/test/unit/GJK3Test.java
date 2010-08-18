@@ -41,7 +41,7 @@ public class GJK3Test extends TestCase {
 				
 		gjk.run(s1,s2,p1,p2,Double.POSITIVE_INFINITY, epsilon, 31);
 		
-		double d = p1.minus(p2).norm();
+		double d = p1.sub(p2).norm();
 		
 		System.out.println( "d="+d);
 		
@@ -75,7 +75,7 @@ public class GJK3Test extends TestCase {
 				
 		gjk.run(s1,s2,p1,p2,Double.POSITIVE_INFINITY, epsilon, 31);
 		
-		double d = p1.minus(p2).norm();
+		double d = p1.sub(p2).norm();
 		System.out.println("d="+d);
 		
 		// distance should be 2a within precision
@@ -103,7 +103,7 @@ public class GJK3Test extends TestCase {
 		gjk.run(s1,s2,p1,p2,Double.POSITIVE_INFINITY, epsilon, 31);
 		
 		// we expect closest points to be the same
-		assertTrue( p1.minus(p2).norm() < epsilon );
+		assertTrue( p1.sub(p2).norm() < epsilon );
 	}
 	
 	/*
@@ -143,7 +143,7 @@ public class GJK3Test extends TestCase {
 			gjk.run(s1,s2,p1,p2,Double.POSITIVE_INFINITY, epsilon, 2256);
 			
 			// we want the expected distance 
-			assertTrue( Math.abs( p1.minus(p2).norm() - expected ) < epsilon );
+			assertTrue( Math.abs( p1.sub(p2).norm() - expected ) < epsilon );
 		}
 	}
 

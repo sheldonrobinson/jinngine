@@ -105,22 +105,22 @@ public final class Quaternion implements Serializable {
 		Quaternion vq = new Quaternion(0.0f, v);
 		Quaternion rotatet = this.multiply(vq).multiply( this.conjugate() );
 
-		return rotatet.v.copy();
+		return new Vector3(rotatet.v);
 	}
 
 	/** 
 	 * Apply the quaternion q as a rotation to the vector v
 	 */
 	public static final void applyRotation( Quaternion q, Vector3 v ) {
-		Vector3 vtemp = new Vector3(0,0,0);
+		
 
-		double s = -Vector3.dot(q.v, v);  //scalar value of quaternion q*qv
-		Vector3.multiply(v, q.s, vtemp);         //vector part of q*qv, stored in v
+		double s = -q.v.dot(v);  //scalar value of quaternion q*qv
+		final Vector3 vtemp = v.multiply(q.s);         //vector part of q*qv, stored in v
 		Vector3.crossProduct(q.v, v, v );        
 		Vector3.add(v,vtemp);
 
 		//reset vtemp
-		vtemp.assign(Vector3.zero);
+		vtemp.assign(new Vector3());
 
 		//conjugate q
 		//Quaternion.conjugate(q);
@@ -294,13 +294,13 @@ public final class Quaternion implements Serializable {
 	}
 
 	public static final Quaternion orientation( Vector3 unit) {
-		Vector3 i = Vector3.i;
+		Vector3 i = Vector3.i();
 
 		double theta = Math.acos(i.dot(unit));
 		Vector3 v = i.cross(unit);
 
 		System.out.println("rotation axis is");
-		v.print();
+		System.out.println(v);
 		System.out.println("and angle is " + theta );
 
 
@@ -310,7 +310,7 @@ public final class Quaternion implements Serializable {
 
 	public void Print() {
 		System.out.println( "[ "+ s );
-		v.print();
+		System.out.println(v);
 		System.out.println("]");
 	}
 }

@@ -41,15 +41,7 @@ public class Vector3Test {
         assertEquals(Double.NEGATIVE_INFINITY, w.z);
     }
 
-    @Test
-    public void testCtor05() {
-        final double[] d = {Double.MIN_VALUE, Double.MAX_VALUE, 0.};
-        final Vector3 v = new Vector3(d);
-        assertEquals(Double.MIN_VALUE, v.x);
-        assertEquals(Double.MAX_VALUE, v.y);
-        assertEquals(0., v.z);
-    }
-
+    
     @Test
     public void testAssign() {
         final Vector3 v = new Vector3();
@@ -83,7 +75,7 @@ public class Vector3Test {
     @Test
     public void testCopy() {
         final Vector3 v1 = new Vector3(1., 2., 3.);
-        final Vector3 v2 = v1.copy();
+        final Vector3 v2 = new Vector3(v1);
         assertTrue(v1 != v2); //It is a new ref
         assertEquals(1., v1.x);
         assertEquals(2., v1.y);
@@ -359,7 +351,6 @@ public class Vector3Test {
         assertEquals(0., a.z);
     }
 
-
     @Test
     public void testNorm() {
         final Vector3 a = new Vector3(1., 2., 3.);
@@ -549,5 +540,82 @@ public class Vector3Test {
     @Test(expected = NullPointerException.class)
     public void testCross06() {
         Vector3.crossProduct(new Vector3(), new Vector3(), null);
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testIsEpsilon01() {
+        new Vector3().isEpsilon(-1.);
+    }
+
+    @Test
+    public void testIsEpsilon02() {
+        {//The vector is not changed
+            final Vector3 a = new Vector3(-3., 0., 3.);
+            a.isEpsilon(4.);
+            a.isEpsilon(1.);
+            assertEquals(-3., a.x);
+            assertEquals(0., a.y);
+            assertEquals(3., a.z);
+        }
+        assertTrue(new Vector3().isEpsilon(-0.));
+        assertTrue(new Vector3(-3., -3., -3.).isEpsilon(3.));
+        assertTrue(new Vector3(3., 3., 3.).isEpsilon(3.));
+        assertFalse(new Vector3(-4., 0., 0.).isEpsilon(3.));
+        assertFalse(new Vector3(4., 0., 0.).isEpsilon(3.));
+        assertFalse(new Vector3(0., -4., 0.).isEpsilon(3.));
+        assertFalse(new Vector3(0., 4., 0.).isEpsilon(3.));
+        assertFalse(new Vector3(0., 0., -4.).isEpsilon(3.));
+        assertFalse(new Vector3(0., 0., 4.).isEpsilon(3.));
+    }
+
+    @Test
+    public void testI() {
+        Vector3 a = Vector3.i();
+        assertEquals(1., a.x);
+        assertEquals(0., a.y);
+        assertEquals(0., a.z);
+        assertFalse(a == Vector3.i());
+    }
+
+    @Test
+    public void testJ() {
+        Vector3 a = Vector3.j();
+        assertEquals(0., a.x);
+        assertEquals(1., a.y);
+        assertEquals(0., a.z);
+        assertFalse(a == Vector3.j());
+    }
+
+    @Test
+    public void testK() {
+        Vector3 a = Vector3.k();
+        assertEquals(0., a.x);
+        assertEquals(0., a.y);
+        assertEquals(1., a.z);
+        assertFalse(a == Vector3.k());
+    }
+
+
+    @Test
+    public void testScale01() {
+        final Vector3 a = new Vector3(1., 2., 3.);
+        final Vector3 b = new Vector3(10., 20., 30.);
+        final Vector3 r = a.scale(b);
+        assertTrue(r!=a);
+        assertTrue(r!=b);        
+        assertEquals(1., a.x);
+        assertEquals(2., a.y);
+        assertEquals(3., a.z);
+        assertEquals(10., b.x);
+        assertEquals(20., b.y);
+        assertEquals(30., b.z);        
+        assertEquals(10., r.x);
+        assertEquals(40., r.y);
+        assertEquals(90., r.z);
+    }
+
+    @Test(expected = NullPointerException.class)
+    public void testScale02() {
+        new Vector3().scale(null);
     }
 }

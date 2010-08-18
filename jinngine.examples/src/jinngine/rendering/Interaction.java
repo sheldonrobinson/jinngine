@@ -34,7 +34,7 @@ public class Interaction implements Rendering.EventCallback {
 		// update body
 	
 		// intersect the pointer ray with the interaction plane to get a target point
-		double u = planeNormal.dot(pickpoint.minus(point)) / planeNormal.dot(direction);
+		double u = planeNormal.dot(pickpoint.sub(point)) / planeNormal.dot(direction);
 
 		// move controller body to target position
 		controller.setPosition(point.add(direction.multiply(u)));

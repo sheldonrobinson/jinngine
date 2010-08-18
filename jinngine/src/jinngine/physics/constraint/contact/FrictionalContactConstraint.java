@@ -110,8 +110,8 @@ public final class FrictionalContactConstraint implements ContactConstraint {
 		B.getColumnVectors(t1, t2, t3);
 
 		// interaction points and jacobian for normal constraint
-		final Vector3 r1 = p.minus(b1.state.position);
-		final Vector3 r2 = p.minus(b2.state.position);
+		final Vector3 r1 = p.sub(b1.state.position);
+		final Vector3 r2 = p.sub(b2.state.position);
 
 		// jacobians for normal direction
 		final Vector3 nJ1 = n;
@@ -195,10 +195,10 @@ public final class FrictionalContactConstraint implements ContactConstraint {
 		final Vector3 t2J2 = r1.cross(t2);
 		final Vector3 t2J3 = t2.negate();
 		final Vector3 t2J4 = r2.cross(t2).negate();
-		final Vector3 t2B1 = b1.isFixed()? Vector3.zero: M1.multiply(t2J1);
-		final Vector3 t2B2 = b1.isFixed()? Vector3.zero: I1.multiply(t2J2);
-		final Vector3 t2B3 = b2.isFixed()? Vector3.zero: M2.multiply(t2J3);				
-		final Vector3 t2B4 = b2.isFixed()? Vector3.zero: I2.multiply(t2J4);
+		final Vector3 t2B1 = b1.isFixed()? new Vector3(): M1.multiply(t2J1);
+		final Vector3 t2B2 = b1.isFixed()?  new Vector3(): I1.multiply(t2J2);
+		final Vector3 t2B3 = b2.isFixed()? new Vector3(): M2.multiply(t2J3);
+		final Vector3 t2B4 = b2.isFixed()? new Vector3(): I2.multiply(t2J4);
 
 		//then the tangential friction constraints 
 		double ut1i = t2J1.dot(b1.state.velocity) + t2J2.dot(b1.state.omega) + t2J3.dot(b2.state.velocity) + t2J4.dot(b2.state.omega); //relativeVelocity(b1,b2,p,t2);
@@ -220,10 +220,10 @@ public final class FrictionalContactConstraint implements ContactConstraint {
 		final Vector3 t3J2 = r1.cross(t3);
 		final Vector3 t3J3 = t3.negate();
 		final Vector3 t3J4 = r2.cross(t3).negate();
-		final Vector3 t3B1 = b1.isFixed()? Vector3.zero: M1.multiply(t3J1);
-		final Vector3 t3B2 = b1.isFixed()? Vector3.zero: I1.multiply(t3J2);
-		final Vector3 t3B3 = b2.isFixed()? Vector3.zero: M2.multiply(t3J3);				
-		final Vector3 t3B4 = b2.isFixed()? Vector3.zero: I2.multiply(t3J4);
+		final Vector3 t3B1 = b1.isFixed()? new Vector3(): M1.multiply(t3J1);
+		final Vector3 t3B2 = b1.isFixed()? new Vector3(): I1.multiply(t3J2);
+		final Vector3 t3B3 = b2.isFixed()? new Vector3(): M2.multiply(t3J3);
+		final Vector3 t3B4 = b2.isFixed()? new Vector3(): I2.multiply(t3J4);
 
 		double ut2i = t3J1.dot(b1.state.velocity) + t3J2.dot(b1.state.omega) + t3J3.dot(b2.state.velocity) + t3J4.dot(b2.state.omega); //relativeVelocity(b1,b2,p,t2);
 		double ut2f = 0;

@@ -159,8 +159,8 @@ public class NonsmoothNonlinearConjugateGradient implements Solver {
 				
 			for (Body bi: bodies) {
 				// compute residual in body space
-				Vector3.minus( bi.auxDeltav2, bi.deltavelocity);
-				Vector3.minus( bi.auxDeltaOmega2, bi.deltaomega);
+				Vector3.sub( bi.auxDeltav2, bi.deltavelocity);
+				Vector3.sub( bi.auxDeltaOmega2, bi.deltaomega);
 				Vector3.multiply( bi.auxDeltav2, -1);
 				Vector3.multiply( bi.auxDeltaOmega2, -1);
 

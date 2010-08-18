@@ -88,11 +88,11 @@ public class SphereContactGenerator implements ContactGenerator {
 	@Override
 	public void run() {
 		// sphere centres in world space
-		Vector3 caw = s1.getTransform().multiply(Vector3.zero);
-		Vector3 cbw = s2.getTransform().multiply(Vector3.zero);
+		Vector3 caw = s1.getTransform().multiply(new Vector3());
+		Vector3 cbw = s2.getTransform().multiply(new Vector3());
 
 		// contact normal
-		Vector3 normal = caw.minus(cbw).normalize();
+		Vector3 normal = caw.sub(cbw).normalize();
 		cp.normal.assign(normal);
 
 		// find closest points in world space
@@ -107,7 +107,7 @@ public class SphereContactGenerator implements ContactGenerator {
 		cp.point.assign(cp.paw.add(cp.pbw).multiply(0.5));
 
 		// distance between closest points
-		double d = caw.minus(cbw).norm() - (s1.getRadius()+s2.getRadius());  
+		double d = caw.sub(cbw).norm() - (s1.getRadius()+s2.getRadius());
 				
 
 		// contact within envelope
