@@ -108,8 +108,8 @@ public class BulletNativeContactGenerator implements ContactGenerator {
 		
 		numberOfContacts = bulletRunContactGeneration(
 				record,
-				Matrix3.pack(A.state.rotation), A.state.position.pack(),
-				Matrix3.pack(B.state.rotation), B.state.position.pack() );
+				A.state.rotation.toArray(), A.state.position.toArray(),
+				B.state.rotation.toArray(), B.state.position.toArray() );
 		
 //		System.out.println("Contacts from bullet: " + numberOfContacts);
 		

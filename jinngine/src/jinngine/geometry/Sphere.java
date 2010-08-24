@@ -85,15 +85,9 @@ public class Sphere implements SupportMap3, Geometry, Material {
 	
 	@Override
 	public InertiaMatrix getInertialMatrix() {
-		double r = radius;
+		//Inertia tensor for the sphere.
 		InertiaMatrix I = new InertiaMatrix();
-
-		//Inertia tensor for the sphere. 
-		Matrix3.set( I,
-				(2/5f)*mass*r*r, 0.0f, 0.0f,
-				0.0f, (2/5f)*mass*r*r, 0.0f,
-				0.0f, 0.0f, (2/5f)*mass*r*r );
-
+                I.assignScale((2/5f)*mass*radius*radius);
 		return I;
 	}
 
@@ -107,7 +101,7 @@ public class Sphere implements SupportMap3, Geometry, Material {
 	public void setLocalTransform(Matrix3 B, Vector3 b2) {
 		//A sphere only supports translations as local transform
 		displacement.assign(b2);
-		Matrix4.set(Transforms.transformAndTranslate4(Matrix3.identity().multiply(radius), displacement), localtransform4);
+	localtransform4.assign(Transforms.transformAndTranslate4(Matrix3.scaleMatrix(radius), displacement));
 	}
 	
 	@Override

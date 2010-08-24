@@ -157,7 +157,7 @@ public class JoglRendering extends Frame implements Rendering, GLEventListener, 
 		for ( DrawShape shape: toDraw) {
 			gl.glPushAttrib(GL.GL_LIGHTING_BIT);
 			gl.glPushMatrix();
-			gl.glMultMatrixd(Matrix4.pack(shape.getTransform()), 0);	
+			gl.glMultMatrixd(shape.getTransform().toArray(), 0);
 
 			
 			if (shape.getReferenceBody().deactivated) {
@@ -245,7 +245,7 @@ public class JoglRendering extends Frame implements Rendering, GLEventListener, 
 		
 		for ( DrawShape shape: toDraw) {
 			gl.glPushMatrix();
-			gl.glMultMatrixd(Matrix4.pack(shape.getTransform()), 0);	
+			gl.glMultMatrixd(shape.getTransform().toArray(), 0);
 //			gl.glMultMatrixd(Matrix4.pack(dt.shape.getTransform()),0);
 
 
@@ -323,15 +323,11 @@ public class JoglRendering extends Frame implements Rendering, GLEventListener, 
 	
 	
 	private Matrix4 getCameraMatrix() {
-		Matrix4 M = new Matrix4();
-		Matrix4.set(M, camera);
-		return M;
+		return new Matrix4(camera);
 	}
 
-	private Matrix4 getProjectionMatrix() {
-		Matrix4 M = new Matrix4();
-		Matrix4.set(M, proj);
-		return M;
+	private Matrix4 getProjectionMatrix() {		
+		return new Matrix4(proj);
 	}
 	
 	public void getPointerRay(Vector3 p, Vector3 d, double x, double y) {
@@ -340,9 +336,8 @@ public class JoglRendering extends Frame implements Rendering, GLEventListener, 
 		Vector3 far = new Vector3(2*x/(double)width-1,-2*(y-((height-drawHeight)*0.5))/(double)drawHeight+1, 0.9);
 
 		//inverse transform
-		Matrix4 T = getProjectionMatrix().multiply(getCameraMatrix());
-		Matrix4.invert(T);
-		
+		Matrix4 T = getProjectionMatrix().multiply(getCameraMatrix()).inverse();
+	
 		Vector3 p1 = new Vector3();
 		Vector3 p2 = new Vector3();
 		

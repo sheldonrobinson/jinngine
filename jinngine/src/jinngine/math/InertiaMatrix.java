@@ -10,6 +10,15 @@ package jinngine.math;
 
 
 public class InertiaMatrix extends Matrix3 {
+
+    public InertiaMatrix() {
+    }
+
+    public InertiaMatrix(Matrix3 B) {
+        super(B);
+    }
+
+    
 	//Inertia matrix is a 3x3 matrix used to represent the momentum 
 	//which is required to rotate a rigid body around the fixed basis axis
 	//e_x, e_y, and e_z. The inertia matrix is given by
@@ -21,7 +30,7 @@ public class InertiaMatrix extends Matrix3 {
 	// which is symetric because I = I^T 
 	
 	public InertiaMatrix translate(double mass, Vector3 r) {
-		InertiaMatrix I = new InertiaMatrix(); Matrix3.set(this, I);
+		InertiaMatrix I = new InertiaMatrix(this);
 		InertiaMatrix.translate(I,mass,r);
 		return I;
 	}
@@ -56,7 +65,7 @@ public class InertiaMatrix extends Matrix3 {
 	
 	public InertiaMatrix rotate(Quaternion q) {
 		//functional 
-		InertiaMatrix I = new InertiaMatrix(); Matrix3.set(this, I);
+		InertiaMatrix I = new InertiaMatrix(this);
 		return InertiaMatrix.rotate(I, q);
 	}
 	
@@ -71,7 +80,7 @@ public class InertiaMatrix extends Matrix3 {
 		// I'= R I R^T
 		Matrix3 R = q.toRotationMatrix3();	
 		Matrix3.multiply(R, M, M);
-		Matrix3.transpose(R);
+		R.assignTranspose();
 		Matrix3.multiply(M, R, M);
 		return M;
 	}
@@ -86,7 +95,7 @@ public class InertiaMatrix extends Matrix3 {
 		//as described in [Erleben et al. 2001]
 		// I'= R I R^T
 		Matrix3.multiply(R, M, M);
-		Matrix3.transpose(R);
+		R.assignTranspose();
 		Matrix3.multiply(M, R, M);
 		return M;
 	}

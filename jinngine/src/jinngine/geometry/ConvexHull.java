@@ -170,8 +170,7 @@ public class ConvexHull implements SupportMap3, Geometry, Material {
 		
 		// set propperties
 		mass = referenceMass = masscalculation.getMass();
-		inertiamatrix = new InertiaMatrix();
-		Matrix3.set( masscalculation.getInertiaMatrix(), inertiamatrix );
+		inertiamatrix = new InertiaMatrix(masscalculation.getInertiaMatrix());
 		centreOfMass = masscalculation.getCentreOfMass();
 
 		// align all vertices and faces to centre of mass coordinates
@@ -223,8 +222,8 @@ public class ConvexHull implements SupportMap3, Geometry, Material {
 	private Object auxiliary;
 	private Body body = new Body("default");
 	private double envelope = 0.125;
-	private Matrix3 localrotation = Matrix3.identity(new Matrix3());
-	private Matrix4 localtransform4 = Matrix4.identity(new Matrix4());
+	private Matrix3 localrotation = Matrix3.identity();
+	private Matrix4 localtransform4 = Matrix4.identity();
 	private final Vector3 localtranslation = new Vector3();
 //	private final Vector3 displacement = new Vector3();
 	private final Vector3 localscale = new Vector3(1,1,1);
@@ -335,9 +334,7 @@ public class ConvexHull implements SupportMap3, Geometry, Material {
 	@Override
 	public InertiaMatrix getInertialMatrix() {
 		// scale the inertia matrix in the specified mass and reference mass ratio
-		InertiaMatrix inertia = new InertiaMatrix();
-		Matrix3.set( inertiamatrix.multiply( mass / referenceMass ), inertia );
-		return inertia;
+		return new InertiaMatrix(inertiamatrix.multiply( mass / referenceMass ));
 	}
 
 		
@@ -357,10 +354,10 @@ public class ConvexHull implements SupportMap3, Geometry, Material {
 	}
 
 	@Override
-	public void setLocalTransform(Matrix3 B, Vector3 displacement) {
-		this.localtranslation.assign(displacement);
-		Matrix3.set(B, this.localrotation); 
-		Matrix4.set(Transforms.transformAndTranslate4(localrotation, localtranslation), localtransform4);
+	public void setLocalTransform(Matrix3 localRot, Vector3 localTransl) {
+		this.localtranslation.assign(localTransl);
+                this.localrotation.assign(localRot);
+                localtransform4.assign( Transforms.transformAndTranslate4(localrotation, localtranslation) );
 	}
 	
 	@Override

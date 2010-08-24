@@ -192,7 +192,7 @@ public final class Quaternion implements Serializable {
 		Vector3 v = q.v;
 		double s = q.s;
 
-		Matrix3.set(R, 
+		R.assign(
 				1-2*(v.y*v.y+v.z*v.z), 2*v.x*v.y-2*s*v.z,       2*s*v.y+2*v.x*v.z, 
 				2*v.x*v.y+2*s*v.z,      1-2*(v.x*v.x+v.z*v.z), -2*s*v.x+2*v.y*v.z,
 				-2*s*v.y+2*v.x*v.z,      2*s*v.x+2*v.y*v.z,       1-2*(v.x*v.x+v.y*v.y));

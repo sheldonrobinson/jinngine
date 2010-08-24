@@ -45,22 +45,6 @@ public final class Vector3 implements Serializable {
 
         
 	public transient final static double e = 1e-9f;
-        @Deprecated
-	public transient final static Vector3 epsilon = new Vector3(e,e,e) ;
-        @Deprecated
-        public transient final static Vector3 zero = new Vector3(0,0,0);
-	@Deprecated
-        public transient final static Vector3 i    = new Vector3(1,0,0);
-	@Deprecated
-        public transient final static Vector3 j    = new Vector3(0,1,0);
-	@Deprecated
-        public transient final static Vector3 k    = new Vector3(0,0,1);
-        /**
-         *
-         * @deprecated
-         */
-        @Deprecated
-        public transient final static Vector3 unit = new Vector3(1/Math.sqrt(3),1/Math.sqrt(3),1/Math.sqrt(3));
 
 	/**
          * Constructs and initializes a <code>Vector3</code> to [0., 0., 0.]
@@ -89,17 +73,6 @@ public final class Vector3 implements Serializable {
 		x=v.x; y=v.y; z = v.z;
 	}
 
-	/**
-         *
-         * @param m
-         * @deprecated reaplaced by public {@link Vector3#Vector3(double, double, double)}
-         * @throws NullPointerException when m is null
-         */
-	public Vector3( double[] m ) {
-		x = m[0];
-		y = m[1];
-		z = m[2];
-	}
     /**
      * Create a new unit vector heading positive x
      * @return a new unit vector heading positive x
@@ -121,13 +94,7 @@ public final class Vector3 implements Serializable {
     public static Vector3 k() {
         return new Vector3(0., 0., 1.);
     }
-	/**
-         * @return
-         * @deprecated replaced by  {@link Vector3#Vector3(Vector3)}
-         */
-	public final Vector3 copy() {
-		return new Vector3(this);
-	}
+
         /**
          * Adds a provided vector to this vector creating a resultant
          * vector which is returned.
@@ -139,14 +106,6 @@ public final class Vector3 implements Serializable {
          */
 	public final Vector3 add( Vector3 v) {
 		return new Vector3( x+v.x, y+v.y, z+v.z );
-	}
-        /**
-         * @param s
-         * @return
-         * @deprecated not replaced
-         */
-	public final Vector3 add(double s) {
-		return new Vector3( x+s, y+s, z+s );
 	}
         /**
          * Multiply the vector coordinates by -1. creating a resultant vector
@@ -195,17 +154,6 @@ public final class Vector3 implements Serializable {
 			}
 		}
 	}
-
-	/**
-         * @param v1
-         * @param v2
-         * @deprecated replaced by assign(Vector3)
-         */
-	public static final void assign( Vector3 v1, Vector3 v2) {
-		v1.x = v2.x;
-		v1.y = v2.y;
-		v1.z = v2.z;
-	} 
 	
         /**
          * Add two vectors and place the result in v1.
@@ -214,7 +162,7 @@ public final class Vector3 implements Serializable {
          * @param v2 a not null reference
          * @throws NullPointerException if v1 or v2 is null
          */
-	public static final void add( final Vector3 v1, final Vector3 v2 ) {
+	public static void add( final Vector3 v1, final Vector3 v2 ) {
 		v1.x += v2.x;
 		v1.y += v2.y;
 		v1.z += v2.z;
@@ -227,34 +175,11 @@ public final class Vector3 implements Serializable {
          * @param v2 a not null reference
          * @throws NullPointerException if v1 or v2 is null
          */
-	public static final void sub( final Vector3 v1, final Vector3 v2 ) {
+	public static void sub( final Vector3 v1, final Vector3 v2 ) {
 		v1.x -= v2.x;
 		v1.y -= v2.y;
 		v1.z -= v2.z;
 	}
-	
-        /**
-         * Subtract two vectors, placing result in result
-         * @param v1
-         * @param v2
-         * @param result
-         * @deprecated an not replaced. See {@link Vector3#sub(Vector3, Vector3)}
-         */
-	public static final void sub( Vector3 v1, Vector3 v2, Vector3 result ) {
-		result.x = v1.x - v2.x;
-		result.y = v1.y - v2.y;
-		result.z = v1.z - v2.z;
-	}
-
-
-         /**
-         * @param v
-         * @return
-         * @deprecated replaces by {@link Vector3#sub( Vector3 )}
-         */
-	public final Vector3 minus( Vector3 v) {
-		return new Vector3( x-v.x, y-v.y, z-v.z );
-        }
 
         /**
          * Substracts a provided vector to this vector creating a resultant
@@ -268,27 +193,6 @@ public final class Vector3 implements Serializable {
 		return new Vector3( x-v.x, y-v.y, z-v.z );
 	}
 
-        
-        
-        /**
-         * @return
-         * @deprecated replaced by v.x+v.y+x.z
-         */
-	public final double sum() {
-		return x+y+z;
-	}
-	
-	/**
-         * @deprecated replaced by Vector3.sub(a,b)
-	 * Subtract a from b and place result in a
-         * @param a
-         * @param b
-	 */
-	public static final void minus( Vector3 a, Vector3 b) {
-		a.x -= b.x;
-		a.y -= b.y;
-		a.z -= b.z;		
-	}
         /**
          * Multiply this vector by a provided scalar creating a resultant
          * vector which is returned.
@@ -317,24 +221,10 @@ public final class Vector3 implements Serializable {
          * @param s scalar used to scale the vector
          * @throws NullPointerException if v is null
          */
-	public static final void  multiply( Vector3 v, double s) {
+	public static void multiply( Vector3 v, double s) {
 		v.x*=s; v.y*=s; v.z*=s;
 	}
 
-        /**
-         * @param v
-         * @param s
-         * @param result
-         * @deprecated not replaced. See {@link Vector3#multiply(Vector3,double)}
-         * This occurrence can be replaced by Vector3 multiply(double s)
-         * Vector3 vtemp = new Vector3(0,0,0);
-         * Vector3.multiply(v, q.s, vtemp);
-         */
-	public static final void  multiply( Vector3 v, double s, Vector3 result) {
-		result.x = v.x*s; 
-		result.y = v.y*s; 
-		result.z = v.z*s;
-	}
         /**
          *
          * @param v
@@ -342,7 +232,7 @@ public final class Vector3 implements Serializable {
          * @param result
          * @throws NullPointerException if v ot result is null
          */
-	public static final void  multiplyAndAdd( Vector3 v, double s, Vector3 result) {
+	public static void multiplyAndAdd( Vector3 v, double s, Vector3 result) {
 		result.x += v.x*s; 
 		result.y += v.y*s; 
 		result.z += v.z*s;
@@ -355,7 +245,7 @@ public final class Vector3 implements Serializable {
 	 * @param result
          * @throws NullPointerException if v ot result is null
 	 */
-	public static final void  multiplyStoreAndAdd( Vector3 v, double s, Vector3 result) {
+	public static void  multiplyStoreAndAdd( Vector3 v, double s, Vector3 result) {
 		v.x *= s;
 		v.y *= s;
 		v.z *= s;		
@@ -386,17 +276,6 @@ public final class Vector3 implements Serializable {
 		return this.x*v.x+this.y*v.y;
 	}
 
-
-        /**
-         * @param v1
-         * @param v2
-         * @return
-         * @deprecated replaced by {@link Vector3#dot(Vector3) }
-         */
-	public static final double dot(Vector3 v1,Vector3 v2) {
-		return v1.x*v2.x+v1.y*v2.y+v1.z*v2.z;
-	}
-
 	/**
          * Return a new new set to the cross product of this vectors and v
          * Neither <code>this</code> nor <code>v</code> is modified.
@@ -414,7 +293,7 @@ public final class Vector3 implements Serializable {
         * @param v2 the second vector
         * @param result
         */
-	public static final void crossProduct( final Vector3 v1, final Vector3 v2, final Vector3 result ) {
+	public static void crossProduct( final Vector3 v1, final Vector3 v2, final Vector3 result ) {
 		final double tempa1 = v1.y*v2.z-v1.z*v2.y;
 		final double tempa2 = v1.z*v2.x-v1.x*v2.z;
 		final double tempa3 = v1.x*v2.y-v1.y*v2.x;
@@ -506,14 +385,7 @@ public final class Vector3 implements Serializable {
 		return Math.sqrt( x*x + y*y );
 	}
 
-        /**
-         * @return
-         * @deprecated not replaced
-         */
-	public final double infnorm() {
-		return Math.abs( x>y?x>z?x:z:y>z?y:z); 
-	}
-
+       
         /**
          * Returns the length of this vector.
          * <code>this</code> vector is not modified.
@@ -523,82 +395,7 @@ public final class Vector3 implements Serializable {
 		return x*x+y*y+z*z;
 	}
 
-        /**
-         * @return
-         * @deprecated not replaced
-         */
-	public final double[][] crossProductMatrix() {
-		double [][] m = new double[3][3];
-
-		m[0][0] =   0;  m[0][1]= -z;  m[0][2]=  y;
-		m[1][0] =  z;  m[1][1]=   0;  m[1][2]= -x;
-		m[2][0] = -y;  m[2][1]=  x;  m[2][2]=   0;
-
-		return m;
-	}
-
-        /**
-         * @param A
-         * @return
-         * @deprecated not replaced
-         */
-	public final Matrix3 crossProductMatrix(Matrix3 A) {
-		Matrix3.set( A,  0,-z,  y,
-				z,  0, -x,
-				-y, x,   0 );
-
-		return A;
-	}
-
-        /**
-         * @return
-         * @deprecated replaced by Matrix3.crossProduct
-         */
-	public final Matrix3 crossProductMatrix3() {
-		Matrix3 A = new Matrix3();
-
-		Matrix3.set( A,  0,-z,  y,
-				z,  0, -x,
-				-y, x,   0 );
-
-		return A;
-	}
-
-        /**
-         * @return
-         * @deprecated not repalced
-         */
-	public final double[][] transposeMatrix() {
-		double [][] m = new double[3][1];
-
-		m[0][0] = x;
-		m[1][0] = y;
-		m[2][0] = z;
-
-		return m;
-	}
-        /**
-         * @return
-         * @deprecated not repalced
-         */
-	public final double[][] Matrix() {
-		double [][] m = new double[1][3];
-
-		m[0][0] = x;  m[0][1]= y;  m[0][2]= z;
-
-		return m;
-	}
-
-        /**
-         * @param v 
-         * @return
-         * @deprecated not replaced
-         * the only occurence where it is used should migrate to isEpsilon(double)
-         */
-	public final boolean lessThan(Vector3 v) {
-		return (x<v.x)&&(y<v.y)&&(z<v.z);
-	}
-
+       
     /**
      * Returns <tt>true</tt> if the absolute value of the three coordinates are
      * smaller or equal to epsilon.
@@ -616,68 +413,12 @@ public final class Vector3 implements Serializable {
                 && -epsilon <= z && z <= epsilon;
     }
         /**
-         * @param v
-         * @return
-         * @deprecated not replaced
-         */
-	public final boolean weaklyLessThan(Vector3 v) {
-		return (x<=v.x)&&(y<=v.y)&&(z<=v.z);
-	}
-        /**
-         * @return
-         * @deprecated not replaced. Try equals(new Vector())
-         */
-	public final boolean isZero() {
-		return x==0&&y==0&&z==0;
-	}
-        /**
-         * @deprecated not replaced
-         * @return x>=0&&y>=0&&z>=0;
-         */
-        public final boolean isWeaklyGreaterThanZero() {
-		return x>=0&&y>=0&&z>=0;
-	}
-        /**
-         * @deprecated not replaced
-         * @return new Vector3( Math.abs(x), Math.abs(y), Math.abs(z) )
-         */
-	public final Vector3 abs() {
-		return new Vector3( Math.abs(x), Math.abs(y), Math.abs(z) );
-	}
-        /**
-         * @deprecated replaced by System.out.println( vect );
-         */
-	public final void print() {
-		System.out.println( "[" + x + "," +y+ "," +z + "]" );
-	}
-
-        /**
-         * @param epsilon
-         * @return
-         * @deprecated not replaced
-         */
-	public final Vector3 cutOff(double epsilon) {
-		double b1=Math.abs(x)<epsilon?0:x;
-		double b2=Math.abs(y)<epsilon?0:y;
-		double b3=Math.abs(z)<epsilon?0:z;
-		return new Vector3(b1,b2,b3);
-	}
-        /**
          * Pack the three coorindates into a new double array
          * <code>this</code> vector is not modified.
          * @return a array set with x, y and z
          */
-	public final double[] pack() {
+	public final double[] toArray() {
 		return new double[]{x,y,z};
-	}
-
-        /**
-         * @param v
-         * @return
-         * @deprecated replaced by {@link Vector3#pack()}
-         */
-	public final static double[] pack(Vector3 v) {
-		return new double[]{v.x,v.y,v.z};
 	}
 
         /**

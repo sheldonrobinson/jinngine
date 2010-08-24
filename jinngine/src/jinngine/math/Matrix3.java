@@ -15,13 +15,25 @@ package jinngine.math;
  * A 3x3 matrix implementation
  */
 public class Matrix3 {
-  public double a11=0, a12=0, a13=0;
-  public double a21=0, a22=0, a23=0;
-  public double a31=0, a32=0, a33=0;
-
-  public static final Matrix3 zero = new Matrix3(0);
+  public double a11, a12, a13;
+  public double a21, a22, a23;
+  public double a31, a32, a33;
   
   public Matrix3() {
+      a11=0; a12=0; a13=0;
+      a21=0; a22=0; a23=0;
+      a31=0; a32=0; a33=0;
+  }
+
+   /**
+    * Assign the zero matrix to this matrix
+    * @return <code>this</code>
+    */
+  public final Matrix3 assignZero() {
+	  a11 = 0; a12 = 0; a13 = 0;
+	  a21 = 0; a22 = 0; a23 = 0;
+	  a31 = 0; a32 = 0; a33 = 0;
+          return this;
   }
   
   /**
@@ -37,8 +49,7 @@ public class Matrix3 {
    * @param a33
    */
   public Matrix3(double a11, double a12, double a13, double a21, double a22,
-		double a23, double a31, double a32, double a33) {
-	super();
+		double a23, double a31, double a32, double a33) {	
 	this.a11 = a11;
 	this.a12 = a12;
 	this.a13 = a13;
@@ -73,54 +84,46 @@ public class Matrix3 {
   /**
    * Construct a new 3x3 matrix as a copy of the given matrix B
    * @param B
+   * @throws NullPointerException
    */
   public Matrix3( Matrix3 B) {
-	  this.a11 = B.a11; this.a12 = B.a12; this.a13 = B.a13;
-	  this.a21 = B.a21; this.a22 = B.a22; this.a23 = B.a23;
-	  this.a31 = B.a31; this.a32 = B.a32; this.a33 = B.a33;
-  }
-  
-  public Matrix3( Matrix4 B) {
-	  this.a11 = B.a11; this.a12 = B.a12; this.a13 = B.a13;
-	  this.a21 = B.a21; this.a22 = B.a22; this.a23 = B.a23;
-	  this.a31 = B.a31; this.a32 = B.a32; this.a33 = B.a33;
+	 assign(B);
   }
 
-  /**
+   /**
    * assign the value of B to this Matrix3
-   * @param B 
+   * @param B
    */
-  public final void assign(Matrix3 B) {
-	  this.a11 = B.a11; this.a12 = B.a12; this.a13 = B.a13;
-	  this.a21 = B.a21; this.a22 = B.a22; this.a23 = B.a23;
-	  this.a31 = B.a31; this.a32 = B.a32; this.a33 = B.a33;	  
+  public final Matrix3 assign(Matrix3 B) {
+	  a11 = B.a11; a12 = B.a12; a13 = B.a13;
+	  a21 = B.a21; a22 = B.a22; a23 = B.a23;
+	  a31 = B.a31; a32 = B.a32; a33 = B.a33;
+          return this;
   }
-  
-  /**
-   * Assign the zero matrix to this matrix
-   */
-  public final void assignZero() {
-	  this.a11 = 0; this.a12 = 0; this.a13 = 0;
-	  this.a21 = 0; this.a22 = 0; this.a23 = 0;
-	  this.a31 = 0; this.a32 = 0; this.a33 = 0;	  
-  }
+
+  public Matrix3( Matrix4 B) {
+	  a11 = B.a11; a12 = B.a12; a13 = B.a13;
+	  a21 = B.a21; a22 = B.a22; a23 = B.a23;
+	  a31 = B.a31; a32 = B.a32; a33 = B.a33;
+  } 
   
   /**
    * Assign the scale matrix given by s, to this matrix
    */
-  public final void assignScale(double s) {
-	  this.a11 = s; this.a12 = 0; this.a13 = 0;
-	  this.a21 = 0; this.a22 = s; this.a23 = 0;
-	  this.a31 = 0; this.a32 = 0; this.a33 = s;	  
+  public final Matrix3 assignScale(final double s) {
+	  a11 = s; a12 = 0; a13 = 0;
+	  a21 = 0; a22 = s; a23 = 0;
+	  a31 = 0; a32 = 0; a33 = s;
+          return this;
   }
 
   /**
    * Assign the non-uniform scale matrix given by s1, s2 and s3, to this matrix
    */
-  public final Matrix3 assignScale(double s1, double s2, double s3) {
-	  this.a11 = s1; this.a12 = 0; this.a13 = 0;
-	  this.a21 = 0; this.a22 = s2; this.a23 = 0;
-	  this.a31 = 0; this.a32 = 0; this.a33 = s3;
+  public final Matrix3 assignScale(double sx, double sy, double sz) {
+	  a11 = sx; a12 = 0.; a13 = 0.;
+	  a21 = 0.; a22 = sy; a23 = 0.;
+	  a31 = 0.; a32 = 0.; a33 = sz;
 	  return this;
   }
 
@@ -128,16 +131,27 @@ public class Matrix3 {
   /**
    * Assign the identity matrix to this matrix
    */
-  public final void assignIdentity() {
-	  this.a11 = 1; this.a12 = 0; this.a13 = 0;
-	  this.a21 = 0; this.a22 = 1; this.a23 = 0;
-	  this.a31 = 0; this.a32 = 0; this.a33 = 1;	  
+  public final Matrix3 assignIdentity() {
+	  a11 = 1; a12 = 0; a13 = 0;
+	  a21 = 0; a22 = 1; a23 = 0;
+	  a31 = 0; a32 = 0; a33 = 1;
+          return this;
   }
-  
+
+    public Matrix3 assign(
+            double a11, double a12, double a13,
+            double a21, double a22, double a23,
+            double a31, double a32, double a33) {
+        this.a11 = a11;	this.a12 = a12;	this.a13 = a13;
+	this.a21 = a21;	this.a22 = a22;	this.a23 = a23;
+	this.a31 = a31;	this.a32 = a32;	this.a33 = a33;
+        return this;
+    }
   /**
    * Get the n'th column vector of this matrix
    * @param n
    * @return
+   * @throws IllegalArgumentException
    */
   public final Vector3 column(int n) {
 	  switch (n) {
@@ -147,8 +161,9 @@ public class Matrix3 {
 		  return new Vector3(a12,a22,a32);
 	  case 2:
 		  return new Vector3(a13,a23,a33);
-	  }
-	return null;	  
+              default:
+                  throw new IllegalArgumentException();
+	  }	
   }
   
   /**
@@ -164,29 +179,30 @@ public class Matrix3 {
 		  return new Vector3(a21,a22,a23);
 	  case 2:
 		  return new Vector3(a31,a32,a33);
-	  }
-	return null;	  
+              default:
+                  throw new IllegalArgumentException();
+	  }	
   }
 
   
   /**
    * Get all column vectors of this matrix
-   * @param r1
-   * @param r2
-   * @param r3
+   * @param c1
+   * @param c2
+   * @param c3
    */
-  public void getColumnVectors( Vector3 r1, Vector3 r2, Vector3 r3) {
-	  r1.x = a11;
-	  r1.y = a21;
-	  r1.z = a31;
+  public void getColumnVectors( Vector3 c1, Vector3 c2, Vector3 c3) {
+	  c1.x = a11;
+	  c1.y = a21;
+	  c1.z = a31;
 
-	  r2.x = a12;
-	  r2.y = a22;
-	  r2.z = a32;
+	  c2.x = a12;
+	  c2.y = a22;
+	  c2.z = a32;
 	  
-	  r3.x = a13;
-	  r3.y = a23;
-	  r3.z = a33;
+	  c3.x = a13;
+	  c3.y = a23;
+	  c3.z = a33;
   }
   
   /**
@@ -208,26 +224,13 @@ public class Matrix3 {
 	  r3.y = a32;
 	  r3.z = a33;
   }
-  
-  /**
-   * 
-   * @param s
-   */
-  public Matrix3(int s) {
-    Matrix3.multiply( this,0,this);
-  } 
-  
+    
   /**
    * Return a new identity Matrix3 instance
    * @return
    */
   public static Matrix3 identity() {
-	  Matrix3 A = new Matrix3();
-	  A.a11 = 1; A.a12 = 0; A.a13 = 0;
-	  A.a21 = 0; A.a22 = 1; A.a23 = 0;
-	  A.a31 = 0; A.a32 = 0; A.a33 = 1;
-	  
-	  return A;
+	  return new Matrix3().assignIdentity();
   }
   
   /**
@@ -262,13 +265,20 @@ public class Matrix3 {
    * @return
    */
   public Matrix3 multiply(Matrix3 A) {
-	  Matrix3 R = new Matrix3();
-	  multiply(this,A,R);
-	  return R;
+	  return multiply(this,A,new Matrix3());
+  }
+
+    /**
+   * Multiply this matrix by the matrix A and return the result
+   * @param A
+   * @return
+   */
+  public Matrix3 assignMultiply(Matrix3 A) {
+	  return multiply(this,A,this);
   }
   
   //C = AxB 
-  public final static Matrix3 multiply( final Matrix3 A, final Matrix3 B, final Matrix3 C ) {
+  public static Matrix3 multiply( final Matrix3 A, final Matrix3 B, final Matrix3 C ) {
     //               B | b11 b12 b13
     //                 | b21 b22 b23
     //                 | b31 b32 b33
@@ -277,7 +287,7 @@ public class Matrix3 {
     //     a21 a22 a23 | c21 c22 c23
     //     a31 a32 a33 | c31 c32 c33  C
     
-    double t11 = A.a11*B.a11 + A.a12*B.a21 + A.a13*B.a31; 
+    double t11 = A.a11*B.a11 + A.a12*B.a21 + A.a13*B.a31;
     double t12 = A.a11*B.a12 + A.a12*B.a22 + A.a13*B.a32;
     double t13 = A.a11*B.a13 + A.a12*B.a23 + A.a13*B.a33;
     
@@ -293,11 +303,11 @@ public class Matrix3 {
     C.a11 = t11;
     C.a12 = t12;
     C.a13 = t13;
-    
+
     C.a21 = t21;
     C.a22 = t22;
     C.a23 = t23;
-    
+
     C.a31 = t31;
     C.a32 = t32;
     C.a33 = t33;
@@ -315,30 +325,14 @@ public class Matrix3 {
 	  return r;
   }
   
-  //C = As 
-  public final static Matrix3 multiply( final Matrix3 A, final double s, final Matrix3 C ) {
-    double t11 = A.a11*s; double t12 = A.a12*s; double t13 = A.a13*s;
-    double t21 = A.a21*s; double t22 = A.a22*s; double t23 = A.a23*s;
-    double t31 = A.a31*s; double t32 = A.a32*s; double t33 = A.a33*s;
-    
-    C.a11 = t11; C.a12 = t12; C.a13 = t13;
-    C.a21 = t21; C.a22 = t22; C.a23 = t23;
-    C.a31 = t31; C.a32 = t32; C.a33 = t33;
-
-    return C;
-  }
   
   //A = A^T 
-  public final static Matrix3 transpose( final Matrix3 A ) {
-    double t11 = A.a11; double t12 = A.a12; double t13 = A.a13;
-    double t21 = A.a21; double t22 = A.a22; double t23 = A.a23;
-    double t31 = A.a31; double t32 = A.a32; double t33 = A.a33;
-    
-    A.a11 = t11; A.a12 = t21; A.a13 = t31;
-    A.a21 = t12; A.a22 = t22; A.a23 = t32;
-    A.a31 = t13; A.a32 = t23; A.a33 = t33;
-
-    return A;
+  public Matrix3 assignTranspose() {
+    double t;
+	t=a12; a12=a21; a21=t;
+	t=a13; a13=a31; a31=t;
+	t=a23; a23=a32; a32=t;
+    return this;
   }
   
   /**
@@ -346,47 +340,60 @@ public class Matrix3 {
    * @return
    */
   public final Matrix3 transpose() {
-	  Matrix3 A = new Matrix3(this);
-	  Matrix3.transpose(A);
-	  return A;
+	 return new Matrix3(this).assignTranspose();
   }
 
 
   //C = A-B
-  public final static void subtract( final Matrix3 A, final Matrix3 B, final Matrix3 C ) {
-    double t11 = A.a11-B.a11; double t12 = A.a12-B.a12; double t13 = A.a13-B.a13;
-    double t21 = A.a21-B.a21; double t22 = A.a22-B.a22; double t23 = A.a23-B.a23;
-    double t31 = A.a31-B.a31; double t32 = A.a32-B.a32; double t33 = A.a33-B.a33;
-
-    C.a11 = t11; C.a12 = t12; C.a13 = t13;
-    C.a21 = t21; C.a22 = t22; C.a23 = t23;
-    C.a31 = t31; C.a32 = t32; C.a33 = t33;
+  public static Matrix3 subtract( final Matrix3 A, final Matrix3 B, final Matrix3 C ) {
+    C.a11 = A.a11-B.a11; C.a12 = A.a12-B.a12; C.a13 = A.a13-B.a13;
+    C.a21 = A.a21-B.a21; C.a22 = A.a22-B.a22; C.a23 = A.a23-B.a23;
+    C.a31 = A.a31-B.a31; C.a32 = A.a32-B.a32; C.a33 = A.a33-B.a33;
+    return C;
   }
-
+ /**
+   * Substract to this matrix the matrix B, return result in a new matrix instance
+   * @param B
+   * @return
+   */
+  public Matrix3 subtract( Matrix3 B ) {
+	  return subtract(this,B,new Matrix3());
+  }
+  /**
+   * Substract to this matrix the matrix B, return result in a new matrix instance
+   * @param B
+   * @return
+   */
+  public Matrix3 assignSubtract( Matrix3 B ) {
+	  return subtract(this,B,this);
+  }
   /**
    * Add to this matrix the matrix B, return result in a new matrix instance
    * @param B
    * @return
    */
   public Matrix3 add( Matrix3 B ) {
-	  Matrix3 A = new Matrix3(this);
-	  Matrix3.add(A, B, A);
-	  return A;
+	  return add(this,B,new Matrix3());
+  }
+  /**
+   * Add to this matrix the matrix B, return result in a new matrix instance
+   * @param B
+   * @return
+   */
+  public Matrix3 assignAdd( Matrix3 B ) {
+	  return add(this,B,this);
   }
   
   //C = A+B
-  public final static void add( final Matrix3 A, final Matrix3 B, final Matrix3 C ) {
-    double t11 = A.a11+B.a11; double t12 = A.a12+B.a12; double t13 = A.a13+B.a13;
-    double t21 = A.a21+B.a21; double t22 = A.a22+B.a22; double t23 = A.a23+B.a23;
-    double t31 = A.a31+B.a31; double t32 = A.a32+B.a32; double t33 = A.a33+B.a33;
-    
-    C.a11 = t11; C.a12 = t12; C.a13 = t13;
-    C.a21 = t21; C.a22 = t22; C.a23 = t23;
-    C.a31 = t31; C.a32 = t32; C.a33 = t33;
+  public static Matrix3 add( final Matrix3 A, final Matrix3 B, final Matrix3 C ) {
+    C.a11 = A.a11+B.a11; C.a12 = A.a12+B.a12; C.a13 = A.a13+B.a13;
+    C.a21 = A.a21+B.a21; C.a22 = A.a22+B.a22; C.a23 = A.a23+B.a23;
+    C.a31 = A.a31+B.a31; C.a32 = A.a32+B.a32; C.a33 = A.a33+B.a33;
+    return C;
   }
   
   // rT = (vT)A   NOTE that the result of this is actually a transposed vector!! 
-  public final static Vector3 transposeVectorAndMultiply( final Vector3 v, final Matrix3 A, final Vector3 r ){
+  public static Vector3 transposeVectorAndMultiply( final Vector3 v, final Matrix3 A, final Vector3 r ){
     //            A  | a11 a12 a13
     //               | a21 a22 a23
     //               | a31 a32 a33
@@ -411,7 +418,7 @@ public class Matrix3 {
    * @param r Vector to hold result of multiplication
    * @return Reference to the given Vector3 r instance
    */
-  public final static Vector3 multiply( final Matrix3 A, final Vector3 v, final Vector3 r ) {
+  public static Vector3 multiply( final Matrix3 A, final Vector3 v, final Vector3 r ) {
     //                   
     //               V | v1
     //                 | v2
@@ -437,96 +444,51 @@ public class Matrix3 {
    * @param A
    * @return 
    */
-  public final static double determinant( final Matrix3 A ) {
-	  return A.a11*A.a22*A.a33- A.a11*A.a23*A.a32 + A.a21*A.a32*A.a13 - A.a21*A.a12*A.a33 + A.a31*A.a12*A.a23-A.a31*A.a22*A.a13;
+  public double determinant() {
+	  return a11*a22*a33- a11*a23*a32 + a21*a32*a13 - a21*a12*a33 + a31*a12*a23-a31*a22*a13;
   }
   
 /**
  * Compute the inverse of the matrix A, place the result in C
  */
-  public final static Matrix3 inverse( final Matrix3 A, final Matrix3 C ) {
-    double t11 =  (A.a22*A.a33-A.a23*A.a32)/(A.a31*A.a12*A.a23-A.a31*A.a13*A.a22-A.a21*A.a12*A.a33+A.a21*A.a13*A.a32+A.a11*A.a22*A.a33-A.a11*A.a23*A.a32); 
-    double t12 = -(A.a12*A.a33-A.a13*A.a32)/(A.a31*A.a12*A.a23-A.a31*A.a13*A.a22-A.a21*A.a12*A.a33+A.a21*A.a13*A.a32+A.a11*A.a22*A.a33-A.a11*A.a23*A.a32); 
-    double t13 =  (A.a12*A.a23-A.a13*A.a22)/(A.a31*A.a12*A.a23-A.a31*A.a13*A.a22-A.a21*A.a12*A.a33+A.a21*A.a13*A.a32+A.a11*A.a22*A.a33-A.a11*A.a23*A.a32);
-    double t21 = -(-A.a31*A.a23+A.a21*A.a33)/(A.a31*A.a12*A.a23-A.a31*A.a13*A.a22-A.a21*A.a12*A.a33+A.a21*A.a13*A.a32+A.a11*A.a22*A.a33-A.a11*A.a23*A.a32);
-    double t22 =  (-A.a31*A.a13+A.a11*A.a33)/(A.a31*A.a12*A.a23-A.a31*A.a13*A.a22-A.a21*A.a12*A.a33+A.a21*A.a13*A.a32+A.a11*A.a22*A.a33-A.a11*A.a23*A.a32);
-    double t23 = -(-A.a21*A.a13+A.a11*A.a23)/(A.a31*A.a12*A.a23-A.a31*A.a13*A.a22-A.a21*A.a12*A.a33+A.a21*A.a13*A.a32+A.a11*A.a22*A.a33-A.a11*A.a23*A.a32); 
-    double t31 =  (-A.a31*A.a22+A.a21*A.a32)/(A.a31*A.a12*A.a23-A.a31*A.a13*A.a22-A.a21*A.a12*A.a33+A.a21*A.a13*A.a32+A.a11*A.a22*A.a33-A.a11*A.a23*A.a32);
-    double t32 = -(-A.a31*A.a12+A.a11*A.a32)/(A.a31*A.a12*A.a23-A.a31*A.a13*A.a22-A.a21*A.a12*A.a33+A.a21*A.a13*A.a32+A.a11*A.a22*A.a33-A.a11*A.a23*A.a32);
-    double t33 =  (-A.a21*A.a12+A.a11*A.a22)/(A.a31*A.a12*A.a23-A.a31*A.a13*A.a22-A.a21*A.a12*A.a33+A.a21*A.a13*A.a32+A.a11*A.a22*A.a33-A.a11*A.a23*A.a32);
-    
+  public static Matrix3 inverse( final Matrix3 A, final Matrix3 C ) {
+    double d = (A.a31*A.a12*A.a23-A.a31*A.a13*A.a22-A.a21*A.a12*A.a33+A.a21*A.a13*A.a32+A.a11*A.a22*A.a33-A.a11*A.a23*A.a32);
+    double t11 =  (A.a22*A.a33-A.a23*A.a32)/d;
+    double t12 = -(A.a12*A.a33-A.a13*A.a32)/d;
+    double t13 =  (A.a12*A.a23-A.a13*A.a22)/d;
+    double t21 = -(-A.a31*A.a23+A.a21*A.a33)/d;
+    double t22 =  (-A.a31*A.a13+A.a11*A.a33)/d;
+    double t23 = -(-A.a21*A.a13+A.a11*A.a23)/d;
+    double t31 =  (-A.a31*A.a22+A.a21*A.a32)/d;
+    double t32 = -(-A.a31*A.a12+A.a11*A.a32)/d;
+    double t33 =  (-A.a21*A.a12+A.a11*A.a22)/d;
+
     C.a11 = t11; C.a12 = t12; C.a13 = t13;
     C.a21 = t21; C.a22 = t22; C.a23 = t23;
     C.a31 = t31; C.a32 = t32; C.a33 = t33;
     return C;
   }
-  
+
+  public final Matrix3 assignInverse() {
+      return inverse(this,this);
+  }
   public final Matrix3 inverse() {
-	  Matrix3 I = new Matrix3();
-	  Matrix3.inverse(this, I);
-	  return I;
-  }
-  
-  //set the Matrix from a double[][] array
-  /**
-   * Set the entries of the matrix A, using the double array matrixArray
-   */
-  public final static void set( double[][] matrixArray, final Matrix3 A ) {
-    A.a11 = matrixArray[0][0]; A.a12 = matrixArray[0][1]; A.a13 = matrixArray[0][2];
-    A.a21 = matrixArray[1][0]; A.a22 = matrixArray[1][1]; A.a23 = matrixArray[1][2];
-    A.a31 = matrixArray[2][0]; A.a32 = matrixArray[2][1]; A.a33 = matrixArray[2][2];
-  }
-  
-  //set the Matrix from given Matrix: B = A
-  public final static void set( final Matrix3 A, final Matrix3 B ) {
-    B.a11 = A.a11; B.a12 = A.a12; B.a13 = A.a13;
-    B.a21 = A.a21; B.a22 = A.a22; B.a23 = A.a23;
-    B.a31 = A.a31; B.a32 = A.a32; B.a33 = A.a33;
-  }
-  
-  public final static void set( Matrix3 A, double p11, double p12, double p13,
-                                double p21, double p22, double p23,
-                                double p31, double p32, double p33) {
-    A.a11 = p11; A.a12 = p12; A.a13 = p13;
-    A.a21 = p21; A.a22 = p22; A.a23 = p23;
-    A.a31 = p31; A.a32 = p32; A.a33 = p33;
-  }
-  
-  //C = I
-  public final static Matrix3 identity( final Matrix3 C ) {
-    C.a11 = 1; C.a12 = 0; C.a13 = 0;
-    C.a21 = 0; C.a22 = 1; C.a23 = 0;
-    C.a31 = 0; C.a32 = 0; C.a33 = 1;
-    return C;
-  } 
-
-  //C = S(s)
-  public final static Matrix3 scale( final Matrix3 C, Vector3 s ) {
-    C.a11 = s.x; C.a12 = 0; C.a13 = 0;
-    C.a21 = 0; C.a22 = s.y; C.a23 = 0;
-    C.a31 = 0; C.a32 = 0; C.a33 = s.z;
-    return C;
-  } 
-  
-  public final static Matrix3 diagonal( Vector3 d) {
-	  Matrix3 C = new Matrix3();
-	  C.a11 = d.x; C.a12 = 0; C.a13 = 0;
-	  C.a21 = 0; C.a22 = d.y; C.a23 = 0;
-	  C.a31 = 0; C.a32 = 0; C.a33 = d.z;
-	  return C;	  
-  }
-  
-  public final Matrix3 copy() {
-	  Matrix3 M = new Matrix3();
-	  Matrix3.set(this, M);
-	  return M;
+        return inverse(this,new Matrix3());
   }
 
+  public static Matrix3 scaleMatrix( double xs, double ys, double zs) {
+      return new Matrix3().assignScale(xs,ys,zs);
+  }
   
-  public final static void print( final Matrix3 A ) {
-    System.out.println("[ "+A.a11+" , " + A.a12 + " , " + A.a13 + " ]" );
-    System.out.println("[ "+A.a21+" , " + A.a22 + " , " + A.a23 + " ]" );
-    System.out.println("[ "+A.a31+" , " + A.a32 + " , " + A.a33 + " ]" );
+  public static Matrix3 scaleMatrix( double s ) {
+      return new Matrix3().assignScale(s);      
+  }
+     
+  @Override
+  public String toString() {
+    return "["+a11+", " + a12 + ", " + a13 + "]\n"
+         + "["+a21+", " + a22 + ", " + a23 + "]\n"
+         + "["+a31+", " + a32 + ", " + a33 + "]" ;
   }
   
   /**
@@ -538,18 +500,11 @@ public class Matrix3 {
 	  || Double.isNaN(a31)||Double.isNaN(a32)||Double.isNaN(a33);
   }
   
-  public static final double[] pack( Matrix3 M ) {
-	  double[] array = new double[3*3];
-	  array[0] = M.a11;
-	  array[1] = M.a21;
-	  array[2] = M.a31;
-	  array[3] = M.a12;
-	  array[4] = M.a22;
-	  array[5] = M.a32;
-	  array[6] = M.a13;
-	  array[7] = M.a23;
-	  array[8] = M.a33;
-	  return array;
+  public double[] toArray() {
+	     return new double[]{
+                  a11, a21, a31,
+                  a12, a22, a32,
+                  a13, a23, a33};
   }
 
   /**
@@ -565,7 +520,7 @@ public class Matrix3 {
      * @return
      * @throws NullPointerException
      */
-    public static final Matrix3 crossProductMatrix(Vector3 v) {
+    public static Matrix3 crossProductMatrix(Vector3 v) {
         return new Matrix3(
                 0., -v.z, v.y,
                 v.z, 0., -v.x,

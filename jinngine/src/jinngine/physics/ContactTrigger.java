@@ -76,7 +76,7 @@ public class ContactTrigger implements Trigger {
 			Iterator<NCPConstraint> ncps = constraint.getNcpConstraints();
 			while(ncps.hasNext()) {
 				NCPConstraint ncp = ncps.next();
-				totalforce += ncp.lambda;
+				totalforce += ncp.lambda;			
 				numberOfNcpConstraints += 1;
 			}
 
@@ -107,7 +107,7 @@ public class ContactTrigger implements Trigger {
 			Iterator<NCPConstraint> ncps = constraint.getNcpConstraints();
 			while(ncps.hasNext()) {
 				NCPConstraint ncp = ncps.next();
-				totalforce += ncp.lambda;
+				totalforce += ncp.lambda;				
 				numberOfNcpConstraints += 1;
 			}
 

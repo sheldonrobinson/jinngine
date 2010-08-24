@@ -9,39 +9,112 @@
 package jinngine.math;
 
 public class Matrix4 {
-	  public double a11=0, a12=0, a13=0, a14=0;
-	  public double a21=0, a22=0, a23=0, a24=0;
-	  public double a31=0, a32=0, a33=0, a34=0;
-	  public double a41=0, a42=0, a43=0, a44=0;
 
-	  public final static Matrix4 identity(final Matrix4 M) {
-		  M.a11=1; M.a12=0; M.a13=0; M.a14=0;
-		  M.a21=0; M.a22=1; M.a23=0; M.a24=0;
-		  M.a31=0; M.a32=0; M.a33=1; M.a34=0;
-		  M.a41=0; M.a42=0; M.a43=0; M.a44=1;
-		  return M;
-	  }
-	  
-	  public Matrix4() {}
-	  
+    	  public double a11, a12, a13, a14;
+	  public double a21, a22, a23, a24;
+	  public double a31, a32, a33, a34;
+	  public double a41, a42, a43, a44;
+	  	  
+	  public Matrix4() {
+            a11=0; a12=0; a13=0; a14=0;
+            a21=0; a22=0; a23=0; a24=0;
+            a31=0; a32=0; a33=0; a34=0;
+            a41=0; a42=0; a43=0; a44=0;
+          }
+
+          public final Matrix4 assignZero() {
+                a11=0; a12=0; a13=0; a14=0;
+                a21=0; a22=0; a23=0; a24=0;
+                a31=0; a32=0; a33=0; a34=0;
+                a41=0; a42=0; a43=0; a44=0;
+                return this;
+          }
+
 	  public Matrix4(double a11, double a12, double a13, double a14,
 			         double a21, double a22, double a23, double a24,
 			         double a31, double a32, double a33, double a34,
 			         double a41, double a42, double a43, double a44	  
-	  ) {
-		  Matrix4 M = this;
-		  M.a11=a11; M.a12=a12; M.a13=a13; M.a14=a14;
-		  M.a21=a21; M.a22=a22; M.a23=a23; M.a24=a24;
-		  M.a31=a31; M.a32=a32; M.a33=a33; M.a34=a34;
-		  M.a41=a41; M.a42=a42; M.a43=a43; M.a44=a44;
+	  ) {		  
+		  this.a11=a11; this.a12=a12; this.a13=a13; this.a14=a14;
+		  this.a21=a21; this.a22=a22; this.a23=a23; this.a24=a24;
+		  this.a31=a31; this.a32=a32; this.a33=a33; this.a34=a34;
+		  this.a41=a41; this.a42=a42; this.a43=a43; this.a44=a44;
 	  }
+	  public Matrix4 assign(double a11, double a12, double a13, double a14,
+			         double a21, double a22, double a23, double a24,
+			         double a31, double a32, double a33, double a34,
+			         double a41, double a42, double a43, double a44
+	  ) {
+		  this.a11=a11; this.a12=a12; this.a13=a13; this.a14=a14;
+		  this.a21=a21; this.a22=a22; this.a23=a23; this.a24=a24;
+		  this.a31=a31; this.a32=a32; this.a33=a33; this.a34=a34;
+		  this.a41=a41; this.a42=a42; this.a43=a43; this.a44=a44;
+                  return this;
+	  }
+
 	  
 	  public Matrix4( Matrix4 M) {
-		  Matrix4.set(M, this);
+                assign(M);
 	  }
-	  
+
+          public final Matrix4 assign(Matrix4 M) {
+                a11 = M.a11; a12 = M.a12; a13 = M.a13; a14 = M.a14;
+                a21 = M.a21; a22 = M.a22; a23 = M.a23; a24 = M.a24;
+                a31 = M.a31; a32 = M.a32; a33 = M.a33; a34 = M.a34;
+                a41 = M.a41; a42 = M.a42; a43 = M.a43; a44 = M.a44;
+                return this;
+          }
+
+          public Matrix4(double[] m) {
+              assign(m);
+          }
+
+          /**
+	   *
+	   * @param M
+	   * @param array
+	   */
+	  public final Matrix4 assign( double[] array) {
+		  a11 = array[0];
+		  a21 = array[1];
+		  a31 = array[2];
+		  a41 = array[3];
+
+		  a12 = array[4];
+		  a22 = array[5];
+		  a32 = array[6];
+		  a42 = array[7];
+
+		  a13 = array[8];
+		  a23 = array[9];
+		  a33 = array[10];
+		  a43 = array[11];
+
+		  a14 = array[12];
+		  a24 = array[13];
+		  a34 = array[14];
+		  a44 = array[15];
+                  return this;
+	  }
+
+          public static Matrix4 identity() {
+              return new Matrix4().assignIdentity();
+	  }
+
+          /**
+	   * Assign the identity matrix to this matrix4
+	   */
+	  public final Matrix4 assignIdentity() {
+		  a11=1; a12=0; a13=0; a14=0;
+		  a21=0; a22=1; a23=0; a24=0;
+		  a31=0; a32=0; a33=1; a34=0;
+		  a41=0; a42=0; a43=0; a44=1;
+                  return this;
+	  }
+
+          
 	  //C = AxB 
-	  public final static Matrix4 multiply( final Matrix4 A, final Matrix4 B, final Matrix4 C ) {
+	  public static Matrix4 multiply( final Matrix4 A, final Matrix4 B, final Matrix4 C ) {
 	    //                   B | b11 b12 b13 b14
 	    //                     | b21 b22 b23 b24
 	    //                     | b31 b32 b33 b34
@@ -66,35 +139,35 @@ public class Matrix4 {
 	    final double t32 = A.a31*B.a12 + A.a32*B.a22 + A.a33*B.a32 + A.a34*B.a42;
 	    final double t33 = A.a31*B.a13 + A.a32*B.a23 + A.a33*B.a33 + A.a34*B.a43;
 	    final double t34 = A.a31*B.a14 + A.a32*B.a24 + A.a33*B.a34 + A.a34*B.a44;
-
+       
 	    final double t41 = A.a41*B.a11 + A.a42*B.a21 + A.a43*B.a31 + A.a44*B.a41;
 	    final double t42 = A.a41*B.a12 + A.a42*B.a22 + A.a43*B.a32 + A.a44*B.a42;
 	    final double t43 = A.a41*B.a13 + A.a42*B.a23 + A.a43*B.a33 + A.a44*B.a43;
 	    final double t44 = A.a41*B.a14 + A.a42*B.a24 + A.a43*B.a34 + A.a44*B.a44;
 
-	    
+
 	    //copy to C
 	    C.a11 = t11;
 	    C.a12 = t12;
 	    C.a13 = t13;
 	    C.a14 = t14;
-	    
+
 	    C.a21 = t21;
 	    C.a22 = t22;
 	    C.a23 = t23;
 	    C.a24 = t24;
-	    
+
 	    C.a31 = t31;
 	    C.a32 = t32;
 	    C.a33 = t33;
 	    C.a34 = t34;
-	    
+
 	    C.a41 = t41;
 	    C.a42 = t42;
 	    C.a43 = t43;
 	    C.a44 = t44;
-	    
-	    return C;
+
+            return C;
 	  }
 	  
 	  /**
@@ -102,10 +175,8 @@ public class Matrix4 {
 	   * @param A
 	   * @return
 	   */
-	  public Matrix4 multiply( final Matrix4 A) {
-		  Matrix4 M = new Matrix4();
-		  Matrix4.multiply(this, A, M);
-		  return M;
+	  public Matrix4 multiply( final Matrix4 A ) {		 
+		  return Matrix4.multiply(this, A, new Matrix4());		  
 	  }
 	  
 	  /**
@@ -113,15 +184,14 @@ public class Matrix4 {
 	   * @param v
 	   * @return
 	   */
-	  public Vector3 multiply( Vector3 v) {
-		  Vector3 x = new Vector3();
-		  return Matrix4.multiply(this, v, x);
+	  public Vector3 multiply( Vector3 v) {		
+		  return Matrix4.multiply(this, v, new Vector3());
 	  }
 	  
 	  //Transform a vector in R3 to a homogeneous vector in R4, perform matrix mult,
 	  //and transform back into an R3 vector  
 	  //r = Av
-	  public final static Vector3 multiply( final Matrix4 A, final Vector3 v, final Vector3 r ) {
+	  public static Vector3 multiply( final Matrix4 A, final Vector3 v, final Vector3 r ) {
 		  
 	    //                   V | v1
 	    //                     | v2
@@ -145,172 +215,90 @@ public class Matrix4 {
 	    return r;
 	  }  
 
-	  public static final double[] pack( Matrix4 M ) {
-		  double[] array = new double[4*4];
-		  array[0] = M.a11;
-		  array[1] = M.a21;
-		  array[2] = M.a31;
-		  array[3] = M.a41;
-		  array[4] = M.a12;
-		  array[5] = M.a22;
-		  array[6] = M.a32;
-		  array[7] = M.a42;
-		  array[8] = M.a13;
-		  array[9] = M.a23;
-		  array[10] = M.a33;
-		  array[11] = M.a43;
-		  array[12] = M.a14;
-		  array[13] = M.a24;
-		  array[14] = M.a34;
-		  array[15] = M.a44;
-		  return array;
+	  public double[] toArray() {
+		  return new double[]{
+		  a11,a21,a31,a41,
+                  a12,a22,a32,a42,
+                  a13,a23,a33,a43,
+                  a14,a24,a34,a44};
 	  }
 	  
-	  public static final double[][] pack2( Matrix4 M) {
-		  double[][] array = new double[4][4];
-		  array[0][0] = M.a11;
-		  array[1][0] = M.a21;
-		  array[2][0] = M.a31;
-		  array[3][0] = M.a41;
-		  
-		  array[0][1] = M.a12;
-		  array[1][1] = M.a22;
-		  array[2][1] = M.a32;
-		  array[3][1] = M.a42;
-		  
-		  array[0][2] = M.a13;
-		  array[1][2] = M.a23;
-		  array[2][2] = M.a33;
-		  array[3][2] = M.a43;
-		  
-		  array[0][3] = M.a14;
-		  array[1][3] = M.a24;
-		  array[2][3] = M.a34;
-		  array[3][3] = M.a44;
-		  return array;
-	  }
-	  
-	  /**
-	   * Fill in the matrix M with the values in array
-	   * @param M
-	   * @param array
-	   */
-	  public static final void set( Matrix4 M, double[][] array) {
-		  M.a11 = array[0][0];
-		  M.a21 = array[1][0] ;
-		  M.a31 = array[2][0];
-		  M.a41 = array[3][0];
-
-		  M.a12 = array[0][1];
-		  M.a22 = array[1][1];
-		  M.a32 = array[2][1];
-		  M.a42 = array[3][1];
-
-		  M.a13 = array[0][2];
-		  M.a23 = array[1][2];
-		  M.a33 = array[2][2];
-		  M.a43 = array[3][2];
-
-		  M.a14 = array[0][3];
-		  M.a24 = array[1][3];
-		  M.a34 = array[2][3];
-		  M.a44 = array[3][3];
-	  }
-	  
-	  /**
-	   * 
-	   * @param M
-	   * @param array
-	   */
-	  public static final void set( Matrix4 M, double[] array) {
-		  M.a11 = array[0];
-		  M.a21 = array[1];
-		  M.a31 = array[2];
-		  M.a41 = array[3];
-
-		  M.a12 = array[4];
-		  M.a22 = array[5];
-		  M.a32 = array[6];
-		  M.a42 = array[7];
-
-		  M.a13 = array[8];
-		  M.a23 = array[9];
-		  M.a33 = array[10];
-		  M.a43 = array[11];
-
-		  M.a14 = array[12];
-		  M.a24 = array[13];
-		  M.a34 = array[14];
-		  M.a44 = array[15];
-	  }
-	  
-	  //set the Matrix from given Matrix: B = A
-	  public final static void set( final Matrix4 A, final Matrix4 B ) {
-	    B.a11 = A.a11; B.a12 = A.a12; B.a13 = A.a13; B.a14 = A.a14;
-	    B.a21 = A.a21; B.a22 = A.a22; B.a23 = A.a23; B.a24 = A.a24;
-	    B.a31 = A.a31; B.a32 = A.a32; B.a33 = A.a33; B.a34 = A.a34;
-	    B.a41 = A.a41; B.a42 = A.a42; B.a43 = A.a43; B.a44 = A.a44;
-	  }
-	  
-	  public static final Matrix4 invert( Matrix4 S) {
-
-		  double[][] M = new double[4][4];
-		  M = Matrix4.pack2(S);
-
-		  //code borrowed from OpenTissue (thanks to Kenny Erleben:)
-		  double a00 = M[0][0]; double a01 = M[0][1]; double a02 = M[0][2]; double a03 = M[0][3];
-		  double a10 = M[1][0]; double a11 = M[1][1]; double a12 = M[1][2]; double a13 = M[1][3];
-		  double a20 = M[2][0]; double a21 = M[2][1]; double a22 = M[2][2]; double a23 = M[2][3];
-		  double a30 = M[3][0]; double a31 = M[3][1]; double a32 = M[3][2]; double a33 = M[3][3];
-
-		  M[0][0] =      a11*a22*a33 - a11*a23*a32 - a21*a12*a33 + a21*a13*a32 + a31*a12*a23 - a31*a13*a22;
-		  M[0][1] =    - a01*a22*a33 + a01*a23*a32 + a21*a02*a33 - a21*a03*a32 - a31*a02*a23 + a31*a03*a22;
-		  M[0][2] =      a01*a12*a33 - a01*a13*a32 - a11*a02*a33 + a11*a03*a32 + a31*a02*a13 - a31*a03*a12;
-		  M[0][3] =    - a01*a12*a23 + a01*a13*a22 + a11*a02*a23 - a11*a03*a22 - a21*a02*a13 + a21*a03*a12;
-		  M[1][0] =    - a10*a22*a33 + a10*a23*a32 + a20*a12*a33 - a20*a13*a32 - a30*a12*a23 + a30*a13*a22;
-		  M[1][1] =      a00*a22*a33 - a00*a23*a32 - a20*a02*a33 + a20*a03*a32 + a30*a02*a23 - a30*a03*a22;
-		  M[1][2] =    - a00*a12*a33 + a00*a13*a32 + a10*a02*a33 - a10*a03*a32 - a30*a02*a13 + a30*a03*a12;
-		  M[1][3] =      a00*a12*a23 - a00*a13*a22 - a10*a02*a23 + a10*a03*a22 + a20*a02*a13 - a20*a03*a12;
-		  M[2][0] =      a10*a21*a33 - a10*a23*a31 - a20*a11*a33 + a20*a13*a31 + a30*a11*a23 - a30*a13*a21;
-		  M[2][1] =    - a00*a21*a33 + a00*a23*a31 + a20*a01*a33 - a20*a03*a31 - a30*a01*a23 + a30*a03*a21;
-		  M[2][2] =      a00*a11*a33 - a00*a13*a31 - a10*a01*a33 + a10*a03*a31 + a30*a01*a13 - a30*a03*a11;
-		  M[2][3] =    - a00*a11*a23 + a00*a13*a21 + a10*a01*a23 - a10*a03*a21 - a20*a01*a13 + a20*a03*a11;
-		  M[3][0] =    - a10*a21*a32 + a10*a22*a31 + a20*a11*a32 - a20*a12*a31 - a30*a11*a22 + a30*a12*a21;
-		  M[3][1] =      a00*a21*a32 - a00*a22*a31 - a20*a01*a32 + a20*a02*a31 + a30*a01*a22 - a30*a02*a21;
-		  M[3][2] =    - a00*a11*a32 + a00*a12*a31 + a10*a01*a32 - a10*a02*a31 - a30*a01*a12 + a30*a02*a11;
-		  M[3][3] =      a00*a11*a22 - a00*a12*a21 - a10*a01*a22 + a10*a02*a21 + a20*a01*a12 - a20*a02*a11;
-		  //double D =
-			  //  (
-					  //       a00*a11*a22*a33 - a00*a11*a23*a32 - a00*a21*a12*a33 + a00*a21*a13*a32 + a00*a31*a12*a23 - a00*a31*a13*a22
-		  //     - a10*a01*a22*a33 + a10*a01*a23*a32 + a10*a21*a02*a33 - a10*a21*a03*a32 - a10*a31*a02*a23 + a10*a31*a03*a22
-		  //     + a20*a01*a12*a33 - a20*a01*a13*a32 - a20*a11*a02*a33 + a20*a11*a03*a32 + a20*a31*a02*a13 - a20*a31*a03*a12
-		  //     - a30*a01*a12*a23 + a30*a01*a13*a22 + a30*a11*a02*a23 - a30*a11*a03*a22 - a30*a21*a02*a13 + a30*a21*a03*a12
-		  //  );
-		  double D = a00*M[0][0] + a10*M[0][1] +  a20*M[0][2] + a30*M[0][3];
+	  public final Matrix4 inverse() {
+                  Matrix4 m=new Matrix4();
+		  m.a11 =      a22*a33*a44 - a22*a34*a43 - a32*a23*a44 + a32*a24*a43 + a42*a23*a34 - a42*a24*a33;
+		  m.a12 =    - a12*a33*a44 + a12*a34*a43 + a32*a13*a44 - a32*a14*a43 - a42*a13*a34 + a42*a14*a33;
+		  m.a13 =      a12*a23*a44 - a12*a24*a43 - a22*a13*a44 + a22*a14*a43 + a42*a13*a24 - a42*a14*a23;
+		  m.a14 =    - a12*a23*a34 + a12*a24*a33 + a22*a13*a34 - a22*a14*a33 - a32*a13*a24 + a32*a14*a23;
+		  m.a21 =    - a21*a33*a44 + a21*a34*a43 + a31*a23*a44 - a31*a24*a43 - a41*a23*a34 + a41*a24*a33;
+		  m.a22 =      a11*a33*a44 - a11*a34*a43 - a31*a13*a44 + a31*a14*a43 + a41*a13*a34 - a41*a14*a33;
+		  m.a23 =    - a11*a23*a44 + a11*a24*a43 + a21*a13*a44 - a21*a14*a43 - a41*a13*a24 + a41*a14*a23;
+		  m.a24 =      a11*a23*a34 - a11*a24*a33 - a21*a13*a34 + a21*a14*a33 + a31*a13*a24 - a31*a14*a23;
+		  m.a31 =      a21*a32*a44 - a21*a34*a42 - a31*a22*a44 + a31*a24*a42 + a41*a22*a34 - a41*a24*a32;
+		  m.a32 =    - a11*a32*a44 + a11*a34*a42 + a31*a12*a44 - a31*a14*a42 - a41*a12*a34 + a41*a14*a32;
+		  m.a33 =      a11*a22*a44 - a11*a24*a42 - a21*a12*a44 + a21*a14*a42 + a41*a12*a24 - a41*a14*a22;
+		  m.a34 =    - a11*a22*a34 + a11*a24*a32 + a21*a12*a34 - a21*a14*a32 - a31*a12*a24 + a31*a14*a22;
+		  m.a41 =    - a21*a32*a43 + a21*a33*a42 + a31*a22*a43 - a31*a23*a42 - a41*a22*a33 + a41*a23*a32;
+		  m.a42 =      a11*a32*a43 - a11*a33*a42 - a31*a12*a43 + a31*a13*a42 + a41*a12*a33 - a41*a13*a32;
+		  m.a43 =    - a11*a22*a43 + a11*a23*a42 + a21*a12*a43 - a21*a13*a42 - a41*a12*a23 + a41*a13*a22;
+		  m.a44 =      a11*a22*a33 - a11*a23*a32 - a21*a12*a33 + a21*a13*a32 + a31*a12*a23 - a31*a13*a22;
+		 
+		  double D = a11*m.a11 + a21*m.a12 +  a31*m.a13 + a41*m.a14;
 		  if(D != 0)
 		  {
-			  M[0][0] /=D; M[0][1] /=D; M[0][2] /=D; M[0][3] /=D;
-			  M[1][0] /=D; M[1][1] /=D; M[1][2] /=D; M[1][3] /=D;
-			  M[2][0] /=D; M[2][1] /=D; M[2][2] /=D; M[2][3] /=D;
-			  M[3][0] /=D; M[3][1] /=D; M[3][2] /=D; M[3][3] /=D;
+			  m.a11 /=D; m.a12 /=D; m.a13 /=D; m.a14 /=D;
+			  m.a21 /=D; m.a22 /=D; m.a23 /=D; m.a24 /=D;
+			  m.a31 /=D; m.a32 /=D; m.a33 /=D; m.a34 /=D;
+			  m.a41 /=D; m.a42 /=D; m.a43 /=D; m.a44 /=D;
 		  }
-
-		  //copy new values
-		  Matrix4.set(S, M);
-		  
-		  return S;
-
+		  return m;
 	  }
-	  
-	  /**
-	   * Assign the identity matrix to this matrix4
-	   */
-	  public final void assignIdentity() {
-		  final Matrix4 M = this;
-		  M.a11=1; M.a12=0; M.a13=0; M.a14=0;
-		  M.a21=0; M.a22=1; M.a23=0; M.a24=0;
-		  M.a31=0; M.a32=0; M.a33=1; M.a34=0;
-		  M.a41=0; M.a42=0; M.a43=0; M.a44=1;  
-	  }
-		
+    public static Matrix4 scaleMatrix(double d) {
+        return new Matrix4().assignScale(d,d,d);
+    }
+    public static Matrix4 scaleMatrix(double x,double y, double z) {
+        return new Matrix4().assignScale(x,y,z);
+    }
+    public Matrix4 assignScale(double d) {
+        return assignScale(d, d, d);
+    }
+
+    public Matrix4 assignScale(double x,double y, double z) {
+        a11=x; a12=0; a13=0; a14=0;
+	a21=0; a22=y; a23=0; a24=0;
+	a31=0; a32=0; a33=z; a34=0;
+	a41=0; a42=0; a43=0; a44=1;
+        return this;
+    }
+
+    public Matrix4 assignMultiply(Matrix4 m) {
+        return multiply(this, m, this);
+    }
+    public boolean isNaN() {
+        return Double.isNaN(a11)
+                || Double.isNaN(a12)
+                || Double.isNaN(a13)
+                || Double.isNaN(a14)
+                || Double.isNaN(a21)
+                || Double.isNaN(a22)
+                || Double.isNaN(a23)
+                || Double.isNaN(a24)
+                || Double.isNaN(a31)
+                || Double.isNaN(a32)
+                || Double.isNaN(a33)
+                || Double.isNaN(a34)
+                || Double.isNaN(a41)
+                || Double.isNaN(a42)
+                || Double.isNaN(a43)
+                || Double.isNaN(a44);
+    }
+
+    @Override
+    public String toString() {
+        return "[" + a11 + ", " + a12 + ", " + a13 + ", " + a14 + "]\n"
+                + "[" + a21 + ", " + a22 + ", " + a23 + ", " + a24 + "]\n"
+                + "[" + a31 + ", " + a32 + ", " + a33 + ", " + a34 + "]\n"
+                + "[" + a41 + ", " + a42 + ", " + a43 + ", " + a44 + "]";
+    }
+
+    
 }

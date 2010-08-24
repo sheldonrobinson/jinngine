@@ -5,6 +5,7 @@ import java.util.Iterator;
 import jinngine.collision.RayCast;
 import jinngine.geometry.Geometry;
 import jinngine.geometry.SupportMap3;
+import jinngine.math.InertiaMatrix;
 import jinngine.math.Matrix3;
 import jinngine.math.Vector3;
 import jinngine.physics.Body;
@@ -90,11 +91,11 @@ public class Interaction implements Rendering.EventCallback {
 			this.force.setCorrectionVelocityLimit(7);
 			
 			// copy angular mass properties
-			inertia = target.state.inertia.copy();
-			inverse = target.state.inverseinertia.copy();
+			inertia = new InertiaMatrix(target.state.inertia);
+			inverse = new InertiaMatrix(target.state.inverseinertia);
 
 			// mute angular movement
-			Matrix3.set( Matrix3.zero, target.state.inverseinertia );
+			target.state.inverseinertia.assignZero();
 			
 			// remove current movement
 			target.setVelocity(0,0,0);
@@ -116,8 +117,8 @@ public class Interaction implements Rendering.EventCallback {
 			scene.removeLiveConstraint(this.force);
 					
 			// restore angular inertia properties
-			Matrix3.set(inertia, target.state.inertia);
-			Matrix3.set(inverse, target.state.inverseinertia );
+			target.state.inertia.assign(inertia);
+			target.state.inverseinertia.assign(inverse);
 
 			// reset state
 			target = null;

@@ -80,12 +80,12 @@ public class MassProperties {
 					//				System.out.println("small or included");
 					totalmass = totalmass + localmass;
 
-					// inertia matrix for this local box
-					InertiaMatrix localinertia = new InertiaMatrix();
-					Matrix3.set( localinertia,
-							(1.0f/12.0f)*localmass*(yl*yl+zl*zl), 0.0f, 0.0f,
-							0.0f, (1.0f/12.0f)*localmass*(xl*xl+zl*zl), 0.0f,
-							0.0f, 0.0f, (1.0f/12.0f)*localmass*(yl*yl+xl*xl) );
+				// inertia matrix for this local box
+				InertiaMatrix localinertia = new InertiaMatrix();
+				localinertia.assignScale(
+                                        (1.0f / 12.0f) * localmass * (yl * yl + zl * zl),
+                                        (1.0f / 12.0f) * localmass * (xl * xl + zl * zl),
+                                        (1.0f / 12.0f) * localmass * (yl * yl + xl * xl));
 
 					// translate inertia matrix
 					Vector3 localcentre = new Vector3((xmax+xmin)*0.5, (ymax+ymin)*0.5, (zmax+zmin)*0.5);			
@@ -196,7 +196,7 @@ public class MassProperties {
 	 * @return
 	 */
 	public Matrix3 getInertiaMatrix() {
-		return inertia.copy();
+		return new Matrix3(inertia);
 	}
 	
 

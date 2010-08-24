@@ -55,7 +55,7 @@ public class Vector3Test {
     @Test
     public void testPack() {
         final Vector3 v = new Vector3(1., 2., 3.);
-        final double[] d = v.pack();
+        final double[] d = v.toArray();
         assertEquals(1., v.x);
         assertEquals(2., v.y);
         assertEquals(3., v.z);

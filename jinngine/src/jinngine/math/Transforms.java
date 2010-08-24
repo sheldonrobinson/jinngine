@@ -18,8 +18,7 @@ public final class Transforms {
 	 * @return A 4x4 translation matrix
 	 */
 	public final static Matrix4 translate4(Vector3 r) {
-		Matrix4 T = new Matrix4();
-		Matrix4.identity(T);
+		Matrix4 T = Matrix4.identity();
 		T.a14 = r.x;
 		T.a24 = r.y;
 		T.a34 = r.z;

@@ -105,14 +105,12 @@ public class Box implements SupportMap3, Geometry, Material {
 
 	@Override
 	public InertiaMatrix getInertialMatrix() {
-		InertiaMatrix I = new InertiaMatrix();
-		// standard inertia matrix for a box with variable side lengths
-		Matrix3.set( I,
-				(1.0f/12.0f)*mass*(ys*ys+zs*zs), 0.0f, 0.0f,
-				0.0f, (1.0f/12.0f)*mass*(xs*xs+zs*zs), 0.0f,
-				0.0f, 0.0f, (1.0f/12.0f)*mass*(ys*ys+xs*xs) );
-
-		return I;
+            // standard inertia matrix for a box with variable side lengths            
+            final Matrix3 M = Matrix3.scaleMatrix(
+					(1.0f/12.0f)*mass*(ys*ys+zs*zs),
+					(1.0f/12.0f)*mass*(xs*xs+zs*zs),
+					(1.0f/12.0f)*mass*(ys*ys+xs*xs));
+            return new InertiaMatrix(M);
 	}
 	
 	@Override

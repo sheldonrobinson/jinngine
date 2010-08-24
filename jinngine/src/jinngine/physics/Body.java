@@ -55,13 +55,13 @@ public final class Body {
 	 * @param identifier Unique identifier for this body
 	 */
 	public Body(String identifier) {
-		this.identifier = new String(identifier);
-		Matrix4.identity(state.transform);
-		Matrix3.identity(state.rotation);
+		this.identifier = identifier;
+		state.transform.assignIdentity();
+		state.rotation.assignIdentity();
 		updateTransformations();	
-		this.state.anisotropicmass.assignZero();
-		this.state.inverseanisotropicmass.assignZero();
-		Matrix3.set(new Matrix3(), state.inertia);
+		state.anisotropicmass.assignZero();
+		state.inverseanisotropicmass.assignZero();
+		state.inertia.assignZero();
 	}
 	
 	/**
@@ -71,9 +71,9 @@ public final class Body {
 	 * @param g A geometry that will define this body's mass and inertia properties 
 	 */
 	public Body( String identifier, Geometry g  ) {
-		this.identifier = new String(identifier);
-		Matrix4.identity(state.transform);
-		Matrix3.identity(state.rotation);
+		this.identifier = identifier;
+		state.transform.assignIdentity();
+		state.rotation.assignIdentity();
 		updateTransformations();
 		
 		//some default properties
@@ -95,7 +95,7 @@ public final class Body {
 	 * @param i
 	 */
 	public Body( String identifier, Iterator<Geometry> i) {
-		this.identifier = new String(identifier);
+		this.identifier = identifier;
 		this.state.transform.assignIdentity();
 		this.state.rotation.assignIdentity();
 		updateTransformations();
@@ -280,12 +280,11 @@ public final class Body {
 	 * the position and orientation state
 	 */
 	public final void updateTransformations() {
-		//set identity transforms
-		Matrix3.identity(state.rotation);
-		Matrix4.identity(state.transform);
+		//set identity transforms		
+		state.transform.assignIdentity();
 
 		// quaternion to rotation matrix
-		Matrix3.set(state.orientation.toRotationMatrix3(), state.rotation);
+		state.rotation.assign(state.orientation.toRotationMatrix3());
 		
 		// inverse rotations (for normals)
 		Matrix3.inverse(state.rotation, state.inverserotation);
@@ -336,14 +335,14 @@ public final class Body {
 	 * Get a copy of the anisotropic mass matrix of this body
 	 */
 	public final Matrix3 getAnisotopicMass() {
-		return this.state.anisotropicmass.copy();
+		return new Matrix3(state.anisotropicmass);
 	}
 
 	/**
 	 * Get a copy of the inverse anisotropic mass matrix of this body
 	 */
 	public final Matrix3 getInverseAnisotropicMass() {
-		return this.state.inverseanisotropicmass.copy();
+		return new Matrix3(state.inverseanisotropicmass);
 	}
 
 	/**
