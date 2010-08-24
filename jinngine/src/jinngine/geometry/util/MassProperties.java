@@ -75,30 +75,32 @@ public class MassProperties {
 			// use a primitive inclusion test. If all 8 corners of the box is 
 			// intersecting the shape, then the box included in it, and no further 
 			// subdivisions a required
-			if ( localmass < masslimit|| testInclusion(xmax, xmin, ymax, ymin, zmax, zmin) ) {
-//				System.out.println("small or included");
-				totalmass = totalmass + localmass;
+			if ( localmass < masslimit||depth>2) {		
+//				if(testInclusion(xmax, xmin, ymax, ymin, zmax, zmin) || depth > 3 ) {
+					//				System.out.println("small or included");
+					totalmass = totalmass + localmass;
 
-				// inertia matrix for this local box
-				InertiaMatrix localinertia = new InertiaMatrix();
-				Matrix3.set( localinertia,
-						(1.0f/12.0f)*localmass*(yl*yl+zl*zl), 0.0f, 0.0f,
-						0.0f, (1.0f/12.0f)*localmass*(xl*xl+zl*zl), 0.0f,
-						0.0f, 0.0f, (1.0f/12.0f)*localmass*(yl*yl+xl*xl) );
+					// inertia matrix for this local box
+					InertiaMatrix localinertia = new InertiaMatrix();
+					Matrix3.set( localinertia,
+							(1.0f/12.0f)*localmass*(yl*yl+zl*zl), 0.0f, 0.0f,
+							0.0f, (1.0f/12.0f)*localmass*(xl*xl+zl*zl), 0.0f,
+							0.0f, 0.0f, (1.0f/12.0f)*localmass*(yl*yl+xl*xl) );
 
-				// translate inertia matrix
-				Vector3 localcentre = new Vector3((xmax+xmin)*0.5, (ymax+ymin)*0.5, (zmax+zmin)*0.5);			
-				InertiaMatrix.translate(localinertia, localmass, localcentre);
+					// translate inertia matrix
+					Vector3 localcentre = new Vector3((xmax+xmin)*0.5, (ymax+ymin)*0.5, (zmax+zmin)*0.5);			
+					InertiaMatrix.translate(localinertia, localmass, localcentre);
 
-				// add to final inertia matrix
-				Matrix3.add(inertia, localinertia, inertia);
+					// add to final inertia matrix
+					Matrix3.add(inertia, localinertia, inertia);
 
-				// update centre of mass vector
-				Vector3.add(centreofmass, localcentre.multiply(localmass));
+					// update centre of mass vector
+					Vector3.add(centreofmass, localcentre.multiply(localmass));
 
-				// done with this branch
-				return;
-			}
+					// done with this branch
+					return;
+				}
+//			}
 
 			//subdivide this box into 8 partitions
 			divide( (xmax+xmin)*0.5, xmin,           (ymax+ymin)*0.5,  ymin,            (zmax+zmin)*0.5, zmin,     depth+1);
