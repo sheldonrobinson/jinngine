@@ -4,6 +4,8 @@
  */
 package jinngine.test.unit;
 
+import java.util.ArrayList;
+import java.util.List;
 import jinngine.math.Vector3;
 import org.junit.Test;
 
@@ -30,18 +32,19 @@ public class Vector3Test {
 
     @Test
     public void testCtor03() {
-        final Vector3 v = new Vector3(new Vector3(Double.MIN_VALUE, Double.MAX_VALUE, 0.));
+        final Vector3 v =
+                new Vector3(new Vector3(Double.MIN_VALUE, Double.MAX_VALUE, 0.));
         assertEquals(Double.MIN_VALUE, v.x);
         assertEquals(Double.MAX_VALUE, v.y);
         assertEquals(0., v.z);
 
-        final Vector3 w = new Vector3(new Vector3(Double.NaN, Double.POSITIVE_INFINITY, Double.NEGATIVE_INFINITY));
+        final Vector3 w =
+                new Vector3(new Vector3(Double.NaN, Double.POSITIVE_INFINITY, Double.NEGATIVE_INFINITY));
         assertEquals(Double.NaN, w.x);
         assertEquals(Double.POSITIVE_INFINITY, w.y);
         assertEquals(Double.NEGATIVE_INFINITY, w.z);
     }
 
-    
     @Test
     public void testAssign() {
         final Vector3 v = new Vector3();
@@ -53,7 +56,25 @@ public class Vector3Test {
     }
 
     @Test
-    public void testPack() {
+    public void testToArray01() {
+        final Vector3 v = new Vector3(1., 2., 3.);
+        final double[] d = v.toArray();
+        assertEquals(1., v.x);
+        assertEquals(2., v.y);
+        assertEquals(3., v.z);
+        assertEquals(3, d.length);
+        assertEquals(1., d[0]);
+        assertEquals(2., d[1]);
+        assertEquals(3., d[2]);
+    }
+
+    @Test
+    public void testToArray02() {
+        final List<Vector3> vertices = new ArrayList<Vector3>();
+        vertices.add(new Vector3(1, 2, 3));
+        vertices.add(new Vector3(4, 5, 6));
+        vertices.add(new Vector3(7, 8, 9));
+
         final Vector3 v = new Vector3(1., 2., 3.);
         final double[] d = v.toArray();
         assertEquals(1., v.x);
@@ -595,20 +616,19 @@ public class Vector3Test {
         assertFalse(a == Vector3.k());
     }
 
-
     @Test
     public void testScale01() {
         final Vector3 a = new Vector3(1., 2., 3.);
         final Vector3 b = new Vector3(10., 20., 30.);
         final Vector3 r = a.scale(b);
-        assertTrue(r!=a);
-        assertTrue(r!=b);        
+        assertTrue(r != a);
+        assertTrue(r != b);
         assertEquals(1., a.x);
         assertEquals(2., a.y);
         assertEquals(3., a.z);
         assertEquals(10., b.x);
         assertEquals(20., b.y);
-        assertEquals(30., b.z);        
+        assertEquals(30., b.z);
         assertEquals(10., r.x);
         assertEquals(40., r.y);
         assertEquals(90., r.z);
