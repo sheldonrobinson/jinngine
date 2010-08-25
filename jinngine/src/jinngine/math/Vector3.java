@@ -10,6 +10,7 @@
 package jinngine.math;
 
 import java.io.Serializable;
+import java.util.Collection;
 /**
  * <code>Vector3d</code> defines a Vector for a three double value tuple.
  * <code>Vector3d</code> can represent any three dimensional value, such as a
@@ -192,7 +193,18 @@ public final class Vector3 implements Serializable {
         public final Vector3 sub( Vector3 v ) {
 		return new Vector3( x-v.x, y-v.y, z-v.z );
 	}
-
+        /**
+         * Substracts a provided vector to this vector.
+         * <code>this</code> contains the result and <code>v</code> is not modified.
+         * @param v vector to substract
+         * @return <code>this</code>
+         */
+        public Vector3 assignSub(Vector3 v) {
+            x-=v.x;
+            y-=v.y;
+            z-=v.z;
+            return this;
+        }
         /**
          * Multiply this vector by a provided scalar creating a resultant
          * vector which is returned.
@@ -420,7 +432,24 @@ public final class Vector3 implements Serializable {
 	public final double[] toArray() {
 		return new double[]{x,y,z};
 	}
-
+    /**
+     * Build an array of {@link double} from a collection of {@link Vector3}.
+     * A new array is allocated with a length equal to <code>vectors.size()*3</code>
+     * The given collection is not modified.
+     * @param vectors a not null collection ov vector
+     * @return a array of packed vector coordinates
+     */
+    public static double[] toArray(final Collection<Vector3> vectors) {
+        // convert points
+        double[] array = new double[3 * vectors.size()];
+        int i = 0;
+        for (Vector3 v : vectors) {
+            array[i++] = v.x;
+            array[i++] = v.y;
+            array[i++] = v.z;
+        }
+        return array;
+    }
         /**
          * Returns a string representation of this vector.  The string
          * representation consists of the three dimentions in the order x, y, z,
@@ -434,4 +463,6 @@ public final class Vector3 implements Serializable {
 	public final String toString() {
 		return  "[" + x + ", " +y+ ", " +z + "]";
 	}
+
+
 }

@@ -4,6 +4,8 @@
  */
 package jinngine.test.unit;
 
+import java.util.ArrayList;
+import java.util.List;
 import jinngine.math.Vector3;
 import org.junit.Test;
 
@@ -30,18 +32,19 @@ public class Vector3Test {
 
     @Test
     public void testCtor03() {
-        final Vector3 v = new Vector3(new Vector3(Double.MIN_VALUE, Double.MAX_VALUE, 0.));
+        final Vector3 v =
+                new Vector3(new Vector3(Double.MIN_VALUE, Double.MAX_VALUE, 0.));
         assertEquals(Double.MIN_VALUE, v.x);
         assertEquals(Double.MAX_VALUE, v.y);
         assertEquals(0., v.z);
 
-        final Vector3 w = new Vector3(new Vector3(Double.NaN, Double.POSITIVE_INFINITY, Double.NEGATIVE_INFINITY));
+        final Vector3 w =
+                new Vector3(new Vector3(Double.NaN, Double.POSITIVE_INFINITY, Double.NEGATIVE_INFINITY));
         assertEquals(Double.NaN, w.x);
         assertEquals(Double.POSITIVE_INFINITY, w.y);
         assertEquals(Double.NEGATIVE_INFINITY, w.z);
     }
 
-    
     @Test
     public void testAssign() {
         final Vector3 v = new Vector3();
@@ -53,9 +56,11 @@ public class Vector3Test {
     }
 
     @Test
-    public void testPack() {
+    public void testToArray() {
         final Vector3 v = new Vector3(1., 2., 3.);
         final double[] d = v.toArray();
+        final double[] e = v.toArray();
+        assertNotSame(d, e);
         assertEquals(1., v.x);
         assertEquals(2., v.y);
         assertEquals(3., v.z);
@@ -63,6 +68,44 @@ public class Vector3Test {
         assertEquals(1., d[0]);
         assertEquals(2., d[1]);
         assertEquals(3., d[2]);
+    }
+
+    @Test
+    public void testToArray2() {
+        final List<Vector3> vertices = new ArrayList<Vector3>();
+        vertices.add(new Vector3(1, 2, 3));
+        vertices.add(new Vector3(4, 5, 6));
+        final double[] d = Vector3.toArray(vertices);
+        final double[] e = Vector3.toArray(vertices);
+        assertNotSame(d, e);
+
+        assertEquals(1., vertices.get(0).x);
+        assertEquals(2., vertices.get(0).y);
+        assertEquals(3., vertices.get(0).z);
+        assertEquals(4., vertices.get(1).x);
+        assertEquals(5., vertices.get(1).y);
+        assertEquals(6., vertices.get(1).z);
+        assertEquals(6, d.length);
+        assertEquals(1., d[0]);
+        assertEquals(2., d[1]);
+        assertEquals(3., d[2]);
+        assertEquals(4., d[3]);
+        assertEquals(5., d[4]);
+        assertEquals(6., d[5]);
+    }
+
+    @Test
+    public void testToArray3() {
+        final List<Vector3> vertices = new ArrayList<Vector3>();
+        final double[] d = Vector3.toArray(vertices);
+        final double[] e = Vector3.toArray(vertices);
+        assertNotSame(d, e);
+        assertEquals(0, d.length);
+    }
+
+    @Test(expected = NullPointerException.class)
+    public void testToArray4() {
+        Vector3.toArray(null);
     }
 
     @Test
@@ -232,6 +275,35 @@ public class Vector3Test {
     @Test(expected = NullPointerException.class)
     public void testSub07() {
         Vector3.sub(null, new Vector3());
+    }
+
+    @Test(expected = NullPointerException.class)
+    public void testSub08() {
+        new Vector3().assignSub(null);
+    }
+
+    @Test
+    public void testSub09() {
+        final Vector3 a = new Vector3(1., 2., 3.);
+        final Vector3 b = new Vector3(10., 20., 30.);
+        final Vector3 r = a.assignSub(b);
+        assertSame(r, a); 
+
+        assertEquals(-9., a.x);
+        assertEquals(-18., a.y);
+        assertEquals(-27., a.z);
+        assertEquals(10., b.x);
+        assertEquals(20., b.y);
+        assertEquals(30., b.z);       
+    }
+    @Test
+    public void testSub10() {
+        final Vector3 a = new Vector3(1., 2., 3.);
+        final Vector3 r = a.assignSub(a);
+        assertSame(r, a);
+        assertEquals(0., a.x);
+        assertEquals(0., a.y);
+        assertEquals(0., a.z);
     }
 
     @Test
@@ -595,20 +667,19 @@ public class Vector3Test {
         assertFalse(a == Vector3.k());
     }
 
-
     @Test
     public void testScale01() {
         final Vector3 a = new Vector3(1., 2., 3.);
         final Vector3 b = new Vector3(10., 20., 30.);
         final Vector3 r = a.scale(b);
-        assertTrue(r!=a);
-        assertTrue(r!=b);        
+        assertTrue(r != a);
+        assertTrue(r != b);
         assertEquals(1., a.x);
         assertEquals(2., a.y);
         assertEquals(3., a.z);
         assertEquals(10., b.x);
         assertEquals(20., b.y);
-        assertEquals(30., b.z);        
+        assertEquals(30., b.z);
         assertEquals(10., r.x);
         assertEquals(40., r.y);
         assertEquals(90., r.z);
