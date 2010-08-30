@@ -30,6 +30,7 @@ import com.sun.opengl.util.Animator;
 import jinngine.geometry.Box;
 import jinngine.geometry.ConvexHull;
 import jinngine.geometry.Geometry;
+import jinngine.geometry.UniformCapsule;
 import jinngine.math.Matrix4;
 import jinngine.math.Vector3;
 import jinngine.physics.Body;
@@ -99,7 +100,7 @@ public class JoglRendering extends Frame implements Rendering, GLEventListener, 
 			
 		}
 		
-		if ( g instanceof Box ) {
+		if ( g instanceof Box  ) {
 			final List<Vector3> vertices = new ArrayList<Vector3>();
 			vertices.add( new Vector3(  0.5,  0.5,  0.5));
 			vertices.add( new Vector3( -0.5,  0.5,  0.5));
@@ -126,6 +127,58 @@ public class JoglRendering extends Frame implements Rendering, GLEventListener, 
 				}
 			});
 		}
+		
+		if ( g instanceof UniformCapsule  ) {
+			UniformCapsule cap = (UniformCapsule)g;
+			final List<Vector3> vertices = new ArrayList<Vector3>();
+			final List<Vector3> icoicosahedron = new ArrayList<Vector3>();
+
+			final double s = 0.7071;
+			
+			
+				final double t = (1.0 + Math.sqrt(5.0))/ 2.0;
+				final double S = 1.0 / ( Math.sqrt(1+t*t)); 
+				icoicosahedron.add(new Vector3(-1,  t,  0));
+				icoicosahedron.add( new Vector3( 1,  t,  0));
+				icoicosahedron.add( new Vector3(-1, -t,  0));
+				icoicosahedron.add( new Vector3( 1, -t,  0));
+				icoicosahedron.add( new Vector3( 0, -1,  t));
+				icoicosahedron.add( new Vector3( 0,  1,  t));
+				icoicosahedron.add( new Vector3( 0, -1, -t));
+				icoicosahedron.add( new Vector3( 0,  1, -t));
+				icoicosahedron.add( new Vector3( t,  0, -1));
+				icoicosahedron.add( new Vector3( t,  0,  1));
+				icoicosahedron.add( new Vector3(-t,  0, -1));
+				icoicosahedron.add( new Vector3(-t,  0,  1));
+
+				// scale to unit
+				for (Vector3 v: icoicosahedron)
+					v.assign(v.multiply(S) );
+				
+				// add two icos to vertices
+				for (Vector3 v: icoicosahedron) {
+					vertices.add( v.multiply(cap.getRadius()).add(0,0,cap.getLength()/2));
+					vertices.add( v.multiply(cap.getRadius()).add(0,0,-cap.getLength()/2));
+				}
+				
+			final ConvexHull hull = new ConvexHull(vertices);
+			
+			toDraw.add( new DrawShape() {		
+				@Override
+				public Iterator<Vector3[]> getFaces() {
+					return hull.getFaces();
+				}
+				@Override
+				public Matrix4 getTransform() {
+					return g.getTransform();
+				}
+				@Override
+				public Body getReferenceBody() {
+					return g.getBody();
+				}
+			});
+		}
+
 	}
 
 	@Override

@@ -16,7 +16,7 @@ import jinngine.math.Vector3;
 import jinngine.math.Transforms;
 import jinngine.physics.Body;
 
-public final class UniformCapsule implements Geometry, SupportMap3 {
+public final class UniformCapsule implements Geometry, SupportMap3, Material {
 	// data
 	private final double radius;
 	private final double length;
@@ -42,6 +42,20 @@ public final class UniformCapsule implements Geometry, SupportMap3 {
 		final double Ixx = uniformmass*(1/12.0)*(3*radius*radius+length*length);
 		this.inertia = new InertiaMatrix();
 		this.inertia.assignScale( Ixx, Ixx, 0.5*uniformmass*radius*radius); 
+	}
+	
+	/**
+	 * Get the radius value for this capsule
+	 */
+	public double getRadius() {
+		return radius;
+	}
+
+	/**
+	 * Get the length of this capsule
+	 */
+	public double getLength() {
+		return length;
 	}
 	
 	/*
@@ -115,7 +129,7 @@ public final class UniformCapsule implements Geometry, SupportMap3 {
 	 */
 	
 	@Override
-	public void supportFeature(Vector3 direction, double epsilon, List<Vector3> face) {
+	public void supportFeature(Vector3 direction, List<Vector3> face) {
 		// calculate a support point in world space
 		Vector3 v = body.state.rotation.multiply(rotation).transpose().multiply(direction);
 		
@@ -140,5 +154,21 @@ public final class UniformCapsule implements Geometry, SupportMap3 {
 	public double sphereSweepRadius() {
 		return radius;
 	}
+	
+	/*
+	 * Material methods
+	 */
+	
+	private double friction = 0.5;
+	private double restitution = 0.7;
+
+	@Override
+	public double getFrictionCoefficient() { return friction; }
+	@Override
+	public double getRestitution() { return restitution; }
+	@Override
+	public void setFrictionCoefficient(double f) { this.friction = f; }
+	@Override
+	public void setRestitution(double e) { this.restitution = e; }
 
 }

@@ -17,6 +17,7 @@ import jinngine.collision.GJK;
 import jinngine.collision.RayCast;
 import jinngine.geometry.Geometry;
 import jinngine.geometry.Material;
+import jinngine.geometry.UniformCapsule;
 import jinngine.geometry.util.ORourke;
 import jinngine.geometry.SupportMap3;
 import jinngine.math.Matrix3;
@@ -29,8 +30,6 @@ public final class SupportMapContactGenerator implements ContactGenerator {
 	private final Geometry ga, gb;
 	private final Vector3 pa = new Vector3();
 	private final Vector3 pb = new Vector3();
-//	private final Vector3 v = new Vector3();
-//	private final Vector3 n = new Vector3();
 	private final List<ContactPoint> contacts = new ArrayList<ContactPoint>();
 	private final List<Vector3> faceA = new ArrayList<Vector3>();
 	private final List<Vector3> faceB = new ArrayList<Vector3>();
@@ -46,7 +45,6 @@ public final class SupportMapContactGenerator implements ContactGenerator {
 	private final double spa;
 	private final double spb;
 
-
 	// distance algorithms
 	private final GJK gjk = new GJK();
 	private final RayCast raycast = new RayCast();
@@ -60,7 +58,6 @@ public final class SupportMapContactGenerator implements ContactGenerator {
 		// sphere sweeping radius
 		this.spa =  Sa.sphereSweepRadius();
 		this.spb =  Sb.sphereSweepRadius();
-
 		
 		// select the largest envelope for contact generation
 		if  ( gb.getEnvelope() > ga.getEnvelope() ) {
@@ -101,18 +98,13 @@ public final class SupportMapContactGenerator implements ContactGenerator {
 		}
 		
 		// first we run GJK (the same as setting t=0)
-		// we must know is the distance is less than the envelope plus sphere
-		// sweep radius for both geometries
+		// we must know is the distance is less than the envelope 
+		// plus sphere sweep radius for both geometries
 		gjk.run(Sa, Sb, pa, pb, envelope+spa+spb, epsilon, 32);
-//		v.assign(pa.minus(pb));
-//		n.assign(v.normalize());
-//		double d = v.squaredNorm();
 		
-		// if distance is below precision
-//		if (d < epsilon*epsilon || gjk.getState().simplexSize > 3) {
+		// if objects are intersecting
 		if (gjk.getState().intersection) {
-
-			// we perform a raycast, that is equivalent to
+			// we perform a ray-cast, that is equivalent to
 			// finding the growth distance between Sa and Sb. 
 			// by that we obtain a contact normal at the 
 			// intersection point. 
@@ -123,6 +115,10 @@ public final class SupportMapContactGenerator implements ContactGenerator {
 			Matrix3.multiply(ga.getBody().state.rotation, gadisp, gadisp);
 			Matrix3.multiply(gb.getBody().state.rotation, gbdisp, gbdisp);
 			Vector3 direction = ga.getBody().getPosition().add(gadisp).sub(gb.getBody().getPosition().add(gbdisp));
+			
+			// if direction is too small select a default one
+			if (direction.norm() < epsilon)
+				direction.assign(0,1,0);
 
 			// compute the largest possible starting lambda, based on 
 			// the support of A-B along the ray direction
@@ -133,6 +129,11 @@ public final class SupportMapContactGenerator implements ContactGenerator {
 			// generate contact points
 			generate(pa, pb, pa.sub(pb).normalize() );
 			
+			if (pa.isNaN() || pb.isNaN() ) {
+				System.out.println();
+			}
+			
+		// if separation
 		} else {
 			// A and B was initially separated. We determine the distance and taking into account
 			// that A and/or B can be sphere swept 
@@ -145,26 +146,13 @@ public final class SupportMapContactGenerator implements ContactGenerator {
 			} else {
 				contacts.clear();	
 			}
-		}
-		
-		
-//		else if ( d > epsilon*epsilon && d < envelope*envelope) {
-//			// generate contact points
-//			generate(pa, pb, pa.minus(pb).normalize() );	
-//		} else {
-//			// outside envelope
-//			contacts.clear();
-//		}
-		
-		// find distance that takes into account sphere sweeping
-//		double d = v.norm();
-		
+		} 	
 	}
 
 	private final void generate(final Vector3 a, final Vector3 b, final Vector3 v ) {
 		contacts.clear(); faceA.clear(); faceB.clear();
-		Sa.supportFeature(v.multiply(-1), 0.09, faceA);
-		Sb.supportFeature(v.multiply(1), 0.09, faceB);
+		Sa.supportFeature(v.negate(), faceA);
+		Sb.supportFeature(v, faceB);
 		
 		// reverse the points in face A, so they will be in counter-clock-wise order
 		// when relating to the normal direction
@@ -180,7 +168,7 @@ public final class SupportMapContactGenerator implements ContactGenerator {
 		// make sure the normal direction is in the z-component
 		final Matrix3 B = new Matrix3(M.column(1),M.column(2),M.column(0));
 
-		// since B is orthogonal so its inverse equals its transpose
+		// since B is orthogonal its inverse equals its transpose
 		final Matrix3 Binv = B.transpose();
 		
 		// create a result handler for the intersection algorithm
@@ -195,10 +183,8 @@ public final class SupportMapContactGenerator implements ContactGenerator {
 				cp.point.assign( B.multiply(new Vector3(p.x,p.y,0)).add(midpoint) );
 				
 				// distance along the z axis in contact space
-//				cp.distance = p.z -q.z;
 				cp.distance = (p.z-q.z)-spb-spa;  // take into account sphere sweeping
 
-				
 				// if contact is within the envelope size
 				if (cp.distance < envelope ) {
 					cp.depth = shell-cp.distance;
@@ -220,7 +206,18 @@ public final class SupportMapContactGenerator implements ContactGenerator {
 		}
 		
 		// run 2d intersection
-		ORourke.run(faceA, faceB, handler);		
+		ORourke.run(faceA, faceB, handler);
+		
+//		if (contacts.size() == 0) {
+//			System.out.println("contacts="+contacts.size()+" (" + faceA.size() +","+faceB.size()+")" );
+//
+//			// run 2d intersection
+//			ORourke.run(faceA, faceB, handler);
+//
+//		}
+//		
+//		if (ga instanceof UniformCapsule && gb instanceof UniformCapsule )
+//			System.out.println("contacts="+contacts.size() +"("+faceA.size()+","+faceB.size()+")");
 	}
 	
 	@Override

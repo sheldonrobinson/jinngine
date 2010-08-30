@@ -19,10 +19,10 @@ import jinngine.physics.solver.NonsmoothNonlinearConjugateGradient;
 import jinngine.rendering.Interaction;
 import jinngine.rendering.Rendering;
 
-public class BasicExample implements Rendering.Callback {	
+public class CapsuleExample implements Rendering.Callback {	
 	private final Scene scene;
 	
-	public BasicExample() {
+	public CapsuleExample() {
 		
 		// start jinngine 
 		scene = new DefaultScene(new SAP2(), new NonsmoothNonlinearConjugateGradient(44), new DisabledDeactivationPolicy());
@@ -47,12 +47,30 @@ public class BasicExample implements Rendering.Callback {
 
 		Body right = new Body( "right", new Box(20,200,200));		
 		right.setPosition(new Vector3(10,0,0));
-		right.setFixed(true);		
+		right.setFixed(true);
 		
-		Box boxgeometry = new Box(6,6,6);
+		// create capsules
+		UniformCapsule capgeo = new UniformCapsule(2,6);
+		Body cap = new Body( "cap", capgeo );
+		cap.setPosition(new Vector3(-10,-11,-25));
+
+		UniformCapsule capgeo2 = new UniformCapsule(1.8,5);
+		Body cap2 = new Body( "cap2", capgeo2 );
+		cap2.setPosition(new Vector3(-10,-11,-25));
+
+		UniformCapsule capgeo3 = new UniformCapsule(1.6,4);
+		Body cap3 = new Body( "cap3", capgeo3 );
+		cap3.setPosition(new Vector3(-10,-11,-25));
+
+		UniformCapsule capgeo4 = new UniformCapsule(1.6,4);
+		Body cap4 = new Body( "cap3", capgeo4 );
+		cap4.setPosition(new Vector3(-10,-11,-25));
+
+		// create a box
+		Box boxgeometry = new Box(6,3,3);
 		Body box = new Body( "box", boxgeometry );
-		box.setPosition(new Vector3(-10,-11,-25));
-				
+		box.setPosition(new Vector3(-3,-11,-25));
+		
 		// add all to scene
 		scene.addBody(floor);
 		scene.addBody(back);
@@ -61,23 +79,39 @@ public class BasicExample implements Rendering.Callback {
 		scene.addBody(right);
 		scene.addBody(box);
 
-		// put gravity on box
+		scene.addBody(cap);
+		scene.addBody(cap2);
+		scene.addBody(cap3);
+		scene.addBody(cap4);
+
+		// put gravity on stuff
 		scene.addForce( new GravityForce(box));		
+		scene.addForce( new GravityForce(cap));		
+		scene.addForce( new GravityForce(cap2));
+		scene.addForce( new GravityForce(cap3));		
+		scene.addForce( new GravityForce(cap4));		
+
 		
 		// handle drawing
 		Rendering rendering = new jinngine.rendering.jogl.JoglRendering(this, new Interaction(scene));
 		rendering.drawMe(boxgeometry);
+		rendering.drawMe(capgeo);
+		rendering.drawMe(capgeo2);
+		rendering.drawMe(capgeo3);
+		rendering.drawMe(capgeo4);
 
 		rendering.start();
 	}
 
 	@Override
+	
 	public void tick() {
 		// each frame, to a time step on the Scene
 		scene.tick();
 	}
 	
 	public static void main( String[] args) {
-		new BasicExample();
+		new CapsuleExample();
 	}
+
 }

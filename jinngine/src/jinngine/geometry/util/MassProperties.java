@@ -59,7 +59,7 @@ public class MassProperties {
 				double sv3 = v.z<0?zmin:zmax;
 				return new Vector3(sv1, sv2, sv3);
 			}
-			public final void supportFeature(Vector3 d, double epsilon,List<Vector3> face) {}
+			public final void supportFeature(Vector3 d, List<Vector3> face) {}
 			public final double sphereSweepRadius() {return 0;}
 		};
 		
@@ -126,7 +126,7 @@ public class MassProperties {
 		final Vector3 point = new Vector3();
 		SupportMap3 Sb = new SupportMap3() {
 			public final Vector3 supportPoint(Vector3 v) { return point; }
-			public final void supportFeature(Vector3 d, double epsilon,List<Vector3> face) {}
+			public final void supportFeature(Vector3 d, List<Vector3> face) {}
 			public final double sphereSweepRadius() {return 0;}
 		};
 		

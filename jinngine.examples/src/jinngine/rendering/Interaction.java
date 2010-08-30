@@ -63,6 +63,9 @@ public class Interaction implements Rendering.EventCallback {
 					Vector3 pb = new Vector3(), pc = new Vector3();
 					double t = raycast.run((SupportMap3)gi, null, point, direction, pb, pc, 0, 0.05, 1e-7, true);
 
+//					write out t for debugging
+//					System.out.println("t="+t);
+					
 					if (t<parameter) {
 						parameter = t;
 						target = bi;

@@ -60,7 +60,7 @@ public final class SupportMapSphereContactGenerator implements ContactGenerator 
 		// SupportMap for the sphere centre
 		this.pointmap = new SupportMap3() {
 			public final Vector3 supportPoint(Vector3 direction) { return new Vector3(spherecentreworld); }
-			public final void supportFeature(Vector3 d, double epsilon, List<Vector3> face) {}
+			public final void supportFeature(Vector3 d, List<Vector3> face) {}
 			public final double sphereSweepRadius() {return 0;}
 		};
 		
@@ -85,7 +85,7 @@ public final class SupportMapSphereContactGenerator implements ContactGenerator 
 		// SupportMap for the sphere centre
 		this.pointmap = new SupportMap3() {
 			public final Vector3 supportPoint(Vector3 direction) { return new Vector3(spherecentreworld); }
-			public final void supportFeature(Vector3 d, double epsilon, List<Vector3> face) {}
+			public final void supportFeature(Vector3 d, List<Vector3> face) {}
 			public final double sphereSweepRadius() { return 0; }
 		};
 		

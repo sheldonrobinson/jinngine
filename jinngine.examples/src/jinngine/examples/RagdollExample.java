@@ -181,7 +181,7 @@ public class RagdollExample implements Rendering.Callback {
 		righttknee.getSecondAxisControler().setFrictionMagnitude(0.01);
 		scene.addConstraint(righttknee);
 
-		
+	    
 		
 		
 		// add all to scene

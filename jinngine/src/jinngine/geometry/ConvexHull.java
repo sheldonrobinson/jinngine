@@ -290,7 +290,7 @@ public class ConvexHull implements SupportMap3, Geometry, Material {
 	}
 
 	@Override
-	public void supportFeature(Vector3 direction, double epsilon, List<Vector3> returnface) {
+	public void supportFeature(Vector3 direction, List<Vector3> returnface) {
 		// Su  
 		// the support feature of CovexHull is the face with the face normal closest to the 
 		// given support direction. This is accomplished by hill-climbing the dual hull, that
