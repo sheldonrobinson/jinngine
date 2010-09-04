@@ -43,8 +43,7 @@ public class ORourke {
 		P,
 		Q
 	};
-	
-	
+		
 	/**
 	 * Perform XY-plane intersection of poly1 and poly2. The given polygons must be in counter clockwise order.
 	 * @param poly1 A closed polygon in the XY plane
@@ -172,10 +171,18 @@ public class ORourke {
 			final Vector3 p3 = poly2points.next();
 			final Vector3 p4 = poly2points.next();
 			final Vector3 par = new Vector3();
-			// line line intersection has a unique intersection point
-			if ( lineLineIntersection(p1, p2, p3, p4, par, epsilon) ) {
+			
+			// alternative version
+			// the two lines are
+			// l1(t) = p1 + (p2-p1)t
+			// l2(s) = p3 + (p4-p3)s
+
+			// if lines are orthogonal, use the unique intersection test (this is rare)
+			final double p4p3Tp2p1 = p4.sub(p3).xydot(p2.sub(p1));		
+			if ( Math.abs(p4p3Tp2p1) < epsilon) {
+				lineLineIntersection(p1, p2, p3, p4, par, epsilon); 
 				// intersection in internal part of lines?
-				if (par.x>=0 && par.x <=1 && par.y>=0 && par.y<=1) {
+				if (par.x>=-epsilon && par.x <=1+epsilon && par.y>=-epsilon && par.y<=1+epsilon) {
 					// report intersection
 					result.intersection(p1.add(p2.sub(p1).multiply(par.x)), p3.add(p4.sub(p3).multiply(par.y)));
 					// done
@@ -183,77 +190,82 @@ public class ORourke {
 				} else {
 					// no intersection
 					return;
+				}	
+			}
+			// we require (p4-p3)T(p2-p1) > 0. if not, swap p3 and p4
+			else if ( p4p3Tp2p1<0) {
+				// swap
+				Vector3 tmp = new Vector3(p3);
+				p3.assign(p4);
+				p4.assign(tmp);
+			}			
+			
+			final double e = 0.1;
+			final Vector3 p4p3 = p4.sub(p3);
+			final Vector3 p2p1 = p2.sub(p1);
+			final Vector3 p3p1 = p3.sub(p1);
+			// d is the normalised tangent of l2
+			final double p4p3n =p4p3.xynorm();
+			final Vector3 d = new Vector3( -p4p3.y/p4p3n, p4p3.x/p4p3n, 0 );
+			
+			// if lines are not parallel, we can compute two points on l1 where
+			// its distance to l2 is equal to e
+			final double z = p2p1.dot(d);
+			double tlow;
+			double thigh;
+			if (Math.abs(z)>epsilon) {
+				// TODO include derivation
+				tlow = (-e+p3p1.xydot(d))/z;
+				thigh = (e+p3p1.xydot(d))/z;
+				// enforce t1<t2
+				if (thigh<tlow) {
+					final double t = tlow;
+					tlow=thigh;
+					thigh=t;
 				}
 			} else {
-				// test if lines are separated
-				if (Math.abs(p2.sub(p1).cross( p4.sub(p1)).z) > epsilon ) {
-					// no intersection
-					return;
-				} else {
-					// two co-incident has an edge intersection. We look for extremal points so
-					// l1(t) = l2(s) 
-					// p1+(p2-p1)t = p3+(p4-p3)s
-					// (p2-p1)t+(p3-p4)s = p3-p1
-					// (p2-p1)t+(p2-p1)k1 s = (p2-p1)k2
-					// where
-					// (p2-p1)k1 = (p3-p4) =>  k1 = (p3-p4)T(p2-p1)/(p2-p1)^2
-					// (p2-p1)k1 = (p3-p1) =>  k2 = (p3-p1)T(p2-p1)/(p2-p1)^2
-					//
-					// so 
-					// t = k2-k1s
-					// s = (k2-t)/k1
-					//
-					// our candidate points are t=0 and t=1 where 0<=s<=1, 
-					// likewise s=0 and s=1, where 0<=t<=1.				
-					final Vector3 p3p4 = p3.sub(p4);
-					final Vector3 p2p1 = p2.sub(p1);
-					final Vector3 p3p1 = p3.sub(p1);
-					final double k1 = p3p4.xydot(p2p1)/p2p1.squaredNorm();
-					final double k2 = p3p1.xydot(p2p1)/p2p1.squaredNorm();
-					int counter = 0;
-					
-					// case t=0
-					double s = (k2-0)/k1;
-					if ( 0<=s && s<=1 ) {
-						// report intersection points
-						result.intersection(p1, p3.add(p4.sub(p3).multiply(s)));
-						counter=counter+1;
-					}
-					//case t=1
-					s = (k2-1)/k1;
-					if ( 0<=s && s<=1 ) {
-						// report intersection points
-						result.intersection(p2, p3.add(p4.sub(p3).multiply(s)));
-						counter=counter+1;
-					}
-					
-					// termination
-					if (counter>1)
-						return;
-					
-					//case s=0
-					double t=k2;
-					if ( 0<=t && t<=1) {
-						// report intersection points
-						result.intersection(p2.add(p2p1.multiply(t)), p3);
-						counter=counter+1;
-					}
+				// if lines are parallel, we send tlow and thigh to their limits
+				tlow = Double.NEGATIVE_INFINITY;
+				thigh = Double.POSITIVE_INFINITY;
+			}
 
-					// termination
-					if (counter>1)
-						return;
+//			System.out.println("z="+z);
+//			System.out.println("p4p3norm="+p4p3n);
+//			System.out.println("p2p1 norm="+p2p1.xynorm());
 
-					
-					//case s=1
-					t=k2-k1;
-					if ( 0<=t && t<=1) {
-						// report intersection points
-						result.intersection(p2.add(p2p1.multiply(t)), p4);
-						counter=counter+1;
-					}
-				} // if co-incident intersection
-			} // if non-unique intersection
+//			System.out.println("(tlow,thigh)=("+tlow+","+thigh+")");
+
+			// transform t <-> s
+			final double k1 = (1/(p4p3n*p4p3n))*p4p3.xydot(p1.sub(p3));
+			final double k2 = (1/(p4p3n*p4p3n))*p4p3.xydot(p2p1);
+
+//			System.out.println("(k1,k2)=("+k1+","+k2+")");
+
+			// all candidate points end-points
+			final double slow = k1+k2*tlow;
+			final double st0 = k1;
+			final double s0 = 0;
+			final double shigh = k1+k2*thigh;
+			final double st1 = k1+k2;
+			final double s1 = 1;
+
+			// highest possible plow
+			double plow = slow>st0? (slow>s0? slow:s0) : (st0>s0? st0:s0);
+			// smallest possible phigh
+			double phigh = shigh<st1? (shigh<s1? shigh:s1) : (st1<s1? st1:s1);
+
+			// generate intersections
+			if ( Math.abs(plow-phigh) < epsilon) {
+				result.intersection(p1.add(p2p1.multiply((plow-k1)/k2)), p3.add(p4.sub(p3).multiply(plow)));					
+			} else if ( plow < phigh) {
+				result.intersection(p1.add(p2p1.multiply((plow-k1)/k2)), p3.add(p4.sub(p3).multiply(plow)));
+				result.intersection(p1.add(p2p1.multiply((phigh-k1)/k2)), p3.add(p4.sub(p3).multiply(phigh)));
+			}
+
+//			System.out.println("(plow,phigh)=("+plow+","+phigh+")");
+
 			return;
+			
 		} // if line-line case
 
 		// line-poly
@@ -500,7 +512,7 @@ public class ORourke {
 		final Vector3 p2p1 = p2.sub(p1);
 		p2p1.z = 0; // we only work in the xy plane
 		final double t = x.sub(p1).dot(p2p1) / p2p1.squaredNorm();
-		if (t>= 0 && t <= 1) {
+		if (t>= -epsilon && t <= 1+epsilon) {
 			// closest point on line
 			Vector3 lp = p1.add(p2.sub(p1).multiply(t));
 			if (  lp.sub(x).xynorm() < epsilon ) {

@@ -461,7 +461,7 @@ public final class Body {
 	
 	@Override
 	public String toString() {
-		return identifier+":"+super.toString();
+		return identifier;
 	}
 }  
 

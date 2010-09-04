@@ -747,6 +747,127 @@ public class ORourkeTest extends TestCase {
 		// rest of the vertices, in order.
 		assertTrue( verifyPolygon(result, expected));
 	}
+	
+	public void testLineLine15() {
+		//  Orthogonal lines
+        //             (0,2)
+		//               |
+		//               |
+		//(-2,0) o-------x-------o  (2,0)      
+		//               |
+		//               |
+		//             (0,-2)
+		//                  
+		List<Vector3> line1    = new ArrayList<Vector3>();
+		List<Vector3> line2    = new ArrayList<Vector3>();
+		List<Vector3> result   = new ArrayList<Vector3>();
+		List<Vector3> expected = new ArrayList<Vector3>();
+		
+		// build lines		
+		line1.add( new Vector3( -2, 0,0));
+		line1.add( new Vector3(  2, 0,0));
+		line2.add( new Vector3(  0,  2,0));
+		line2.add( new Vector3(  0, -2,0));
+
+		// we intersection in two points
+		expected.add(new Vector3(0, 0, 0));
+		
+		// run intersection
+		ORourke.run(line1, line2, result);	
+
+		System.out.println("orthogonal line line 15 case");
+		
+		// write out the returned polygon
+		for (Vector3 p: result)
+			System.out.println(""+p);
+
+		
+		// check result by first searching for the first vertex.
+		// When found, we traverse the result again to verify the 
+		// rest of the vertices, in order.
+		assertTrue( verifyPolygon(result, expected));
+	}
+	
+	public void testLineLine16() {
+		//  Orthogonal lines
+        //             (3,2)
+		//               |
+		//               |
+		//(-2,-1) o------x--o  (4,-1)      
+		//               |
+		//               |
+		//             (3,-2)
+		//                  
+		List<Vector3> line1    = new ArrayList<Vector3>();
+		List<Vector3> line2    = new ArrayList<Vector3>();
+		List<Vector3> result   = new ArrayList<Vector3>();
+		List<Vector3> expected = new ArrayList<Vector3>();
+		
+		// build lines		
+		line1.add( new Vector3( 3, 2,0));
+		line1.add( new Vector3( 3, -2,0));
+		line2.add( new Vector3(  -2, -1,0));
+		line2.add( new Vector3(  4,  -1,0));
+
+		// we intersection in two points
+		expected.add(new Vector3(3, -1, 0));
+		
+		// run intersection
+		ORourke.run(line1, line2, result);	
+
+		System.out.println("orthogonal line line 16 case");
+		
+		// write out the returned polygon
+		for (Vector3 p: result)
+			System.out.println(""+p);
+
+		
+		// check result by first searching for the first vertex.
+		// When found, we traverse the result again to verify the 
+		// rest of the vertices, in order.
+		assertTrue( verifyPolygon(result, expected));
+	}
+	
+	public void testLineLine17() {
+		//  Orthogonal separated lines
+        //                  (3,2)
+		//                o
+		//                |
+		//                o (3,0)
+		//
+		// (-2,-1) o------x--o  (4,-1)      
+		//
+		//                  
+		List<Vector3> line1    = new ArrayList<Vector3>();
+		List<Vector3> line2    = new ArrayList<Vector3>();
+		List<Vector3> result   = new ArrayList<Vector3>();
+		List<Vector3> expected = new ArrayList<Vector3>();
+		
+		// build lines		
+		line1.add( new Vector3( 3, 2,0));
+		line1.add( new Vector3( 3, 0,0));
+		line2.add( new Vector3(  -2, -1,0));
+		line2.add( new Vector3(  4,  -1,0));
+
+		// we no intersection ...
+		//expected.add(new Vector3(3, -1, 0));
+		
+		// run intersection
+		ORourke.run(line1, line2, result);	
+
+		System.out.println("orthogonal line line 17 case");
+		
+		// write out the returned polygon
+		for (Vector3 p: result)
+			System.out.println(""+p);
+
+		
+		// check result by first searching for the first vertex.
+		// When found, we traverse the result again to verify the 
+		// rest of the vertices, in order.
+		assertTrue( verifyPolygon(result, expected));
+	}
+
 
 
 	

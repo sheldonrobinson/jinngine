@@ -14,19 +14,18 @@ import jinngine.math.Vector3;
 
 /**
  * Implementation of the Gilbert-Johnsson-Keerthi algorithm, for computing the distance 
- * between convex objects and/or closest points. This implementation is based on the theory presented in [Bergen 2003]
- * @author Silcowitz
+ * between convex objects and/or closest points. This implementation is based on the theory presented in 
+ * [Bergen, 2003, Continuous Collision Detection in Interactive 3D environments, ISBN-13: 978-1558608016].
+ * This describes an approach that is based on a recursive simplex reduction technique. This implementation
+ * us "unrolled", so that recursive calls are avoided. 
  */
-public class GJK {
-	//private Map<Pair<Body>,GJK3.State> cachedStates = new HashMap<Pair<Body>,GJK3.State>();
-
+public final class GJK {
 	/**
 	 * A state structure for the GJK3 implementation. Used internally in the GJK3 implementation,
 	 * and also used to simplify caching of GJK results.
-	 * @author Silcowitz
 	 */
 	public final class State {
-		public final Vector3 v = new Vector3(1,1,1);
+		public final Vector3 v = new Vector3(10,10,10);
 		public final Vector3 w = new Vector3();
 		public final Vector3 p = new Vector3();
 		public final Vector3 q = new Vector3();
@@ -54,65 +53,59 @@ public class GJK {
 	public State getState() {
 		return state;
 	}
-		
+	
+	/**
+	 * Find the closest pair of points on the convex objects A and B, given by the support mappings Sa and Sb. This 
+	 * method does not take into account the value of {@link SupportMap3.sphereSweepRadius()}. This is so, because 
+	 * the closest points of two sphere swept volumes are trivially known if the closest points of the original shapes
+	 * are known. 
+	 * 
+	 * @param Sa support mapping of a convex object A
+	 * @param Sb support mapping of a convex object B
+	 * @param va on return, va will contain the closest point on A 
+	 * @param vb on return, vb will contain the closest point on B
+	 * 
+	 * @param envelope the maximum distance that GJK should compute. If the algorithm reaches a state where the 
+	 * true distance between A and B will be greater the given value, it terminates. Setting this value Inf will 
+	 * result in the algorithm computing the distance between A and B in all cases. Setting it to zero will reduce 
+	 * the algorithm to computing a separating axis, because it will terminate as soon as evidence that A and B are 
+	 * non-intersecting is found.
+	 * @param epsilon error precision, used in termination criterion. In general, a smaller error tolerance results 
+	 * in more iterations before termination. 
+	 * 
+	 * @param maxiter maximum number of iterations before termination is forced.
+	 */
 	public void run( SupportMap3 Sa, SupportMap3 Sb, Vector3 va, Vector3 vb, double envelope, double epsilon, int maxiter ) {		
 		// if v has become too small, reset it TODO check this
-		if (state.v.norm()<=envelope) {
-			state.v.assign(1,1,1);
+		if (state.v.norm()<epsilon) {
+			state.v.assign(10,10,10);
 		}
 
 		state.iterations = 0;
-    	Vector3 v = state.v;
-		Vector3 w = state.w;
-		Vector3 sa = new Vector3();
-		Vector3 sb = new Vector3();
-    	
-		sa.assign( Sa.supportPoint(state.v.multiply(-1)));
-		sb.assign( Sb.supportPoint(state.v.multiply(1)));	    							
-		w.assign( sa.sub(sb) );
-	
-		//initial separating axis test (distance is at least more than the envelope)
-		if ( v.normalize().dot(w) > envelope ) {
-			//return support points as approximations of closest points
-			va.assign(sa);
-			vb.assign(sb);
-			//v.assign(sa.minus(sb));
-//			w.print();
-//			v.print();
-//			System.out.println("GJK: early termination, vlaue "+v.normalize().dot(w));
-			state.intersection = false;
-			return;
-		} 
-		
-    	//initially update the simplex (often results in a quick termination)
+		state.intersection = false;
+    	final Vector3 v = state.v;
+		final Vector3 w = state.w;
+		final Vector3 sa = new Vector3();
+		final Vector3 sb = new Vector3();
+    			
+    	// initially update the simplex (often results in a quick termination)
     	if (state.simplexSize>0)
     		updateSimplex(state, Sa, Sb);
-    	
-    	//main loop
+
+    	// main loop
 		while ( true  ) {
-			state.iterations++;
-		
+			state.iterations++;		
 //		    System.out.println("gjk iteration" + " " + v.norm()+ "  : " + state.simplexSize);
-//			v.print();
 			
-			//store points of convex objects a and b, and A-B (in A space)
-//			sa.assign( a.toWorld(Sa.supportPoint(state.v.multiply(-1), a)));
-//			sb.assign( b.toWorld(Sb.supportPoint(state.v.multiply(1), b)));	    							
-//			w.assign( sa.minus(sb) );
-			sa.assign( Sa.supportPoint(state.v.multiply(-1)));
-			sb.assign( Sb.supportPoint(state.v.multiply(1)));	    							
+			// store points of convex objects a and b, and A-B 
+			sa.assign( Sa.supportPoint(state.v.negate()));
+			sb.assign( Sb.supportPoint(state.v));	    							
 			w.assign( sa.sub(sb) );
 
-			//Termination condition
+			// termination condition
 			// ||v||2 -v.w is an upper bound for ||vk-v(A-B)||2 which converges towards zero as k goes large
 			if (  Math.abs(v.dot(v)-v.dot(w)) < epsilon*epsilon  || state.iterations>maxiter || state.simplexSize > 3 ) 
 				break;
-			
-			//separating axis test (distance is at least more than the envelope)
-			if ( v.normalize().dot(w) > envelope ) {
-				state.intersection = false;
-				break;
-			} 
 						
 			//add w to the simplices
 			Vector3[] row = state.simplices[state.permutation[state.simplexSize]];
@@ -124,10 +117,15 @@ public class GJK {
 			
 			if ( !reduceSimplex( state ) ) {
 				//latest w vector was rejected, we consequently terminate (simplex cannot chance from here on)
-//				System.out.println("reject");
 				break;
 			}
-									
+			
+			// separating axis test (distance is at least more than the envelope)
+			if ( v.normalize().dot(w) > envelope ) {
+				state.intersection = false;
+				break;
+			} 
+			
 			//Calculate the vector v using lambda values
 			v.assignZero();
 			for (int i=0; i<state.simplexSize;i++) {
@@ -136,15 +134,15 @@ public class GJK {
 
 			//Check for a penetrating state
 			if ( v.norm() < epsilon || state.simplexSize > 3 ) {
-//				System.out.println("penetration");
 				break;				
 			}
 		} //while true
 		
 		//Computing v, p, and q, closest points of A and B
-		state.v.assignZero(); state.p.assignZero(); state.q.assignZero(); 
+//		state.v.assignZero(); 
+		state.p.assignZero(); state.q.assignZero(); 
 		for (int i=0; i<state.simplexSize;i++) {
-			Vector3.add(state.v, state.simplices[state.permutation[i]][0].multiply(state.lambda[state.permutation[i]]));			
+//			Vector3.add(state.v, state.simplices[state.permutation[i]][0].multiply(state.lambda[state.permutation[i]]));			
 			Vector3.add(state.p, state.simplices[state.permutation[i]][1].multiply(state.lambda[state.permutation[i]]));
 			Vector3.add(state.q, state.simplices[state.permutation[i]][2].multiply(state.lambda[state.permutation[i]]));				
 		}
@@ -154,7 +152,7 @@ public class GJK {
 		vb.assign(state.q);
 		
 		// check for intersection
-		if ( v.norm() < epsilon || va.sub(vb).norm() < epsilon || state.simplexSize > 3)
+		if ( va.sub(vb).norm() < epsilon || state.simplexSize > 3)
 			state.intersection = true;
 	}
 	
@@ -168,18 +166,17 @@ public class GJK {
 	 *  to meet the termination condition for the next time frame. For example, this is would often be the case 
 	 *  for resting contacts. Thus all subsequent GJK iterations is avoided.
 	 */
-	private final void updateSimplex(GJK.State state, SupportMap3 Sa, SupportMap3 Sb) {
+	private final void updateSimplex(final GJK.State state, final SupportMap3 Sa, final SupportMap3 Sb) {
 
 		for (int i = 0; i<state.simplexSize; i++) {
 			//add w to the simplices
-			Vector3[] row = state.simplices[state.permutation[i]];
+			final Vector3[] row = state.simplices[state.permutation[i]];
 
 			//store points of convex objects a and b, and A-B (in A space)
-			row[1].assign(Sa.supportPoint(state.simplices[i][3].multiply(-1)));
-			row[2].assign(Sb.supportPoint(state.simplices[i][3].multiply(1)));	    							
+			row[1].assign(Sa.supportPoint(state.simplices[i][3].negate()));
+			row[2].assign(Sb.supportPoint(state.simplices[i][3]));	    							
 			row[0].assign(row[1].sub(row[2]));
 			//row[4] = v.copy(); not needed
-			//state.simplexSize = ++state.permutation[4];
 		}
 
 		//recompute the simplex and lambda values
@@ -201,10 +198,10 @@ public class GJK {
 	 * @return a new support point on the configuration space obstacle of A and B
 	 */
 	@SuppressWarnings("unused")
-	private final Vector3 support( SupportMap3 Sa, SupportMap3 Sb, Vector3 v) {
-		Vector3 sva = Sa.supportPoint(v) ;
+	private final Vector3 support( final SupportMap3 Sa, final SupportMap3 Sb, final Vector3 v) {
+		final Vector3 sva = Sa.supportPoint(v) ;
 		//We need rotate the vector reverse in B space
-		Vector3 svb = Sb.supportPoint(v.multiply(-1));   		
+		final Vector3 svb = Sb.supportPoint(v.multiply(-1));   		
 		return sva.sub(svb);
 	}
 	/**
@@ -214,8 +211,8 @@ public class GJK {
 	 * @param j
 	 * @param permutation 
 	 */
-	private final void swap( int i, int j, int[] permutation ) {
-		int temp = permutation[i];
+	private final void swap( final int i, final int j, final int[] permutation ) {
+		final int temp = permutation[i];
 		permutation[i] = permutation[j];
 		permutation[j] = temp;
 	}
@@ -225,13 +222,13 @@ public class GJK {
 	 * that contains the closest point to the origin. This approach is described in detail in [Bergen 2003],
 	 * and can be quite cumbersome to grasp. However, it is sufficient to know that the method finds the 
 	 * smallest subset of simplex points, which contains the closest point to the origin of the whole simplex.
-	 * In addition, the method also computes a parametrization of the closest point, v, expressed as a convex
+	 * In addition, the method also computes a parametrisation of the closest point, v, expressed as a convex
 	 * combination of the new simplex points, given by the lambda coefficients.
 	 * @param state State containing the simplex that is to be reduced
 	 * @return returns false if the latest added simplex point was rejected, true otherwise. Upon return, the state
 	 * class will be updated containing new simplex points, lambda values and permutation vector. 
 	 */
-	private final boolean reduceSimplex(State state) {
+	private final boolean reduceSimplex(final State state) {
 		// Matrix is a 4x3 matrix like:| y1 a1 b1 |
 		// permutation is              | ...      |
 		//  {size,p1,p2,p3,p4}         | y4 a4 b4 |

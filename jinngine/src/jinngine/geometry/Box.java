@@ -223,13 +223,10 @@ public class Box implements SupportMap3, Geometry, Material {
 	}	
 
 	@Override
-	public void supportFeature(final Vector3 d, final double epsilon, final List<Vector3> featureList) {
-		//final double epsilon = 0.03;  //123+132  213 231 312+321   
+	public void supportFeature(final Vector3 d, final List<Vector3> featureList) {
+		final double epsilon = 0.09;
 		//get d into the canonical box space
 		Vector3 v = body.state.rotation.multiply(localrotation).transpose().multiply(d);
-		//Vector3 v = body.state.rotation.transpose().multiply(d);
-		//Vector3 v = d.copy();
-		//List<Vector3> featureList = new ArrayList<Vector3>();
 
 		int numberOfZeroAxis = 0;
 		final int[] zeroAxisIndices = new int[3];

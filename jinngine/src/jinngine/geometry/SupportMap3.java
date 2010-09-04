@@ -33,10 +33,9 @@ public interface SupportMap3  {
 	 * line segment, or a face. In case of a face, the points must appear in counter 
 	 * clock-wise order with respect to the direction of d.
 	 * 
-	 * @param epsilon a positive tolerance
 	 * @return list of points that constitute either a point, line or a face
 	 */
-	public void supportFeature( Vector3 direction, double epsilon, List<Vector3> face );
+	public void supportFeature( Vector3 direction, List<Vector3> face );
 		
 	/**
 	 * Return the radius of the sweeping sphere for this support mapping. Sphere swept shapes

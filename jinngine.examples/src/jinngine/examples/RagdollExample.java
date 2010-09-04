@@ -17,7 +17,6 @@ import jinngine.physics.constraint.Constraint;
 import jinngine.physics.constraint.joint.UniversalJoint;
 import jinngine.physics.force.GravityForce;
 import jinngine.physics.solver.NonsmoothNonlinearConjugateGradient;
-import jinngine.physics.solver.ProjectedGaussSeidel;
 import jinngine.rendering.Interaction;
 import jinngine.rendering.Rendering;
 
@@ -181,7 +180,7 @@ public class RagdollExample implements Rendering.Callback {
 		righttknee.getSecondAxisControler().setFrictionMagnitude(0.01);
 		scene.addConstraint(righttknee);
 
-		
+	    
 		
 		
 		// add all to scene

@@ -121,7 +121,7 @@ public class Sphere implements SupportMap3, Geometry, Material {
 	}
 
 	@Override
-	public void supportFeature(Vector3 d, double epsilon, List<Vector3> ret) {
+	public void supportFeature(Vector3 d, List<Vector3> ret) {
 		//sphere is invariant under rotation
 		ret.add(d.normalize().multiply(radius).add(body.state.position).add(Matrix3.multiply(body.state.rotation, displacement, new Vector3()) ));
 	}

@@ -32,8 +32,8 @@ public final class RayCast {
 	 * of the ray
 	 * @param lambda starting ray parameter. Defaults to zero
 	 * @param envelope they ray is defined to hit the object if it is within this distance
-	 * @param epsilon the desired accuracy (directly passed to gjk)
-	 * @param sweep TODO
+	 * @param epsilon the desired accuracy (directly passed to GJK)
+	 * @param sweep when true, the ray-cast will take sphere sweeping into account. 
 	 * @return t such that c = direction t + point, where c is the point of collision. If the ray does not intersect the 
 	 * convex shape for any positive t, then positive infinity is returned
 	 */
@@ -45,9 +45,21 @@ public final class RayCast {
 			Vector3 pb, 
 			Vector3 pc, 
 			double lambda, 
-			double envelope, double epsilon, boolean sweep) {
+			final double envelope, 
+			final double epsilon, 
+			final boolean sweep) {
 		
-		int iterations = 0; final Vector3 x = point.add(direction.multiply(lambda));
+		int iterations = 0; 
+		final Vector3 x = point.add(direction.multiply(lambda));
+		final double sphere;
+		
+		// sphere swept volumes?
+		if (sweep) {
+			sphere = /*envelope*/ + Sb.sphereSweepRadius() + (Sc!=null? Sc.sphereSweepRadius():0);
+		} else {
+			sphere = 0;
+		}
+		
 		
 		// translated support mapping Sc+x
 		final SupportMap3 Sa;		
@@ -56,7 +68,7 @@ public final class RayCast {
 				@Override
 				public final Vector3 supportPoint(Vector3 direction) { return new Vector3(x); }
 				@Override
-				public final void supportFeature(Vector3 d, double epsilon, List<Vector3> returnList) {}
+				public final void supportFeature(Vector3 d, List<Vector3> returnList) {}
 				@Override
 				public final double sphereSweepRadius() {return 0;}
 			};
@@ -66,7 +78,7 @@ public final class RayCast {
 				@Override
 				public final Vector3 supportPoint(Vector3 direction) { return x.add(Sc.supportPoint(direction)); }
 				@Override
-				public final void supportFeature(Vector3 d, double epsilon, List<Vector3> returnList) {}
+				public final void supportFeature(Vector3 d, List<Vector3> returnList) {}
 				@Override
 				public final double sphereSweepRadius() {return 0;}
 				
@@ -79,18 +91,20 @@ public final class RayCast {
 		
 		while (true) {
 			iterations++;
+//			System.out.println("RayCast: iter=" + iterations +" lambda="+lambda);
+
 			// run as many gjk iterations as necessary to get a separating axis. If the distance
 			// is within the envelope, run until the error in v is below epsilon. 
-			gjk.run(Sa, Sb, pc, pb, envelope, epsilon, 31);
+			gjk.run(Sa, Sb, pc, pb, envelope+sphere, epsilon, 31);
 			//termination
-			if (v.norm() < envelope  || iterations > 31 )
+			if (v.norm() < envelope+sphere  || iterations > 31 )
 				break;
 			// ray miss?
-			if ( v.normalize().dot(direction) >= 0) {
+			if ( v.dot(direction) >= 0) {
 				return Double.POSITIVE_INFINITY;
 			} else {
 				// move forward as much as possible, half way into the envelope 
-				Vector3 vs = v.sub(v.normalize().multiply(envelope*0.5));
+				Vector3 vs = v.sub(v.normalize().multiply(envelope*0.5+sphere));
 				lambda = lambda - vs.dot(w) / v.dot(direction);
 				x.assign(point.add(direction.multiply(lambda)));
 			}			
