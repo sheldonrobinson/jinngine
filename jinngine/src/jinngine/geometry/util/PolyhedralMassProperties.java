@@ -1,3 +1,11 @@
+/**
+ * Copyright (c) 2008-2010  Morten Silcowitz.
+ *
+ * This file is part of the Jinngine physics library
+ *
+ * Jinngine is published under the GPL license, available
+ * at http://www.gnu.org/copyleft/gpl.html.
+ */
 package jinngine.geometry.util;
 
 import jinngine.math.InertiaMatrix;
@@ -63,12 +71,20 @@ public class PolyhedralMassProperties {
             }
         }
 
-
         /**
-         * Compute all vertex normals using Newell's method
+         * Compute faces normals using Newell's method. It is assumed that faces
+         * are made of vertices in counter clock-wize order.
+         * This algorythm is designed of planear faces convex & concave. It
+         * retruns a normal and an offset.
+         * offset = p0 dot n where n is the face normal and p0 is a vertex of
+         * the face
+         * It is robust to degenerated triangles (when to vertices are at the same place)
+         * It returns  normal =(0,0,0) and  offset=0 for faces of area 0.
          */
+        // Results
         final Vector3[] normals = new Vector3[facesIndices.length];
         final double[] offset = new double[facesIndices.length];
+
         for (int i = 0; i < facesIndices.length; i++) {
             final int[] faceIdx = facesIndices[i];
             /**
@@ -80,8 +96,9 @@ public class PolyhedralMassProperties {
             if (faceIdx.length < 3) {
                 throw new RuntimeException("Degenerated face detected");
             }
-
+            // The first vertex is used as the origin for computation
             final Vector3 p0 = vectices[faceIdx[0]];
+            // u and v are two consecutive vectors of a fan
             final Vector3 u = new Vector3();
             final Vector3 v = new Vector3(vectices[faceIdx[1]]).assignSub(p0);
             final Vector3 n = normals[i] = new Vector3();
@@ -94,7 +111,6 @@ public class PolyhedralMassProperties {
                 n.y += u.z * v.x - u.x * v.z;
                 n.z += u.x * v.y - u.y * v.x;
             }
-
             offset[i] = -p0.dot(n);
         }
 
@@ -103,12 +119,13 @@ public class PolyhedralMassProperties {
         final int Y = 1;
         final int Z = 2;
 
-        double T0 = 0.;
-        double T1[] = new double[3];
-        double T2[] = new double[3];
-        double TP[] = new double[3];
+        double T0 = 0.; // Volume
+        double T1[] = new double[3]; // Mass Center
+        double T2[] = new double[3]; // Inertia diagonal
+        double TP[] = new double[3]; // Inertia upper triangle
 
         for (int i = 0; i < facesIndices.length; i++) {
+            // Get indices and normal of the face
             final int[] f = facesIndices[i];
             final Vector3 n = normals[i];
 
@@ -116,9 +133,19 @@ public class PolyhedralMassProperties {
             /**
              * C is set to the largest coordinate ordinal for this vector
              * Maybe is this someting interesting to add to Vector3
+             *
+             * Green's theorem reduces an integral over a planear region to an
+             * integral around it's one-dimentional boundary.
+             *
+             * The following code aims at finding A-B-C axes, a right handed
+             * permutation of x-y-z that maximizes the area of the projected
+             * face of A-B.
+             *
+             * Then integration is performed on faces projection over A-B
              */
             final int A, B, C;
             {
+                // C is the main component of the vecore amon x-y-z
                 double nx = Math.abs(n.x);
                 double ny = Math.abs(n.y);
                 double nz = Math.abs(n.z);
@@ -127,20 +154,24 @@ public class PolyhedralMassProperties {
                 } else {
                     C = (ny > nz) ? Y : Z;
                 }
+                // A & B are computed so that A,B,C is a right handed
+                // permutation of x-y-z
                 A = (C + 1) % 3;
                 B = (A + 1) % 3;
             }
 
 
             /**
-             * Compute Projection Integrals
+             * Integration over projected face perimeter
              */
-            double P1 = 0, Pa = 0, Pb = 0, Paa = 0, Pab = 0, Pbb = 0, Paaa = 0, Paab =
-                    0, Pabb = 0, Pbbb = 0;
+            double P1 = 0, Pa = 0, Pb = 0, Paa = 0, Pab = 0, Pbb = 0, Paaa = 0;
+            double Paab = 0, Pabb = 0, Pbbb = 0;
             {
                 for (int j = 0; j < f.length; j++) {
+                    //First vertex 2d coordinates
                     double a0 = vectices[f[j]].get(A);
                     double b0 = vectices[f[j]].get(B);
+                    //Second vertex 2d coordinates
                     double a1 = vectices[f[(j + 1) % f.length]].get(A);
                     double b1 = vectices[f[(j + 1) % f.length]].get(B);
 
