@@ -67,8 +67,7 @@ public interface Geometry extends BoundingBox {
 	public double getMass();
 	
 	/**
-	 * Compute the inertia tensor of this geometry. Note that this quantity is dependent on the mass of the geometry. 
-	 * The inertia tensor returned from this call must assume no local rotation or translation of the geometry instance.
+	 * Return the inertia matrix for this geometry, given in the centre of mass frame and scaled to mass = 1
 	 */
 	public InertiaMatrix getInertialMatrix();
 	
@@ -107,6 +106,13 @@ public interface Geometry extends BoundingBox {
 	 * link geometry objects to some user space reference
 	 */
 	public void setAuxiliary(Object aux);
+	
+	/**
+	 * Get the centre of mass position in local space
+	 * @param cm Vector3 reference to contain the centre of mass position
+	 * @return the reference to the cm object
+	 */
+	public Vector3 getLocalCentreOfMass(Vector3 cm);
 	
 }
 

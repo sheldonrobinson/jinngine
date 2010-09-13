@@ -172,6 +172,8 @@ public class Sphere implements SupportMap3, Geometry, Material {
 	public double sphereSweepRadius() {
 		return 0;
 	}
-
+	
+	@Override
+	public Vector3 getLocalCentreOfMass(Vector3 cm) { return cm.assignZero(); }
 
 }

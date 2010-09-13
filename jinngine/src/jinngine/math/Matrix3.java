@@ -127,6 +127,16 @@ public class Matrix3 {
 	  return this;
   }
 
+  /**
+   * Assign the non-uniform scale matrix given by s1, s2 and s3, to this matrix
+   */
+  public final Matrix3 assignScale(Vector3 s) {
+	  a11 = s.x; a12 = 0.; a13 = 0.;
+	  a21 = 0.; a22 = s.y; a23 = 0.;
+	  a31 = 0.; a32 = 0.; a33 = s.z;
+	  return this;
+  }
+
   
   /**
    * Assign the identity matrix to this matrix
@@ -275,6 +285,19 @@ public class Matrix3 {
    */
   public Matrix3 assignMultiply(Matrix3 A) {
 	  return multiply(this,A,this);
+  }
+  
+  
+  /**
+   * Multiply by scalar s and store in this matrix.
+   * @param s scalar
+   * @return this matrix
+   */
+  public Matrix3 assignMultiply( double s) {
+	  a11*=s; a12*=s; a13*=s;
+	  a21*=s; a22*=s; a23*=s;
+	  a31*=s; a32*=s; a33*=s;	  
+	  return this;
   }
   
   //C = AxB 

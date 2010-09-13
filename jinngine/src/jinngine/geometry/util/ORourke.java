@@ -282,7 +282,6 @@ public class ORourke {
 		}
 		// poly-line
 		if (N>2 && M==2) {
-//			System.out.println("switch");
 			// turn arguments around and wrap result TODO, could be more effective? 
 			final Vector3 p1 = poly2points.next();
 			final Vector3 p2 = poly2points.next();
@@ -508,14 +507,14 @@ public class ORourke {
 		// p1T(p2-p1) + (p2-p1)T(p2-p1) t - xT(p2-p1) = 0
 		//  t =  xT(p2-p1) - p1T(p2-p1) / (p2-p1)T(p2-p1)
 		//  t =  (x-p1)T(p2-p1) / |(p2-p1)|^2
-
+		final double e = 0.1;
 		final Vector3 p2p1 = p2.sub(p1);
 		p2p1.z = 0; // we only work in the xy plane
-		final double t = x.sub(p1).dot(p2p1) / p2p1.squaredNorm();
+		final double t = x.sub(p1).xydot(p2p1) / p2p1.squaredNorm();
 		if (t>= -epsilon && t <= 1+epsilon) {
 			// closest point on line
 			Vector3 lp = p1.add(p2.sub(p1).multiply(t));
-			if (  lp.sub(x).xynorm() < epsilon ) {
+			if (  lp.sub(x).xynorm() < e ) {
 				intPoint.assign(lp);
 				return true;
 			}
@@ -555,7 +554,7 @@ public class ORourke {
 			// intersect line with poly edge
 			if (lineLineIntersection(p1, p2, qm, q, param, epsilon)) {
 				// internal on lines
-				if (0<=param.x && param.x<=1 && 0<=param.y && param.y<=1) {
+				if (-epsilon<=param.x && param.x<=1+epsilon && -epsilon<=param.y && param.y<=1+epsilon) {
 					// calculate intersection points (including the right z-coordinate)
 					final Vector3 ipp = p1.add(p2.sub(p1).multiply(param.x));
 					final Vector3 ipq = qm.add( q.sub(qm).multiply(param.y));
@@ -587,10 +586,13 @@ public class ORourke {
 						// terminate
 						return;
 					}
+				} else {
+//					System.out.println("intersection point not internal = "+param);
 				}
 			} else {
 				// poly edge is parallel with line. There is a special case where the line
 				// is coincident with and edge of the poly
+//				System.out.println("line parallel with poly edge");
 			}
 			
 			

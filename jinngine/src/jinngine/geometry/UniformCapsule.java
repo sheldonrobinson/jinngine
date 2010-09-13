@@ -33,15 +33,26 @@ public final class UniformCapsule implements Geometry, SupportMap3, Material {
 		this.radius = radius;
 		this.length = length;
 				
-		// use mass of a cylinder for now
-		this.uniformmass = Math.PI*radius*radius*length;
+		// use mass of a cylinder plus mass of the sphere
+		final double cylinderMass = Math.PI*radius*radius*length;
+		final double sphereMass = (4.0/3.0)*Math.PI*radius*radius*radius;
+		this.uniformmass = cylinderMass + sphereMass;
 		
-//		System.out.println("capsule mass="+uniformmass);
-
-		// angular inertia (for a cylinder for now) TODO 
-		final double Ixx = uniformmass*(1/12.0)*(3*radius*radius+length*length);
+		// angular inertia for cylinder part (scale in cylinders part of total mass) 
+		final double Ixx = (cylinderMass/uniformmass)*(1.0/12.0)*(3*radius*radius+length*length);
 		this.inertia = new InertiaMatrix();
-		this.inertia.assignScale( Ixx, Ixx, 0.5*uniformmass*radius*radius); 
+		this.inertia.assignScale( Ixx, Ixx, 0.5*radius*radius); 
+		
+		// add the contribution from the two half-sphere at the ends 
+		// inertia for half-sphere in (0,0,0) frame (not in centre of mass frame)
+		final double IHalfSphere = (1.0/5.0)*radius*radius;
+		// the following is equivalent to translating two half-sphere tensors to
+		// each side along the z-axis, there after adding them to the inertia of the cylinder
+		this.inertia.a11 += 2*(sphereMass/uniformmass)*(IHalfSphere + (0.25*length*length));
+		this.inertia.a22 += 2*(sphereMass/uniformmass)*(IHalfSphere + (0.25*length*length));
+		
+		// centre of mass for half-sphere in positive z space
+		//final double halfSphereCmZ = (3.0/16.0)*radius;
 	}
 	
 	/**
@@ -170,5 +181,8 @@ public final class UniformCapsule implements Geometry, SupportMap3, Material {
 	public void setFrictionCoefficient(double f) { this.friction = f; }
 	@Override
 	public void setRestitution(double e) { this.restitution = e; }
+
+	@Override
+	public Vector3 getLocalCentreOfMass(Vector3 cm) { return cm.assignZero(); }
 
 }
