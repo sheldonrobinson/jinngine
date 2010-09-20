@@ -49,10 +49,11 @@ public final class UniversalJoint implements Constraint {
 	private final JointAxisController controler2;
 	
 	// constraint entries
-	private NCPConstraint linear1 = new NCPConstraint();
-	private NCPConstraint linear2 = new NCPConstraint();
-	private NCPConstraint linear3 = new NCPConstraint();
-	private NCPConstraint angular1 = new NCPConstraint();
+	private final NCPConstraint linear1 = new NCPConstraint();
+	private final NCPConstraint linear2 = new NCPConstraint();
+	private final NCPConstraint linear3 = new NCPConstraint();
+	private final NCPConstraint angular1 = new NCPConstraint();
+
 	
 	/**
 	 * Get the axis controller for the first axis. Use this controller to adjust joint limits, motor and friction
@@ -393,7 +394,10 @@ public final class UniversalJoint implements Constraint {
 
 	@Override
 	public final Iterator<NCPConstraint> getNcpConstraints() {
-		// return iterator over the members linear1, linear2, linear3. angular1, angular2, angular3
+		// TODO, this iterator does not export the "extra" constraint used by the joint limits. This
+		// needs to be added here.
+		
+		// return iterator over the members linear1, linear2, linear3. angular1, axis1.angular, axis2.angular
 		return new  Iterator<NCPConstraint>() {
 			private int i = 0;
 			@Override
@@ -406,9 +410,10 @@ public final class UniversalJoint implements Constraint {
 				case 0: i=i+1; return linear1; 
 				case 1: i=i+1; return linear2; 
 				case 2: i=i+1; return linear3; 
-//				case 3: i=i+1; return angular1; 
-//				case 4: i=i+1; return angular2; 
 				case 3: i=i+1; return angular1; 
+				case 4: i=i+1; return axis1.angular; 
+				case 5: i=i+1; return axis2.angular; 
+				
 				}				
 				return null;
 			}
