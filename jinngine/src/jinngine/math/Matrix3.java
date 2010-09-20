@@ -515,6 +515,16 @@ public class Matrix3 {
   }
   
   /**
+   * Return this matrix as a formated string, that can be 
+   * directly used in a MATLAB script.
+   */
+  public final String toMatlabString() {
+	    return "[" +a11 +" "+a12+ " " +a13+ "; "
+	    +a21+" " + a22 + " " + a23 + "; "
+        + a31+" " + a32 + " " + a33 + "]" ;
+  }
+  
+  /**
    * Check matrix for NaN values 
    */
   public final boolean isNaN() {

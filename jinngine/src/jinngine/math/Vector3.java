@@ -434,4 +434,13 @@ public final class Vector3 implements Serializable {
 	public final String toString() {
 		return  "[" + x + ", " +y+ ", " +z + "]";
 	}
+	
+	  /**
+	   * Return this vector as a formated string, that can be 
+	   * directly used in a MATLAB script.
+	   */
+	  public final String toMatlabString() {
+		    return "["+x+"; "+y+"; "+z+ "]";
+	  }
+
 }
