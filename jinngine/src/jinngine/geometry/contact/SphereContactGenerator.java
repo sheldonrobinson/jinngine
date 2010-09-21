@@ -136,4 +136,9 @@ public class SphereContactGenerator implements ContactGenerator {
 		
 	}
 
+	@Override
+	public int getNumberOfContacts() {
+		return incontact?1:0;
+	}
+
 }

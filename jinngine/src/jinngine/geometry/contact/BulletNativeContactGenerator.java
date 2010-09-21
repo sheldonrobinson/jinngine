@@ -2,6 +2,8 @@ package jinngine.geometry.contact;
 
 import java.util.Iterator;
 
+import javax.naming.OperationNotSupportedException;
+
 import jinngine.geometry.Box;
 import jinngine.geometry.ConvexHull;
 import jinngine.geometry.Geometry;
@@ -182,6 +184,11 @@ public class BulletNativeContactGenerator implements ContactGenerator {
 		// free memory in the native bullet impl.
 		//System.out.println("clean");
 		bulletCleanup(record);
+	}
+
+	@Override
+	public int getNumberOfContacts() {
+		throw new UnsupportedOperationException();
 	}
 
 }

@@ -93,6 +93,10 @@ public interface ContactGenerator {
 	 */
 	public Iterator<ContactPoint> getContacts();	
 	
+	/**
+	 * Return the number of contact points in this generator
+	 */
+	public int getNumberOfContacts();
 	
 	/**
 	 * Called when this ContactGenerator is being removed from the {@link ContactConstraint} (or some other user). 

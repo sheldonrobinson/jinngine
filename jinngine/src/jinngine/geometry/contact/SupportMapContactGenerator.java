@@ -215,4 +215,9 @@ public final class SupportMapContactGenerator implements ContactGenerator {
 	
 	@Override
 	public void remove() {/* nothing to clean up */}
+
+	@Override
+	public int getNumberOfContacts() {
+		return contacts.size();
+	}
 }
