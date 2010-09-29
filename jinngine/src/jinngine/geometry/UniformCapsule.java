@@ -75,7 +75,7 @@ public final class UniformCapsule implements Geometry, SupportMap3, Material {
 	
 	private Object auxiliary;
 	private Body body;
-	private double envelope = 0.125;
+	private double envelope = 0.225;
 	private final Matrix3 rotation = new Matrix3(Matrix3.identity());
 	private final Vector3 translation = new Vector3();
 	
@@ -122,17 +122,17 @@ public final class UniformCapsule implements Geometry, SupportMap3, Material {
 	 */
 
 	@Override
-	public Vector3 getMaxBounds() {
+	public Vector3 getMaxBounds(Vector3 bounds) {
 		Vector3 p1 = body.state.rotation.multiply(rotation.multiply(new Vector3(0, 0,  0.5*length)).add(translation)).add(body.state.position);
 		Vector3 p2 = body.state.rotation.multiply(rotation.multiply(new Vector3(0, 0, -0.5*length)).add(translation)).add(body.state.position);
-		return new Vector3((p1.x>p2.x?p1.x:p2.x) + envelope+radius, (p1.y>p2.y?p1.y:p2.y)+ envelope+radius, (p1.z>p2.z?p1.z:p2.z)+envelope+radius );
+		return bounds.assign((p1.x>p2.x?p1.x:p2.x) + envelope+radius, (p1.y>p2.y?p1.y:p2.y)+ envelope+radius, (p1.z>p2.z?p1.z:p2.z)+envelope+radius );
 	}
 
 	@Override
-	public Vector3 getMinBounds() {
+	public Vector3 getMinBounds(Vector3 bounds) {
 		Vector3 p1 = body.state.rotation.multiply(rotation.multiply(new Vector3(0, 0,  0.5*length)).add(translation)).add(body.state.position);
 		Vector3 p2 = body.state.rotation.multiply(rotation.multiply(new Vector3(0, 0, -0.5*length)).add(translation)).add(body.state.position);
-		return new Vector3((p1.x<p2.x?p1.x:p2.x)-envelope-radius, (p1.y<p2.y?p1.y:p2.y)-envelope-radius, (p1.z<p2.z?p1.z:p2.z)-envelope-radius );
+		return bounds.assign((p1.x<p2.x?p1.x:p2.x)-envelope-radius, (p1.y<p2.y?p1.y:p2.y)-envelope-radius, (p1.z<p2.z?p1.z:p2.z)-envelope-radius );
 	}
 
 	/*  

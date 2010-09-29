@@ -267,7 +267,7 @@ public class ConvexHull implements SupportMap3, Geometry, Material {
 	// Geometry
 	private Object auxiliary;
 	private Body body = new Body("default");
-	private double envelope = 0.125;
+	private double envelope = 0.225;
 	private Matrix3 localrotation = Matrix3.identity();
 	private Matrix4 localtransform4 = Matrix4.identity();
 	private final Vector3 localtranslation = new Vector3();
@@ -395,15 +395,15 @@ public class ConvexHull implements SupportMap3, Geometry, Material {
 	}
 	
 	@Override
-	public Vector3 getMaxBounds() {
+	public Vector3 getMaxBounds(Vector3 bounds) {
 		updateBoundingBoxTransform();
-		return boundingBox.getMaxBounds();
+		return boundingBox.getMaxBounds(bounds);
 	}
 
 	@Override
-	public Vector3 getMinBounds() {
+	public Vector3 getMinBounds(Vector3 bounds) {
 		updateBoundingBoxTransform();
-		return boundingBox.getMinBounds();
+		return boundingBox.getMinBounds(bounds);
 	}
 
 	@Override
