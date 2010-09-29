@@ -40,8 +40,8 @@ public class ConjugateGradients implements Solver {
 		
 		//reset auxiliary deltas
 		for (Body b: bodies) {
-			b.auxDeltav.assignZero();
-			b.auxDeltaOmega.assignZero();
+			b.deltavelocity1.assignZero();
+			b.deltaomega1.assignZero();
 		}
 		
 		//We solve Ax+b = 0 => r = -b-Ax
@@ -63,10 +63,10 @@ public class ConjugateGradients implements Solver {
 			}
 
 			//reflect d in the delta velocities
-			Vector3.add( ci.body1.auxDeltav,     ci.b1.multiply(ci.d));
-			Vector3.add( ci.body1.auxDeltaOmega, ci.b2.multiply(ci.d));
-			Vector3.add( ci.body2.auxDeltav,     ci.b3.multiply(ci.d));
-			Vector3.add( ci.body2.auxDeltaOmega, ci.b4.multiply(ci.d));
+			Vector3.add( ci.body1.deltavelocity1,     ci.b1.multiply(ci.d));
+			Vector3.add( ci.body1.deltaomega1, ci.b2.multiply(ci.d));
+			Vector3.add( ci.body2.deltavelocity1,     ci.b3.multiply(ci.d));
+			Vector3.add( ci.body2.deltaomega1, ci.b4.multiply(ci.d));
 
 			
 			delta_new += ci.residual * ci.d;
@@ -88,8 +88,8 @@ public class ConjugateGradients implements Solver {
 			//alpha = delta_new/dTq
 			double dTq = 0;
 			for (NCPConstraint ci: constraints) {
-				ci.q = ci.j1.dot(ci.body1.auxDeltav) + ci.j2.dot(ci.body1.auxDeltaOmega)
-				+ ci.j3.dot(ci.body2.auxDeltav) + ci.j4.dot(ci.body2.auxDeltaOmega)
+				ci.q = ci.j1.dot(ci.body1.deltavelocity1) + ci.j2.dot(ci.body1.deltaomega1)
+				+ ci.j3.dot(ci.body2.deltavelocity1) + ci.j4.dot(ci.body2.deltaomega1)
 				+ ci.d * ci.damper;
 				
 				dTq += ci.d*ci.q;
@@ -147,8 +147,8 @@ public class ConjugateGradients implements Solver {
 
 			//d = s + beta d
 			for (Body b: bodies) { // d = beta d
-				Vector3.multiply( b.auxDeltav,     beta);
-				Vector3.multiply( b.auxDeltaOmega, beta);				
+				Vector3.multiply( b.deltavelocity1,     beta);
+				Vector3.multiply( b.deltaomega1, beta);				
 			}			
 			for (NCPConstraint ci: constraints) { 
 				// d = d + r
@@ -156,10 +156,10 @@ public class ConjugateGradients implements Solver {
 				ci.d = ci.s + beta* ci.d;
 
 				//reflect d in the delta velocities
-				Vector3.add( ci.body1.auxDeltav,     ci.b1.multiply(ci.s));
-				Vector3.add( ci.body1.auxDeltaOmega, ci.b2.multiply(ci.s));
-				Vector3.add( ci.body2.auxDeltav,     ci.b3.multiply(ci.s));
-				Vector3.add( ci.body2.auxDeltaOmega, ci.b4.multiply(ci.s));
+				Vector3.add( ci.body1.deltavelocity1,     ci.b1.multiply(ci.s));
+				Vector3.add( ci.body1.deltaomega1, ci.b2.multiply(ci.s));
+				Vector3.add( ci.body2.deltavelocity1,     ci.b3.multiply(ci.s));
+				Vector3.add( ci.body2.deltaomega1, ci.b4.multiply(ci.s));
 				
 				//if best updated, set the best vector
 				if (best_updated)

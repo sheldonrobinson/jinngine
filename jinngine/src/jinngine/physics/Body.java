@@ -36,10 +36,10 @@ public final class Body {
 	public final Vector3               deactivatedexternaltorque= new Vector3();
 
 	// more auxiliary members
-	public final Vector3               auxDeltav     = new Vector3();
-	public final Vector3               auxDeltaOmega = new Vector3();
-	public final Vector3               auxDeltav2 = new Vector3();
-	public final Vector3               auxDeltaOmega2 = new Vector3();
+	public final Vector3               deltavelocity1     = new Vector3();
+	public final Vector3               deltaomega1 = new Vector3();
+	public final Vector3               deltavelocity2 = new Vector3();
+	public final Vector3               deltaomega2 = new Vector3();
 
 	// physical state of body
 	public final State state = new State();
