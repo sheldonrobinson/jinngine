@@ -185,9 +185,9 @@ public final class UniversalJoint implements Constraint {
 		
 		//jacobians on matrix form
 		Matrix3 Ji = Matrix3.identity().multiply(1);
-		Matrix3 Jangi = Matrix3.crossProductMatrix(riw).multiply(-1);
+		Matrix3 Jangi = Matrix3.cross(riw).multiply(-1);
 		Matrix3 Jj = Matrix3.identity().multiply(-1);
-		Matrix3 Jangj = Matrix3.crossProductMatrix(rjw);
+		Matrix3 Jangj = Matrix3.cross(rjw);
 
 //		Matrix3 MiInv = Matrix3.identity().multiply(1/bi.state.mass);
 //		Matrix3 MjInv = Matrix3.identity().multiply(1/bj.state.mass);

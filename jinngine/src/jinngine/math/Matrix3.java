@@ -244,6 +244,15 @@ public class Matrix3 {
   }
   
   /**
+   * Return a new matrix that is multiplied by the scalar -1
+   */
+  public final Matrix3 negate() {
+	  return new Matrix3( -this.a11, -this.a12, -this.a13, 
+			  -this.a21, -this.a22, -this.a23,
+			  -this.a31, -this.a32, -this.a33 ); 
+  }
+  
+  /**
    * Multiply this matrix by a scalar, return the resulting matrix
    * @param s
    * @return
@@ -548,15 +557,12 @@ public class Matrix3 {
 	  return Math.sqrt(	a11*a11 + a12*a12 + a13*a13  + a21*a21 + a22*a22  + a23*a23  + a31*a31 + a32*a32 + a33*a33 ); 
   }
     /**
-     *
-     * @param v
-     * @return
-     * @throws NullPointerException
+     * Return the cross product matrix of the vector a, such that M b = a x b.
      */
-    public static Matrix3 crossProductMatrix(Vector3 v) {
+    public static Matrix3 cross(Vector3 a) {
         return new Matrix3(
-                0., -v.z, v.y,
-                v.z, 0., -v.x,
-                -v.y, v.x, 0.);
+                0., -a.z, a.y,
+                a.z, 0., -a.x,
+                -a.y, a.x, 0.);
     }
 }
