@@ -8,6 +8,7 @@
  */
 package jinngine.rendering.jogl;
 
+import java.awt.Canvas;
 import java.awt.Frame;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
@@ -37,13 +38,13 @@ import jinngine.math.Vector3;
 import jinngine.physics.Body;
 import jinngine.rendering.Rendering;
 
-public class JoglRendering extends Frame implements Rendering, 
+public class JoglRendering implements Rendering, 
 GLEventListener, MouseListener, MouseMotionListener, KeyListener {
 	
 	private static final long serialVersionUID = 1L;
 	public List<DrawShape> toDraw = new ArrayList<DrawShape>();
 	private final Callback callback;
-	private final EventCallback mouseCallback;
+	private final List<EventCallback> mouseCallbacks = new ArrayList<EventCallback>();
 	private final GLCanvas canvas = new GLCanvas();
 	private Animator animator = new Animator(this.canvas);
 	private final GLU glu = new GLU();	
@@ -79,24 +80,29 @@ GLEventListener, MouseListener, MouseMotionListener, KeyListener {
 		public Body getReferenceBody();
 	}
 	
-	public JoglRendering(Callback callback, EventCallback mouseCallback) {
+	public JoglRendering(Callback callback ) {
 		this.callback = callback;
-		this.mouseCallback = mouseCallback;
-		setTitle("jinngine.example");
-		setSize(1024,(int)(1024/(1.77777)));
+		canvas.setSize(1024,(int)(1024/(1.77777)));
 		canvas.setIgnoreRepaint( true );
 		canvas.addGLEventListener(this);
 		canvas.setVisible(true);
-		//Setup exit function
-		addWindowListener(new WindowAdapter() {public void windowClosing(java.awt.event.WindowEvent e) {			
-			System.exit(0);} 
-		} );
-
-		add(canvas, java.awt.BorderLayout.CENTER);
-		setVisible(true);
 		canvas.addMouseListener(this);
 		canvas.addMouseMotionListener(this);
 		canvas.addKeyListener(this);
+		canvas.setVisible(true);
+	}
+	
+	public void createWindow() {
+		Frame frame = new Frame();
+		frame.setTitle("jinngine.example");
+		frame.setSize(1024,(int)(1024/(1.77777)));
+		//Setup exit function
+		frame.addWindowListener(new WindowAdapter() {public void windowClosing(java.awt.event.WindowEvent e) {			
+			System.exit(0);} 
+		} );
+
+		frame.add(canvas, java.awt.BorderLayout.CENTER);
+		frame.setVisible(true);
 	}
 	
 	@Override
@@ -434,7 +440,7 @@ GLEventListener, MouseListener, MouseMotionListener, KeyListener {
 	private void drawSmoothShape( List<Vector3> vertices, List<Vector3> normals, int[][] faceIndices, GL gl) {
 		// draw shaded mesh
 		gl.glUniform1f(extrutionUniformLocation, 0);
-		gl.glUniform3f(colorUniformLocation, 1f, 0.95f, 0.95f);
+		gl.glUniform3f(colorUniformLocation, 1f, 0.95f, 1f);
 		gl.glUniform1f(influenceUniformLocation, 0);
 		gl.glCullFace(GL.GL_BACK);
 		drawFaces( vertices, normals, faceIndices, gl);	
@@ -697,21 +703,26 @@ GLEventListener, MouseListener, MouseMotionListener, KeyListener {
 	public void mousePressed(MouseEvent e) {
 		Vector3 p = new Vector3();
 		Vector3 d = new Vector3();
-		getPointerRay(p, d, e.getX(), e.getY());		
-		mouseCallback.mousePressed((double)e.getX(), (double)e.getY(), p, d );
+		getPointerRay(p, d, e.getX(), e.getY());
+		
+		for (EventCallback call: this.mouseCallbacks)
+			call.mousePressed((double)e.getX(), (double)e.getY(), p, d );
 	}
 
 	@Override
 	public void mouseReleased(MouseEvent e) {
-		mouseCallback.mouseReleased();
+		for (EventCallback call: this.mouseCallbacks)
+			call.mouseReleased();
 	}
 
 	@Override
 	public void mouseDragged(MouseEvent e) {
 		Vector3 p = new Vector3();
 		Vector3 d = new Vector3();
-		getPointerRay(p, d, e.getX(), e.getY());		
-		mouseCallback.mouseDragged((double)e.getX(), (double)e.getY(), p, d );
+		getPointerRay(p, d, e.getX(), e.getY());
+		
+		for (EventCallback call: this.mouseCallbacks)
+			call.mouseDragged((double)e.getX(), (double)e.getY(), p, d );
 	}
 
 	@Override
@@ -720,19 +731,36 @@ GLEventListener, MouseListener, MouseMotionListener, KeyListener {
 	@Override
 	public void keyPressed(KeyEvent arg0) {
 		if (arg0.getKeyChar()==' ') {
-			mouseCallback.spacePressed();
+			for (EventCallback call: this.mouseCallbacks)
+				call.spacePressed();
+		}
+		
+		if ( arg0.getKeyCode() == java.awt.event.KeyEvent.VK_ENTER ) {
+			for (EventCallback call: this.mouseCallbacks)
+				call.enterPressed();			
 		}
 	}
 
 	@Override
 	public void keyReleased(KeyEvent arg0) {
 		if (arg0.getKeyChar()==' ') {
-			mouseCallback.spaceReleased();
+			for (EventCallback call: this.mouseCallbacks)
+				call.spaceReleased();
 		}
 	}
 
 	@Override
 	public void keyTyped(KeyEvent arg0) {}
+
+	@Override
+	public void addCallback(EventCallback c) {
+		mouseCallbacks.add(c);
+	}
+
+	@Override
+	public Canvas getCanvas() {
+		return canvas;
+	}
 
 
 

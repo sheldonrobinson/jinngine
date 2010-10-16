@@ -79,8 +79,10 @@ public class TriggerExample implements Rendering.Callback {
 		}));
 		
 		// handle drawing
-		Rendering rendering = new jinngine.rendering.jogl.JoglRendering(this, new Interaction(scene));
+		Rendering rendering = new jinngine.rendering.jogl.JoglRendering(this);
+		rendering.addCallback(new Interaction(scene));
 		rendering.drawMe(boxgeometry);
+		rendering.createWindow();
 		rendering.start();
 	}
 
