@@ -257,22 +257,22 @@ public final class Quaternion implements Serializable {
 	 */
 	public final Quaternion interpolate( Quaternion q2, double t) {
 		//seems to be slerp interpolation of quaterions [02 03 2008]
-		                                                 Quaternion qa = this;
-		                                                 Quaternion qb = q2;
-		                                                 //      qa sin((1-t) theta) + qb sin( t theta )
-		                                                 //qm = ---------------------------------------  0<t<1 
-		                                                 //                    sin theta
-		                                                 //  	  
-		                                                 //  theta = arccos( qa dot qb )
-		                                                 double theta = Math.acos(qa.dot(qb));
+		Quaternion qa = this;
+		Quaternion qb = q2;
+		//      qa sin((1-t) theta) + qb sin( t theta )
+		//qm = ---------------------------------------  0<t<1 
+		//                    sin theta
+		//  	  
+		//  theta = arccos( qa dot qb )
+		double theta = Math.acos(qa.dot(qb));
 
-		                                                 if (Math.abs(theta) < 1e-7 ) {
-		                                                	 return this;
-		                                                 }
+		if (Math.abs(theta) < 1e-7 ) {
+			return this;
+		}
 
-		                                                 return qa.multiply(Math.sin((1-t)*theta))
-		                                                 .add( qb.multiply( Math.sin( t*theta )))
-		                                                 .multiply( 1/Math.sin(theta));
+		return qa.multiply(Math.sin((1-t)*theta))
+		.add( qb.multiply( Math.sin( t*theta )))
+		.multiply( 1/Math.sin(theta));
 	}
 
 	public static final Vector3 anguarVelocity(Quaternion q0, Quaternion q1) {
@@ -307,6 +307,30 @@ public final class Quaternion implements Serializable {
 		return Quaternion.rotation(theta, v);
 	}
 
+	
+	/**
+	 * Calculate the XYZ Euler angles from the unit quaternion q. 
+	 * 
+	 * The euler angles, [phi,theta,psi], will reflect the rotation obtained by 
+	 * the rotation matrix R(q) = Rz(psi)Ry(theta)Rx(phi), where R(q) is the 
+	 * rotation matrix computed directly from the unit quaternion q, and Rx(phi) is
+	 * the rotation matrix that rotates phi radians about the x-axis, etc.  
+	 */
+	public static final void quaternionToEuler(final Quaternion q, final Vector3 euler) {		
+		// partially calculate the rotation matrix
+		final double m11 = 1-2*(q.v.y*q.v.y+q.v.z*q.v.z); // final double m12 = 2*q1.v.x*q1.v.y-2*q1.s*q1.v.z; final double m13 = 2*q1.s*q1.v.y+2*q1.v.x*q1.v.z; 
+		final double m21 = 2*q.v.x*q.v.y+2*q.s*q.v.z; // final double m22 = 1-2*(q1.v.x*q1.v.x+q1.v.z*q1.v.z); final double m23 = -2*q1.s*q1.v.x+2*q1.v.y*q1.v.z;
+		final double m31 = -2*q.s*q.v.y+2*q.v.x*q.v.z; final double m32 = 2*q.s*q.v.x+2*q.v.y*q.v.z; final double m33 = 1-2*(q.v.x*q.v.x+q.v.y*q.v.y);
+		
+		// calculate the euler angles using the atan2() function
+		final double phi = Math.atan2( m32, m33 );
+		final double theta = Math.atan2( -m31, m32*Math.sin(phi)+m33*Math.cos(phi));
+		final double psi = Math.atan2( m21, m11 );
+
+		// return result
+		euler.assign(phi,theta,psi);
+	}
+	
 
 	public void Print() {
 		System.out.println( "[ "+ s );
