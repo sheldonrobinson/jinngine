@@ -19,10 +19,10 @@ import java.io.Serializable;
  * left <code>this</code> unchanged.
  *
  * Static methods store the resulting vector on a existing reference, which avoid
- * allowcation an can improove performances around 20% (profiling performend on vector
+ * allocation an can improve performances around 20% (profiling performed on vector
  * addition).
  *
- * Deprecated methods will be removed on October 2010
+ * Depreciated methods will be removed on October 2010
  *
  * @author Morten Silcowitz
  * @author Pierre Labatut 
