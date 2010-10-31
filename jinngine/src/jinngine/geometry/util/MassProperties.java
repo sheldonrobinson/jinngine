@@ -29,8 +29,11 @@ public class MassProperties {
 		// finalise calculation of centre of mass
 		Vector3.multiply( centreofmass, (1/totalmass));
 		
-		// align inertia tensor to centre of mass
-		InertiaMatrix.translate( inertia, totalmass, centreofmass.multiply(-1));		
+		
+		// scale inertia tensor in total mass
+		inertia.assignMultiply(1/totalmass);
+		// align inertia tensor to centre of mass		
+		InertiaMatrix.inverseTranslate( inertia, 1, centreofmass );		
 	}
 	
 	private final void divide( 
@@ -75,7 +78,7 @@ public class MassProperties {
 			// use a primitive inclusion test. If all 8 corners of the box is 
 			// intersecting the shape, then the box included in it, and no further 
 			// subdivisions a required
-			if ( localmass < masslimit||depth>2) {		
+			if ( localmass < masslimit || (depth>2&&false) ) {		
 //				if(testInclusion(xmax, xmin, ymax, ymin, zmax, zmin) || depth > 3 ) {
 					//				System.out.println("small or included");
 					totalmass = totalmass + localmass;

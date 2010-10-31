@@ -29,7 +29,7 @@ public class InertiaMatrix extends Matrix3 {
 	// 
 	// which is symetric because I = I^T 
 	
-	public InertiaMatrix translate(double mass, Vector3 r) {
+	public Matrix3 translate(double mass, Vector3 r) {
 		InertiaMatrix I = new InertiaMatrix(this);
 		InertiaMatrix.translate(I,mass,r);
 		return I;
@@ -41,21 +41,47 @@ public class InertiaMatrix extends Matrix3 {
 	 * @param mass
 	 * @param r
 	 */
-	public static void translate(InertiaMatrix M, double mass, Vector3 r) {
+	public static void translate(Matrix3 M, double mass, Vector3 r) {
 		//as described in [Erleben et. al 2001]. This is based on the parallel axis theorem, see wiki for instance
 		//Ixx
 		double t11 = M.a11 + mass*(r.y*r.y + r.z*r.z);
 		//Iyy
-		double t22 = M.a22 + mass*(r.x*r.x + r.z*r.z);
+		double t22 = M.a22 + mass*( r.x*r.x + r.z*r.z);
 		//Izz
-		double t33 = M.a33 + mass*(r.x*r.x + r.y*r.y);
-		
+		double t33 = M.a33 + mass*( r.x*r.x + r.y*r.y);	
 		//Ixy
 		double t12 = M.a12 - mass*(r.x*r.y);
 		//Ixz
 		double t13 = M.a13 - mass*(r.x*r.z);
 		//Iyz
 		double t23 = M.a23 - mass*(r.y*r.z);
+
+		//set result
+		M.a11 = t11; M.a12 = t12; M.a13 = t13;
+		M.a21 = t12; M.a22 = t22; M.a23 = t23;
+		M.a31 = t13; M.a32 = t23; M.a33 = t33;
+	}
+	
+	/**
+	 * Simply the inverse of translate
+	 * @param M
+	 * @param mass
+	 * @param r
+	 */
+	public static void inverseTranslate(Matrix3 M, double mass, Vector3 r) {
+		//as described in [Erleben et. al 2001]. This is based on the parallel axis theorem, see wiki for instance
+		//Ixx
+		double t11 = M.a11 - mass*(r.y*r.y + r.z*r.z);
+		//Iyy
+		double t22 = M.a22 - mass*( r.x*r.x + r.z*r.z);
+		//Izz
+		double t33 = M.a33 - mass*( r.x*r.x + r.y*r.y);	
+		//Ixy
+		double t12 = M.a12 + mass*(r.x*r.y);
+		//Ixz
+		double t13 = M.a13 + mass*(r.x*r.z);
+		//Iyz
+		double t23 = M.a23 + mass*(r.y*r.z);
 
 		//set result
 		M.a11 = t11; M.a12 = t12; M.a13 = t13;
@@ -91,12 +117,13 @@ public class InertiaMatrix extends Matrix3 {
 	 * @param orientation
 	 * @return Rotated inertia matrix
 	 */
-	public static InertiaMatrix rotate(InertiaMatrix M, Matrix3 R) {
+	public static Matrix3 rotate(Matrix3 M, Matrix3 R) {
 		//as described in [Erleben et al. 2001]
 		// I'= R I R^T
-		Matrix3.multiply(R, M, M);
-		R.assignTranspose();
-		Matrix3.multiply(M, R, M);
+		Matrix3 Rm = new Matrix3(R);
+		Matrix3.multiply(Rm, M, M);
+		Rm.assignTranspose();
+		Matrix3.multiply(M, Rm, M);
 		return M;
 	}
 

@@ -54,25 +54,27 @@ public class Interaction implements Rendering.EventCallback {
 			// only shoot at non-fixed bodies
 			if ( !bi.isFixed()) {
 				Iterator<Geometry> geometries = bi.getGeometries();
-				Geometry gi = geometries.next();
+				while( geometries.hasNext()) {
+					Geometry gi = geometries.next();
 
-				// if geometry is usable
-				if ( gi instanceof SupportMap3) {
+					// if geometry is usable
+					if ( gi instanceof SupportMap3) {
 
-					RayCast raycast = new RayCast();
-					Vector3 pb = new Vector3(), pc = new Vector3();
-					double t = raycast.run((SupportMap3)gi, null, point, direction, pb, pc, 0, 0.05, 1e-7, true);
+						RayCast raycast = new RayCast();
+						Vector3 pb = new Vector3(), pc = new Vector3();
+						double t = raycast.run((SupportMap3)gi, null, point, direction, pb, pc, 0, 0.05, 1e-7, true);
 
-//					write out t for debugging
-//					System.out.println("t="+t);
-					
-					if (t<parameter) {
-						parameter = t;
-						target = bi;
-						pickpoint.assign(point.add(direction.multiply(t)));
-//						pickpoint.print();
-					}
-				} // if support map
+						// write out t for debugging
+						System.out.println("t="+t);
+
+						if (t<parameter) {
+							parameter = t;
+							target = bi;
+							pickpoint.assign(point.add(direction.multiply(t)));
+							//						pickpoint.print();
+						}
+					} // if support map
+				} // for each geometry
 			} // body is unfixed
 		}
 		
@@ -91,7 +93,7 @@ public class Interaction implements Rendering.EventCallback {
 
 			this.force = new BallInSocketJoint(target, controller, controller.getPosition(), new Vector3(0,1,0));
 			this.force.setForceLimit(1.5*target.getMass());
-			this.force.setCorrectionVelocityLimit(7);
+			this.force.setCorrectionVelocityLimit(17);
 			
 			// copy angular mass properties
 			inertia = new InertiaMatrix(target.state.inertia);
@@ -143,6 +145,12 @@ public class Interaction implements Rendering.EventCallback {
 		planeNormal.assign(0,1,0);	
 		pickpoint.assign(controller.getPosition());
 
+	}
+
+	@Override
+	public void enterPressed() {
+		// TODO Auto-generated method stub
+		
 	}
 
 }

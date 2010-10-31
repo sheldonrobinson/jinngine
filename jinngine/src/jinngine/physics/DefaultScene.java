@@ -119,7 +119,7 @@ public final class DefaultScene implements Scene {
 	private final Solver solver;
 	
 	// PGS iteration for live constraints
-	private final Solver pgs = new ProjectedGaussSeidel(1);
+	private final Solver pgs = new ProjectedGaussSeidel(1, Double.POSITIVE_INFINITY);
 	
 	// deactivation policy
 	private final DeactivationPolicy policy;

@@ -111,7 +111,11 @@ public final class SupportMapContactGenerator implements ContactGenerator {
 			ga.getLocalTranslation(gadisp);	
 			gb.getLocalTranslation(gbdisp);
 			
-			// apply body rotation to local displacements (centre of mass of objects)
+			// add the local centre of mass displacement
+			Vector3.add(gadisp, ga.getLocalCentreOfMass(new Vector3()));
+			Vector3.add(gbdisp, gb.getLocalCentreOfMass(new Vector3()));
+			
+			// apply body rotation to centre of mass of objects
 			Matrix3.multiply(ga.getBody().state.rotation, gadisp, gadisp);
 			Matrix3.multiply(gb.getBody().state.rotation, gbdisp, gbdisp);
 			Vector3 direction = ga.getBody().getPosition().add(gadisp).sub(gb.getBody().getPosition().add(gbdisp));
@@ -194,8 +198,7 @@ public final class SupportMapContactGenerator implements ContactGenerator {
 					contacts.add(cp);
 				}
 			}
-		};
-		
+		};	
 		
 		// apply transform to all points
 		for (Vector3 p: faceA) {
@@ -207,19 +210,14 @@ public final class SupportMapContactGenerator implements ContactGenerator {
 		
 		// run 2d intersection
 		ORourke.run(faceA, faceB, handler);
-		
-//		if (contacts.size() == 0) {
-//			System.out.println("contacts="+contacts.size()+" (" + faceA.size() +","+faceB.size()+")" );
-//
-//			// run 2d intersection
-//			ORourke.run(faceA, faceB, handler);
-//
-//		}
-//		
-//		if (ga instanceof UniformCapsule && gb instanceof UniformCapsule )
-//			System.out.println("contacts="+contacts.size() +"("+faceA.size()+","+faceB.size()+")");
+
 	}
 	
 	@Override
 	public void remove() {/* nothing to clean up */}
+
+	@Override
+	public int getNumberOfContacts() {
+		return contacts.size();
+	}
 }

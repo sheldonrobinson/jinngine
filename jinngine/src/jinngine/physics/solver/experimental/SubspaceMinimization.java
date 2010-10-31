@@ -31,7 +31,7 @@ public class SubspaceMinimization implements Solver {
 	private final List<NCPConstraint> normals = new ArrayList<NCPConstraint>();
 	private final double epsilon = 1e-6;
 	private  int pgsmin = 25;
-	private final ProjectedGaussSeidel pgs = new ProjectedGaussSeidel();
+	private final ProjectedGaussSeidel pgs = new ProjectedGaussSeidel(25,Double.POSITIVE_INFINITY);
 	private double phi;
 	private final boolean debug;
 	private final PrintStream stream;

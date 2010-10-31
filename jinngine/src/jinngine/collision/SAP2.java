@@ -11,6 +11,7 @@ import java.util.Set;
 import java.util.Map.Entry;
 
 import jinngine.geometry.Geometry;
+import jinngine.math.Vector3;
 import jinngine.util.Pair;
 
 /**
@@ -22,6 +23,7 @@ public class SAP2 implements BroadphaseCollisionDetection {
 		public final Geometry geo;
 		public final boolean begin;
 		public final int axis;
+		public final Vector3 bounds = new Vector3();
 		public SweepPoint(Geometry geo, boolean begin, int axis) {
 			super();
 			this.geo = geo;
@@ -35,9 +37,9 @@ public class SAP2 implements BroadphaseCollisionDetection {
 		}
 		public final double value() {
 			if (begin) {
-				return geo.getMinBounds().get(axis);
+				return geo.getMinBounds(bounds).get(axis);				
 			} else {
-				return geo.getMaxBounds().get(axis);				
+				return geo.getMaxBounds(bounds).get(axis);				
 			}
 		}
 	}

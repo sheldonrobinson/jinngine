@@ -8,10 +8,8 @@
  */
 package jinngine.examples;
 
-
 import jinngine.collision.SAP2;
 import jinngine.geometry.Box;
-import jinngine.geometry.UniformCapsule;
 import jinngine.math.Vector3;
 import jinngine.physics.*;
 import jinngine.physics.force.GravityForce;
@@ -22,10 +20,13 @@ import jinngine.rendering.Rendering;
 public class BasicExample implements Rendering.Callback {	
 	private final Scene scene;
 	
-	public BasicExample() {
-		
+	public BasicExample() {		
 		// start jinngine 
-		scene = new DefaultScene(new SAP2(), new NonsmoothNonlinearConjugateGradient(44), new DisabledDeactivationPolicy());
+		scene = new DefaultScene(
+				new SAP2(), 
+				new NonsmoothNonlinearConjugateGradient(44), 
+				new DisabledDeactivationPolicy());
+		
 		scene.setTimestep(0.1);
 		
 		// add boxes to bound the world
@@ -49,10 +50,10 @@ public class BasicExample implements Rendering.Callback {
 		right.setPosition(new Vector3(10,0,0));
 		right.setFixed(true);		
 		
-		Box boxgeometry = new Box(6,6,6);
-		Body box = new Body( "box", boxgeometry );
-		box.setPosition(new Vector3(-10,-11,-25));
-				
+		Box boxgeometry = new Box(5,5,5);
+		Body box = new Body("box", boxgeometry);		
+		box.setPosition(-10,-10, -20);
+		
 		// add all to scene
 		scene.addBody(floor);
 		scene.addBody(back);
@@ -65,9 +66,10 @@ public class BasicExample implements Rendering.Callback {
 		scene.addForce( new GravityForce(box));		
 		
 		// handle drawing
-		Rendering rendering = new jinngine.rendering.jogl.JoglRendering(this, new Interaction(scene));
+		Rendering rendering = new jinngine.rendering.jogl.JoglRendering(this);
+		rendering.addCallback(new Interaction(scene));
 		rendering.drawMe(boxgeometry);
-
+		rendering.createWindow();
 		rendering.start();
 	}
 

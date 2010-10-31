@@ -175,8 +175,8 @@ public class NonsmoothNonlinearConjugateGradientOld implements Solver {
 		
 		//copy to auxiliary
 		for ( Body bi: bodies) {
-			bi.auxDeltav.assign(bi.deltavelocity);
-			bi.auxDeltaOmega.assign(bi.deltaomega);
+			bi.deltavelocity1.assign(bi.deltavelocity);
+			bi.deltaomega1.assign(bi.deltaomega);
 		}
 		//copy lambda value
 		for (NCPConstraint ci: constraints) {
@@ -186,10 +186,10 @@ public class NonsmoothNonlinearConjugateGradientOld implements Solver {
 		//use one PGS iteration to compute new residual 
 		for (NCPConstraint ci: constraints) {
 			//calculate (Ax+b)_i 
-			double w =  ci.j1.dot(ci.body1.auxDeltav) 
-			+ ci.j2.dot(ci.body1.auxDeltaOmega)
-			+ ci.j3.dot(ci.body2.auxDeltav) 
-			+ ci.j4.dot(ci.body2.auxDeltaOmega) + ci.s*ci.damper;
+			double w =  ci.j1.dot(ci.body1.deltavelocity1) 
+			+ ci.j2.dot(ci.body1.deltaomega1)
+			+ ci.j3.dot(ci.body2.deltavelocity1) 
+			+ ci.j4.dot(ci.body2.deltaomega1) + ci.s*ci.damper;
 
 			double deltaLambda = (-ci.b-w)/(ci.diagonal + ci.damper );
 			double lambda0 = ci.s;
@@ -212,10 +212,10 @@ public class NonsmoothNonlinearConjugateGradientOld implements Solver {
 			deltaLambda = newlambda - lambda0;
 			
 			//ci.residual = deltaLambda;
-			Vector3.add( ci.body1.auxDeltav,     ci.b1.multiply(deltaLambda) );
-			Vector3.add( ci.body1.auxDeltaOmega, ci.b2.multiply(deltaLambda) );
-			Vector3.add( ci.body2.auxDeltav,     ci.b3.multiply(deltaLambda));
-			Vector3.add( ci.body2.auxDeltaOmega, ci.b4.multiply(deltaLambda));
+			Vector3.add( ci.body1.deltavelocity1,     ci.b1.multiply(deltaLambda) );
+			Vector3.add( ci.body1.deltaomega1, ci.b2.multiply(deltaLambda) );
+			Vector3.add( ci.body2.deltavelocity1,     ci.b3.multiply(deltaLambda));
+			Vector3.add( ci.body2.deltaomega1, ci.b4.multiply(deltaLambda));
 
 			ci.s += deltaLambda;
 			

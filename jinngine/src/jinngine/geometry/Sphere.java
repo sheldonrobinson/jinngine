@@ -21,11 +21,11 @@ import jinngine.physics.Body;
  */
 public class Sphere implements SupportMap3, Geometry, Material {
 
-	public Object getAuxiliary() {
+	public Object getUserReference() {
 		return auxiliary;
 	}
 
-	public void setAuxiliary(Object auxiliary) {
+	public void setUserReference(Object auxiliary) {
 		this.auxiliary = auxiliary;
 	}
 
@@ -70,38 +70,33 @@ public class Sphere implements SupportMap3, Geometry, Material {
 	}
 	
 	@Override
-	public Vector3 getMaxBounds() {
+	public Vector3 getMaxBounds(Vector3 bounds) {
 		//return new Vector3(radius+envelope,radius+envelope,radius+envelope).add(Matrix3.multiply(body.state.rotation, displacement, new Vector3())).add(body.state.rCm);
-		return body.state.position.add( Matrix3.multiply(body.state.rotation, displacement, new Vector3())).add( new Vector3(radius+envelope,radius+envelope,radius+envelope));
-		
+		return bounds.assign(body.state.position.add( Matrix3.multiply(body.state.rotation, displacement, new Vector3())).add( new Vector3(radius+envelope,radius+envelope,radius+envelope)));
 	}
 
 	@Override
-	public Vector3 getMinBounds() {
+	public Vector3 getMinBounds(Vector3 bounds) {
 		//return  new Vector3(-radius-envelope,-radius-envelope,-radius-envelope).add(Matrix3.multiply(body.state.rotation, displacement, new Vector3())).add(body.state.rCm);	
-		return body.state.position.add( Matrix3.multiply(body.state.rotation, displacement, new Vector3())).add( new Vector3(-radius-envelope,-radius-envelope,-radius-envelope));
-
+		return bounds.assign(body.state.position.add( Matrix3.multiply(body.state.rotation, displacement, new Vector3())).add( new Vector3(-radius-envelope,-radius-envelope,-radius-envelope)));
 	}
 	
 	@Override
-	public InertiaMatrix getInertialMatrix() {
-		//Inertia tensor for the sphere.
+	public InertiaMatrix getInertiaMatrix() {
+		// inertia tensor for the sphere.
 		InertiaMatrix I = new InertiaMatrix();
                 I.assignScale((2/5f)*mass*radius*radius);
 		return I;
 	}
 
 	@Override
-	public void setBody(Body b) {
-		this.body = b;
-		
-	}
+	public void setBody(Body b) { this.body = b; }
 
 	@Override
 	public void setLocalTransform(Matrix3 B, Vector3 b2) {
-		//A sphere only supports translations as local transform
+		// a sphere only supports translations as local transform
 		displacement.assign(b2);
-	localtransform4.assign(Transforms.transformAndTranslate4(Matrix3.scaleMatrix(radius), displacement));
+		localtransform4.assign(Transforms.transformAndTranslate4(Matrix3.scaleMatrix(radius), displacement));
 	}
 	
 	@Override
@@ -111,7 +106,7 @@ public class Sphere implements SupportMap3, Geometry, Material {
 	
 
 	@Override
-	public Matrix4 getTransform() {
+	public Matrix4 getWorldTransform() {
 		return Matrix4.multiply(body.state.transform, localtransform4, transform4);	
 	}
 
@@ -122,11 +117,11 @@ public class Sphere implements SupportMap3, Geometry, Material {
 
 	@Override
 	public void supportFeature(Vector3 d, List<Vector3> ret) {
-		//sphere is invariant under rotation
+		// sphere is invariant under rotation
 		ret.add(d.normalize().multiply(radius).add(body.state.position).add(Matrix3.multiply(body.state.rotation, displacement, new Vector3()) ));
 	}
 
-	//Material getters and setters
+	// material getters and setters
 	@Override
 	public double getFrictionCoefficient() {
 		return friction;
@@ -172,6 +167,8 @@ public class Sphere implements SupportMap3, Geometry, Material {
 	public double sphereSweepRadius() {
 		return 0;
 	}
-
+	
+	@Override
+	public Vector3 getLocalCentreOfMass(Vector3 cm) { return cm.assignZero(); }
 
 }

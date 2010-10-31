@@ -33,10 +33,17 @@ public class ConvexHull implements SupportMap3, Geometry, Material {
 	private final ArrayList<ArrayList<Integer>> adjacent;
 	private final ArrayList<Vector3> dualvertices = new ArrayList<Vector3>();
 	private final ArrayList<ArrayList<Integer>> dualadjacent;
-	private final Vector3 centreOfMass;
+	private final Vector3 centreOfMass = new Vector3();
 	private final double referenceMass;
 	private final int numberOfVertices;
-	private int cachedVertex = 0;
+//	private int cachedVertex = 0;
+
+	// bounding box
+	public final Box boundingBox;
+	private final Vector3 boundingBoxPosition = new Vector3();
+	
+	private final int[]   originalVertexIndices;
+	private final int[][] faceIndices;
 	
 	// Material
 	private double friction = 0.5;
@@ -112,7 +119,8 @@ public class ConvexHull implements SupportMap3, Geometry, Material {
 				
 		// extract faces from the QuickHull3D implementation
 		Point3d[] points = hull.getVertices();
-		int[][] faceIndices = hull.getFaces();
+		faceIndices = hull.getFaces();
+		originalVertexIndices = hull.getVertexPointIndices();
 		
 		// get hull vertices 
 		for ( Point3d p: points) 
@@ -166,32 +174,41 @@ public class ConvexHull implements SupportMap3, Geometry, Material {
 		dualadjacent = adjacencyList(dualhull.getFaces(), dualvertices.size());			
 					
 		// perform approximate mass calculation
-		MassProperties masscalculation = new MassProperties( this, 0.05 );
+		MassProperties masscalculation = new MassProperties( this, 0.05);
 		
-		// set propperties
+		// set properties
 		mass = referenceMass = masscalculation.getMass();
-		inertiamatrix = new InertiaMatrix(masscalculation.getInertiaMatrix());
-		centreOfMass = masscalculation.getCentreOfMass();
-
-		// align all vertices and faces to centre of mass coordinates
-		for ( Vector3 p: vertices)
-			Vector3.add( p, centreOfMass.multiply(-1) );
+		inertiamatrix.assign(masscalculation.getInertiaMatrix());
+		centreOfMass.assign(masscalculation.getCentreOfMass());
+				
+		// find extremal bounds to form a bounding box
+		final Vector3 positiveBounds = new Vector3( 
+				this.supportPoint(new Vector3(1,0,0)).x, 
+				this.supportPoint(new Vector3(0,1,0)).y, 
+				this.supportPoint(new Vector3(0,0,1)).z ); 
+		final Vector3 negativeBounds = new Vector3( 
+				this.supportPoint(new Vector3(-1,0,0)).x, 
+				this.supportPoint(new Vector3(0,-1,0)).y, 
+				this.supportPoint(new Vector3(0,0,-1)).z ); 
 		
-//		for ( Vector3[] f: faces) 
-//			for (Vector3 p: f)
-//				Vector3.add( p, centreOfMass.multiply(-1));
-
+		boundingBoxPosition.assign( 
+				0.5*(positiveBounds.x+negativeBounds.x), 
+				0.5*(positiveBounds.y+negativeBounds.y),
+				0.5*(positiveBounds.z+negativeBounds.z));
+	
+		final Vector3 boundingBoxSideLengths = new Vector3(
+				Math.abs(positiveBounds.x-negativeBounds.x),
+				Math.abs(positiveBounds.y-negativeBounds.y),
+				Math.abs(positiveBounds.z-negativeBounds.z));
 		
-		//search vertices to find extremal bounds
-		extremalpoint.assignZero();
-		for ( Vector3 v: vertices) {
-			if (extremalpoint.norm() < v.norm()) extremalpoint.assign(v);
-		}
-		
-		// assign max extends ( assume identity scale at this point)
-		double max = extremalpoint.norm();
-		bounds.assign(max,max,max);
-
+		// set the initial bounding box
+		this.boundingBox = new Box(boundingBoxSideLengths);
+		updateBoundingBoxTransform();
+	}
+	
+	private final void updateBoundingBoxTransform() {
+		this.boundingBox.setBody(this.body);
+		this.boundingBox.setLocalTransform(this.localrotation, this.localrotation.multiply(boundingBoxPosition).add(this.localtranslation));		
 	}
 	
 	/**
@@ -210,6 +227,10 @@ public class ConvexHull implements SupportMap3, Geometry, Material {
 		return vertices.iterator();
 	}
 	
+	public final List<Vector3> getVerticesList() {
+		return new ArrayList<Vector3>(vertices);
+	}
+	
 	/**
 	 * Get the faces of the convex hull in object space
 	 * @return
@@ -217,39 +238,53 @@ public class ConvexHull implements SupportMap3, Geometry, Material {
 	public final Iterator<Vector3[]> getFaces() {
 		return faces.iterator();
 	}
+	
+	/**
+	 * Get the indices mapping the vertices to each face
+	 * @return
+	 */
+	public final int[][] getFaceIndices() {
+		return faceIndices;
+	}
+	
+	/**
+	 * Return the vertex adjacency information for this convex hull
+	 * @return
+	 */
+	public final ArrayList<ArrayList<Integer>> getVertexAdjacencyMatrix() {
+		return adjacent;
+	}
 
+	/**
+	 * Mapping from each vertex index to the index of 
+	 * the original vertex, given upon construction. 
+	 * @return
+	 */
+	public final int[] getOriginalVertexIndices() {
+		return originalVertexIndices;
+	}
+	
 	// Geometry
 	private Object auxiliary;
 	private Body body = new Body("default");
-	private double envelope = 0.125;
+	private double envelope = 0.225;
 	private Matrix3 localrotation = Matrix3.identity();
 	private Matrix4 localtransform4 = Matrix4.identity();
 	private final Vector3 localtranslation = new Vector3();
-//	private final Vector3 displacement = new Vector3();
-	private final Vector3 localscale = new Vector3(1,1,1);
-	private final Vector3 inverselocalscale = new Vector3(1,1,1);
-
-	// AxisAlignedBoundingBox
-	private final Vector3 extremalpoint = new Vector3();
-	private final Vector3 bounds = new Vector3();
-//	private final Vector3 minBounds = new Vector3();
-//	private final Vector3 maxBounds = new Vector3();
-//	private final Vector3 minBoundsTransformed = new Vector3();
-//	private final Vector3 maxBoundsTransformed = new Vector3();
 	
 	// Material
 	private double mass = 1;
-	private final InertiaMatrix inertiamatrix;
+	private final InertiaMatrix inertiamatrix = new InertiaMatrix();
 	
 	@Override
 	public Vector3 supportPoint(Vector3 direction) {
 		// normals are transformed (RS^-1)
-		Vector3 v = body.state.rotation.multiply(localrotation).scale(localscale).transpose().multiply(direction);
+		Vector3 v = body.state.rotation.multiply(localrotation)./*scale(localscale).*/transpose().multiply(direction);
 		
 		// do hill climbing if the hull has a considerable number of vertices
 //		if (numberOfVertices > 32) {
 			//hill climb along v
-			int index = cachedVertex;
+			int index = 0;//cachedVertex;
 			double value = v.dot(vertices.get(index));
 			boolean better = true;
 			while (better) {
@@ -267,10 +302,10 @@ public class ConvexHull implements SupportMap3, Geometry, Material {
 			}
 			
 			// keep the vertex
-			cachedVertex = index;
+//			cachedVertex = index;
 			
 			// return the final support point in world space
-			return body.state.rotation.multiply(localrotation.scale(localscale).multiply(vertices.get(index)).add(localtranslation)).add(body.state.position);
+			return body.state.rotation.multiply(localrotation./*scale(localscale).*/multiply(vertices.get(index)).add(localtranslation)).add(body.state.position);
 
 //		} else {
 //			// if not, just check each vertex
@@ -291,12 +326,11 @@ public class ConvexHull implements SupportMap3, Geometry, Material {
 
 	@Override
 	public void supportFeature(Vector3 direction, List<Vector3> returnface) {
-		// Su  
 		// the support feature of CovexHull is the face with the face normal closest to the 
 		// given support direction. This is accomplished by hill-climbing the dual hull, that
 		// maps a vertex onto a face in the original convex hull. Therefore, this method will 
 		// return a face at all times
-		Vector3 v = body.state.rotation.multiply(localrotation).scale(localscale).transpose().multiply(direction);
+		Vector3 v = body.state.rotation.multiply(localrotation)./*scale(localscale).*/transpose().multiply(direction);
 		// hill climb the dual hull to find face 
 		int index = 0;
 		double value = v.dot(dualvertices.get(index));
@@ -312,12 +346,12 @@ public class ConvexHull implements SupportMap3, Geometry, Material {
 					better = true;
 					break;
 				} 
-			}
-		}
+			} // for each adjacent vertex (normal)
+		} // while better
 		
 		// output the face according to the dual hull index
 		for (Vector3 p: faces.get(index)) 
-			returnface.add( body.state.rotation.multiply(localrotation.scale(localscale).multiply(p).add(localtranslation)).add(body.state.position) );
+			returnface.add( body.state.rotation.multiply(localrotation./*scale(localscale).*/multiply(p).add(localtranslation)).add(body.state.position) );
 	}
 
 	
@@ -332,14 +366,14 @@ public class ConvexHull implements SupportMap3, Geometry, Material {
 	}
 
 	@Override
-	public InertiaMatrix getInertialMatrix() {
+	public InertiaMatrix getInertiaMatrix() {
 		// scale the inertia matrix in the specified mass and reference mass ratio
 		return new InertiaMatrix(inertiamatrix.multiply( mass / referenceMass ));
 	}
 
 		
 	@Override
-	public Matrix4 getTransform() {
+	public Matrix4 getWorldTransform() {
 		return Matrix4.multiply(body.getTransform(), localtransform4, new Matrix4());
 	}
 
@@ -361,17 +395,15 @@ public class ConvexHull implements SupportMap3, Geometry, Material {
 	}
 	
 	@Override
-	public Vector3 getMaxBounds() {
-		// return the max bounds in world space
-//		return bounds.add(localtranslation).add(body.state.position);		
-		return body.state.rotation.multiply(localtranslation).add(body.state.position).add(bounds);
-
+	public Vector3 getMaxBounds(Vector3 bounds) {
+		updateBoundingBoxTransform();
+		return boundingBox.getMaxBounds(bounds);
 	}
 
 	@Override
-	public Vector3 getMinBounds() {
-		// return the min bounds in world space
-		return body.state.rotation.multiply(localtranslation).add(body.state.position).sub(bounds);
+	public Vector3 getMinBounds(Vector3 bounds) {
+		updateBoundingBoxTransform();
+		return boundingBox.getMinBounds(bounds);
 	}
 
 	@Override
@@ -395,12 +427,12 @@ public class ConvexHull implements SupportMap3, Geometry, Material {
 	}
 	
 	@Override
-	public Object getAuxiliary() {
+	public Object getUserReference() {
 		return auxiliary;
 	}
 
 	@Override
-	public void setAuxiliary(Object auxiliary) {
+	public void setUserReference(Object auxiliary) {
 		this.auxiliary = auxiliary;
 	}
 	
@@ -430,24 +462,15 @@ public class ConvexHull implements SupportMap3, Geometry, Material {
 
 	@Override
 	public void setLocalScale(Vector3 s) {
-		localscale.assign(s);
-		inverselocalscale.assign(1/s.x,1/s.y,1/s.z);
-		
-		//re-assign bounds by scaling the previous extremal point TODO not sure this is tight
-		//search vertices to find extremal bounds
-		extremalpoint.assignZero();
-		for ( Vector3 v: vertices) {
-			if (extremalpoint.norm() < v.scale(localscale).norm()) 
-				extremalpoint.assign(v.scale(localscale));
-		}
-		double max = extremalpoint.norm();
-		bounds.assign(max,max,max);
-		System.out.println("max="+max);
-
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
 	public double sphereSweepRadius() {
 		return 0;
 	}
+	
+	@Override
+	public Vector3 getLocalCentreOfMass(Vector3 cm) { return cm.assign(centreOfMass); }
+	
 }

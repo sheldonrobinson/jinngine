@@ -36,10 +36,10 @@ public final class Body {
 	public final Vector3               deactivatedexternaltorque= new Vector3();
 
 	// more auxiliary members
-	public final Vector3               auxDeltav     = new Vector3();
-	public final Vector3               auxDeltaOmega = new Vector3();
-	public final Vector3               auxDeltav2 = new Vector3();
-	public final Vector3               auxDeltaOmega2 = new Vector3();
+	public final Vector3               deltavelocity1     = new Vector3();
+	public final Vector3               deltaomega1 = new Vector3();
+	public final Vector3               deltavelocity2 = new Vector3();
+	public final Vector3               deltaomega2 = new Vector3();
 
 	// physical state of body
 	public final State state = new State();
@@ -177,7 +177,11 @@ public final class Body {
 				b.assign( b.sub(cm));
 
 				//rotate the inertia matrix into this frame and add it to the inertia tensor of this body
-				Matrix3 Im = InertiaMatrix.rotate(g.getInertialMatrix(), R).translate(g.getMass(), b);
+				Matrix3 Im = g.getInertiaMatrix();
+				
+				Im.assignMultiply(g.getMass());
+				InertiaMatrix.rotate(Im, R);
+				InertiaMatrix.translate(Im, g.getMass(), b);
 				Matrix3.add(this.state.inertia, Im, this.state.inertia);
 
 				//set the final transform
@@ -194,7 +198,94 @@ public final class Body {
 			this.state.inertia.assign(InertiaMatrix.identity());
 		}
 	}
+	
+	
+	/**
+	 * Add a geometry to this body. The mass properties of the body is updated, and the body space 
+	 * transformations for the new geometry, as well as existing ones, are updated. After the geometry is
+	 * added, it will be in the world space transform specified, but the world position of the body may
+	 * have changed.
+	 * 
+	 * @param rotation rotation of geometry in world space
+	 * @param translation translation of geometry in world space
+	 * @param g geometry to be added
+	 */
+	public void addGeometryIncremental( Matrix3 rotation, Vector3 translation, Geometry g ) {
+		// get the previous mass 
+		double previousTotalMass = state.anisotropicmass.fnorm(); // mass at (0,0,0) 
+		
+//		System.out.println("local centre of mass: "+g.getLocalCentreOfMass(new Vector3()));
 
+		// the local centre of mass displacement in the geometry, transformed to body space
+		final Vector3 localCentreOfMassDisplacementBody = state.inverserotation.multiply(rotation).multiply(g.getLocalCentreOfMass(new Vector3()));
+		
+		// the centre of mass point for the new geometry in body space
+		final Vector3 localTranslationBody = state.inverserotation.multiply( translation.sub(state.position));
+		final Vector3 localCentreOfMassPositionBody = localTranslationBody.add(localCentreOfMassDisplacementBody);		
+		
+		// find the new centre of mass displacement for the resulting body
+		// point = p1*m1/(m1+m2) + p2*m2/(m1+m2)		
+		final double localMass = g.getMass();
+		final double totalMass = previousTotalMass + localMass;
+		final Vector3 totalCentreOfMassDisplacementBody = localCentreOfMassPositionBody.multiply(localMass/totalMass);
+		
+		// move body to the new centre of mass point in world space 
+		Vector3.add(this.state.position, state.rotation.multiply(totalCentreOfMassDisplacementBody) );
+
+//		System.out.println("new body position=" +state.position);
+//		System.out.println("cm displacement=" +state.rotation.multiply(totalCentreOfMassDisplacementBody));
+		
+		// translate the current inertia tensor the reverse direction 
+		// of the new centre of mass displacement (inertia tensor is already scaled to the right mass)
+		InertiaMatrix.translate(this.state.inertia, previousTotalMass, totalCentreOfMassDisplacementBody.negate());
+		
+		// add the new contribution from the new inertia tensor
+		InertiaMatrix Inew = g.getInertiaMatrix();
+		
+//		System.out.println("tenser from body = \n" + Inew);
+		
+		// scale inertia to mass
+		Inew.assignMultiply(localMass);
+		// rotate the new tensor into body frame
+		InertiaMatrix.rotate(Inew, state.inverserotation.multiply(rotation) );
+		// translate to new position relative to cm 
+		InertiaMatrix.translate(Inew, localMass, localCentreOfMassPositionBody.sub(totalCentreOfMassDisplacementBody));		
+
+//		System.out.println("amount of tensor translation= "+localCentreOfMassPositionBody.sub(totalCentreOfMassDisplacementBody) );
+		// add to body tensor
+		state.inertia.assignAdd(Inew);
+		
+//		System.out.println(""+state.inertia);
+		
+		// add the new mass to the total mass
+		state.anisotropicmass.assignScale(previousTotalMass+localMass);
+
+		// compute mass inverses
+		state.inverseanisotropicmass.assignScale(1/(previousTotalMass+localMass));
+		Matrix3.inverse(state.inertia, state.inverseinertia );
+		
+		// go through existing geometries and translate them
+		for (Geometry gi: geometries) {
+			final Matrix3 R = new Matrix3();
+			final Vector3 b = new Vector3();
+			gi.getLocalTransform(R, b);			
+			gi.setLocalTransform(R, b.sub(totalCentreOfMassDisplacementBody));
+		}
+		
+		// assign local transform to new geometry
+		g.setLocalTransform(state.inverserotation.multiply(rotation), localCentreOfMassPositionBody.sub(totalCentreOfMassDisplacementBody).sub(localCentreOfMassDisplacementBody) );
+
+//		System.out.println("local translation = "+localCentreOfMassPositionBody.sub(totalCentreOfMassDisplacementBody).add(localCentreOfMassDisplacementBody));
+//		System.out.println("local centre of mass displacement = "+localCentreOfMassDisplacementBody);
+		
+		// assign this body to g
+		g.setBody(this);
+		
+		// attach the new geometry
+		geometries.add(g);
+	}
+	
+	
 	
     /**
      * Get geometry instances attached to this Body.

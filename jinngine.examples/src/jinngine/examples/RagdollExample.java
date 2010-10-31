@@ -11,6 +11,8 @@ package jinngine.examples;
 import jinngine.collision.SAP2;
 import jinngine.geometry.Box;
 import jinngine.geometry.Geometry;
+import jinngine.geometry.UniformCapsule;
+import jinngine.math.Quaternion;
 import jinngine.math.Vector3;
 import jinngine.physics.*;
 import jinngine.physics.constraint.Constraint;
@@ -84,9 +86,9 @@ public class RagdollExample implements Rendering.Callback {
 		scene.addConstraint(spine2);
 
 		// upper left arm
-		Geometry upleftarmgeometry = new Box(0.5,2,0.5);
-		Body upleftarm = new Body( "upleftarm", upleftarmgeometry );
-		upleftarm.setPosition(new Vector3(-3.5,-12,-25));
+		Geometry upleftarmgeometry = new UniformCapsule(0.5,1.0);
+		Body upleftarm = new Body( "upleftarm"  );
+		upleftarm.addGeometryIncremental(Quaternion.rotation(Math.PI*0.5, Vector3.i()).toRotationMatrix3(), new Vector3(-3.5,-12,-25), upleftarmgeometry);
 		
 		UniversalJoint leftshoulder = new UniversalJoint(torso1,upleftarm, new Vector3(-3.5,-11,-25), new Vector3(0,0,1), new Vector3(0,1,0));
 		leftshoulder.getFirstAxisControler().setLimits(-0.5, 0.5);
@@ -99,7 +101,6 @@ public class RagdollExample implements Rendering.Callback {
 		Geometry uprightarmgeometry = new Box(0.5,2,0.5);
 		Body uprightarm = new Body( "uprightarm", uprightarmgeometry );
 		uprightarm.setPosition(new Vector3(-6.5,-12,-25));
-		
 		UniversalJoint rightshoulder = new UniversalJoint(torso1,uprightarm, new Vector3(-6.5,-11,-25), new Vector3(0,0,1), new Vector3(0,1,0));
 		rightshoulder.getFirstAxisControler().setLimits(-1.5, 1.5);
 		rightshoulder.getSecondAxisControler().setLimits(-1.5, 1.5);
@@ -220,7 +221,8 @@ public class RagdollExample implements Rendering.Callback {
 
 		
 		// handle drawing
-		Rendering rendering = new jinngine.rendering.jogl.JoglRendering(this, new Interaction(scene));
+		Rendering rendering = new jinngine.rendering.jogl.JoglRendering(this);
+		rendering.addCallback(new Interaction(scene));
 		rendering.drawMe(headgeometry);
 		rendering.drawMe(torso1geometry);
 		rendering.drawMe(torso2geometry);
@@ -234,7 +236,7 @@ public class RagdollExample implements Rendering.Callback {
 		rendering.drawMe(rightthighgeometry);
 		rendering.drawMe(righttaibageometry);
 
-
+		rendering.createWindow();
 		rendering.start();
 	}
 

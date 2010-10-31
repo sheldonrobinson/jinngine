@@ -79,10 +79,10 @@ public class ExhaustiveSearch implements BroadphaseCollisionDetection {
 	
 	private static final boolean overlap( BoundingBox i , BoundingBox j) {
 
-		Vector3 bi = i.getMinBounds();
-		Vector3 ei = i.getMaxBounds();
-		Vector3 bj = j.getMinBounds();
-		Vector3 ej = j.getMaxBounds();
+		final Vector3 bi = i.getMinBounds(new Vector3());
+		final Vector3 ei = i.getMaxBounds(new Vector3());
+		final Vector3 bj = j.getMinBounds(new Vector3());
+		final Vector3 ej = j.getMaxBounds(new Vector3());
 		
 		double bix = bi.x;
 		double biy = bi.y;
@@ -100,12 +100,7 @@ public class ExhaustiveSearch implements BroadphaseCollisionDetection {
 		//TODO test this 
 		if( (((bjx < bix) && (bix <= ejx)) || ((bix <= bjx) && (bjx < eix ))) &&
 				(((bjy < biy) && (biy <= ejy)) || ((biy <= bjy) && (bjy < eiy ))) &&
-				(((bjz < biz) && (biz <= ejz)) || ((biz <= bjz) && (bjz < eiz )))) {
-			
-//			if (i instanceof Sphere && j instanceof Sphere) {
-//				if ( ((Sphere)i).getBody() != ((Sphere)j).getBody() )
-//					System.out.println("sphere-sphere overlap");
-//			}
+				(((bjz < biz) && (biz <= ejz)) || ((biz <= bjz) && (bjz < eiz )))) {			
 			return true;
 		} else {
 			return false;

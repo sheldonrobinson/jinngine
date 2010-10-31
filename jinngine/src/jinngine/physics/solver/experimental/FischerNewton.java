@@ -137,8 +137,8 @@ public class FischerNewton implements Solver {
 				if (besterror < error) {
 					//copy best solution to delta velocities
 					for (Body b: bodies) {
-						b.deltavelocity.assign( b.auxDeltav2);
-						b.deltaomega.assign(b.auxDeltaOmega2);
+						b.deltavelocity.assign( b.deltavelocity2);
+						b.deltaomega.assign(b.deltaomega2);
 					}
 					
 					return besterror;
@@ -187,17 +187,17 @@ public class FischerNewton implements Solver {
 				// clear velocities
 				for (Body b: bodies) {
 					//What?
-					b.auxDeltaOmega.assignZero();
-					b.auxDeltav.assignZero();
+					b.deltaomega1.assignZero();
+					b.deltavelocity1.assignZero();
 				}
 				
 				// compute change in velocity
 				j=0; for (NCPConstraint ci: constraints) {
 					double delta = d[j]*h;
-					Vector3.add( ci.body1.auxDeltav,     ci.b1.multiply(delta));
-					Vector3.add( ci.body1.auxDeltaOmega, ci.b2.multiply(delta));
-					Vector3.add( ci.body2.auxDeltav,     ci.b3.multiply(delta));
-					Vector3.add( ci.body2.auxDeltaOmega, ci.b4.multiply(delta));
+					Vector3.add( ci.body1.deltavelocity1,     ci.b1.multiply(delta));
+					Vector3.add( ci.body1.deltaomega1, ci.b2.multiply(delta));
+					Vector3.add( ci.body2.deltavelocity1,     ci.b3.multiply(delta));
+					Vector3.add( ci.body2.deltaomega1, ci.b4.multiply(delta));
 					j = j+1;
 				}
 
@@ -206,10 +206,10 @@ public class FischerNewton implements Solver {
 					double lambda = ci.lambda + d[j]*h;
 
 					//velocity
-					double w = ci.j1.dot(ci.body1.deltavelocity.add(ci.body1.auxDeltav)) 
-					+ ci.j2.dot(ci.body1.deltaomega.add(ci.body1.auxDeltaOmega))
-					+ ci.j3.dot(ci.body2.deltavelocity.add(ci.body2.auxDeltav)) 
-					+ ci.j4.dot(ci.body2.deltaomega.add(ci.body2.auxDeltaOmega)) 
+					double w = ci.j1.dot(ci.body1.deltavelocity.add(ci.body1.deltavelocity1)) 
+					+ ci.j2.dot(ci.body1.deltaomega.add(ci.body1.deltaomega1))
+					+ ci.j3.dot(ci.body2.deltavelocity.add(ci.body2.deltavelocity1)) 
+					+ ci.j4.dot(ci.body2.deltaomega.add(ci.body2.deltaomega1)) 
 					+ (ci.b) +damper*lambda;
 
 					//fisher
@@ -270,8 +270,8 @@ public class FischerNewton implements Solver {
 
 			// clear velocities
 			for (Body b: bodies) {
-				b.auxDeltaOmega.assignZero();
-				b.auxDeltav.assignZero();
+				b.deltaomega1.assignZero();
+				b.deltavelocity1.assignZero();
 			}
 
 			//compute velocity vector for step length 1, move velocity forward
@@ -279,10 +279,10 @@ public class FischerNewton implements Solver {
 				double delta = dk[j];
 				ci.lambda += dk[j];
 				//System.out.println(""+ dk[j]);
-				Vector3.add( ci.body1.auxDeltav,     ci.b1.multiply(delta));
-				Vector3.add( ci.body1.auxDeltaOmega, ci.b2.multiply(delta));
-				Vector3.add( ci.body2.auxDeltav,     ci.b3.multiply(delta));
-				Vector3.add( ci.body2.auxDeltaOmega, ci.b4.multiply(delta));
+				Vector3.add( ci.body1.deltavelocity1,     ci.b1.multiply(delta));
+				Vector3.add( ci.body1.deltaomega1, ci.b2.multiply(delta));
+				Vector3.add( ci.body2.deltavelocity1,     ci.b3.multiply(delta));
+				Vector3.add( ci.body2.deltaomega1, ci.b4.multiply(delta));
 
 				Vector3.add( ci.body1.deltavelocity,      ci.b1.multiply(delta));	
 				Vector3.add( ci.body1.deltaomega,  ci.b2.multiply(delta));				
@@ -345,8 +345,8 @@ public class FischerNewton implements Solver {
 				k = k+1;
 				step = Math.pow(2,-k);
 				for (Body b: bodies) {
-					Vector3.add(b.deltavelocity, b.auxDeltav.multiply(-step));
-					Vector3.add(b.deltaomega, b.auxDeltaOmega.multiply(-step));				
+					Vector3.add(b.deltavelocity, b.deltavelocity1.multiply(-step));
+					Vector3.add(b.deltaomega, b.deltaomega1.multiply(-step));				
 				}
 			} // linesearch
 
@@ -357,8 +357,8 @@ public class FischerNewton implements Solver {
 				besterror = error;
 				//copy the best solution
 				for (Body b: bodies) {
-					b.auxDeltav2.assign(b.deltavelocity);
-					b.auxDeltaOmega2.assign(b.deltaomega);
+					b.deltavelocity2.assign(b.deltavelocity);
+					b.deltaomega2.assign(b.deltaomega);
 				}
 			}
 

@@ -17,11 +17,15 @@ import jinngine.math.Vector3;
 public interface BoundingBox {
 	/**
 	 * Return a vector that contains all minimum bounds on each axis. The bounds are in world coordinates in world space
+	 * @param bounds Vector3 that will contain the updated bound values
+	 * @return reference to the bounds vector
 	 */
-	public Vector3 getMinBounds();
+	public Vector3 getMinBounds(Vector3 bounds);
 
 	/**
 	 * Return a vector that contains all maximum bounds on each axis. The bounds are in world coordinates in world space
+	 * @param bounds Vector3 that will contain the updated bound values
+	 * @return reference to the bounds vector
 	 */
-	public Vector3 getMaxBounds();
+	public Vector3 getMaxBounds(Vector3 bounds);
 }
