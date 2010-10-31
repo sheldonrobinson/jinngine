@@ -63,6 +63,7 @@ public class NonsmoothNonlinearConjugateGradient implements Solver {
 		double beta= 0;		
 		int iter = 0;
 		int restarts = 0;
+	    epsilon = 1e-31;
 		
 		
 		// compute external force contribution, clear direction and residual, compute b vector norm
@@ -78,6 +79,7 @@ public class NonsmoothNonlinearConjugateGradient implements Solver {
 			bnorm += Math.pow(ci.b+ci.Fext,2);			
 		}
 		bnorm = Math.sqrt(bnorm);
+		final double bnorminv = 1.0/bnorm;
 		
 		// reset search direction
 		for (Body b: bodies) {
@@ -109,7 +111,7 @@ public class NonsmoothNonlinearConjugateGradient implements Solver {
 				         + ci.lambda*ci.damper ;
 				
 			    
-			    double deltaLambda = -((ci.b+ci.Fext)/bnorm+w)/(ci.diagonal + ci.damper );
+			    double deltaLambda = -((ci.b+ci.Fext)*bnorminv+w)/(ci.diagonal + ci.damper );
 				final double lambda0 = ci.lambda;
 				
 				//Clamp the lambda[i] value to the constraints
@@ -146,14 +148,17 @@ public class NonsmoothNonlinearConjugateGradient implements Solver {
 				
 				ci.residual = deltaLambda;
 			} //for constraints	
-
+			
 			// termination condition
 			if (Math.abs(rnew) < epsilon) {
 				break;
 			}	
+
+//			System.out.println("rnew="+rnew);
+
 			
 			// iteration limit
-			if (iter>max || restarts > 17 )
+			if (iter>max || restarts > 13250 )
 				break;
 
 			//compute beta
@@ -162,7 +167,7 @@ public class NonsmoothNonlinearConjugateGradient implements Solver {
 			if ( beta > 1.0 || iter == 0 )  {
 				beta = 0;
 				restarts = restarts+1;
-				//System.out.println("restart");
+//				System.out.println("restart");
 			} 
 				
 			for (Body bi: bodies) {
@@ -184,6 +189,9 @@ public class NonsmoothNonlinearConjugateGradient implements Solver {
 			//iteration count
 			iter = iter+1;
 		} // while true
+
+//		System.out.println("rnew="+rnew);
+
 		
 		// scale lambda in the bnorm. This is unnecessary if bnorm is set to 1
 		for (NCPConstraint ci: constraints) {
