@@ -15,7 +15,11 @@ import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
+import java.awt.event.MouseWheelEvent;
+import java.awt.event.MouseWheelListener;
 import java.awt.event.WindowAdapter;
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -24,9 +28,11 @@ import javax.media.opengl.GL;
 import javax.media.opengl.GLAutoDrawable;
 import javax.media.opengl.GLCanvas;
 import javax.media.opengl.GLEventListener;
+import javax.media.opengl.GLException;
 import javax.media.opengl.glu.GLU;
 
 import com.sun.opengl.util.Animator;
+import com.sun.opengl.util.Screenshot;
 
 import jinngine.geometry.Box;
 import jinngine.geometry.ConvexHull;
@@ -39,7 +45,7 @@ import jinngine.physics.Body;
 import jinngine.rendering.Rendering;
 
 public class JoglRendering implements Rendering, 
-GLEventListener, MouseListener, MouseMotionListener, KeyListener {
+GLEventListener, MouseListener, MouseMotionListener, MouseWheelListener, KeyListener {
 	
 	private static final long serialVersionUID = 1L;
 	public List<DrawShape> toDraw = new ArrayList<DrawShape>();
@@ -51,6 +57,9 @@ GLEventListener, MouseListener, MouseMotionListener, KeyListener {
 	private double width;
 	private double height;
 	private double drawHeight;
+	private volatile boolean takeScreenShot = false;
+	private volatile String screenShotFilename;
+	private volatile boolean redoCamera;
 
 	//camera transform
 	public double[] proj = new double[16];
@@ -58,9 +67,11 @@ GLEventListener, MouseListener, MouseMotionListener, KeyListener {
 	public double zoom = 0.95;
 	private final Vector3 cameraTo = new Vector3(-12,-3,0).multiply(1);	
 	private final Vector3 cameraFrom = cameraTo.add(new Vector3(0,0.5,1).multiply(5));
+	private int cameraClicks = 1;
 	
 	// global light0 position
-	private final float position[] = { -5f, -0.0f, -25.0f, 1.0f };
+	private final float position[] = { -5f, 20.0f, -25.0f, 1.0f };
+//	private final float position[] = { 0f, 0.0f, -0.0f, 1.0f };
 	
 	// uniforms
 	private int extrutionUniformLocation;
@@ -88,6 +99,7 @@ GLEventListener, MouseListener, MouseMotionListener, KeyListener {
 		canvas.setVisible(true);
 		canvas.addMouseListener(this);
 		canvas.addMouseMotionListener(this);
+		canvas.addMouseWheelListener(this);
 		canvas.addKeyListener(this);
 		canvas.setVisible(true);
 	}
@@ -114,7 +126,7 @@ GLEventListener, MouseListener, MouseMotionListener, KeyListener {
 				private int shadowList = 0;
 				@Override
 				public Matrix4 getTransform() {
-					return g.getTransform();
+					return g.getWorldTransform();
 				}
 				@Override
 				public Body getReferenceBody() {
@@ -176,7 +188,7 @@ GLEventListener, MouseListener, MouseMotionListener, KeyListener {
 
 				@Override
 				public Matrix4 getTransform() {
-					return g.getTransform();
+					return g.getWorldTransform();
 				}
 				@Override
 				public Body getReferenceBody() {
@@ -248,7 +260,7 @@ GLEventListener, MouseListener, MouseMotionListener, KeyListener {
 				private int shadowList = 0;
 				@Override
 				public Matrix4 getTransform() {
-					return g.getTransform();
+					return g.getWorldTransform();
 				}
 				@Override
 				public Body getReferenceBody() {
@@ -338,6 +350,27 @@ GLEventListener, MouseListener, MouseMotionListener, KeyListener {
 			initialized = true;
 		}
 
+		if (redoCamera) {
+			// setup camera
+			gl.glMatrixMode(GL.GL_MODELVIEW);
+			gl.glLoadIdentity();
+						
+			// Set camera transform
+			glu.gluLookAt(cameraFrom.x, cameraFrom.y, cameraFrom.z, 
+					cameraTo.x, cameraTo.y, cameraTo.z, 
+					0, 1, 0); 
+
+			//copy camera transform (needed for picking)
+			gl.glGetDoublev(GL.GL_MODELVIEW_MATRIX, camera, 0);
+			
+			// set light position in world space
+			gl.glLightfv(GL.GL_LIGHT0, GL.GL_POSITION, position,0);
+
+			
+			// camera done
+			redoCamera = false;
+		}
+		
 		// Perform ratio time-steps on the model
 		callback.tick();
 
@@ -362,6 +395,23 @@ GLEventListener, MouseListener, MouseMotionListener, KeyListener {
 
 		// Finish this frame
 		gl.glFlush();
+		
+		// take screenshot
+		if (takeScreenShot) {
+			gl.glFinish();
+			
+			takeScreenShot = false;
+			try {
+				Screenshot.writeToTargaFile(new File(screenShotFilename), (int)this.width, (int)this.height);
+			} catch (GLException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+		
 	}
 	
 	private void drawEdgeMesh( ConvexHull hull, GL gl ) {		
@@ -376,21 +426,39 @@ GLEventListener, MouseListener, MouseMotionListener, KeyListener {
 			for ( int j: indices) {
 				// for each edge, create a thick line hull
 				List<Vector3> inputEdgeVertices = new ArrayList<Vector3>();
+				List<Vector3> inputEdgeNormals = new ArrayList<Vector3>();
 			
 //				System.out.println("edge " + vertices.get(i) +","+vertices.get(j));
 				
 				for (Vector3 p: icosphere.getVerticesList()) {
 					// at i
-					inputEdgeVertices.add(p.multiply(0.04).add(vertices.get(i)));
+					Vector3 normal = p.normalize();
+					inputEdgeVertices.add(normal.add(vertices.get(i)));
+					inputEdgeNormals.add(normal);
 					
 					// at j
-					inputEdgeVertices.add(p.multiply(0.04).add(vertices.get(j)));
+					inputEdgeVertices.add(normal.add(vertices.get(j)));
+					inputEdgeNormals.add(normal);
+
 				}
 				// build a hull for this edge
 				ConvexHull edgehull = new ConvexHull(inputEdgeVertices);
 				
+				
+				// build normal array
+				List<Vector3> hullNormals = new ArrayList<Vector3>();
+				for( int index : edgehull.getOriginalVertexIndices()) {
+					hullNormals.add( inputEdgeNormals.get(index) );
+				}
+				
+				// collapse edge mesh (extrudet later by vertex shader)
+				int k=0; for ( Vector3 v: edgehull.getVerticesList() ) {
+					v.assign(v.sub(hullNormals.get(k)));
+					k++;
+				}
+				
 				// draw this edge
-				drawFaces(edgehull.getVerticesList(), null, edgehull.getFaceIndices(), gl);				
+				drawFaces(edgehull.getVerticesList(), hullNormals, edgehull.getFaceIndices(), gl);				
 			}
 			i = i+1;
 		}
@@ -463,6 +531,7 @@ GLEventListener, MouseListener, MouseMotionListener, KeyListener {
 		drawFaces( vertices, normals, faceIndices, gl);	
 		
 		// draw solid coloured edge mesh
+		gl.glUniform1f(extrutionUniformLocation, 0.04f);
 		gl.glUniform3f(colorUniformLocation, 0.30f,0.30f,0.30f);
 		gl.glUniform1f(influenceUniformLocation, 1f);
 		drawEdgeMesh( new ConvexHull(vertices), gl);
@@ -491,7 +560,7 @@ GLEventListener, MouseListener, MouseMotionListener, KeyListener {
 		gl.glBlendFunc(GL.GL_SRC_ALPHA, GL.GL_ONE_MINUS_SRC_ALPHA);
 		//enable vsync
 		gl.setSwapInterval(1);
-		
+				
 		// init some lighting
 		gl.glEnable(GL.GL_LIGHTING);
 		gl.glEnable(GL.GL_LIGHT0);
@@ -501,6 +570,8 @@ GLEventListener, MouseListener, MouseMotionListener, KeyListener {
 		float diffuseLight[] = { 0.2f, 0.2f, 0.2f, 1.0f };
 		float specularLight[] = { 0.5f, 0.5f, 0.5f, 1.0f };
 
+
+		
 		gl.glMatrixMode(GL.GL_MODELVIEW);
 		gl.glLoadIdentity();
 		// Set camera transform
@@ -511,22 +582,22 @@ GLEventListener, MouseListener, MouseMotionListener, KeyListener {
 		//copy camera transform
 		gl.glGetDoublev(GL.GL_MODELVIEW_MATRIX, camera, 0);
 
-		
 		// Assign created components to GL_LIGHT0
 		gl.glLightfv(GL.GL_LIGHT0, GL.GL_AMBIENT, ambientLight,0);
 		gl.glLightfv(GL.GL_LIGHT0, GL.GL_DIFFUSE, diffuseLight,0);
 		gl.glLightfv(GL.GL_LIGHT0, GL.GL_SPECULAR, specularLight,0);
 		gl.glLightfv(GL.GL_LIGHT0, GL.GL_POSITION, position,0);
-
+		
 		
 		String[] vertexShader = {
 				"uniform float extrution;\n ",
 				"varying vec3 point;   \n",
 				"varying vec3 normal;  \n",
 				"void main(void) {     \n",
-				"  normal = gl_NormalMatrix * gl_Normal; \n",
+				"  normal = normalize(gl_NormalMatrix * gl_Normal); \n",
                 "  point = vec3(gl_ModelViewMatrix * gl_Vertex); \n", 
-                "  gl_Position = gl_ModelViewProjectionMatrix * (gl_Vertex+vec4(extrution*gl_Normal,0)) ;\n",
+                "  vec4 newpos = gl_ModelViewProjectionMatrix * gl_Vertex; \n",
+                "  gl_Position = gl_ModelViewProjectionMatrix * vec4(newpos.w*extrution*0.04*gl_Normal,0) + newpos;\n",
                 "}\n\n"	
 		};
 		
@@ -538,9 +609,9 @@ GLEventListener, MouseListener, MouseMotionListener, KeyListener {
 				"void main(void) { \n",
 				" vec3 L = normalize(gl_LightSource[0].position.xyz-point);\n",
 				" vec3 E = normalize(-point);\n",
-				" vec3 R = normalize(-reflect(L,normal));\n",
+				" vec3 R = normalize(reflect(-L,normal));\n",
 				" float diff = 0.3 * max(dot(normal,L), 0.0);\n",
-				" float spec = 0.1 * pow(max(dot(R,E),0.0), 25.0);\n",
+				" float spec = 0.1 * pow(max(dot(R,E),0.0), 35.0);\n",
 				" gl_FragColor = vec4( (1.0-influence)*color*(0.5+diff+spec)+influence*color, 1.0);\n",
 				"}\n\n"};
 		
@@ -760,6 +831,25 @@ GLEventListener, MouseListener, MouseMotionListener, KeyListener {
 	@Override
 	public Canvas getCanvas() {
 		return canvas;
+	}
+
+	@Override
+	public void takeScreenShot(String filename) {
+		screenShotFilename = filename;
+		takeScreenShot = true;		
+	}
+
+	@Override
+	public void mouseWheelMoved(MouseWheelEvent e) {
+		cameraClicks += e.getWheelRotation();
+		System.out.println(cameraClicks);
+		
+		Vector3 direction = new Vector3(0,0.5,1).normalize();
+		cameraTo.assign(new Vector3(-12,-3,0).add(direction.multiply(cameraClicks)));	
+		cameraFrom.assign(cameraTo.add(direction));
+
+		redoCamera = true;
+		
 	}
 
 

@@ -17,6 +17,7 @@ public interface Rendering {
 		public void tick();
 	}
 
+	public void    takeScreenShot(String filename);
 	public void    createWindow();
 	public Canvas  getCanvas();
 	
