@@ -21,11 +21,11 @@ import jinngine.physics.Body;
  */
 public class Sphere implements SupportMap3, Geometry, Material {
 
-	public Object getAuxiliary() {
+	public Object getUserReference() {
 		return auxiliary;
 	}
 
-	public void setAuxiliary(Object auxiliary) {
+	public void setUserReference(Object auxiliary) {
 		this.auxiliary = auxiliary;
 	}
 
@@ -82,7 +82,7 @@ public class Sphere implements SupportMap3, Geometry, Material {
 	}
 	
 	@Override
-	public InertiaMatrix getInertialMatrix() {
+	public InertiaMatrix getInertiaMatrix() {
 		// inertia tensor for the sphere.
 		InertiaMatrix I = new InertiaMatrix();
                 I.assignScale((2/5f)*mass*radius*radius);
@@ -106,7 +106,7 @@ public class Sphere implements SupportMap3, Geometry, Material {
 	
 
 	@Override
-	public Matrix4 getTransform() {
+	public Matrix4 getWorldTransform() {
 		return Matrix4.multiply(body.state.transform, localtransform4, transform4);	
 	}
 

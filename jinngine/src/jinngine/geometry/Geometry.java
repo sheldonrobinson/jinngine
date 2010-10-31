@@ -52,8 +52,7 @@ public interface Geometry extends BoundingBox {
 	 * @param t 
 	 */
 	public void getLocalTranslation( Vector3 t ) ;
-	
-	
+		
 	/**
 	 * Set the local scale. Not all geometries will support scaling and/or non-uniform scaling
 	 * @param s
@@ -69,7 +68,7 @@ public interface Geometry extends BoundingBox {
 	/**
 	 * Return the inertia matrix for this geometry, given in the centre of mass frame and scaled to mass = 1
 	 */
-	public InertiaMatrix getInertialMatrix();
+	public InertiaMatrix getInertiaMatrix();
 	
 	/**
 	 * Get the envelope size for this geometry. The envelope is related to narrow-phase contact determination
@@ -92,20 +91,20 @@ public interface Geometry extends BoundingBox {
 	 * Get the final transform for this geometry, going from object space to world space.
 	 * @return 4x4 affine transformation matrix
 	 */
-	public Matrix4 getTransform();
+	public Matrix4 getWorldTransform();
 	
 	/**
 	 * Get the auxiliary reference. This reference is a way for the user to 
 	 * link geometry objects to some user space object 
 	 * @return
 	 */
-	public Object getAuxiliary();
+	public Object getUserReference();
 		
 	/**
 	 * Set the auxiliary reference. This reference is a way for the user to 
 	 * link geometry objects to some user space reference
 	 */
-	public void setAuxiliary(Object aux);
+	public void setUserReference(Object user);
 	
 	/**
 	 * Get the centre of mass position in local space

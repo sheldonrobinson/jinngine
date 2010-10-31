@@ -80,9 +80,9 @@ public final class UniformCapsule implements Geometry, SupportMap3, Material {
 	private final Vector3 translation = new Vector3();
 	
 	@Override
-	public final Object getAuxiliary() {return this.auxiliary;}
+	public final Object getUserReference() {return this.auxiliary;}
 	@Override
-	public final void setAuxiliary(Object aux) {this.auxiliary = aux;}
+	public final void setUserReference(Object aux) {this.auxiliary = aux;}
 	@Override
 	public final Body getBody() {return body;}
 	@Override
@@ -90,7 +90,7 @@ public final class UniformCapsule implements Geometry, SupportMap3, Material {
 	@Override
 	public final double getEnvelope() {return envelope;}
 	@Override
-	public final InertiaMatrix getInertialMatrix() { return this.inertia;}
+	public final InertiaMatrix getInertiaMatrix() { return this.inertia;}
 	@Override
 	public final void getLocalTransform(Matrix3 R, Vector3 b) {
 		R.assign(rotation);
@@ -103,7 +103,7 @@ public final class UniformCapsule implements Geometry, SupportMap3, Material {
 	public final double getMass() { return uniformmass; }
 
 	@Override
-	public final Matrix4 getTransform() {
+	public final Matrix4 getWorldTransform() {
 		Matrix4 T =  Transforms.transformAndTranslate4(rotation, translation);
 		return body.getTransform().multiply(T);
 	}

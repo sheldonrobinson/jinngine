@@ -366,14 +366,14 @@ public class ConvexHull implements SupportMap3, Geometry, Material {
 	}
 
 	@Override
-	public InertiaMatrix getInertialMatrix() {
+	public InertiaMatrix getInertiaMatrix() {
 		// scale the inertia matrix in the specified mass and reference mass ratio
 		return new InertiaMatrix(inertiamatrix.multiply( mass / referenceMass ));
 	}
 
 		
 	@Override
-	public Matrix4 getTransform() {
+	public Matrix4 getWorldTransform() {
 		return Matrix4.multiply(body.getTransform(), localtransform4, new Matrix4());
 	}
 
@@ -427,12 +427,12 @@ public class ConvexHull implements SupportMap3, Geometry, Material {
 	}
 	
 	@Override
-	public Object getAuxiliary() {
+	public Object getUserReference() {
 		return auxiliary;
 	}
 
 	@Override
-	public void setAuxiliary(Object auxiliary) {
+	public void setUserReference(Object auxiliary) {
 		this.auxiliary = auxiliary;
 	}
 	

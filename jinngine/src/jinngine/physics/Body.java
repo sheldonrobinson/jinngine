@@ -177,7 +177,7 @@ public final class Body {
 				b.assign( b.sub(cm));
 
 				//rotate the inertia matrix into this frame and add it to the inertia tensor of this body
-				Matrix3 Im = g.getInertialMatrix();
+				Matrix3 Im = g.getInertiaMatrix();
 				
 				Im.assignMultiply(g.getMass());
 				InertiaMatrix.rotate(Im, R);
@@ -240,7 +240,7 @@ public final class Body {
 		InertiaMatrix.translate(this.state.inertia, previousTotalMass, totalCentreOfMassDisplacementBody.negate());
 		
 		// add the new contribution from the new inertia tensor
-		InertiaMatrix Inew = g.getInertialMatrix();
+		InertiaMatrix Inew = g.getInertiaMatrix();
 		
 //		System.out.println("tenser from body = \n" + Inew);
 		

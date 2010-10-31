@@ -88,8 +88,8 @@ public class SphereContactGenerator implements ContactGenerator {
 	@Override
 	public void run() {
 		// sphere centres in world space
-		Vector3 caw = s1.getTransform().multiply(new Vector3());
-		Vector3 cbw = s2.getTransform().multiply(new Vector3());
+		Vector3 caw = s1.getWorldTransform().multiply(new Vector3());
+		Vector3 cbw = s2.getWorldTransform().multiply(new Vector3());
 
 		// contact normal
 		Vector3 normal = caw.sub(cbw).normalize();

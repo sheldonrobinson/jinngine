@@ -94,8 +94,8 @@ public class Box implements SupportMap3, Geometry, Material {
 	}
 	
 	// user auxiliary methods
-	public Object getAuxiliary() { return auxiliary; }
-	public void setAuxiliary(Object auxiliary) { this.auxiliary = auxiliary; }
+	public Object getUserReference() { return auxiliary; }
+	public void setUserReference(Object auxiliary) { this.auxiliary = auxiliary; }
 
 	@Override
 	public Vector3 supportPoint(Vector3 direction) {
@@ -114,7 +114,7 @@ public class Box implements SupportMap3, Geometry, Material {
 	public void setBody(Body b) { this.body = b; }
 
 	@Override
-	public InertiaMatrix getInertialMatrix() {
+	public InertiaMatrix getInertiaMatrix() {
             // standard inertia matrix for a box with variable side lengths            
             final Matrix3 M = Matrix3.scaleMatrix(
 					(1.0f/12.0f)*1*(ys*ys+zs*zs),
@@ -220,7 +220,7 @@ public class Box implements SupportMap3, Geometry, Material {
 	}
 
 	@Override
-	public Matrix4 getTransform() {
+	public Matrix4 getWorldTransform() {
 		return Matrix4.multiply(body.getTransform(), Transforms.transformAndTranslate4(localrotation, localdisplacement), new Matrix4());
 	}	
 
