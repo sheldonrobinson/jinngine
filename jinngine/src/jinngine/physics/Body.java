@@ -212,7 +212,7 @@ public final class Body {
 	 */
 	public void addGeometryIncremental( Matrix3 rotation, Vector3 translation, Geometry g ) {
 		// get the previous mass 
-		double previousTotalMass = state.anisotropicmass.fnorm(); // mass at (0,0,0) 
+		double previousTotalMass = state.anisotropicmass.diag().infnorm(); // mass at (0,0,0) 
 		
 //		System.out.println("local centre of mass: "+g.getLocalCentreOfMass(new Vector3()));
 
@@ -283,6 +283,13 @@ public final class Body {
 		
 		// attach the new geometry
 		geometries.add(g);
+		
+		System.out.println("*) mass " + this);
+		System.out.println("" + state.anisotropicmass );
+		System.out.println("" + state.inertia );
+		System.out.println("" + state.inverseanisotropicmass );
+		System.out.println("" + state.inverseinertia );
+
 	}
 	
 	

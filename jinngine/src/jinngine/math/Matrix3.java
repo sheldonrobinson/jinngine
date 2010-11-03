@@ -194,6 +194,12 @@ public class Matrix3 {
 	  }	
   }
 
+  /** 
+   * Get the diagonal of this matrix
+   */
+  public Vector3 diag() {
+	  return new Vector3(a11,a22,a33);
+  }
   
   /**
    * Get all column vectors of this matrix

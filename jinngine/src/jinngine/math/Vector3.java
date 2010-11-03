@@ -394,7 +394,14 @@ public final class Vector3 implements Serializable {
 	public final double squaredNorm() {
 		return x*x+y*y+z*z;
 	}
-
+	
+	/**
+	 * Return the infinity norm, absolute value of the largest entry.
+	 * @return infinity norm of this vector
+	 */
+	public final double infnorm() {
+		return x>y? (x>z? x:z) : (y>z? y:z);
+	}
        
     /**
      * Returns <tt>true</tt> if the absolute value of the three coordinates are
