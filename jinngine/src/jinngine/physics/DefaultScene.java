@@ -9,6 +9,8 @@
 package jinngine.physics;
 import java.util.*;
 
+import jinngine.math.Matrix3;
+import jinngine.math.Vector3;
 import jinngine.physics.constraint.*;
 import jinngine.physics.constraint.contact.ContactConstraintManager;
 import jinngine.physics.constraint.contact.DefaultContactConstraintManager;
@@ -31,6 +33,8 @@ public final class DefaultScene implements Scene {
 	
 	// constraints, joints and forces
 	public final List<NCPConstraint> ncpconstraints = new ArrayList<NCPConstraint>();
+	public final List<NCPConstraint> coarsencpconstraints = new ArrayList<NCPConstraint>();
+	
 	private final List<Body> ncpbodies = new ArrayList<Body>();
 	private final List<Force> forces = new ArrayList<Force>(); 
 	private final List<Constraint> liveconstraints = new ArrayList<Constraint>();
@@ -318,9 +322,23 @@ public final class DefaultScene implements Scene {
 			}
 		}
 		
+		
+		List<Constraint> contactconstraints = new ArrayList<Constraint>();
+		// grap a list of contact constraints
+		Iterator<ConstraintGroup> iter1 = constraintGraph.getComponents();
+		while (iter1.hasNext()) {
+			Iterator<Constraint> iter2 = constraintGraph.getEdgesInComponent(iter1.next());
+			while (iter2.hasNext()) {
+				Constraint c = iter2.next();
+				contactconstraints.add(c);
+			}
+		}
+		
 		// run the solver (compute delta velocities) for all 
 		// components in the constraint graph
 		solver.solve( ncpconstraints, bodies, 1e-5 );
+//		Multigrid mg = new Multigrid();
+//		mg.solve(contactconstraints, bodies, 1e-31);
 		
 		// update triggers
 		for (Trigger trigger: triggers) {
@@ -406,15 +424,14 @@ public final class DefaultScene implements Scene {
 	
 	@Override
 	public final void removeBody(Body body) {
-		//remove associated geometries from collision detection
+		// remove associated geometries from collision detection
 		Iterator<Geometry> i = body.getGeometries();
 		while( i.hasNext()) {
 			broadphase.remove(i.next());			
 		}
 		
-		//finally remove from body list
-		bodies.remove(body);
-		
+		// finally remove from body list
+		bodies.remove(body);		
 	}
 
 	@Override
@@ -428,16 +445,11 @@ public final class DefaultScene implements Scene {
 	}
 
 	@Override
-	public void fixBody(Body b, boolean fixed) {
-		// this may seem a bit drastic, but it is necessary. If one
-		// just changes the fixed setting directly on bodies during animation,
-		// really bad thing will happen, because the contact graph will become
-		// corrupted and will eventually crash jinngine
-		
+	public void fixBody(Body b, boolean fixed) {		
 		//check if the body is in the animation
-		if (!bodies.contains(b))
-			return;
-		
+		if (!bodies.contains(b)) {
+			throw new IllegalArgumentException("Attempt to fix a body that is not in the scene");
+		}		
 		// check if body is already the at the correct 
 		// fixed setting, in which case do nothing
 		if (b.isFixed() == fixed) 
@@ -450,8 +462,7 @@ public final class DefaultScene implements Scene {
 		b.setFixed(fixed);
 
 		// reinsert body
-		addBody(b);
-		
+		addBody(b);	
 	}
 	
 	@Override
@@ -496,5 +507,54 @@ public final class DefaultScene implements Scene {
 	public BroadphaseCollisionDetection getBroadphase() {
 		return this.broadphase;
 	}
+
+	@Override
+	public void addGeometry(Matrix3 orientation, Vector3 position, Geometry g) {
+		// create a new body
+		Body body = new Body(g.getName());
+		body.addGeometry(orientation, position, g);
+
+		// add the geometry to broadphase
+		broadphase.add(g);
+		
+		// add the new body
+		bodies.add(body);
+		body.updateTransformations();
+	}
+	
+	@Override
+	public void addGeometry(Body body, Matrix3 orientation, Vector3 position,
+			Geometry g) {
+		//check if the body is in the animation
+		if (!bodies.contains(body)) {
+			throw new IllegalArgumentException("The given body does not exist in this scene");
+		}						
+		
+		// add geometry to the body
+		body.addGeometry(orientation, position, g);
+
+		// add the geometry to broadphase
+		broadphase.add(g);		
+	}
+
+
+	@Override
+	public void removeGeometry(Geometry g) {		
+		// if the geometry has no body assigned, it 
+		// means that it was never added to the scene
+		Body body = g.getBody();
+		if (body==null) {
+			throw new IllegalStateException("Attempt to remove a geometry that does not exist in the scene");
+		}
+		
+		// remove from body
+		body.removeGeometry(g);
+				
+		if (body.getNumberOfGeometries() < 1) {
+			// body has no geometries remove it
+			removeBody(body);
+		}
+	}
+
 
 }

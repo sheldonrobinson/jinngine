@@ -13,6 +13,7 @@ import jinngine.collision.SweepAndPrune;
 import jinngine.collision.BroadphaseCollisionDetection.Handler;
 import jinngine.geometry.Box;
 import jinngine.geometry.Geometry;
+import jinngine.math.Matrix3;
 import jinngine.math.Vector3;
 import jinngine.physics.Body;
 import jinngine.util.Pair;
@@ -29,11 +30,14 @@ public class SweepAndPruneTest extends TestCase {
 		double epsilon = 1e-15;
 		
 		//create two cubes
-		Box box1 = new Box(1,1,1);
-		@SuppressWarnings("unused")
-		Body b1 = new Body("Box 1", box1);
-		Box box2 = new Box(1,1,1);
-		Body b2 = new Body("Box 2", box2);
+		Box box1 = new Box("box1",1,1,1);
+		Body b1 = new Body("Box 1");
+		b1.addGeometry(Matrix3.identity(), new Vector3(), box1);
+
+		Box box2 = new Box("box2",1,1,1);
+		Body b2 = new Body("Box 2");
+		b2.addGeometry(Matrix3.identity(), new Vector3(), box2);
+
 		
 		// set the envelope size (or collision margin)
 		final double env = 1.0;

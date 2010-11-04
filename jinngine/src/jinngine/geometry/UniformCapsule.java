@@ -22,6 +22,7 @@ public final class UniformCapsule implements Geometry, SupportMap3, Material {
 	private final double length;
 	private final InertiaMatrix inertia;
 	private final double uniformmass;
+	private final String name;
 	
 	/**
 	 * A uniform capsule aligned on the z-axis, centred in the origin.
@@ -29,7 +30,8 @@ public final class UniformCapsule implements Geometry, SupportMap3, Material {
 	 * @param length distance between capsule end-points. Note that the total length of the 
 	 *        capsule will be length + 2radius
 	 */
-	public UniformCapsule(double radius, double length) {
+	public UniformCapsule(String name, double radius, double length) {
+		this.name = new String(name);
 		this.radius = radius;
 		this.length = length;
 				
@@ -184,5 +186,10 @@ public final class UniformCapsule implements Geometry, SupportMap3, Material {
 
 	@Override
 	public Vector3 getLocalCentreOfMass(Vector3 cm) { return cm.assignZero(); }
+
+	@Override
+	public String getName() {
+		return name;
+	}
 
 }

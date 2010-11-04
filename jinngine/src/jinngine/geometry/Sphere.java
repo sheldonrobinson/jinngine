@@ -21,14 +21,6 @@ import jinngine.physics.Body;
  */
 public class Sphere implements SupportMap3, Geometry, Material {
 
-	public Object getUserReference() {
-		return auxiliary;
-	}
-
-	public void setUserReference(Object auxiliary) {
-		this.auxiliary = auxiliary;
-	}
-
 	private Body body;
 	private double radius;
 	private final Vector3 displacement = new Vector3();
@@ -38,14 +30,23 @@ public class Sphere implements SupportMap3, Geometry, Material {
 	private Object auxiliary;
 	private double restitution = 0.7;
 	private double friction = 0.5;
-	private double mass;
-
-
+	private final double mass;
+	private final String name;
+	
 	public Sphere(double radius) {
-		super();
 		this.radius = radius;		
 		this.mass = (4.0/3.0)*Math.PI*radius*radius*radius;
 		this.envelope = 1;
+		this.name = new String("");
+		//set the initial local transform
+		setLocalTransform( Matrix3.identity(), new Vector3());		
+	}
+
+	public Sphere(String name, double radius) {
+		this.radius = radius;		
+		this.mass = (4.0/3.0)*Math.PI*radius*radius*radius;
+		this.envelope = 1;
+		this.name = new String(name);
 
 		//set the initial local transform
 		setLocalTransform( Matrix3.identity(), new Vector3());
@@ -154,10 +155,6 @@ public class Sphere implements SupportMap3, Geometry, Material {
 		return mass;
 	}
 	
-	public void setMass(double mass) {
-		this.mass = mass;
-	}
-
 	@Override
 	public void setLocalScale(Vector3 s) {
 		throw new UnsupportedOperationException();
@@ -167,8 +164,24 @@ public class Sphere implements SupportMap3, Geometry, Material {
 	public double sphereSweepRadius() {
 		return 0;
 	}
-	
-	@Override
-	public Vector3 getLocalCentreOfMass(Vector3 cm) { return cm.assignZero(); }
 
+	@Override
+	public Vector3 getLocalCentreOfMass(Vector3 cm) { 
+		return cm.assignZero();
+	}
+
+	@Override
+	public String getName() {
+		return name;
+	}
+
+	@Override
+	public Object getUserReference() { 
+		return auxiliary; 
+	}
+
+	@Override
+	public void setUserReference(Object auxiliary) {
+		this.auxiliary = auxiliary;
+	}
 }

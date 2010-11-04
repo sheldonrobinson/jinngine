@@ -21,11 +21,12 @@ public class Box implements SupportMap3, Geometry, Material {
 	private Body body;
 	private final Matrix3 localrotation = new Matrix3();
 	private final Vector3 localdisplacement = new Vector3();
-	private double envelope = 0.125;
 	
 	// box properties
 	private double xs,ys,zs;
 	private double mass;
+	private final String name;
+	private double envelope = 0.125;
 	
 	// auxiliary user reference
 	private Object auxiliary;
@@ -40,11 +41,12 @@ public class Box implements SupportMap3, Geometry, Material {
 	 * @param y Box y-axis extend
 	 * @param z Box z-axis extend
 	 */
-	public Box(double x, double y, double z) {
+	public Box(String name, double x, double y, double z) {
+		this.name = new String(name);
 		this.xs = x; this.ys = y; this.zs = z;
 		mass = xs*ys*zs;
 				
-		//set the local transform
+		// set the local transform
 		setLocalTransform( Matrix3.identity(), new Vector3() );
 	}
 	
@@ -54,7 +56,8 @@ public class Box implements SupportMap3, Geometry, Material {
 	 * @param y Box y-axis extend
 	 * @param z Box z-axis extend
 	 */
-	public Box(Vector3 sides) {
+	public Box(String name, Vector3 sides) {
+		this.name = new String(name);
 		this.xs = sides.x; this.ys = sides.y; this.zs = sides.z;
 		mass = xs*ys*zs;
 				
@@ -62,36 +65,36 @@ public class Box implements SupportMap3, Geometry, Material {
 		setLocalTransform( Matrix3.identity(), new Vector3() );
 	}
 
-	/**
-	 * Create a new box with the given side lengths and a local translation
-	 * @param x Box x-axis extend
-	 * @param y Box y-axis extend
-	 * @param z Box z-axis extend
-	 * @param posx Box local x-axis translation
-	 * @param posy Box local y-axis translation
-	 * @param posz Box local z-axis translation
-	 */
-	public Box(double x, double y, double z, double posx, double posy, double posz) {
-		this.xs = x; this.ys = y; this.zs = z;
-		mass = xs*ys*zs;
-		
-		//set the local transform
-		setLocalTransform( Matrix3.identity(), new Vector3(posx,posy,posz) );
-	}
+//	/**
+//	 * Create a new box with the given side lengths and a local translation
+//	 * @param x Box x-axis extend
+//	 * @param y Box y-axis extend
+//	 * @param z Box z-axis extend
+//	 * @param posx Box local x-axis translation
+//	 * @param posy Box local y-axis translation
+//	 * @param posz Box local z-axis translation
+//	 */
+//	public Box(double x, double y, double z, double posx, double posy, double posz) {
+//		this.xs = x; this.ys = y; this.zs = z;
+//		mass = xs*ys*zs;
+//		
+//		//set the local transform
+//		setLocalTransform( Matrix3.identity(), new Vector3(posx,posy,posz) );
+//	}
 
-	/** 
-	 * Set new side lengths for this box. Keep in mind that altering geometry changes mass and 
-	 * inertia properties of bodies. This method automatically re-finalises the attached body, 
-	 * should this box be attached to one. This operation is relatively expensive.
-	 */
-	public final void setBoxSideLengths( double xl, double yl, double zl) {
-		this.xs = xl; this.ys = yl; this.zs = zl;
-		mass = xl*yl*zl;
-		
-		// re-finalise body if any present
-		if ( body != null)
-			body.finalize();
-	}
+//	/** 
+//	 * Set new side lengths for this box. Keep in mind that altering geometry changes mass and 
+//	 * inertia properties of bodies. This method automatically re-finalises the attached body, 
+//	 * should this box be attached to one. This operation is relatively expensive.
+//	 */
+//	public final void setBoxSideLengths( double xl, double yl, double zl) {
+//		this.xs = xl; this.ys = yl; this.zs = zl;
+//		mass = xl*yl*zl;
+//		
+//		// re-finalise body if any present
+//		if ( body != null)
+//			body.finalize();
+//	}
 	
 	// user auxiliary methods
 	public Object getUserReference() { return auxiliary; }
@@ -386,6 +389,11 @@ public class Box implements SupportMap3, Geometry, Material {
 	}
 	
 	@Override
-	public Vector3 getLocalCentreOfMass(Vector3 cm) { return cm.assignZero(); }	
+	public Vector3 getLocalCentreOfMass(Vector3 cm) { return cm.assignZero(); }
+
+	@Override
+	public String getName() {
+		return name;
+	}	
 
 }

@@ -28,6 +28,7 @@ import jinngine.physics.Body;
  */
 public class ConvexHull implements SupportMap3, Geometry, Material {
 
+	private final String name;
 	private final List<Vector3[]> faces = new ArrayList<Vector3[]>();
 	private final ArrayList<Vector3> vertices = new ArrayList<Vector3>();
 	private final ArrayList<ArrayList<Integer>> adjacent;
@@ -101,7 +102,9 @@ public class ConvexHull implements SupportMap3, Geometry, Material {
 	 * Create a convex hull geometry, based on the points given 
 	 * @param input
 	 */
-	public ConvexHull(List<Vector3> input) {	
+	public ConvexHull(String name, List<Vector3> input) {
+		this.name = new String(name);
+		
 		final QuickHull3D dualhull = new QuickHull3D();
 		final QuickHull3D hull = new QuickHull3D();
 
@@ -202,7 +205,7 @@ public class ConvexHull implements SupportMap3, Geometry, Material {
 				Math.abs(positiveBounds.z-negativeBounds.z));
 		
 		// set the initial bounding box
-		this.boundingBox = new Box(boundingBoxSideLengths);
+		this.boundingBox = new Box("boundingBox", boundingBoxSideLengths);
 		updateBoundingBoxTransform();
 	}
 	
@@ -472,5 +475,10 @@ public class ConvexHull implements SupportMap3, Geometry, Material {
 	
 	@Override
 	public Vector3 getLocalCentreOfMass(Vector3 cm) { return cm.assign(centreOfMass); }
+
+	@Override
+	public String getName() {
+		return name;
+	}
 	
 }

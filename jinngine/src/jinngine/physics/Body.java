@@ -62,142 +62,143 @@ public final class Body {
 		state.anisotropicmass.assignZero();
 		state.inverseanisotropicmass.assignZero();
 		state.inertia.assignZero();
+		state.inverseinertia.assignZero();
 	}
 	
-	/**
-	 * Create a new Body with a single geometry instance. finalize() is called 
-	 * at the end of this constructor.
-	 * @param identifier Unique identifier for this body
-	 * @param g A geometry that will define this body's mass and inertia properties 
-	 */
-	public Body( String identifier, Geometry g  ) {
-		this.identifier = identifier;
-		state.transform.assignIdentity();
-		state.rotation.assignIdentity();
-		updateTransformations();
-		
-		//some default properties
-		this.state.anisotropicmass.assignScale(1);
-		this.state.inverseanisotropicmass.assignScale(1);
-		this.state.inertia.assignZero();
-		this.state.inverseinertia.assignZero();
-				
-		addGeometry(g);
-		
-		//complete
-		finalize();
-	}
+//	/**
+//	 * Create a new Body with a single geometry instance. finalize() is called 
+//	 * at the end of this constructor.
+//	 * @param identifier Unique identifier for this body
+//	 * @param g A geometry that will define this body's mass and inertia properties 
+//	 */
+//	public Body( String identifier, Geometry g  ) {
+//		this.identifier = identifier;
+//		state.transform.assignIdentity();
+//		state.rotation.assignIdentity();
+//		updateTransformations();
+//		
+//		//some default properties
+//		this.state.anisotropicmass.assignScale(1);
+//		this.state.inverseanisotropicmass.assignScale(1);
+//		this.state.inertia.assignZero();
+//		this.state.inverseinertia.assignZero();
+//				
+//		addGeometry(g);
+//		
+//		//complete
+//		finalize();
+//	}
 	
-	/**
-	 * Create a body using the given geometries. After adding all geometries in the iterator i has 
-	 * been added, finalize() is automatically called.
-	 * @param identifier Unique identifier for this body
-	 * @param i
-	 */
-	public Body( String identifier, Iterator<Geometry> i) {
-		this.identifier = identifier;
-		this.state.transform.assignIdentity();
-		this.state.rotation.assignIdentity();
-		updateTransformations();
-				
-		//some default properties
-		this.state.anisotropicmass.assignScale(1);
-		this.state.inverseanisotropicmass.assignScale(1);		
-		this.state.inertia.assignZero();
-		this.state.inverseinertia.assignZero();
-				
-		while (i.hasNext()) {
-			addGeometry(i.next());
-		}
+//	/**
+//	 * Create a body using the given geometries. After adding all geometries in the iterator i has 
+//	 * been added, finalize() is automatically called.
+//	 * @param identifier Unique identifier for this body
+//	 * @param i
+//	 */
+//	public Body( String identifier, Iterator<Geometry> i) {
+//		this.identifier = identifier;
+//		this.state.transform.assignIdentity();
+//		this.state.rotation.assignIdentity();
+//		updateTransformations();
+//				
+//		//some default properties
+//		this.state.anisotropicmass.assignScale(1);
+//		this.state.inverseanisotropicmass.assignScale(1);		
+//		this.state.inertia.assignZero();
+//		this.state.inverseinertia.assignZero();
+//				
+//		while (i.hasNext()) {
+//			addGeometry(i.next());
+//		}
+//		
+//		//complete
+//		finalize();
+//	}
 		
-		//complete
-		finalize();
-	}
-		
-	/**
-	 * Add a geometry to this body
-	 */
-	public void addGeometry( Geometry g ) {
-		geometries.add(g);
-	}
+//	/**
+//	 * Add a geometry to this body
+//	 */
+//	public void addGeometry( Geometry g ) {
+//		geometries.add(g);
+//	}
 
-	/**
-	 * Calculate total mass and inertia matrix. Aligns all attached geometries to the centre off mass. 
-	 * This method must be called when all geometries are attached to this body. If any geometry changes 
-	 * its local position, orientation, mass, or inertia properties, this method must be called again to 
-	 * reflect those changes in the Body state. Some of the constructors call finalize() automatically. 
-	 */
-	public final void finalize() {
-		final Vector3 cm = state.centreofmass;
-		
-		//reset body properties
-		this.state.anisotropicmass.assignZero();
-		this.state.inverseanisotropicmass.assignZero();
-		this.state.inertia.assignZero();
-		this.state.inverseinertia.assignZero();
-
-		//if any geometry
-		if ( geometries.size() > 0 ) {
-
-			//find centre of mass
-			cm.assignZero();
-			double totalMass = 0;
-
-			for (Geometry g: geometries) {
-				g.setBody(this);
-				
-				totalMass += g.getMass();
-				
-				//get the transformation
-				Matrix3 R = new Matrix3();
-				Vector3 b = new Vector3();
-				g.getLocalTransform(R, b);
-				
-				// cm = cm + b*M
-				cm.assign( cm.add( b.multiply(g.getMass())));
-			}
-			
-			//check total mass
-			if (Math.abs(totalMass) < 1e-14 )
-				totalMass = 1;
-			
-			// cm = cm / total mass
-			cm.assign( cm.multiply(1/totalMass));
-			this.state.anisotropicmass.assignScale(totalMass);
-			this.state.inverseanisotropicmass.assignScale(1/totalMass);
-
-			//translate all geometries so centre of mass will become the origin
-			for (Geometry g: geometries) {
-				//get the transformation
-				Matrix3 R = new Matrix3();
-				Vector3 b = new Vector3();
-				g.getLocalTransform(R, b);
-				
-				//align to centre of mass
-				b.assign( b.sub(cm));
-
-				//rotate the inertia matrix into this frame and add it to the inertia tensor of this body
-				Matrix3 Im = g.getInertiaMatrix();
-				
-				Im.assignMultiply(g.getMass());
-				InertiaMatrix.rotate(Im, R);
-				InertiaMatrix.translate(Im, g.getMass(), b);
-				Matrix3.add(this.state.inertia, Im, this.state.inertia);
-
-				//set the final transform
-				g.setLocalTransform(R, b);
-			}
-
-			//fill out the inverse tensor
-			Matrix3.inverse(this.state.inertia, this.state.inverseinertia);
-
-		} else {
-			//fall-back on something, in case no geometries were given
-			this.state.anisotropicmass.assignScale(1);
-			this.state.inverseanisotropicmass.assignScale(1);
-			this.state.inertia.assign(InertiaMatrix.identity());
-		}
-	}
+//	/**
+//	 * Calculate total mass and inertia matrix. Aligns all attached geometries to the centre off mass. 
+//	 * This method must be called when all geometries are attached to this body. If any geometry changes 
+//	 * its local position, orientation, mass, or inertia properties, this method must be called again to 
+//	 * reflect those changes in the Body state. Some of the constructors call finalize() automatically. 
+//	 */
+//	public final void finalize() {
+//		final Vector3 cm = state.centreofmass;
+//		
+//		//reset body properties
+//		this.state.anisotropicmass.assignZero();
+//		this.state.inverseanisotropicmass.assignZero();
+//		this.state.inertia.assignZero();
+//		this.state.inverseinertia.assignZero();
+//
+//		//if any geometry
+//		if ( geometries.size() > 0 ) {
+//
+//			//find centre of mass
+//			cm.assignZero();
+//			double totalMass = 0;
+//
+//			for (Geometry g: geometries) {
+//				g.setBody(this);
+//				
+//				totalMass += g.getMass();
+//				
+//				//get the transformation
+//				Matrix3 R = new Matrix3();
+//				Vector3 b = new Vector3();
+//				g.getLocalTransform(R, b);
+//				
+//				// cm = cm + b*M
+//				cm.assign( cm.add( b.multiply(g.getMass())));
+//			}
+//			
+//			//check total mass
+//			if (Math.abs(totalMass) < 1e-14 )
+//				totalMass = 1;
+//			
+//			// cm = cm / total mass
+//			cm.assign( cm.multiply(1/totalMass));
+//			this.state.anisotropicmass.assignScale(totalMass);
+//			this.state.inverseanisotropicmass.assignScale(1/totalMass);
+//
+//			//translate all geometries so centre of mass will become the origin
+//			for (Geometry g: geometries) {
+//				//get the transformation
+//				Matrix3 R = new Matrix3();
+//				Vector3 b = new Vector3();
+//				g.getLocalTransform(R, b);
+//				
+//				//align to centre of mass
+//				b.assign( b.sub(cm));
+//
+//				//rotate the inertia matrix into this frame and add it to the inertia tensor of this body
+//				Matrix3 Im = g.getInertiaMatrix();
+//				
+//				Im.assignMultiply(g.getMass());
+//				InertiaMatrix.rotate(Im, R);
+//				InertiaMatrix.translate(Im, g.getMass(), b);
+//				Matrix3.add(this.state.inertia, Im, this.state.inertia);
+//
+//				//set the final transform
+//				g.setLocalTransform(R, b);
+//			}
+//
+//			//fill out the inverse tensor
+//			Matrix3.inverse(this.state.inertia, this.state.inverseinertia);
+//
+//		} else {
+//			//fall-back on something, in case no geometries were given
+//			this.state.anisotropicmass.assignScale(1);
+//			this.state.inverseanisotropicmass.assignScale(1);
+//			this.state.inertia.assign(InertiaMatrix.identity());
+//		}
+//	}
 	
 	
 	/**
@@ -210,7 +211,7 @@ public final class Body {
 	 * @param translation translation of geometry in world space
 	 * @param g geometry to be added
 	 */
-	public void addGeometryIncremental( Matrix3 rotation, Vector3 translation, Geometry g ) {
+	 public void addGeometry( Matrix3 rotation, Vector3 translation, Geometry g ) {
 		// get the previous mass 
 		double previousTotalMass = state.anisotropicmass.diag().infnorm(); // mass at (0,0,0) 
 		
@@ -283,16 +284,84 @@ public final class Body {
 		
 		// attach the new geometry
 		geometries.add(g);
-		
-		System.out.println("*) mass " + this);
-		System.out.println("" + state.anisotropicmass );
-		System.out.println("" + state.inertia );
-		System.out.println("" + state.inverseanisotropicmass );
-		System.out.println("" + state.inverseinertia );
-
 	}
 	
-	
+	public void removeGeometry(Geometry g) {
+		// make sure this geometry exist here
+		if (!geometries.remove(g)) {
+			throw new IllegalArgumentException("Attempt to delete geometry from Body that does not exist");
+		}
+
+		
+		// trivial case if there are no more geometries left
+		if (geometries.isEmpty()) {			
+			// reset physical properties 
+			state.anisotropicmass.assignZero();
+			state.inverseanisotropicmass.assignZero();
+			state.inertia.assignZero();
+			state.inverseinertia.assignZero();						
+			return;
+		}
+
+		// we need to remove this geometry from the mass properties 
+		Matrix3 localRotation = new Matrix3();
+		Vector3 localTranslation = new Vector3();
+		Vector3 localCm = new Vector3();
+		final double localMass = g.getMass();
+		g.getLocalTransform(localRotation, localTranslation);
+		g.getLocalCentreOfMass(localCm);
+
+		// calculate the the geometry centre of mass position in 
+		// body space
+		Vector3 geometryCmBody = localTranslation.add(localRotation.multiply(localCm));
+		
+		// get the local mass of geometry
+		double geometryMass = g.getMass();
+		
+		// get the total current mass 
+		double currentTotalMass = state.anisotropicmass.diag().infnorm(); // mass at (0,0,0) 
+
+		// calculate the old mass centre, which would have been 
+		// before this geometry was added
+
+		Vector3 displ = geometryCmBody.multiply(-geometryMass/(currentTotalMass-geometryMass));
+		
+		// go through existing geometries and translate them
+		for (Geometry gi: geometries) {
+			final Matrix3 R = new Matrix3();
+			final Vector3 b = new Vector3();
+			gi.getLocalTransform(R, b);			
+			gi.setLocalTransform(R, b.sub(displ));
+		}
+
+		// translate body to compensate the change
+		Vector3.add(this.state.position, state.rotation.multiply(displ) );
+				
+		// update the mass
+		state.anisotropicmass.assign(Matrix3.identity().multiply(currentTotalMass-geometryMass));		
+		state.inverseanisotropicmass.assignScale(1/(currentTotalMass-geometryMass));
+		
+		// now, we need to update the inertia tensor.
+		// first remove the contribution of the removed geometry
+		InertiaMatrix Ig = g.getInertiaMatrix();	
+		// scale inertia to mass
+		Ig.assignMultiply(localMass);
+		// rotate the new tensor into body frame
+		InertiaMatrix.rotate(Ig, localRotation );
+		// translate to new position relative to cm 
+		InertiaMatrix.translate(Ig, localMass, localTranslation);
+		
+		// remove the contribution of Ig
+		Matrix3.subtract(state.inertia, Ig, state.inertia);
+		
+		// now, the contribution from moving the rest of the body back to 
+		// the new centre of mass must be removed
+		InertiaMatrix.inverseTranslate(this.state.inertia, (currentTotalMass-geometryMass), displ.negate());
+
+		// finally update the inverse inertia
+		Matrix3.inverse(state.inertia, state.inverseinertia );
+		
+	}
 	
     /**
      * Get geometry instances attached to this Body.
@@ -306,7 +375,8 @@ public final class Body {
 		return fixed;
 	}
 
-	public void setFixed( boolean value){
+	// package private
+	void setFixed( boolean value){
 		fixed = value;
 	}
 
@@ -560,6 +630,10 @@ public final class Body {
 	@Override
 	public String toString() {
 		return identifier;
+	}
+	
+	public int getNumberOfGeometries() {
+		return geometries.size();
 	}
 }  
 

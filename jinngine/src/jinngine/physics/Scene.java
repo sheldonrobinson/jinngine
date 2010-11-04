@@ -11,6 +11,9 @@ package jinngine.physics;
 import java.util.Iterator;
 
 import jinngine.collision.BroadphaseCollisionDetection;
+import jinngine.geometry.Geometry;
+import jinngine.math.Matrix3;
+import jinngine.math.Vector3;
 import jinngine.physics.Body;
 import jinngine.physics.constraint.Constraint;
 import jinngine.physics.constraint.contact.ContactConstraintManager;
@@ -41,12 +44,30 @@ public interface Scene {
 	 */
 	public Iterator<Constraint> getConstraints(Body body);
 	
+	/** 
+	 * Add a geometry to the scene, specifying the initial world transform. A new body
+	 * will be created automatically. 
+     * @param orientation A rotation matrix describing the orientation of the geometry
+     * @param position world position of the geometry
+	 */
+	public void addGeometry( Matrix3 orientation, Vector3 position, Geometry g);
+
+	/** 
+	 * Add a geometry to the scene, specifying the initial world transform, using the
+	 * specified body. The body must already exist in the scene.
+	 * @param body that this geometry should be attached to 
+     * @param orientation A rotation matrix describing the orientation of the geometry
+     * @param position world position of the geometry
+	 */
+	public void addGeometry( Body body, Matrix3 orientation, Vector3 position, Geometry g);
+
+	
 	/**
 	 * Add a body to the scene
 	 * @param b
 	 */
 	public void addBody( Body b );
-	
+		
 	/**
 	 * Add a force to the scene
 	 * @param f
@@ -58,6 +79,11 @@ public interface Scene {
 	 * @param c
 	 */
 	public void addConstraint( Constraint c );
+
+	/**
+	 * Remove a geometry from the scene
+	 */
+	public void removeGeometry(Geometry g);
 	
 	/**
 	 * Remove a body from the scene
