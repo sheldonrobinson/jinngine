@@ -173,7 +173,7 @@ GLEventListener, MouseListener, MouseMotionListener, MouseWheelListener, KeyList
 				v.assign(S.multiply(v));
 			}
 			
-			final ConvexHull hull = new ConvexHull(inputVertices);
+			final ConvexHull hull = new ConvexHull("box hull",inputVertices);
 			
 			// get the vertices in the final hull
 			Iterator<Vector3> i = hull.getVertices();
@@ -242,7 +242,7 @@ GLEventListener, MouseListener, MouseMotionListener, MouseWheelListener, KeyList
 			}
 
 			
-			final ConvexHull hull = new ConvexHull(inputVertices);
+			final ConvexHull hull = new ConvexHull("hull",inputVertices);
 			
 			// build normal array
 			for( int index :hull.getOriginalVertexIndices()) {
@@ -312,7 +312,7 @@ GLEventListener, MouseListener, MouseMotionListener, MouseWheelListener, KeyList
 
 		int n = 0;
 		while (true) {
-			ConvexHull hull = new ConvexHull(vertices);
+			ConvexHull hull = new ConvexHull("hull",vertices);
 
 			if (n>=depth)
 				return hull;
@@ -442,7 +442,7 @@ GLEventListener, MouseListener, MouseMotionListener, MouseWheelListener, KeyList
 
 				}
 				// build a hull for this edge
-				ConvexHull edgehull = new ConvexHull(inputEdgeVertices);
+				ConvexHull edgehull = new ConvexHull("hull",inputEdgeVertices);
 				
 				
 				// build normal array
@@ -534,7 +534,7 @@ GLEventListener, MouseListener, MouseMotionListener, MouseWheelListener, KeyList
 		gl.glUniform1f(extrutionUniformLocation, 0.04f);
 		gl.glUniform3f(colorUniformLocation, 0.30f,0.30f,0.30f);
 		gl.glUniform1f(influenceUniformLocation, 1f);
-		drawEdgeMesh( new ConvexHull(vertices), gl);
+		drawEdgeMesh( new ConvexHull("edge hull", vertices), gl);
 	}
 
 	private void drawBackfaceShadowMesh( List<Vector3> vertices, List<Vector3> normals, int[][] faceIndices, GL gl) {

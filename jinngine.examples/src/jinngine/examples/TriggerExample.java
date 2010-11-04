@@ -10,6 +10,7 @@ package jinngine.examples;
 
 
 import jinngine.geometry.Box;
+import jinngine.math.Matrix3;
 import jinngine.math.Vector3;
 import jinngine.physics.*;
 import jinngine.physics.ContactTrigger.Callback;
@@ -28,44 +29,35 @@ public class TriggerExample implements Rendering.Callback {
 		scene.setTimestep(0.1);
 		
 		// add boxes to bound the world
-		Body floor = new Body("floor", new Box(1500,20,1500));
-		floor.setPosition(new Vector3(0,-30,0));
-		floor.setFixed(true);
+		Box floor = new Box("Floor",1500,20,1500);
+		scene.addGeometry(Matrix3.identity(), new Vector3(0,-30,0), floor);
+		scene.fixBody(floor.getBody(), true);
 		
-		Body back = new Body( "back", new Box(200,200,20));		
-		back.setPosition(new Vector3(0,0,-55));
-		back.setFixed(true);
+		Box back = new Box("Back wall", 200, 200, 20);		
+		scene.addGeometry(Matrix3.identity(), new Vector3(0,0,-55), back);
+		scene.fixBody(back.getBody(), true);
 
-		Body front = new Body( "front", new Box(200,200,20));		
-		front.setPosition(new Vector3(0,0,-7));
-		front.setFixed(true);
+		Box front = new Box("Front wall", 200, 200, 20);		
+		scene.addGeometry( Matrix3.identity(), new Vector3(0,0,-7), front);
+		scene.fixBody(front.getBody(), true);
 
-		Body left = new Body( "left", new Box(20,200,200));		
-		left.setPosition(new Vector3(-35,0,0));
-		left.setFixed(true);
+		Box left = new Box("Left wall", 20, 200, 200);		
+		scene.addGeometry(Matrix3.identity(), new Vector3(-35,0,0), left);
+		scene.fixBody(left.getBody(), true);
 
-		Body right = new Body( "right", new Box(20,200,200));		
-		right.setPosition(new Vector3(10,0,0));
-		right.setFixed(true);
+		Box right = new Box("Right wall", 20, 200, 200);		
+		scene.addGeometry(Matrix3.identity(), new Vector3(10,0,0), right);
+		scene.fixBody( right.getBody(), true);	
 		
 		// create a box
-		Box boxgeometry = new Box(2,2,2);
-		Body box = new Body( "box", boxgeometry );
-		box.setPosition(new Vector3(-10,-11,-25));
+		Box box = new Box("box",2,2,2);
+		scene.addGeometry(Matrix3.identity(), new Vector3(-10,-11,-25), box );
 				
-		// add all to scene
-		scene.addBody(floor);
-		scene.addBody(back);
-		scene.addBody(front);		
-		scene.addBody(left);
-		scene.addBody(right);
-		scene.addBody(box);
-
 		// put gravity on box
-		scene.addForce( new GravityForce(box));	
+		scene.addForce( new GravityForce(box.getBody()));	
 		
 		// create a trigger to detect contact forces with some threshold
-		scene.addTrigger(new ContactTrigger(box, 2.0, new Callback(){
+		scene.addTrigger(new ContactTrigger(box.getBody(), 2.0, new Callback(){
 			@Override
 			public void contactAboveThreshold(Body interactingBody,
 					ContactConstraint constraint) {
@@ -81,7 +73,7 @@ public class TriggerExample implements Rendering.Callback {
 		// handle drawing
 		Rendering rendering = new jinngine.rendering.jogl.JoglRendering(this);
 		rendering.addCallback(new Interaction(scene));
-		rendering.drawMe(boxgeometry);
+		rendering.drawMe(box);
 		rendering.createWindow();
 		rendering.start();
 	}

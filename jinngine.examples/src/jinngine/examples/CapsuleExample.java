@@ -28,63 +28,55 @@ public class CapsuleExample implements Rendering.Callback {
 	private final Scene scene;
 	
 	public CapsuleExample() {
-		
 		// start jinngine 
-		scene = new DefaultScene(new SAP2(), new NonsmoothNonlinearConjugateGradient(50), new DefaultDeactivationPolicy());
+		scene = new DefaultScene(new SAP2(), new NonsmoothNonlinearConjugateGradient(50), new DisabledDeactivationPolicy());
 		scene.setTimestep(0.1);
 		
 		// add boxes to bound the world
-		Body floor = new Body("floor", new Box(1500,20,1500));
-		floor.setPosition(new Vector3(0,-30,0));
-		floor.setFixed(true);
+		Box floor = new Box("floor",1500,20,1500);
+		scene.addGeometry(Matrix3.identity(), new Vector3(0,-30,0), floor);
+		scene.fixBody(floor.getBody(), true);
 		
-		Body back = new Body( "back", new Box(200,200,20));		
-		back.setPosition(new Vector3(0,0,-55));
-		back.setFixed(true);
+		Box back = new Box("back", 200, 200, 20);		
+		scene.addGeometry(Matrix3.identity(), new Vector3(0,0,-55), back);
+		scene.fixBody(back.getBody(), true);
 
-		Body front = new Body( "front", new Box(200,200,20));		
-		front.setPosition(new Vector3(0,0,-7));
-		front.setFixed(true);
+		Box front = new Box("front", 200, 200, 20);		
+		scene.addGeometry( Matrix3.identity(), new Vector3(0,0,-7), front);
+		scene.fixBody(front.getBody(), true);
 
-		Body left = new Body( "left", new Box(20,200,200));		
-		left.setPosition(new Vector3(-35,0,0));
-		left.setFixed(true);
+		Box left = new Box("left", 20, 200, 200);		
+		scene.addGeometry(Matrix3.identity(), new Vector3(-35,0,0), left);
+		scene.fixBody(left.getBody(), true);
 
-		Body right = new Body( "right", new Box(20,200,200));		
-		right.setPosition(new Vector3(10,0,0));
-		right.setFixed(true);
+		Box right = new Box("right", 20, 200, 200);		
+		scene.addGeometry(Matrix3.identity(), new Vector3(10,0,0), right);
+		scene.fixBody( right.getBody(), true);
 		
 		// create capsules
-		UniformCapsule capgeo = new UniformCapsule(2,6);
-		Body cap = new Body( "cap", capgeo );
-		cap.setPosition(new Vector3(-10,-11,-25));
+		UniformCapsule capgeo = new UniformCapsule("capgoe",2,6);
+		scene.addGeometry(Matrix3.identity(),new Vector3(-10,-11,-25), capgeo);
+		
+		UniformCapsule capgeo2 = new UniformCapsule("capgoe2",1.8,5);
+		scene.addGeometry(Matrix3.identity(), new Vector3(-10,-11,-25), capgeo2);
 
-		UniformCapsule capgeo2 = new UniformCapsule(1.8,5);
-		Body cap2 = new Body( "cap2", capgeo2 );
-		cap2.setPosition(new Vector3(-10,-11,-25));
+		UniformCapsule capgeo3 = new UniformCapsule("capgoe3",1.0,4);
+		scene.addGeometry(Matrix3.identity(), new Vector3(-10,-11,-25), capgeo3);
 
-		UniformCapsule capgeo3 = new UniformCapsule(1.0,4);
-		Body cap3 = new Body( "cap3", capgeo3 );
-		cap3.setPosition(new Vector3(-10,-11,-25));
-
-		UniformCapsule capgeo4 = new UniformCapsule(1.6,1.0);
-		Body cap4 = new Body( "cap3", capgeo4 );
-		cap4.setPosition(new Vector3(-10,-11,-25));
+		UniformCapsule capgeo4 = new UniformCapsule("capgoe4",1.6,1.0);
+		scene.addGeometry(Matrix3.identity(), new Vector3(-10,-11,-25), capgeo4);
 
 		// create a box
-		Box boxgeometry = new Box(3,3,3);
-		Body box = new Body( "box", boxgeometry );
-		box.setPosition(new Vector3(-3,-11,-25));
+		Box boxgeometry = new Box("box", 3, 3, 3);
+		scene.addGeometry(Matrix3.identity(), new Vector3(-4,-11,-25), boxgeometry);
 
 		// create a box
-		Box boxgeometry2 = new Box(4,4,4);
-		Body box2 = new Body( "box2", boxgeometry2 );
-		box2.setPosition(new Vector3(-3,-11,-25));
+		Box boxgeometry2 = new Box("box2",4,4,4);
+		scene.addGeometry(Matrix3.identity(), new Vector3(-3,-11,-25), boxgeometry2);
 
 		// create a box
-		Box boxgeometry3 = new Box(5,5,5);
-		Body box3 = new Body( "box3", boxgeometry3);
-		box3.setPosition(new Vector3(-3,-11,-25));
+		Box boxgeometry3 = new Box("box3",5,5,5);
+		scene.addGeometry(Matrix3.identity(), new Vector3(-3,-11,-25), boxgeometry3);
 
 		// create ico
 		List<Vector3> vertices = new ArrayList<Vector3>();
@@ -103,40 +95,19 @@ public class CapsuleExample implements Rendering.Callback {
 		vertices.add( new Vector3(-t,  0,  1).normalize());
 		for (Vector3 v: vertices)
 			v.assign(v.multiply(3));
-		ConvexHull ico = new ConvexHull(vertices);
+		ConvexHull ico = new ConvexHull("ico",vertices);
 		
-		Body icosphere = new Body("icosphere");
-		icosphere.addGeometryIncremental(Matrix3.identity(), new Vector3(0,-11,-25), ico);
+		scene.addGeometry(Matrix3.identity(), new Vector3(0,-11,-25), ico);
 		
-		// add all to scene
-		scene.addBody(floor);
-		scene.addBody(back);
-		scene.addBody(front);		
-		scene.addBody(left);
-		scene.addBody(right);
-		
-		scene.addBody(box); 	
-		scene.addBody(box2); 	
-		scene.addBody(box3); 	
-
-		scene.addBody(cap);
-		scene.addBody(cap2);
-		scene.addBody(cap3);
-		scene.addBody(cap4);
-		
-		scene.addBody(icosphere);
-
 		// put gravity on stuff
-		scene.addForce( new GravityForce(box));
-		scene.addForce( new GravityForce(box2));		
-		scene.addForce( new GravityForce(box3));		
-
-		scene.addForce( new GravityForce(cap));		
-		scene.addForce( new GravityForce(cap2));
-		scene.addForce( new GravityForce(cap3));		
-		scene.addForce( new GravityForce(cap4));		
-		scene.addForce( new GravityForce(icosphere));		
-
+		scene.addForce( new GravityForce(boxgeometry.getBody()));
+		scene.addForce( new GravityForce(boxgeometry2.getBody()));		
+		scene.addForce( new GravityForce(boxgeometry3.getBody()));		
+		scene.addForce( new GravityForce(capgeo.getBody()));		
+		scene.addForce( new GravityForce(capgeo2.getBody()));
+		scene.addForce( new GravityForce(capgeo3.getBody()));		
+		scene.addForce( new GravityForce(capgeo4.getBody()));		
+		scene.addForce( new GravityForce(ico.getBody()));		
 		
 		// handle drawing
 		Rendering rendering = new jinngine.rendering.jogl.JoglRendering(this);

@@ -27,7 +27,6 @@ public class Interaction implements Rendering.EventCallback {
 	public Interaction( Scene scene) {
 		this.scene = scene;
 		this.controller.state.anisotropicmass.assignScale(1); // hope to prevent bugs
-		this.controller.setFixed(true);
 	}
 	
 	@Override
@@ -108,6 +107,7 @@ public class Interaction implements Rendering.EventCallback {
 
 			// insert the acting stuff into the physics world
 			scene.addBody(this.controller);
+			scene.fixBody(this.controller, true);
 			scene.addConstraint(this.force);
 			scene.addLiveConstraint(this.force);
 		}
