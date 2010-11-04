@@ -8,14 +8,8 @@
  */
 package jinngine.examples;
 
-
-import java.util.ArrayList;
-import java.util.List;
-
 import jinngine.collision.SAP2;
 import jinngine.geometry.Box;
-import jinngine.geometry.ConvexHull;
-import jinngine.geometry.UniformCapsule;
 import jinngine.math.Matrix3;
 import jinngine.math.Quaternion;
 import jinngine.math.Vector3;
@@ -30,7 +24,7 @@ public class RotundaExample implements Rendering.Callback {
 	
 	public RotundaExample() {
 		// start jinngine 
-		scene = new DefaultScene(new SAP2(), new NonsmoothNonlinearConjugateGradient(50), new DisabledDeactivationPolicy());
+		scene = new DefaultScene(new SAP2(), new NonsmoothNonlinearConjugateGradient(50), new DefaultDeactivationPolicy());
 		scene.setTimestep(0.1);
 		
 		// add boxes to bound the world
