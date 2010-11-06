@@ -15,7 +15,7 @@ import java.util.List;
 import quickhull3d.Point3d;
 import quickhull3d.QuickHull3D;
 
-import jinngine.geometry.util.MassProperties;
+import jinngine.geometry.util.PolyhedralMassProperties;
 import jinngine.math.InertiaMatrix;
 import jinngine.math.Matrix3;
 import jinngine.math.Matrix4;
@@ -108,17 +108,8 @@ public class ConvexHull implements SupportMap3, Geometry, Material {
 		final QuickHull3D dualhull = new QuickHull3D();
 		final QuickHull3D hull = new QuickHull3D();
 
-		// convert points 	
-		int i=0; double[] vectors = new double[3*input.size()];
-		for (Vector3 v: input) {
-			vectors[i+0] = v.x;
-			vectors[i+1] = v.y;
-			vectors[i+2] = v.z;
-			i = i+3;
-		}
-		
 		// build the hull
-		hull.build(vectors);
+		hull.build(Vector3.toArray(input));
 				
 		// extract faces from the QuickHull3D implementation
 		Point3d[] points = hull.getVertices();
@@ -136,7 +127,7 @@ public class ConvexHull implements SupportMap3, Geometry, Material {
 		adjacent = adjacencyList(faceIndices, numberOfVertices );
 		
 		// go thru all faces to make the dual hull points
-		for (i=0; i< faceIndices.length; i++) { 	
+		for (int i=0; i< faceIndices.length; i++) {
 			//convert to Vector3 array
 			Vector3[] f = new Vector3[faceIndices[i].length];
 			for (int j=0; j<faceIndices[i].length; j++) {
@@ -161,27 +152,19 @@ public class ConvexHull implements SupportMap3, Geometry, Material {
 			dualvertices.add(normal);
 		}
 		
-		// create the dual hull
-		i=0; double[] dualvectors = new double[3*dualvertices.size()];
-		for (Vector3 v: dualvertices) {
-			dualvectors[i+0] = v.x;
-			dualvectors[i+1] = v.y;
-			dualvectors[i+2] = v.z;
-			i = i+3;
-		}
-		
 		// build the dual hull
-		dualhull.build(dualvectors);
+		dualhull.build(Vector3.toArray(dualvertices));
 		
 		// create an adjacency list for the dual hull
 		dualadjacent = adjacencyList(dualhull.getFaces(), dualvertices.size());			
 					
 		// perform approximate mass calculation
-		MassProperties masscalculation = new MassProperties( this, 0.05);
+		final PolyhedralMassProperties masscalculation = new PolyhedralMassProperties( hull ,1.);
 		
 		// set properties
 		mass = referenceMass = masscalculation.getMass();
-		inertiamatrix.assign(masscalculation.getInertiaMatrix());
+		// scale inertia matrix in the total mass
+		inertiamatrix.assign(masscalculation.getInertiaMatrix().multiply(1.0/mass));
 		centreOfMass.assign(masscalculation.getCentreOfMass());
 				
 		// find extremal bounds to form a bounding box

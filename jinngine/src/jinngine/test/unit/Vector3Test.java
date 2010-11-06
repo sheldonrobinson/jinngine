@@ -87,6 +87,44 @@ public class Vector3Test {
     }
 
     @Test
+    public void testToArray2() {
+        final List<Vector3> vertices = new ArrayList<Vector3>();
+        vertices.add(new Vector3(1, 2, 3));
+        vertices.add(new Vector3(4, 5, 6));
+        final double[] d = Vector3.toArray(vertices);
+        final double[] e = Vector3.toArray(vertices);
+        assertNotSame(d, e);
+
+        assertEquals(1., vertices.get(0).x);
+        assertEquals(2., vertices.get(0).y);
+        assertEquals(3., vertices.get(0).z);
+        assertEquals(4., vertices.get(1).x);
+        assertEquals(5., vertices.get(1).y);
+        assertEquals(6., vertices.get(1).z);
+        assertEquals(6, d.length);
+        assertEquals(1., d[0]);
+        assertEquals(2., d[1]);
+        assertEquals(3., d[2]);
+        assertEquals(4., d[3]);
+        assertEquals(5., d[4]);
+        assertEquals(6., d[5]);
+    }
+
+    @Test
+    public void testToArray3() {
+        final List<Vector3> vertices = new ArrayList<Vector3>();
+        final double[] d = Vector3.toArray(vertices);
+        final double[] e = Vector3.toArray(vertices);
+        assertNotSame(d, e);
+        assertEquals(0, d.length);
+    }
+
+    @Test(expected = NullPointerException.class)
+    public void testToArray4() {
+        Vector3.toArray(null);
+    }
+
+    @Test
     public void testToString() {
         assertEquals(new Vector3(1., 2., 3.).toString(), "[1.0, 2.0, 3.0]");
         assertEquals(new Vector3(Double.MIN_VALUE, Double.POSITIVE_INFINITY, Double.NaN).toString(),
@@ -253,6 +291,35 @@ public class Vector3Test {
     @Test(expected = NullPointerException.class)
     public void testSub07() {
         Vector3.sub(null, new Vector3());
+    }
+
+    @Test(expected = NullPointerException.class)
+    public void testSub08() {
+        new Vector3().assignSub(null);
+    }
+
+    @Test
+    public void testSub09() {
+        final Vector3 a = new Vector3(1., 2., 3.);
+        final Vector3 b = new Vector3(10., 20., 30.);
+        final Vector3 r = a.assignSub(b);
+        assertSame(r, a); 
+
+        assertEquals(-9., a.x);
+        assertEquals(-18., a.y);
+        assertEquals(-27., a.z);
+        assertEquals(10., b.x);
+        assertEquals(20., b.y);
+        assertEquals(30., b.z);       
+    }
+    @Test
+    public void testSub10() {
+        final Vector3 a = new Vector3(1., 2., 3.);
+        final Vector3 r = a.assignSub(a);
+        assertSame(r, a);
+        assertEquals(0., a.x);
+        assertEquals(0., a.y);
+        assertEquals(0., a.z);
     }
 
     @Test
