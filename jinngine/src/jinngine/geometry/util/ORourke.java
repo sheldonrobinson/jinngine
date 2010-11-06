@@ -651,7 +651,10 @@ public class ORourke {
 	 * @return
 	 */
 	public static final boolean isInHalfplane(final Vector3 a, final Vector3 bs, final Vector3 bt) {
-		return (bt.sub(bs)).cross(a.sub(bs)).z >= 0;
+		// optimised to avoid allocation
+		// return (bt.sub(bs)).cross(a.sub(bs)).z >= 0;		
+		return (bt.x-bs.x)*(a.y-bs.y)-(bt.y-bs.y)*(a.x-bs.x) >=0;
+
 	}
 	
 	/**
@@ -740,9 +743,9 @@ public class ORourke {
 		// a = 1/(pd.x*qd.y-pd.y*qd.x)( qd.y*b.x + (-qd.x)*b.y );
 		// b = 1/(pd.x*qd.y-pd.y*qd.x)( (-pd.y)*b.x + pd.x*b.y );
 		
-		// line deltas
-		Vector3 pd = pt.sub(ps);
-		Vector3 qd = qs.sub(qt); // turned around, see derivation
+/*		// line deltas
+ 		Vector3 pd = pt.sub(ps);
+ 		Vector3 qd = qs.sub(qt); // turned around, see derivation
 		
 		// the b-side in the equation in the comments above
 		Vector3 b = qs.sub(ps);
@@ -757,6 +760,37 @@ public class ORourke {
 		// calculate parametrisation values at intersection
 		double alpha = (1/det)* (qd.y*b.x + (-qd.x)*b.y);
 		double beta  = (1/det)* ( (-pd.y)*b.x + pd.x*b.y ); 
+*/
+		
+//		// line deltas
+//		Vector3 pd = pt.sub(ps);
+//		Vector3 qd = qs.sub(qt); // turned around, see derivation
+//		
+//		// pd.x = (pt.x-ps.x)
+//		// pd.y = (pt.y-ps.y)
+//		// pd.z = (pt.z-ps.z)
+//
+//		// qd.x = (qs.x-qt.x)
+//		// qd.y = (qs.y-qt.y)
+//		// qd.z = (qs.z-qt.z)
+//
+//		
+//		// the b-side in the equation in the comments above
+//		Vector3 b = qs.sub(ps);
+//		
+//		b.x = (qs.x-ps.x)
+//		b.y = (qs.y-ps.y)
+		
+		// determinant calculation
+		double det =  (pt.x-ps.x)*(qs.y-qt.y)-(pt.y-ps.y)*(qs.x-qt.x);		
+		
+		// ill-posed problem?
+		if (Math.abs(det)<epsilon)
+			return false;
+		 
+		// calculate parametrisation values at intersection
+		double alpha = (1/det)* ((qs.y-qt.y)*(qs.x-ps.x) + (-(qs.x-qt.x))*(qs.y-ps.y));
+		double beta  = (1/det)* ( (-(pt.y-ps.y))*(qs.x-ps.x) + (pt.x-ps.x)*(qs.y-ps.y) ); 
 		
 		// set return values
 		st.x = alpha;

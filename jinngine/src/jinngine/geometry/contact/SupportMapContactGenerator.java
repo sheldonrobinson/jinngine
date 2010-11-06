@@ -184,7 +184,12 @@ public final class SupportMapContactGenerator implements ContactGenerator {
 				cp.b2 = gb.getBody();
 				
 				cp.normal.assign(direction);
-				cp.point.assign( B.multiply(new Vector3(p.x,p.y,0)).add(midpoint) );
+				
+				// optimised to avoid allocation
+				// cp.point.assign( B.multiply(new Vector3(p.x,p.y,0)).add(midpoint) );				
+				cp.point.assign(p.x,p.y,0);
+				Matrix3.multiply( B, cp.point, cp.point);
+				Vector3.add( cp.point, midpoint );
 				
 				// distance along the z axis in contact space
 				cp.distance = (p.z-q.z)-spb-spa;  // take into account sphere sweeping
