@@ -9,8 +9,10 @@
 package jinngine.test.unit;
 
 import static org.junit.Assert.assertTrue;
+import jinngine.geometry.Box;
 import jinngine.geometry.Sphere;
 import jinngine.math.Matrix3;
+import jinngine.math.Quaternion;
 import jinngine.math.Vector3;
 import jinngine.physics.Body;
 
@@ -160,7 +162,7 @@ public class BodyTest {
 		// add a unit sphere at 0,0,0
 		body.addGeometry(Matrix3.identity(), new Vector3(0,0,1), u1);
 		body.addGeometry(Matrix3.identity(), new Vector3(0,1,0), u2);
-		body.addGeometry(Matrix3.identity(), new Vector3(1,0,0), u3);
+		body.addGeometry(Matrix3.identity(), new Vector3(-1,0,0), u3);
 		body.addGeometry(Matrix3.identity(), new Vector3(0,1,1), u4);
 		
 //		// mass centre should be  at (0,0,0)
@@ -180,5 +182,92 @@ public class BodyTest {
 		// we expect the inertia tensor of body to match the one in u4 (scaled in the u4 mass)
 		assertTrue( body.state.inertia.subtract(u4.getInertiaMatrix().multiply(u4.getMass())).fnorm() < epsilon );
 		
+	}
+	
+	@Test
+	public void testMassCalculation6() {
+		final double epsilon = 1e-5; // the f-norm is a bit sensitive, so the epsilon needs
+		// to be somewhat larger that machine 1e-15
+		
+		/* By adding boxes together, we expect to end up with the same
+		 * mass properties as if one big box filling the same space 
+		 * would have.
+		 */
+		
+		// composite body of 4 boxes, spanning a 4 by 4 by 2 area
+		Body body1 = new Body("body1");				
+		Box b1 = new Box("box1",2,2,2);
+		Box b2 = new Box("box2",2,2,2);
+		Box b3 = new Box("box3",2,2,2);
+		Box b4 = new Box("box4",2,2,2);		
+		body1.addGeometry(Matrix3.identity(), new Vector3(1,1,0), b1);
+		body1.addGeometry(Matrix3.identity(), new Vector3(-1,1,0), b2);
+		body1.addGeometry(Matrix3.identity(), new Vector3(1,-1,0), b3);
+		body1.addGeometry(Matrix3.identity(), new Vector3(-1,-1,0), b4);
+		
+		// centre of mass should be 0,0,0
+		assertTrue( body1.getPosition().squaredNorm() < 1e-14 ) ;
+		
+		// one solid 4x4x2 box
+		Body body2 = new Body("body2");		
+		Box b5 = new Box("box5",4,4,2);
+		body2.addGeometry(Matrix3.identity(), new Vector3(0,0,0), b5);
+
+//		System.out.println("MASS MATRICES:\n"+body1.state.inertia);
+//		System.out.println(""+body2.state.inertia);
+		
+		// compare inertia matrices
+		assertTrue( body1.state.inertia.subtract(body2.state.inertia).fnorm() < epsilon);
+		
 	}	
+	
+	@Test
+	public void testMassCalculation7() {
+		final double epsilon = 1e-5; // the f-norm is a bit sensitive, so the epsilon needs
+
+		/*
+		 * A test where two bodies are build of composite boxes. In the first case, this is
+		 * done in a straight-forward way. The second time, it is done by rotating the body while
+		 * attaching boxes. This must result in the same centre of mass, and the same inertia matrix.
+		 */
+		
+		Body body1 = new Body("body1");				
+		Box b1 = new Box("box1",1,1,1);
+		Box b2 = new Box("box2",1,1,1);
+		Box b3 = new Box("box3",1,1,1);
+
+		body1.addGeometry(Matrix3.identity(), new Vector3(0, 1, 0), b1);
+		body1.addGeometry(Matrix3.identity(), new Vector3(0,-1, 0), b2);
+		body1.addGeometry(Matrix3.identity(), new Vector3(1, 0, 0), b3);
+
+		// centre of mass should be 1/3,0,0
+		assertTrue( body1.getPosition().sub(new Vector3(0.333333333333333,0,0)).squaredNorm() < 1e-14 ) ;
+		
+		Body body2 = new Body("body2");				
+		Box b4 = new Box("box4",1,1,1);
+		Box b5 = new Box("box5",1,1,1);
+		Box b6 = new Box("box6",1,1,1);
+
+		body2.addGeometry(Matrix3.identity(), new Vector3(0, 1, 0), b4);
+		body2.addGeometry(Matrix3.identity(), new Vector3(0, -1, 0), b5);
+
+		// rotate body2 around the Y axis, 180 degrees
+		body2.state.orientation.assign( Quaternion.rotation(Math.PI, Vector3.j()));
+		body2.updateTransformations();
+
+		// add final body
+		body2.addGeometry(Matrix3.identity(), new Vector3(1, 0, 0), b6);
+	
+		// centre of mass should be 1/3,0,0
+		assertTrue( body1.getPosition().sub(new Vector3(0.333333333333333,0,0)).squaredNorm() < 1e-14 ) ;
+
+		
+//		System.out.println("MASS MATRICES:\n"+body1.state.inertia);
+//		System.out.println(""+body2.state.inertia);
+
+		
+		// compare inertia matrices
+		assertTrue( body1.state.inertia.subtract(body2.state.inertia).fnorm() < epsilon);
+	
+	}
 }
