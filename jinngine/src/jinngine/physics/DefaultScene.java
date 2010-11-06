@@ -175,6 +175,15 @@ public final class DefaultScene implements Scene {
 		// but in short, ContactConstraintManager will insert ContactConstraints into the constraintGraph, and update 
 		// these constraints. See ContactConstraintManager for more details on this.
 		
+		// update transforms of active bodies
+		for (Body bi: bodies) {
+			if (!bi.isFixed()) {
+				if (!bi.deactivated) {
+					bi.update();
+				}
+			}
+		}
+		
 		// run the broad-phase collision detection (this automatically updates the contactGraph,
 		// through the BroadfaseCollisionDetection.Handler type)
 		broadphase.run();
@@ -323,16 +332,16 @@ public final class DefaultScene implements Scene {
 		}
 		
 		
-		List<Constraint> contactconstraints = new ArrayList<Constraint>();
-		// grap a list of contact constraints
-		Iterator<ConstraintGroup> iter1 = constraintGraph.getComponents();
-		while (iter1.hasNext()) {
-			Iterator<Constraint> iter2 = constraintGraph.getEdgesInComponent(iter1.next());
-			while (iter2.hasNext()) {
-				Constraint c = iter2.next();
-				contactconstraints.add(c);
-			}
-		}
+//		List<Constraint> contactconstraints = new ArrayList<Constraint>();
+//		// grap a list of contact constraints
+//		Iterator<ConstraintGroup> iter1 = constraintGraph.getComponents();
+//		while (iter1.hasNext()) {
+//			Iterator<Constraint> iter2 = constraintGraph.getEdgesInComponent(iter1.next());
+//			while (iter2.hasNext()) {
+//				Constraint c = iter2.next();
+//				contactconstraints.add(c);
+//			}
+//		}
 		
 		// run the solver (compute delta velocities) for all 
 		// components in the constraint graph
@@ -358,10 +367,9 @@ public final class DefaultScene implements Scene {
 					body.state.velocity.assign( body.state.velocity.add( body.deltavelocity).add(body.externaldeltavelocity) );
 					body.state.omega.assign( body.state.omega.add( body.deltaomega).add(body.externaldeltaomega));
 
+					// integrate forward on positions
+					body.advancePositions(timestep);
 				}
-
-				// integrate forward on positions
-				body.advancePositions(timestep);
 			}
 		}
 	} //time-step
@@ -463,6 +471,10 @@ public final class DefaultScene implements Scene {
 
 		// reinsert body
 		addBody(b);	
+		
+		// make sure transforms are in order, because the fixed
+		// body will no longer be updated
+		b.update();
 	}
 	
 	@Override
@@ -518,8 +530,7 @@ public final class DefaultScene implements Scene {
 		broadphase.add(g);
 		
 		// add the new body
-		bodies.add(body);
-		body.updateTransformations();
+		bodies.add(body);		
 	}
 	
 	@Override

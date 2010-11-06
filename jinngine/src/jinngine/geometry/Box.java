@@ -21,7 +21,10 @@ public class Box implements SupportMap3, Geometry, Material {
 	private Body body;
 	private final Matrix3 localrotation = new Matrix3();
 	private final Vector3 localdisplacement = new Vector3();
-	
+	private final Vector3 worldMaximumBounds = new Vector3();
+	private final Vector3 worldMinimumBounds = new Vector3();
+	private final Matrix4 worldTransform = new Matrix4();
+		
 	// box properties
 	private double xs,ys,zs;
 	private double mass;
@@ -154,8 +157,12 @@ public class Box implements SupportMap3, Geometry, Material {
 		
 	}
 
-	@Override
-	public Vector3 getMaxBounds(Vector3 bounds) {
+	@Override	
+	public final Vector3 getMaxBounds(Vector3 bounds) {
+		return bounds.assign(worldMaximumBounds);
+	}
+	
+	private final Vector3 getMaxBoundsTmp(Vector3 bounds) {
 		// find the pricipal axis of the box in world space
 		Matrix3 T = body.state.rotation.multiply(localrotation).transpose();
 		Vector3 vx = new Vector3(), vy = new Vector3(), vz = new Vector3();
@@ -182,12 +189,15 @@ public class Box implements SupportMap3, Geometry, Material {
 		Tb.getRowVectors(rx, ry, rz);
 		
 		// return the final bounds, adding the envelope and sweep size
-		return bounds.assign(rx.dot(px)+envelope, ry.dot(py)+envelope, rz.dot(pz)+envelope).add(body.state.position);
+		return bounds.assign(rx.dot(px)+envelope+body.state.position.x, ry.dot(py)+envelope+body.state.position.y, rz.dot(pz)+envelope+body.state.position.z);
 	}
 
 	@Override
-	public Vector3 getMinBounds(Vector3 bounds) {
-
+	public final Vector3 getMinBounds(Vector3 bounds) {
+		return bounds.assign(worldMinimumBounds);
+	}
+	
+	private final Vector3 getMinBoundsTmp(Vector3 bounds) {
 		// get the column vectors of the transform
 		Matrix3 T = body.state.rotation.multiply(localrotation).transpose();
 		Vector3 vx = new Vector3(), vy = new Vector3(), vz = new Vector3();
@@ -219,16 +229,17 @@ public class Box implements SupportMap3, Geometry, Material {
 		Tb.getRowVectors(rx, ry, rz);
 
 		// return final bounds, subtracting the envelope size 
-		return bounds.assign(rx.dot(px)-envelope, ry.dot(py)-envelope, rz.dot(pz)-envelope).add(body.state.position);		
+		return bounds.assign(rx.dot(px)-envelope+body.state.position.x, ry.dot(py)-envelope+body.state.position.y, rz.dot(pz)-envelope+body.state.position.z);		
 	}
 
 	@Override
 	public Matrix4 getWorldTransform() {
-		return Matrix4.multiply(body.getTransform(), Transforms.transformAndTranslate4(localrotation, localdisplacement), new Matrix4());
+//		return Matrix4.multiply(body.getTransform(), Transforms.transformAndTranslate4(localrotation, localdisplacement), new Matrix4());
+		return worldTransform;
 	}	
 
 	@Override
-	public void supportFeature(final Vector3 d, final List<Vector3> featureList) {
+	public final void supportFeature(final Vector3 d, final List<Vector3> featureList) {
 		final double epsilon = 0.09;
 		//get d into the canonical box space
 		Vector3 v = body.state.rotation.multiply(localrotation).transpose().multiply(d);
@@ -394,6 +405,16 @@ public class Box implements SupportMap3, Geometry, Material {
 	@Override
 	public String getName() {
 		return name;
+	}
+
+	@Override
+	public void update() {
+		// update world transform
+        Matrix4.multiply(body.getTransform(), Transforms.transformAndTranslate4(localrotation, localdisplacement),  worldTransform);
+
+        // update world bounding box
+		getMaxBoundsTmp(worldMaximumBounds);
+		getMinBoundsTmp(worldMinimumBounds);		
 	}	
 
 }

@@ -9,6 +9,7 @@
 package jinngine.physics;
 
 import java.util.*;
+
 import jinngine.geometry.*;
 import jinngine.math.*;
 
@@ -596,7 +597,6 @@ public final class Body {
 
 		//apply to body
 		state.orientation.assignNormalized();  // keep q normalized   
-		updateTransformations();
 	}
 	
 	// go from world to model
@@ -634,6 +634,16 @@ public final class Body {
 	
 	public int getNumberOfGeometries() {
 		return geometries.size();
+	}
+	
+	/**
+	 * Update transforms, including attached geometries
+	 */
+	public final void update() {
+		updateTransformations();
+		// update geometries
+		for (Geometry gi: geometries) 
+			gi.update();
 	}
 }  
 

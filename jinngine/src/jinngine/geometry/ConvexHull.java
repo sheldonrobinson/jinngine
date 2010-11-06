@@ -206,11 +206,12 @@ public class ConvexHull implements SupportMap3, Geometry, Material {
 		
 		// set the initial bounding box
 		this.boundingBox = new Box("boundingBox", boundingBoxSideLengths);
+		
+
 		updateBoundingBoxTransform();
 	}
 	
 	private final void updateBoundingBoxTransform() {
-		this.boundingBox.setBody(this.body);
 		this.boundingBox.setLocalTransform(this.localrotation, this.localrotation.multiply(boundingBoxPosition).add(this.localtranslation));		
 	}
 	
@@ -274,6 +275,8 @@ public class ConvexHull implements SupportMap3, Geometry, Material {
 	private Matrix3 localrotation = Matrix3.identity();
 	private Matrix4 localtransform4 = Matrix4.identity();
 	private final Vector3 localtranslation = new Vector3();
+	private final Matrix4 worldTransform = new Matrix4();
+
 	
 	// Material
 	private double mass = 1;
@@ -374,15 +377,18 @@ public class ConvexHull implements SupportMap3, Geometry, Material {
 		return new InertiaMatrix(inertiamatrix.multiply( mass / referenceMass ));
 	}
 
-		
+			
 	@Override
-	public Matrix4 getWorldTransform() {
-		return Matrix4.multiply(body.getTransform(), localtransform4, new Matrix4());
+	public final Matrix4 getWorldTransform() {
+		return new Matrix4(worldTransform);
 	}
+
 
 	@Override
 	public void setBody(Body b) {
 		this.body = b;
+		// attach the bounding box to our body too 
+		this.boundingBox.setBody(b);
 	}
 
 	@Override
@@ -399,13 +405,11 @@ public class ConvexHull implements SupportMap3, Geometry, Material {
 	
 	@Override
 	public Vector3 getMaxBounds(Vector3 bounds) {
-		updateBoundingBoxTransform();
 		return boundingBox.getMaxBounds(bounds);
 	}
 
 	@Override
 	public Vector3 getMinBounds(Vector3 bounds) {
-		updateBoundingBoxTransform();
 		return boundingBox.getMinBounds(bounds);
 	}
 
@@ -479,6 +483,17 @@ public class ConvexHull implements SupportMap3, Geometry, Material {
 	@Override
 	public String getName() {
 		return name;
+	}
+	
+	@Override
+	public void update() {
+		// update world transform
+		Matrix4.multiply(body.getTransform(), localtransform4, worldTransform);
+
+		// update the bounding box
+		boundingBox.update();
+		
+		
 	}
 	
 }

@@ -223,6 +223,18 @@ public class Matrix4 {
                   a14,a24,a34,a44};
 	  }
 	  
+	  /**
+	   * Pack the matrix into the double array A, in row-major order
+	   * @param A array to contain the entries of this matrix
+	   */
+	  public void toArray( double[] A) {
+		  A[0] = a11; A[1] = a21; A[2] = a31; A[3] = a41;
+		  A[4] = a12; A[5] = a22; A[6] = a32; A[7] = a42;
+		  A[8] = a13; A[9] = a23; A[10] = a33; A[11] = a43;
+		  A[12] = a14; A[13] = a24; A[14] = a34; A[15] = a44;
+
+	  }
+	  
 	  public final Matrix4 inverse() {
                   Matrix4 m=new Matrix4();
 		  m.a11 =      a22*a33*a44 - a22*a34*a43 - a32*a23*a44 + a32*a24*a43 + a42*a23*a34 - a42*a24*a33;

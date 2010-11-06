@@ -91,7 +91,11 @@ public interface Geometry extends BoundingBox {
 	 * @return the reference to the cm object
 	 */
 	public Vector3 getLocalCentreOfMass(Vector3 cm);
-
+	
+	/**
+	 * Update the transforms and bounding volumes of this geometry
+	 */
+	public void update(); 
 	
 	/*
 	 *  Package private methods

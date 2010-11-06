@@ -26,12 +26,17 @@ public class Sphere implements SupportMap3, Geometry, Material {
 	private final Vector3 displacement = new Vector3();
 	private final Matrix4 transform4 = new Matrix4();
 	private final Matrix4 localtransform4 = new Matrix4();
+	private final Vector3 worldMaximumBounds = new Vector3();
+	private final Vector3 worldMinimumBounds = new Vector3();
+	private final Matrix4 worldTransform = new Matrix4();
+
 	private double envelope = 1;
 	private Object auxiliary;
 	private double restitution = 0.7;
 	private double friction = 0.5;
 	private final double mass;
 	private final String name;
+	
 	
 	public Sphere(double radius) {
 		this.radius = radius;		
@@ -71,13 +76,21 @@ public class Sphere implements SupportMap3, Geometry, Material {
 	}
 	
 	@Override
-	public Vector3 getMaxBounds(Vector3 bounds) {
+	public final Vector3 getMaxBounds(Vector3 bounds) {
+		return bounds.assign(worldMaximumBounds);
+	}
+
+	private Vector3 getMaxBoundsTmp(Vector3 bounds) {
 		//return new Vector3(radius+envelope,radius+envelope,radius+envelope).add(Matrix3.multiply(body.state.rotation, displacement, new Vector3())).add(body.state.rCm);
 		return bounds.assign(body.state.position.add( Matrix3.multiply(body.state.rotation, displacement, new Vector3())).add( new Vector3(radius+envelope,radius+envelope,radius+envelope)));
 	}
 
 	@Override
 	public Vector3 getMinBounds(Vector3 bounds) {
+		return bounds.assign(worldMinimumBounds);
+	}
+	
+	private Vector3 getMinBoundsTmp(Vector3 bounds) {
 		//return  new Vector3(-radius-envelope,-radius-envelope,-radius-envelope).add(Matrix3.multiply(body.state.rotation, displacement, new Vector3())).add(body.state.rCm);	
 		return bounds.assign(body.state.position.add( Matrix3.multiply(body.state.rotation, displacement, new Vector3())).add( new Vector3(-radius-envelope,-radius-envelope,-radius-envelope)));
 	}
@@ -108,7 +121,7 @@ public class Sphere implements SupportMap3, Geometry, Material {
 
 	@Override
 	public Matrix4 getWorldTransform() {
-		return Matrix4.multiply(body.state.transform, localtransform4, transform4);	
+		return new Matrix4(worldTransform);
 	}
 
 	@Override
@@ -184,4 +197,15 @@ public class Sphere implements SupportMap3, Geometry, Material {
 	public void setUserReference(Object auxiliary) {
 		this.auxiliary = auxiliary;
 	}
+
+	@Override
+	public void update() {
+		// update world transform
+		Matrix4.multiply(body.state.transform, localtransform4, worldTransform);	
+
+        // update world bounding box
+		getMaxBoundsTmp(worldMaximumBounds);
+		getMinBoundsTmp(worldMinimumBounds);		
+	}
+
 }
