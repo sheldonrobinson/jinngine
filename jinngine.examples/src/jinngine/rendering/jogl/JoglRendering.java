@@ -82,14 +82,6 @@ GLEventListener, MouseListener, MouseMotionListener, MouseWheelListener, KeyList
 	
 	private boolean initialized = false;
 
-	// interface for objects to be drawn
-	private interface DrawShape {
-		public void init(GL gl);
-		public int getDisplayList();
-		public int getShadowDisplayList();
-		public Matrix4 getTransform();
-		public Body getReferenceBody();
-	}
 	
 	public JoglRendering(Callback callback ) {
 		this.callback = callback;
@@ -116,17 +108,48 @@ GLEventListener, MouseListener, MouseMotionListener, MouseWheelListener, KeyList
 		frame.add(canvas, java.awt.BorderLayout.CENTER);
 		frame.setVisible(true);
 	}
+
+	@Override
+	public void drawMe(final DrawShape shape, final Geometry g) {
+		DrawShape newshape = new DrawShape() {
+			@Override
+			public void getTransform( Matrix4 T) {
+				T.assign(g.getWorldTransform());
+			}
+			@Override
+			public Body getReferenceBody() {
+				return g.getBody();
+			}
+			@Override
+			public int getDisplayList() {
+				return shape.getDisplayList();
+			}
+			@Override
+			public void init(GL gl) {
+				// init is not needed
+			}
+			@Override
+			public int getShadowDisplayList() {
+				return shape.getShadowDisplayList();
+			}
+		};	
+		
+		toDraw.add(newshape);
+	}
+
 	
 	@Override
-	public void drawMe(final Geometry g) {
+	public DrawShape drawMe(final Geometry g) {
+		DrawShape shape = null;
+		
 		if (g instanceof ConvexHull) {
-			final ConvexHull hull = (ConvexHull)g;
-			toDraw.add( new DrawShape() {
+			final ConvexHull hull = (ConvexHull)g;			
+			shape = new DrawShape() {
 				private int list = 0;
 				private int shadowList = 0;
 				@Override
-				public Matrix4 getTransform() {
-					return g.getWorldTransform();
+				public void getTransform( Matrix4 T) {
+					T.assign(g.getWorldTransform());
 				}
 				@Override
 				public Body getReferenceBody() {
@@ -150,8 +173,7 @@ GLEventListener, MouseListener, MouseMotionListener, MouseWheelListener, KeyList
 				public int getShadowDisplayList() {
 					return shadowList;
 				}
-			});
-			
+			};			
 		}
 		
 		if ( g instanceof Box  ) {
@@ -182,13 +204,13 @@ GLEventListener, MouseListener, MouseMotionListener, MouseWheelListener, KeyList
 				hullVertices.add(point);				
 			}
 			
-			toDraw.add( new DrawShape() {
+			shape = new DrawShape() {
 				private int list = 0;
 				private int shadowList = 0;
 
 				@Override
-				public Matrix4 getTransform() {
-					return g.getWorldTransform();
+				public void getTransform( Matrix4 T) {
+					T.assign(g.getWorldTransform());
 				}
 				@Override
 				public Body getReferenceBody() {
@@ -213,7 +235,7 @@ GLEventListener, MouseListener, MouseMotionListener, MouseWheelListener, KeyList
 				public int getShadowDisplayList() {
 					return shadowList;
 				}
-			});
+			};
 		}
 		
 		if ( g instanceof UniformCapsule  ) {
@@ -255,12 +277,12 @@ GLEventListener, MouseListener, MouseMotionListener, MouseWheelListener, KeyList
 				hullVertices.add(i.next());
 			}
 			
-			toDraw.add( new DrawShape() {
+			shape = new DrawShape() {
 				private int list = 0;
 				private int shadowList = 0;
 				@Override
-				public Matrix4 getTransform() {
-					return g.getWorldTransform();
+				public void getTransform( Matrix4 T) {
+					T.assign(g.getWorldTransform());
 				}
 				@Override
 				public Body getReferenceBody() {
@@ -284,9 +306,15 @@ GLEventListener, MouseListener, MouseMotionListener, MouseWheelListener, KeyList
 				public int getShadowDisplayList() {
 					return shadowList;
 				}
-			});
+			};
 		}
-
+		
+		if (shape!=null) {
+			toDraw.add(shape);
+			return shape;
+		} else {
+			throw new IllegalArgumentException("Unknown Geometry type");
+		}
 	}
 	
 	private ConvexHull buildIcosphere(double r, int depth) {
@@ -336,6 +364,11 @@ GLEventListener, MouseListener, MouseMotionListener, MouseWheelListener, KeyList
 		animator.start();
 	}
 
+	
+	// transformation matrix
+	final double[] transform = new double[4*4];
+	final Matrix4  jMatrix4 = new Matrix4();
+	
 	public void display(GLAutoDrawable drawable) {
 		GL gl = drawable.getGL();
 
@@ -380,7 +413,8 @@ GLEventListener, MouseListener, MouseMotionListener, MouseWheelListener, KeyList
 
 		for ( DrawShape shape: toDraw) {
 			gl.glPushMatrix();
-			final double[] transform= shape.getTransform().toArray();
+			shape.getTransform(jMatrix4);
+			jMatrix4.toArray(transform);
 			gl.glMultMatrixd(transform, 0);
 			gl.glCallList(shape.getDisplayList());
 			gl.glPopMatrix();
@@ -657,7 +691,7 @@ GLEventListener, MouseListener, MouseMotionListener, MouseWheelListener, KeyList
 		GL gl = drawable.getGL();
 		gl.glMatrixMode(GL.GL_PROJECTION);
 		gl.glLoadIdentity();
-		gl.glFrustum (-1.77777*zoom, 1.777777*zoom, -1.0*zoom, 1.0*zoom, 4.0, 100.0); 	
+		gl.glFrustum (-1.77777*zoom, 1.777777*zoom, -1.0*zoom, 1.0*zoom, 4.0, 200.0); 	
 		this.height = h; this.width = w;
 		this.drawHeight = (int)((double)width/1.77777);
 		gl.glViewport (0, (int)((height-drawHeight)/2.0), (int)width, (int)drawHeight);
@@ -810,6 +844,10 @@ GLEventListener, MouseListener, MouseMotionListener, MouseWheelListener, KeyList
 			for (EventCallback call: this.mouseCallbacks)
 				call.enterPressed();			
 		}
+		
+		for (EventCallback call: this.mouseCallbacks)
+			call.keyPressed(arg0.getKeyChar());
+
 	}
 
 	@Override
@@ -818,6 +856,10 @@ GLEventListener, MouseListener, MouseMotionListener, MouseWheelListener, KeyList
 			for (EventCallback call: this.mouseCallbacks)
 				call.spaceReleased();
 		}
+
+		for (EventCallback call: this.mouseCallbacks)
+			call.keyReleased(arg0.getKeyChar());
+		
 	}
 
 	@Override
@@ -842,10 +884,9 @@ GLEventListener, MouseListener, MouseMotionListener, MouseWheelListener, KeyList
 	@Override
 	public void mouseWheelMoved(MouseWheelEvent e) {
 		cameraClicks += e.getWheelRotation();
-		System.out.println(cameraClicks);
 		
 		Vector3 direction = new Vector3(0,0.5,1).normalize();
-		cameraTo.assign(new Vector3(-12,-3,0).add(direction.multiply(cameraClicks)));	
+		cameraTo.assign(new Vector3(-12,-3,0).add(direction.multiply(cameraClicks*5)));	
 		cameraFrom.assign(cameraTo.add(direction));
 
 		redoCamera = true;

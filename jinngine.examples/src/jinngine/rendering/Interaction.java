@@ -153,4 +153,16 @@ public class Interaction implements Rendering.EventCallback {
 		
 	}
 
+	@Override
+	public void keyPressed(char key) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void keyReleased(char key) {
+		// TODO Auto-generated method stub
+		
+	}
+
 }

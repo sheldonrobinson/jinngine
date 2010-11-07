@@ -9,12 +9,26 @@
 package jinngine.rendering;
 
 import java.awt.Canvas;
+
+import javax.media.opengl.GL;
+
 import jinngine.geometry.Geometry;
+import jinngine.math.Matrix4;
 import jinngine.math.Vector3;
+import jinngine.physics.Body;
 
 public interface Rendering {
 	public interface Callback {
 		public void tick();
+	}
+	
+	// interface for objects to be drawn
+	public interface DrawShape {
+		public void init(GL gl);
+		public int getDisplayList();
+		public int getShadowDisplayList();
+		public void getTransform(Matrix4 T);
+		public Body getReferenceBody();
 	}
 
 	public void    takeScreenShot(String filename);
@@ -26,13 +40,16 @@ public interface Rendering {
 		public void mouseDragged(double x, double y, Vector3 point, Vector3 direction);
 		public void mouseReleased();		
 		public void spacePressed();
-		public void spaceReleased();
-		
+		public void spaceReleased();		
 		public void enterPressed();
+		public void keyPressed(char key);
+		public void keyReleased(char key);
+		
 	}
 	
 	public void addCallback(EventCallback c);
-	public void drawMe( Geometry g);
+	public DrawShape drawMe( Geometry g);
+	public void drawMe( DrawShape shape, Geometry g);
 	public void start();
 	
 }
