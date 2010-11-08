@@ -432,6 +432,13 @@ public final class DefaultScene implements Scene {
 	
 	@Override
 	public final void removeBody(Body body) {
+		// force connected bodies to activate in next time-step, because the
+		// deactivation system will not discover such a change 
+		Iterator<Body> iter = constraintGraph.getConnectedNodes(body);
+		while(iter.hasNext()) {
+			policy.forceActivate(iter.next());
+		}
+		
 		// remove associated geometries from collision detection
 		Iterator<Geometry> i = body.getGeometries();
 		while( i.hasNext()) {
