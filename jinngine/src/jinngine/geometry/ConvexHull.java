@@ -163,8 +163,16 @@ public class ConvexHull implements SupportMap3, Geometry, Material {
 		
 		// set properties
 		mass = referenceMass = masscalculation.getMass();
+
+		// get the inertia matrix 
+		inertiamatrix.assign(masscalculation.getInertiaMatrix());
+
+		// translate inertia back into the centre of mass
+		InertiaMatrix.inverseTranslate(inertiamatrix, mass, masscalculation.getCentreOfMass());
+
 		// scale inertia matrix in the total mass
-		inertiamatrix.assign(masscalculation.getInertiaMatrix().multiply(1.0/mass));
+		inertiamatrix.assignMultiply(1.0/mass);
+		
 		centreOfMass.assign(masscalculation.getCentreOfMass());
 				
 		// find extremal bounds to form a bounding box
@@ -473,10 +481,9 @@ public class ConvexHull implements SupportMap3, Geometry, Material {
 		// update world transform
 		Matrix4.multiply(body.getTransform(), localtransform4, worldTransform);
 
-		// update the bounding box
+		// update the bounding box transform
+		boundingBox.setLocalTransform(localrotation, localtranslation.add(boundingBoxPosition));
 		boundingBox.update();
-		
-		
 	}
 	
 }
