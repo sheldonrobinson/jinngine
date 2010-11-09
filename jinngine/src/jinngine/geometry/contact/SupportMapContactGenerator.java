@@ -44,6 +44,7 @@ public final class SupportMapContactGenerator implements ContactGenerator {
 	private double friction;
 	private final double spa;
 	private final double spb;
+	private boolean active = false;
 
 	// distance algorithms
 	private final GJK gjk = new GJK();
@@ -62,10 +63,10 @@ public final class SupportMapContactGenerator implements ContactGenerator {
 		// select the largest envelope for contact generation
 		if  ( gb.getEnvelope() > ga.getEnvelope() ) {
 			envelope = gb.getEnvelope();
-			shell = envelope*0.5;
+			shell = envelope*0.75;
 		} else {
 			envelope = ga.getEnvelope();
-			shell = envelope*0.5;			
+			shell = envelope*0.75;			
 		}
 	}
 	
@@ -104,6 +105,9 @@ public final class SupportMapContactGenerator implements ContactGenerator {
 		
 		// if objects are intersecting
 		if (gjk.getState().intersection) {
+			// mark contact generator 
+			active = true;
+			
 			// we perform a ray-cast, that is equivalent to
 			// finding the growth distance between Sa and Sb. 
 			// by that we obtain a contact normal at the 
@@ -143,12 +147,22 @@ public final class SupportMapContactGenerator implements ContactGenerator {
 			// that A and/or B can be sphere swept 
 			final double d = pa.sub(pb).norm() - spa - spb;
 
-			// if distance is less that the envelope, generate contact points
-			if (d<envelope) {
-				generate(pa, pb, pa.sub(pb).normalize() );
-			// or outside envelope
+			// determine the activity state
+			if (active) {
+				// if active, we only become inactive when leaving the envelope
+				if (d>envelope)
+					active = false;				
 			} else {
-				contacts.clear();	
+				// if inactive, we activate when inside the shell, or inner envelope
+				if (d<shell*1.01)
+					active = true;
+			}
+			
+			// if active, generate contact points			
+			if (active) {
+				generate(pa, pb, pa.sub(pb).normalize() );				
+			} else {
+				contacts.clear();					
 			}
 		} 	
 	}
