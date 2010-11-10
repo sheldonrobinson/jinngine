@@ -10,18 +10,18 @@ package jinngine.physics.solver;
 import java.util.*;
 import jinngine.math.Vector3;
 import jinngine.physics.Body;
+import jinngine.util.Logger;
 
 /**
- * Implementation of the PGS solver. 
+ * Implementation of the Projected Gauss-Seidel solver.  
  */
 public class ProjectedGaussSeidel implements Solver {
-	private int maximumIterations = 35;
-	private double deltaResidual = 0;	
-		
-	public ProjectedGaussSeidel() {}
+	private final int maximumIterations;
+	private final double stagnation;
 	
-	public ProjectedGaussSeidel(int n) {
-		maximumIterations = n;
+	public ProjectedGaussSeidel(int n, double stagnation ) {
+		this.maximumIterations = n;
+		this.stagnation = stagnation;
 	}
 	
 	@Override
@@ -33,56 +33,67 @@ public class ProjectedGaussSeidel implements Solver {
 	//solve NCP problem
 	public final double solve(List<NCPConstraint> constraints, List<Body> bodies, double epsilon) {
 		double iterations = 0;
+		double rnew = 0;
+		double rold = 0;
+		epsilon = 1e-31;
 		
-		// compute external force contribution, clear direction and residual
+		// compute external force contribution, compute norm of the b-vector
+		double bnorm = 0; 
 		for (NCPConstraint ci: constraints) {
 			ci.Fext = ci.j1.dot(ci.body1.externaldeltavelocity)
 			+ ci.j2.dot(ci.body1.externaldeltaomega)
 			+ ci.j3.dot(ci.body2.externaldeltavelocity) 
-			+ ci.j4.dot(ci.body2.externaldeltaomega); 			
+			+ ci.j4.dot(ci.body2.externaldeltaomega);
+			
+			bnorm += (ci.b+ci.Fext)*(ci.b+ci.Fext);			
+		} bnorm = Math.sqrt(bnorm);
+		final double bnorminv;
+		
+		// avoid division by zero
+		if (bnorm < 1e-15) {
+			bnorm = 1.0;
+			bnorminv= 1.0/bnorm;			
+		} else {
+			bnorminv= 1.0/bnorm;			
 		}
 		
-		//perform iterations
+		// scale system
+		for (NCPConstraint ci: constraints) {
+			ci.lambda *= bnorminv;
+		}
+		for (Body bi: bodies) {
+			Vector3.multiply(bi.deltavelocity, bnorminv);
+			Vector3.multiply(bi.deltaomega, bnorminv);
+		}
+		
+		
+		// perform iterations
 		for (int m=0; m<maximumIterations; m++) {
-			deltaResidual = 0;
+			rold = rnew;
+			rnew = 0;
 			for (NCPConstraint ci: constraints) {				
-				//calculate (Ax+b)_i 
+				// calculate (Ax+b)_i 
 				final double w =  ci.j1.dot(ci.body1.deltavelocity) 
 			   	+ ci.j2.dot(ci.body1.deltaomega)
 				+ ci.j3.dot(ci.body2.deltavelocity) 
-				+ ci.j4.dot(ci.body2.deltaomega) + ci.lambda*ci.damper + ci.Fext;
+				+ ci.j4.dot(ci.body2.deltaomega);
 				
+				// the change in lambda_i needed to obtain (Ax+b)_i = 0
+//				double deltaLambda = (-ci.b-w)/(ci.diagonal + ci.damper );
+			    double deltaLambda = -((ci.b+ci.Fext)*bnorminv+w)/(ci.diagonal + ci.damper );
 
-//				final double w = 
-//				  ci.j1.x*(ci.body1.deltavelocity.x+ci.body1.externaldeltavelocity.x) 
-//				+ ci.j1.y*(ci.body1.deltavelocity.y+ci.body1.externaldeltavelocity.y)
-//				+ ci.j1.z*(ci.body1.deltavelocity.z+ci.body1.externaldeltavelocity.z)
-//				+ ci.j2.x*(ci.body1.deltaomega.x+ci.body1.externaldeltaomega.x) 
-//				+ ci.j2.y*(ci.body1.deltaomega.y+ci.body1.externaldeltaomega.y)
-//				+ ci.j2.z*(ci.body1.deltaomega.z+ci.body1.externaldeltaomega.z)
-//				+ ci.j3.x*(ci.body2.deltavelocity.x+ci.body2.externaldeltavelocity.x) 
-//				+ ci.j3.y*(ci.body2.deltavelocity.y+ci.body2.externaldeltavelocity.y)
-//				+ ci.j3.z*(ci.body2.deltavelocity.z+ci.body2.externaldeltavelocity.z)
-//				+ ci.j4.x*(ci.body2.deltaomega.x+ci.body2.externaldeltaomega.x) 
-//				+ ci.j4.y*(ci.body2.deltaomega.y+ci.body2.externaldeltaomega.y)
-//				+ ci.j4.z*(ci.body2.deltaomega.z+ci.body2.externaldeltaomega.z) + ci.lambda*ci.damper;
-
-				double deltaLambda = (-ci.b-w)/(ci.diagonal + ci.damper );
 				final double lambda0 = ci.lambda;
 
 				//Clamp the lambda[i] value to the constraints
 				if (ci.coupling != null) {
-					
 					//growing bounds
 //					double lower = -Math.abs(ci.coupling.lambda)*ci.coupling.mu;					
 //					ci.lower = lower<ci.lower?lower:ci.lower;					
 //					double upper = Math.abs(ci.coupling.lambda)*ci.coupling.mu;
 //					ci.upper =  upper>ci.upper?upper:ci.upper;
-
 					//if the constraint is coupled, allow only lambda <= coupled lambda
 					ci.lower = -Math.abs(ci.coupling.lambda)*ci.coupling.mu;
 					ci.upper =  Math.abs(ci.coupling.lambda)*ci.coupling.mu;
-										
 				} 
 
 				//do projection
@@ -96,7 +107,7 @@ public class ProjectedGaussSeidel implements Solver {
 				deltaLambda = ci.lambda - lambda0;
 				
 				//update residual of change
-				deltaResidual += deltaLambda*deltaLambda;
+				rnew += deltaLambda*deltaLambda;
 
 				//Apply to delta velocities
 				Vector3.add( ci.body1.deltavelocity,     ci.b1.multiply(deltaLambda) );
@@ -106,11 +117,40 @@ public class ProjectedGaussSeidel implements Solver {
 				
 			} //for constraints	
 			
-			if (deltaResidual < epsilon)
+			// termination criterion
+			if (rnew < epsilon) {
+				assert Logger.trace("ProjectedGaussSeidel: target epsilon reached, stopping");
 				break;
+			}
 			
+			// stagnation test
+			if ( iterations>0 && rnew/rold > stagnation) {
+				assert Logger.trace("ProjectedGaussSeidel: stagnation="+(rnew/rold));
+				break;
+			}
+ 			
 			iterations +=1;
 		}
+		
+//		// scale lambda in the bnorm. This is unnecessary if bnorm is set to 1
+//		for (NCPConstraint ci: constraints) {
+//			final double factor = (bnorm-1)*ci.lambda;
+//			Vector3.add( ci.body1.deltavelocity, ci.b1.multiply(factor));
+//			Vector3.add( ci.body1.deltaomega, ci.b2.multiply(factor));
+//			Vector3.add( ci.body2.deltavelocity, ci.b3.multiply(factor));
+//			Vector3.add( ci.body2.deltaomega, ci.b4.multiply(factor));
+//		}
+		
+		// scale system back
+		for (NCPConstraint ci: constraints) {
+			ci.lambda *= bnorm;
+		}
+		for (Body bi: bodies) {
+			Vector3.multiply(bi.deltavelocity, bnorm);
+			Vector3.multiply(bi.deltaomega, bnorm);
+		}
+		
+		assert Logger.trace("ProjectedGaussSeidel: finshed at deltaResidual="+rnew+", iterations="+iterations);
 		return iterations ;
 	}
 }

@@ -8,10 +8,9 @@
  */
 package jinngine.examples;
 
-
 import jinngine.collision.SAP2;
 import jinngine.geometry.Box;
-import jinngine.geometry.UniformCapsule;
+import jinngine.math.Matrix3;
 import jinngine.math.Vector3;
 import jinngine.physics.*;
 import jinngine.physics.force.GravityForce;
@@ -22,52 +21,48 @@ import jinngine.rendering.Rendering;
 public class BasicExample implements Rendering.Callback {	
 	private final Scene scene;
 	
-	public BasicExample() {
-		
+	public BasicExample() {		
 		// start jinngine 
-		scene = new DefaultScene(new SAP2(), new NonsmoothNonlinearConjugateGradient(44), new DisabledDeactivationPolicy());
+		scene = new DefaultScene(
+				new SAP2(), 
+				new NonsmoothNonlinearConjugateGradient(44), 
+				new DisabledDeactivationPolicy());
+		
 		scene.setTimestep(0.1);
 		
 		// add boxes to bound the world
-		Body floor = new Body("floor", new Box(1500,20,1500));
-		floor.setPosition(new Vector3(0,-30,0));
-		floor.setFixed(true);
+		Box floor = new Box("floor",1500,20,1500);
+		scene.addGeometry(Matrix3.identity(), new Vector3(0,-30,0), floor);
+		scene.fixBody(floor.getBody(), true);
 		
-		Body back = new Body( "back", new Box(200,200,20));		
-		back.setPosition(new Vector3(0,0,-55));
-		back.setFixed(true);
+		Box back = new Box("back", 200, 200, 20);		
+		scene.addGeometry(Matrix3.identity(), new Vector3(0,0,-55), back);
+		scene.fixBody(back.getBody(), true);
 
-		Body front = new Body( "front", new Box(200,200,20));		
-		front.setPosition(new Vector3(0,0,-7));
-		front.setFixed(true);
+		Box front = new Box("front", 200, 200, 20);		
+		scene.addGeometry( Matrix3.identity(), new Vector3(0,0,-7), front);
+		scene.fixBody(front.getBody(), true);
 
-		Body left = new Body( "left", new Box(20,200,200));		
-		left.setPosition(new Vector3(-35,0,0));
-		left.setFixed(true);
+		Box left = new Box("left", 20, 200, 200);		
+		scene.addGeometry(Matrix3.identity(), new Vector3(-35,0,0), left);
+		scene.fixBody(left.getBody(), true);
 
-		Body right = new Body( "right", new Box(20,200,200));		
-		right.setPosition(new Vector3(10,0,0));
-		right.setFixed(true);		
+		Box right = new Box("right", 20, 200, 200);		
+		scene.addGeometry(Matrix3.identity(), new Vector3(10,0,0), right);
+		scene.fixBody( right.getBody(), true);		
 		
-		Box boxgeometry = new Box(6,6,6);
-		Body box = new Body( "box", boxgeometry );
-		box.setPosition(new Vector3(-10,-11,-25));
-				
-		// add all to scene
-		scene.addBody(floor);
-		scene.addBody(back);
-		scene.addBody(front);		
-		scene.addBody(left);
-		scene.addBody(right);
-		scene.addBody(box);
+		Box box = new Box("box",5,5,5);
+		scene.addGeometry(Matrix3.identity(), new Vector3(-10,-10, -20), box);
+		
 
 		// put gravity on box
-		scene.addForce( new GravityForce(box));		
+		scene.addForce( new GravityForce(box.getBody()));		
 		
 		// handle drawing
-		Rendering rendering = new jinngine.rendering.jogl.JoglRendering(this, new Interaction(scene));
-		rendering.drawMe(boxgeometry);
-
+		Rendering rendering = new jinngine.rendering.jogl.JoglRendering(this);
+		rendering.addCallback(new Interaction(scene));
+		rendering.drawMe(box);
+		rendering.createWindow();
 		rendering.start();
 	}
 

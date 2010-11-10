@@ -15,29 +15,16 @@ import jinngine.physics.*;
  * should implement this interface.
  */
 public interface Geometry extends BoundingBox {
-	/**
-	 * Return the body that is associated with this Geometry instance
-	 * @return 
-	 */
-	public Body getBody();
-		
-	/**
-	 * Specify a body to be associated with this Geometry instance. Normally, it should not be necessary for the user 
-	 * to call this method directly. A geometry will have a body assigned automatically, when the geometry is added to
-	 * the body
-	 */
-	public void setBody(Body b);
 	
 	/**
-	 * Set the local rotation for this geometry and displacement. The local transform is applied before the transform 
-	 * of the associated body is applied. This is used to rotate and translate geometries around in the
-	 * object space. This transform must not include any scaling or other transformation types. That sort of 
-	 * transformations are to be handled internally by the geometry instance. 
-	 * 
-	 * @param R An orthonormal rotation matrix
-	 * @param b Displacement vector
+	 * Get the user specified name of this geometry
 	 */
-	public void setLocalTransform( Matrix3 R, Vector3 b);
+	public String getName();
+	
+	/**
+	 * Return the body that is associated with this Geometry instance
+	 */
+	public Body getBody();
 	
 	/**
 	 * Get the local transform for this geometry. The rotation and displacement is assigned to 
@@ -49,28 +36,19 @@ public interface Geometry extends BoundingBox {
 	
 	/**
 	 * Return the local translation of this geometry
-	 * @param t 
+	 * @param t Vector that will contain the translation after the call 
 	 */
 	public void getLocalTranslation( Vector3 t ) ;
-	
-	
-	/**
-	 * Set the local scale. Not all geometries will support scaling and/or non-uniform scaling
-	 * @param s
-	 */
-	public void setLocalScale( Vector3 s);
-	
-	
+			
 	/** 
-	 * Get the amount of mass for this geometry
+	 * Get the mass for this geometry
 	 */
 	public double getMass();
 	
 	/**
-	 * Compute the inertia tensor of this geometry. Note that this quantity is dependent on the mass of the geometry. 
-	 * The inertia tensor returned from this call must assume no local rotation or translation of the geometry instance.
+	 * Return the inertia matrix for this geometry, given in the centre of mass frame and scaled to mass = 1
 	 */
-	public InertiaMatrix getInertialMatrix();
+	public InertiaMatrix getInertiaMatrix();
 	
 	/**
 	 * Get the envelope size for this geometry. The envelope is related to narrow-phase contact determination
@@ -93,20 +71,59 @@ public interface Geometry extends BoundingBox {
 	 * Get the final transform for this geometry, going from object space to world space.
 	 * @return 4x4 affine transformation matrix
 	 */
-	public Matrix4 getTransform();
+	public Matrix4 getWorldTransform();
 	
 	/**
 	 * Get the auxiliary reference. This reference is a way for the user to 
 	 * link geometry objects to some user space object 
-	 * @return
 	 */
-	public Object getAuxiliary();
+	public Object getUserReference();
 		
 	/**
 	 * Set the auxiliary reference. This reference is a way for the user to 
 	 * link geometry objects to some user space reference
 	 */
-	public void setAuxiliary(Object aux);
+	public void setUserReference(Object user);
 	
+	/**
+	 * Get the centre of mass position in local space
+	 * @param cm Vector3 reference to contain the centre of mass position
+	 * @return the reference to the cm object
+	 */
+	public Vector3 getLocalCentreOfMass(Vector3 cm);
+	
+	/**
+	 * Update the transforms and bounding volumes of this geometry
+	 */
+	public void update(); 
+	
+	/*
+	 *  Package private methods
+	 */
+	
+	/**
+	 * Specify a body to be associated with this Geometry instance. Normally, it should not be necessary for the user 
+	 * to call this method directly. A geometry will have a body assigned automatically, when the geometry is added to
+	 * the body
+	 */
+	void setBody(Body b);
+	
+	/**
+	 * Set the local rotation for this geometry and displacement. The local transform is applied before the transform 
+	 * of the associated body is applied. This is used to rotate and translate geometries around in the
+	 * object space. This transform must not include any scaling or other transformation types. That sort of 
+	 * transformations are to be handled internally by the geometry instance. 
+	 * 
+	 * @param R An orthonormal rotation matrix
+	 * @param b Displacement vector
+	 */
+	void setLocalTransform( Matrix3 R, Vector3 b);
+	
+	/**
+	 * Set the local scale. Not all geometries will support scaling and/or non-uniform scaling
+	 * @param s
+	 */
+	void setLocalScale( Vector3 s);	
+
 }
 

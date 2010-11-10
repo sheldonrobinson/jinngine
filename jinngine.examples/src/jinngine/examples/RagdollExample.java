@@ -11,6 +11,9 @@ package jinngine.examples;
 import jinngine.collision.SAP2;
 import jinngine.geometry.Box;
 import jinngine.geometry.Geometry;
+import jinngine.geometry.UniformCapsule;
+import jinngine.math.Matrix3;
+import jinngine.math.Quaternion;
 import jinngine.math.Vector3;
 import jinngine.physics.*;
 import jinngine.physics.constraint.Constraint;
@@ -30,65 +33,60 @@ public class RagdollExample implements Rendering.Callback {
 		scene.setTimestep(0.1);
 		
 		// add boxes to bound the world
-		Body floor = new Body("floor", new Box(1500,20,1500));
-		floor.setPosition(new Vector3(0,-30,0));
-		floor.setFixed(true);
+		Box floor = new Box("Floor",1500,20,1500);
+		scene.addGeometry(Matrix3.identity(), new Vector3(0,-30,0), floor);
+		scene.fixBody(floor.getBody(), true);
 		
-		Body back = new Body( "back", new Box(200,200,20));		
-		back.setPosition(new Vector3(0,0,-55));
-		back.setFixed(true);
+		Box back = new Box("Back wall", 200, 200, 20);		
+		scene.addGeometry(Matrix3.identity(), new Vector3(0,0,-55), back);
+		scene.fixBody(back.getBody(), true);
 
-		Body front = new Body( "front", new Box(200,200,20));		
-		front.setPosition(new Vector3(0,0,-7));
-		front.setFixed(true);
+		Box front = new Box("Front wall", 200, 200, 20);		
+		scene.addGeometry( Matrix3.identity(), new Vector3(0,0,-7), front);
+		scene.fixBody(front.getBody(), true);
 
-		Body left = new Body( "left", new Box(20,200,200));		
-		left.setPosition(new Vector3(-35,0,0));
-		left.setFixed(true);
+		Box left = new Box("Left wall", 20, 200, 200);		
+		scene.addGeometry(Matrix3.identity(), new Vector3(-35,0,0), left);
+		scene.fixBody(left.getBody(), true);
 
-		Body right = new Body( "right", new Box(20,200,200));		
-		right.setPosition(new Vector3(10,0,0));
-		right.setFixed(true);
+		Box right = new Box("Right wall", 20, 200, 200);		
+		scene.addGeometry(Matrix3.identity(), new Vector3(10,0,0), right);
+		scene.fixBody( right.getBody(), true);	
 		
 		// head
-		Geometry headgeometry = new Box(1,1,1);
-		Body head = new Body( "head", headgeometry );
-		head.setPosition(new Vector3(-5,-9.5,-25));
+		Geometry head = new Box("head",1,1,1);
+		scene.addGeometry(Matrix3.identity(), new Vector3(-5,-9.5,-25),  head );
 
 		// torso1
-		Geometry torso1geometry = new Box(1.7,1,1.7);
-		Body torso1 = new Body( "torso1", torso1geometry );
-		torso1.setPosition(new Vector3(-5,-11,-25));
+		Geometry torso1 = new Box("torso1",1.7,1,1.7);
+		scene.addGeometry(Matrix3.identity(), new Vector3(-5,-11,-25), torso1 );
 
-		Constraint neck = new UniversalJoint(head,torso1,new Vector3(-5,-10,-25), new Vector3(0,0,1), new Vector3(1,0,0));
+		Constraint neck = new UniversalJoint(head.getBody(),torso1.getBody(),new Vector3(-5,-10,-25), new Vector3(0,0,1), new Vector3(1,0,0));
 		scene.addConstraint(neck);
 
 		// torso2
-		Geometry torso2geometry = new Box(1.5,1,1.5);
-		Body torso2 = new Body( "torso2", torso2geometry );
-		torso2.setPosition(new Vector3(-5,-12.5,-25));
+		Geometry torso2 = new Box("torso2",1.5,1,1.5);
+		scene.addGeometry(Matrix3.identity(), new Vector3(-5,-12.5,-25), torso2);
 
-		UniversalJoint spine = new UniversalJoint(torso1,torso2,new Vector3(-5,-12,-25), new Vector3(0,0,1), new Vector3(1,0,0));
+		UniversalJoint spine = new UniversalJoint(torso1.getBody(),torso2.getBody(),new Vector3(-5,-12,-25), new Vector3(0,0,1), new Vector3(1,0,0));
 		spine.getFirstAxisControler().setLimits(-0.2, 0.2);
 		spine.getSecondAxisControler().setLimits(-0.2, 0.2);
 		scene.addConstraint(spine);
 
 		// torso3
-		Geometry torso3geometry = new Box(1.2,1,1.2);
-		Body torso3 = new Body( "torso3", torso3geometry );
-		torso3.setPosition(new Vector3(-5,-14,-25));
+		Geometry torso3 = new Box("torso3",1.2,1,1.2);
+		scene.addGeometry(Matrix3.identity(), new Vector3(-5,-14,-25), torso3 );
 
-		UniversalJoint spine2 = new UniversalJoint(torso2,torso3,new Vector3(-5,-13,-25), new Vector3(0,0,1), new Vector3(1,0,0));
+		UniversalJoint spine2 = new UniversalJoint(torso2.getBody(),torso3.getBody(),new Vector3(-5,-13,-25), new Vector3(0,0,1), new Vector3(1,0,0));
 		spine2.getFirstAxisControler().setLimits(-0.2, 0.2);
 		spine2.getSecondAxisControler().setLimits(-0.2, 0.2);
 		scene.addConstraint(spine2);
 
 		// upper left arm
-		Geometry upleftarmgeometry = new Box(0.5,2,0.5);
-		Body upleftarm = new Body( "upleftarm", upleftarmgeometry );
-		upleftarm.setPosition(new Vector3(-3.5,-12,-25));
+		Geometry upleftarm = new UniformCapsule("upleftarm",0.5,1.0);
+		scene.addGeometry(Quaternion.rotation(Math.PI*0.5, Vector3.i()).toRotationMatrix3(), new Vector3(-3.5,-12,-25), upleftarm);
 		
-		UniversalJoint leftshoulder = new UniversalJoint(torso1,upleftarm, new Vector3(-3.5,-11,-25), new Vector3(0,0,1), new Vector3(0,1,0));
+		UniversalJoint leftshoulder = new UniversalJoint(torso1.getBody(),upleftarm.getBody(), new Vector3(-3.5,-11,-25), new Vector3(0,0,1), new Vector3(0,1,0));
 		leftshoulder.getFirstAxisControler().setLimits(-0.5, 0.5);
 		leftshoulder.getSecondAxisControler().setLimits(-0.5, 0.5);
 		leftshoulder.getFirstAxisControler().setFrictionMagnitude(0.01);
@@ -96,11 +94,9 @@ public class RagdollExample implements Rendering.Callback {
 		scene.addConstraint(leftshoulder);
 
 		// upper right arm
-		Geometry uprightarmgeometry = new Box(0.5,2,0.5);
-		Body uprightarm = new Body( "uprightarm", uprightarmgeometry );
-		uprightarm.setPosition(new Vector3(-6.5,-12,-25));
-		
-		UniversalJoint rightshoulder = new UniversalJoint(torso1,uprightarm, new Vector3(-6.5,-11,-25), new Vector3(0,0,1), new Vector3(0,1,0));
+		Geometry uprightarm = new Box("uprightarm",0.5,2,0.5);
+		scene.addGeometry(Matrix3.identity(), new Vector3(-6.5,-12,-25), uprightarm);
+		UniversalJoint rightshoulder = new UniversalJoint(torso1.getBody(),uprightarm.getBody(), new Vector3(-6.5,-11,-25), new Vector3(0,0,1), new Vector3(0,1,0));
 		rightshoulder.getFirstAxisControler().setLimits(-1.5, 1.5);
 		rightshoulder.getSecondAxisControler().setLimits(-1.5, 1.5);
 		rightshoulder.getFirstAxisControler().setFrictionMagnitude(0.01);
@@ -108,11 +104,10 @@ public class RagdollExample implements Rendering.Callback {
 		scene.addConstraint(rightshoulder);
 		
 		// lower left arm
-		Geometry lowerleftarmgeometry = new Box(0.5,1.5,0.5);
-		Body lowerleftarm = new Body( "lowerleftarm", lowerleftarmgeometry );
-		lowerleftarm.setPosition(new Vector3(-3.5,-14,-25));
+		Geometry lowerleftarm = new Box("lowerleftarm",0.5,1.5,0.5);
+		scene.addGeometry(Matrix3.identity(), new Vector3(-3.5,-14,-25), lowerleftarm);
 		
-		UniversalJoint leftelbow = new UniversalJoint(upleftarm, lowerleftarm, new Vector3(-3.5,-13.25,-25), new Vector3(1,0,0), new Vector3(0,1,0));
+		UniversalJoint leftelbow = new UniversalJoint(upleftarm.getBody(), lowerleftarm.getBody(), new Vector3(-3.5,-13.25,-25), new Vector3(1,0,0), new Vector3(0,1,0));
 		leftelbow.getFirstAxisControler().setLimits(-0.0, 0.0);
 		leftelbow.getSecondAxisControler().setLimits(-1.5, 1.5);
 		leftelbow.getFirstAxisControler().setFrictionMagnitude(0.01);
@@ -120,11 +115,10 @@ public class RagdollExample implements Rendering.Callback {
 		scene.addConstraint(leftelbow);
 
 		// lower right arm
-		Geometry lowerrightarmgeometry = new Box(0.5,1.5,0.5);
-		Body lowerrightarm = new Body( "lowerrightarm", lowerrightarmgeometry );
-		lowerrightarm.setPosition(new Vector3(-6.5,-14,-25));
+		Geometry lowerrightarm = new Box("lowerrightarm",0.5,1.5,0.5);
+		scene.addGeometry(Matrix3.identity(), new Vector3(-6.5,-14,-25), lowerrightarm);
 		
-		UniversalJoint rightelbow = new UniversalJoint(uprightarm, lowerrightarm, new Vector3(-6.5,-13.25,-25), new Vector3(1,0,0), new Vector3(0,1,0));
+		UniversalJoint rightelbow = new UniversalJoint(uprightarm.getBody(), lowerrightarm.getBody(), new Vector3(-6.5,-13.25,-25), new Vector3(1,0,0), new Vector3(0,1,0));
 		rightelbow.getFirstAxisControler().setLimits(-0.0, 0.0);
 		rightelbow.getSecondAxisControler().setLimits(-1.5, 1.5);
 		rightelbow.getFirstAxisControler().setFrictionMagnitude(0.01);
@@ -132,11 +126,10 @@ public class RagdollExample implements Rendering.Callback {
 		scene.addConstraint(rightelbow);
 
 		// left thigh
-		Geometry leftthighgeometry = new Box(0.5,1.5,0.5);
-		Body leftthigh = new Body( "leftthigh", leftthighgeometry );
-		leftthigh.setPosition(new Vector3(-5.5,-15.5,-25));
+		Geometry leftthigh = new Box("leftthigh",0.5,1.5,0.5);
+		scene.addGeometry(Matrix3.identity(), new Vector3(-5.5,-15.5,-25), leftthigh);
 
-		UniversalJoint lefthip = new UniversalJoint(torso3, leftthigh, new Vector3(-5.5,-14,-25), new Vector3(1,0,0), new Vector3(0,0,1));
+		UniversalJoint lefthip = new UniversalJoint(torso3.getBody(), leftthigh.getBody(), new Vector3(-5.5,-14,-25), new Vector3(1,0,0), new Vector3(0,0,1));
 		lefthip.getFirstAxisControler().setLimits(-0.5, 0.5);
 		lefthip.getSecondAxisControler().setLimits(-0.5, 0.5);
 		lefthip.getFirstAxisControler().setFrictionMagnitude(0.01);
@@ -144,11 +137,10 @@ public class RagdollExample implements Rendering.Callback {
 		scene.addConstraint(lefthip);
 
 		// left taiba
-		Geometry lefttaibageometry = new Box(0.5,1.5,0.5);
-		Body lefttaiba = new Body( "lefttaiba", lefttaibageometry );
-		lefttaiba.setPosition(new Vector3(-5.5,-17.5,-25));
+		Geometry lefttaiba = new Box("lefttaiba",0.5,1.5,0.5);
+		scene.addGeometry(Matrix3.identity(), new Vector3(-5.5,-17.5,-25), lefttaiba);
 
-		UniversalJoint lefttknee = new UniversalJoint(leftthigh, lefttaiba, new Vector3(-5.5,-16,-25), new Vector3(1,0,0), new Vector3(0,0,1));
+		UniversalJoint lefttknee = new UniversalJoint(leftthigh.getBody(), lefttaiba.getBody(), new Vector3(-5.5,-16,-25), new Vector3(1,0,0), new Vector3(0,0,1));
 		lefttknee.getFirstAxisControler().setLimits(-0.5, 0.5);
 		lefttknee.getSecondAxisControler().setLimits(0, 0);
 		lefttknee.getFirstAxisControler().setFrictionMagnitude(0.01);
@@ -157,11 +149,10 @@ public class RagdollExample implements Rendering.Callback {
 
 		
 		// right thigh
-		Geometry rightthighgeometry = new Box(0.5,1.5,0.5);
-		Body rightthigh = new Body( "rightthigh", rightthighgeometry );
-		rightthigh.setPosition(new Vector3(-4.0,-15.5,-25));
+		Geometry rightthigh = new Box("rightthigh",0.5,1.5,0.5);
+		scene.addGeometry(Matrix3.identity(), new Vector3(-4.0,-15.5,-25), rightthigh);
 
-		UniversalJoint righthip = new UniversalJoint(torso3, rightthigh, new Vector3(-4.0,-14,-25), new Vector3(1,0,0), new Vector3(0,0,1));
+		UniversalJoint righthip = new UniversalJoint(torso3.getBody(), rightthigh.getBody(), new Vector3(-4.0,-14,-25), new Vector3(1,0,0), new Vector3(0,0,1));
 		righthip.getFirstAxisControler().setLimits(-0.5, 0.5);
 		righthip.getSecondAxisControler().setLimits(-0.5, 0.5);
 		righthip.getFirstAxisControler().setFrictionMagnitude(0.01);
@@ -169,72 +160,48 @@ public class RagdollExample implements Rendering.Callback {
 		scene.addConstraint(righthip);
 
 		// right taiba
-		Geometry righttaibageometry = new Box(0.5,1.5,0.5);
-		Body righttaiba = new Body( "righttaiba", righttaibageometry );
-		righttaiba.setPosition(new Vector3(-4.0,-17.5,-25));
+		Geometry righttaiba = new Box("righttaiba",0.5,1.5,0.5);
+		scene.addGeometry(Matrix3.identity(), new Vector3(-4.0,-17.5,-25), righttaiba);
 
-		UniversalJoint righttknee = new UniversalJoint(rightthigh, righttaiba, new Vector3(-4.0,-16,-25), new Vector3(1,0,0), new Vector3(0,0,1));
+		UniversalJoint righttknee = new UniversalJoint(rightthigh.getBody(), righttaiba.getBody(), new Vector3(-4.0,-16,-25), new Vector3(1,0,0), new Vector3(0,0,1));
 		righttknee.getFirstAxisControler().setLimits(-0.5, 0.5);
 		righttknee.getSecondAxisControler().setLimits(0, 0);
 		righttknee.getFirstAxisControler().setFrictionMagnitude(0.01);
 		righttknee.getSecondAxisControler().setFrictionMagnitude(0.01);
 		scene.addConstraint(righttknee);
-
-	    
-		
-		
-		// add all to scene
-		scene.addBody(floor);
-		scene.addBody(back);
-		scene.addBody(front);		
-		scene.addBody(left);
-		scene.addBody(right);
-		
-		scene.addBody(head);
-		scene.addBody(torso1);
-		scene.addBody(torso2);
-		scene.addBody(torso3);
-		scene.addBody(upleftarm);
-		scene.addBody(lowerleftarm);
-		scene.addBody(lowerrightarm);
-		scene.addBody(uprightarm);
-		scene.addBody(leftthigh);
-		scene.addBody(lefttaiba);
-		scene.addBody(rightthigh);
-		scene.addBody(righttaiba);
-		
-		
-//		 put gravity on limbs
-		scene.addForce( new GravityForce(head));		
-		scene.addForce( new GravityForce(torso1));		
-		scene.addForce( new GravityForce(torso2));		
-		scene.addForce( new GravityForce(torso3));		
-		scene.addForce( new GravityForce(upleftarm));		
-		scene.addForce( new GravityForce(lowerleftarm));		
-		scene.addForce( new GravityForce(uprightarm));		
-		scene.addForce( new GravityForce(lowerrightarm));		
-		scene.addForce( new GravityForce(leftthigh));		
-		scene.addForce( new GravityForce(lefttaiba));		
-		scene.addForce( new GravityForce(rightthigh));		
-		scene.addForce( new GravityForce(righttaiba));		
+				
+        // put gravity on limbs
+		scene.addForce( new GravityForce(head.getBody()));		
+		scene.addForce( new GravityForce(torso1.getBody()));		
+		scene.addForce( new GravityForce(torso2.getBody()));		
+		scene.addForce( new GravityForce(torso3.getBody()));		
+		scene.addForce( new GravityForce(upleftarm.getBody()));		
+		scene.addForce( new GravityForce(lowerleftarm.getBody()));		
+		scene.addForce( new GravityForce(uprightarm.getBody()));		
+		scene.addForce( new GravityForce(lowerrightarm.getBody()));		
+		scene.addForce( new GravityForce(leftthigh.getBody()));		
+		scene.addForce( new GravityForce(lefttaiba.getBody()));		
+		scene.addForce( new GravityForce(rightthigh.getBody()));		
+		scene.addForce( new GravityForce(righttaiba.getBody()));		
 
 		
 		// handle drawing
-		Rendering rendering = new jinngine.rendering.jogl.JoglRendering(this, new Interaction(scene));
-		rendering.drawMe(headgeometry);
-		rendering.drawMe(torso1geometry);
-		rendering.drawMe(torso2geometry);
-		rendering.drawMe(torso3geometry);
-		rendering.drawMe(upleftarmgeometry);
-		rendering.drawMe(lowerleftarmgeometry);
-		rendering.drawMe(uprightarmgeometry);
-		rendering.drawMe(lowerrightarmgeometry);
-		rendering.drawMe(leftthighgeometry);
-		rendering.drawMe(lefttaibageometry);
-		rendering.drawMe(rightthighgeometry);
-		rendering.drawMe(righttaibageometry);
+		Rendering rendering = new jinngine.rendering.jogl.JoglRendering(this);
+		rendering.addCallback(new Interaction(scene));
+		rendering.drawMe(head);
+		rendering.drawMe(torso1);
+		rendering.drawMe(torso2);
+		rendering.drawMe(torso3);
+		rendering.drawMe(upleftarm);
+		rendering.drawMe(lowerleftarm);
+		rendering.drawMe(uprightarm);
+		rendering.drawMe(lowerrightarm);
+		rendering.drawMe(leftthigh);
+		rendering.drawMe(lefttaiba);
+		rendering.drawMe(rightthigh);
+		rendering.drawMe(righttaiba);
 
-
+		rendering.createWindow();
 		rendering.start();
 	}
 

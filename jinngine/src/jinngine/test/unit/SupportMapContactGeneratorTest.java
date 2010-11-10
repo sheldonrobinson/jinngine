@@ -9,6 +9,7 @@ import jinngine.geometry.Box;
 import jinngine.geometry.contact.ContactGenerator;
 import jinngine.geometry.contact.SupportMapContactGenerator;
 import jinngine.geometry.contact.ContactGenerator.ContactPoint;
+import jinngine.math.Matrix3;
 import jinngine.math.Vector3;
 import jinngine.physics.Body;
 import junit.framework.TestCase;
@@ -37,15 +38,17 @@ public class SupportMapContactGeneratorTest extends TestCase {
 		final List<Vector3> expect = new ArrayList<Vector3>();
 		
 		// setup box geometries
-		final Box box1 = new Box(1,1,1);		
+		final Box box1 = new Box("box",1,1,1);		
 		box1.setEnvelope(1);
-		final Box box2 = new Box(1,1,1);
+		final Box box2 = new Box("box",1,1,1);
 		box2.setEnvelope(1);
 
 		// attach geometries to bodies (to we can change the transform of the
 		// boxes by changing the transform of the bodies)
-		final Body body1 = new Body("box1", box1);		
-		final Body body2 = new Body("box2", box2);
+		final Body body1 = new Body("box1");
+		body1.addGeometry(Matrix3.identity(), new Vector3(), box1);
+		final Body body2 = new Body("box2");
+		body2.addGeometry(Matrix3.identity(), new Vector3(), box2);
 				
 		// contact generator
 		ContactGenerator g = new SupportMapContactGenerator(box1,box1,box2,box2);

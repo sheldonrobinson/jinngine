@@ -78,15 +78,15 @@ public final class FrictionalContactConstraint implements ContactConstraint {
 	
 	@Override
 	public final void applyConstraints(ListIterator<NCPConstraint> constraintIterator, double dt) {
-		//clear list of ncp constraints
+		// clear list of ncp constraints
 		ncpconstraints.clear();
 		
-		//use ContactGenerators to create new contactpoints
+		// use ContactGenerators to create new contactpoints
 		for ( ContactGenerator cg: generators) {
 			//run contact generator
 			cg.run();
 			
-			//generate contacts
+			// generate contacts
 			Iterator<ContactGenerator.ContactPoint> i = cg.getContacts();
 			while (i.hasNext()) {
 				ContactGenerator.ContactPoint cp = i.next();
@@ -97,14 +97,14 @@ public final class FrictionalContactConstraint implements ContactConstraint {
 		
 	}
 
-	//Create a regular contact constraint including tangential friction
+	// create a regular contact constraint including tangential friction
 	public final void createFrictionalContactConstraint( 
 			ContactGenerator.ContactPoint cp,
 			Body b1, Body b2, Vector3 p, Vector3 n, double depth, double dt,
 			ListIterator<NCPConstraint> outConstraints 
 	) {
 
-		//Use a gram-schmidt process to create a orthonormal basis for the contact point ( normal and tangential directions)
+		// use a gram-schmidt process to create a orthonormal basis for the contact point ( normal and tangential directions)
 		final Vector3 t1 = new Vector3(), t2 = new Vector3(), t3 = new Vector3();
 		final Matrix3 B  = GramSchmidt.run(n);
 		B.getColumnVectors(t1, t2, t3);
@@ -119,12 +119,12 @@ public final class FrictionalContactConstraint implements ContactConstraint {
 		final Vector3 nJ3 = n.negate();
 		final Vector3 nJ4 = r2.cross(n).negate();
 
-		//First off, create the constraint in the normal direction
-		final double e = cp.restitution; //coeficient of restitution
+		// first off, create the constraint in the normal direction
+		final double e = cp.restitution; // coefficient of restitution
 		final double uni = nJ1.dot(b1.state.velocity) + nJ2.dot(b1.state.omega) + nJ3.dot(b2.state.velocity) + nJ4.dot(b2.state.omega);
 		final double unf = uni<0 ? -e*uni: 0;		
 		
-		//compute B vector
+		// compute B vector
 		final Matrix3 I1 = b1.state.inverseinertia;
 		final Matrix3 M1 = b1.state.inverseanisotropicmass;
 		final Matrix3 I2 = b2.state.inverseinertia;
@@ -138,9 +138,9 @@ public final class FrictionalContactConstraint implements ContactConstraint {
 		if (b1.isFixed()) { nB1.assignZero(); nB2.assignZero(); }
 		if (b2.isFixed()) { nB3.assignZero(); nB4.assignZero(); }
 
-		//external forces acing at contact (obsolete, external forces are modelled using the delta velocities)
-		//double Fext = B1.dot(b1.state.force) + B2.dot(b1.state.torque) + B3.dot(b2.state.force) + B4.dot(b2.state.torque);
-		double correction = depth*(1/dt); //the true correction velocity. This velocity corrects the contact in the next timestep.
+		// external forces acing at contact (obsolete, external forces are modelled using the delta velocities)
+		// double Fext = B1.dot(b1.state.force) + B2.dot(b1.state.torque) + B3.dot(b2.state.force) + B4.dot(b2.state.torque);
+		double correction = depth*(1/dt); // the true correction velocity. This velocity corrects the contact in the next timestep.
 		final double escape = (cp.envelope-cp.distance)*(1/dt);
 		final double lowerNormalLimit = 0;
 		final double limit = 2;
@@ -184,27 +184,27 @@ public final class FrictionalContactConstraint implements ContactConstraint {
 		// set distance (unused in simulator)
 		c.distance = cp.distance;
 		
-		//normal-friction coupling 
+		// normal-friction coupling 
 		final NCPConstraint coupling = enableCoupling?c:null;
 		
-		//set the correct friction setting for this contact
+		// set the correct friction setting for this contact
 		c.mu = cp.friction;
 						
-		//first tangent
+		// first tangent
 		final Vector3 t2J1 = t2;
 		final Vector3 t2J2 = r1.cross(t2);
 		final Vector3 t2J3 = t2.negate();
 		final Vector3 t2J4 = r2.cross(t2).negate();
 		final Vector3 t2B1 = b1.isFixed()? new Vector3(): M1.multiply(t2J1);
-		final Vector3 t2B2 = b1.isFixed()?  new Vector3(): I1.multiply(t2J2);
+		final Vector3 t2B2 = b1.isFixed()? new Vector3(): I1.multiply(t2J2);
 		final Vector3 t2B3 = b2.isFixed()? new Vector3(): M2.multiply(t2J3);
 		final Vector3 t2B4 = b2.isFixed()? new Vector3(): I2.multiply(t2J4);
 
-		//then the tangential friction constraints 
-		double ut1i = t2J1.dot(b1.state.velocity) + t2J2.dot(b1.state.omega) + t2J3.dot(b2.state.velocity) + t2J4.dot(b2.state.omega); //relativeVelocity(b1,b2,p,t2);
-		double ut1f = 0;
+		// then the tangential friction constraints 
+		final double ut1i = t2J1.dot(b1.state.velocity) + t2J2.dot(b1.state.omega) + t2J3.dot(b2.state.velocity) + t2J4.dot(b2.state.omega);
+		final double ut1f = 0;
 		
-		//double t2Fext = t2B1.dot(b1.state.FCm) + t2B2.dot(b1.state.tauCm) + t2B3.dot(b2.state.FCm) + t2B4.dot(b2.state.tauCm);
+		// double t2Fext = t2B1.dot(b1.state.FCm) + t2B2.dot(b1.state.tauCm) + t2B3.dot(b2.state.FCm) + t2B4.dot(b2.state.tauCm);
 		final NCPConstraint c2 = new NCPConstraint();
 		c2.assign(b1,b2,
 				t2B1, t2B2,	t2B3, t2B4,				
@@ -215,7 +215,7 @@ public final class FrictionalContactConstraint implements ContactConstraint {
 				0
 		);
 		
-		//second tangent
+		// second tangent
 		final Vector3 t3J1 = t3;
 		final Vector3 t3J2 = r1.cross(t3);
 		final Vector3 t3J3 = t3.negate();
@@ -225,8 +225,8 @@ public final class FrictionalContactConstraint implements ContactConstraint {
 		final Vector3 t3B3 = b2.isFixed()? new Vector3(): M2.multiply(t3J3);
 		final Vector3 t3B4 = b2.isFixed()? new Vector3(): I2.multiply(t3J4);
 
-		double ut2i = t3J1.dot(b1.state.velocity) + t3J2.dot(b1.state.omega) + t3J3.dot(b2.state.velocity) + t3J4.dot(b2.state.omega); //relativeVelocity(b1,b2,p,t2);
-		double ut2f = 0;
+		final double ut2i = t3J1.dot(b1.state.velocity) + t3J2.dot(b1.state.omega) + t3J3.dot(b2.state.velocity) + t3J4.dot(b2.state.omega); 
+		final double ut2f = 0;
 		
 		final NCPConstraint c3 = new NCPConstraint();
 		c3.assign(b1,b2,

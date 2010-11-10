@@ -44,6 +44,7 @@ public final class SupportMapContactGenerator implements ContactGenerator {
 	private double friction;
 	private final double spa;
 	private final double spb;
+	private boolean active = false;
 
 	// distance algorithms
 	private final GJK gjk = new GJK();
@@ -62,10 +63,10 @@ public final class SupportMapContactGenerator implements ContactGenerator {
 		// select the largest envelope for contact generation
 		if  ( gb.getEnvelope() > ga.getEnvelope() ) {
 			envelope = gb.getEnvelope();
-			shell = envelope*0.5;
+			shell = envelope*0.75;
 		} else {
 			envelope = ga.getEnvelope();
-			shell = envelope*0.5;			
+			shell = envelope*0.75;			
 		}
 	}
 	
@@ -104,6 +105,9 @@ public final class SupportMapContactGenerator implements ContactGenerator {
 		
 		// if objects are intersecting
 		if (gjk.getState().intersection) {
+			// mark contact generator 
+			active = true;
+			
 			// we perform a ray-cast, that is equivalent to
 			// finding the growth distance between Sa and Sb. 
 			// by that we obtain a contact normal at the 
@@ -111,7 +115,11 @@ public final class SupportMapContactGenerator implements ContactGenerator {
 			ga.getLocalTranslation(gadisp);	
 			gb.getLocalTranslation(gbdisp);
 			
-			// apply body rotation to local displacements (centre of mass of objects)
+			// add the local centre of mass displacement
+			Vector3.add(gadisp, ga.getLocalCentreOfMass(new Vector3()));
+			Vector3.add(gbdisp, gb.getLocalCentreOfMass(new Vector3()));
+			
+			// apply body rotation to centre of mass of objects
 			Matrix3.multiply(ga.getBody().state.rotation, gadisp, gadisp);
 			Matrix3.multiply(gb.getBody().state.rotation, gbdisp, gbdisp);
 			Vector3 direction = ga.getBody().getPosition().add(gadisp).sub(gb.getBody().getPosition().add(gbdisp));
@@ -139,12 +147,22 @@ public final class SupportMapContactGenerator implements ContactGenerator {
 			// that A and/or B can be sphere swept 
 			final double d = pa.sub(pb).norm() - spa - spb;
 
-			// if distance is less that the envelope, generate contact points
-			if (d<envelope) {
-				generate(pa, pb, pa.sub(pb).normalize() );
-			// or outside envelope
+			// determine the activity state
+			if (active) {
+				// if active, we only become inactive when leaving the envelope
+				if (d>envelope)
+					active = false;				
 			} else {
-				contacts.clear();	
+				// if inactive, we activate when inside the shell, or inner envelope
+				if (d<shell*1.01)
+					active = true;
+			}
+			
+			// if active, generate contact points			
+			if (active) {
+				generate(pa, pb, pa.sub(pb).normalize() );				
+			} else {
+				contacts.clear();					
 			}
 		} 	
 	}
@@ -180,7 +198,12 @@ public final class SupportMapContactGenerator implements ContactGenerator {
 				cp.b2 = gb.getBody();
 				
 				cp.normal.assign(direction);
-				cp.point.assign( B.multiply(new Vector3(p.x,p.y,0)).add(midpoint) );
+				
+				// optimised to avoid allocation
+				// cp.point.assign( B.multiply(new Vector3(p.x,p.y,0)).add(midpoint) );				
+				cp.point.assign(p.x,p.y,0);
+				Matrix3.multiply( B, cp.point, cp.point);
+				Vector3.add( cp.point, midpoint );
 				
 				// distance along the z axis in contact space
 				cp.distance = (p.z-q.z)-spb-spa;  // take into account sphere sweeping
@@ -194,8 +217,7 @@ public final class SupportMapContactGenerator implements ContactGenerator {
 					contacts.add(cp);
 				}
 			}
-		};
-		
+		};	
 		
 		// apply transform to all points
 		for (Vector3 p: faceA) {
@@ -207,19 +229,14 @@ public final class SupportMapContactGenerator implements ContactGenerator {
 		
 		// run 2d intersection
 		ORourke.run(faceA, faceB, handler);
-		
-//		if (contacts.size() == 0) {
-//			System.out.println("contacts="+contacts.size()+" (" + faceA.size() +","+faceB.size()+")" );
-//
-//			// run 2d intersection
-//			ORourke.run(faceA, faceB, handler);
-//
-//		}
-//		
-//		if (ga instanceof UniformCapsule && gb instanceof UniformCapsule )
-//			System.out.println("contacts="+contacts.size() +"("+faceA.size()+","+faceB.size()+")");
+
 	}
 	
 	@Override
 	public void remove() {/* nothing to clean up */}
+
+	@Override
+	public int getNumberOfContacts() {
+		return contacts.size();
+	}
 }

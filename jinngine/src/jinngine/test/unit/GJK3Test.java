@@ -10,6 +10,7 @@ package jinngine.test.unit;
 
 import jinngine.collision.GJK;
 import jinngine.geometry.Sphere;
+import jinngine.math.Matrix3;
 import jinngine.math.Vector3;
 import jinngine.physics.Body;
 import junit.framework.TestCase;
@@ -29,10 +30,13 @@ public class GJK3Test extends TestCase {
 		
 		//set up geometries
 		Sphere s1 = new Sphere(1);
-		Body b1 = new Body("default", s1);
+		Body b1 = new Body("default");
+		b1.addGeometry(Matrix3.identity(), new Vector3(), s1);
 		b1.setPosition(new Vector3(0,3,0));
+		
 		Sphere s2 = new Sphere(1);
-		Body b2 = new Body("default", s2);
+		Body b2 = new Body("default");
+		b2.addGeometry(Matrix3.identity(), new Vector3(), s2);
 		b2.setPosition(new Vector3(0,0,0));
 		
 		//closest point vectors
@@ -63,10 +67,13 @@ public class GJK3Test extends TestCase {
 				
 		//set up geometries
 		Sphere s1 = new Sphere(1);
-		Body b1 = new Body("default", s1);
+		Body b1 = new Body("default");
+		b1.addGeometry(Matrix3.identity(), new Vector3(), s1);
 		b1.setPosition(new Vector3(0,1+a,0));
+		
 		Sphere s2 = new Sphere(1);
-		Body b2 = new Body("default", s2);
+		Body b2 = new Body("default");
+		b2.addGeometry(Matrix3.identity(), new Vector3(), s2);
 		b2.setPosition(new Vector3(0,-1-a,0));
 		
 		//closest point vectors
@@ -90,10 +97,13 @@ public class GJK3Test extends TestCase {
 		
 		//set up two spheres, occupying the exact same space
 		Sphere s1 = new Sphere(1);
-		Body b1 = new Body("default", s1);
+		Body b1 = new Body("default");
+		b1.addGeometry(Matrix3.identity(), new Vector3(), s1);
 		b1.setPosition(new Vector3(0,0,0));
+
 		Sphere s2 = new Sphere(1);
-		Body b2 = new Body("default", s2);
+		Body b2 = new Body("default");
+		b2.addGeometry(Matrix3.identity(), new Vector3(), s2);
 		b2.setPosition(new Vector3(0,0,0));
 		
 		//closest point vectors
@@ -115,10 +125,13 @@ public class GJK3Test extends TestCase {
 		
 		//set up two spheres, occupying the exact same space
 		Sphere s1 = new Sphere(1);
-		Body b1 = new Body("default", s1);
+		Body b1 = new Body("default");
+		b1.addGeometry(Matrix3.identity(), new Vector3(), s1);
 		b1.setPosition(new Vector3(0,0,0));
+
 		Sphere s2 = new Sphere(1);
-		Body b2 = new Body("default", s2);
+		Body b2 = new Body("default");
+		b2.addGeometry(Matrix3.identity(), new Vector3(), s2);
 		b2.setPosition(new Vector3(0,0,0));
 		
 		int N = 1024*2;

@@ -1,14 +1,7 @@
-/**
- * Copyright (c) 2008-2010  Morten Silcowitz.
- *
- * This file is part of the Jinngine physics library
- *
- * Jinngine is published under the GPL license, available 
- * at http://www.gnu.org/copyleft/gpl.html. 
- */
 package jinngine.examples;
 
-
+import java.applet.Applet;
+import java.awt.BorderLayout;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -18,18 +11,25 @@ import jinngine.geometry.ConvexHull;
 import jinngine.geometry.UniformCapsule;
 import jinngine.math.Matrix3;
 import jinngine.math.Vector3;
-import jinngine.physics.*;
+import jinngine.physics.DefaultDeactivationPolicy;
+import jinngine.physics.DefaultScene;
+import jinngine.physics.Scene;
 import jinngine.physics.force.GravityForce;
 import jinngine.physics.solver.NonsmoothNonlinearConjugateGradient;
 import jinngine.rendering.Interaction;
 import jinngine.rendering.Rendering;
 
-public class CapsuleExample implements Rendering.Callback {	
-	private final Scene scene;
+public class AppletExample extends Applet implements Rendering.Callback {
+	private static final long serialVersionUID = 1L;
 	
-	public CapsuleExample() {
+	private Scene scene;
+	
+	@Override
+	public void init() {
+		super.init();
+		
 		// start jinngine 
-		scene = new DefaultScene(new SAP2(), new NonsmoothNonlinearConjugateGradient(50), new DisabledDeactivationPolicy());
+		scene = new DefaultScene(new SAP2(), new NonsmoothNonlinearConjugateGradient(260), new DefaultDeactivationPolicy());
 		scene.setTimestep(0.1);
 		
 		// add boxes to bound the world
@@ -121,19 +121,15 @@ public class CapsuleExample implements Rendering.Callback {
 		rendering.drawMe(capgeo4);
 		rendering.drawMe(ico);
 
-		rendering.createWindow();
+		// add to applet
+		add( rendering.getCanvas(), BorderLayout.CENTER);
+		
 		rendering.start();
 	}
 
-	@Override
-	
 	public void tick() {
 		// each frame, to a time step on the Scene
 		scene.tick();
-	}
-	
-	public static void main( String[] args) {
-		new CapsuleExample();
 	}
 
 }

@@ -298,11 +298,11 @@ public class SweepAndPrune implements BroadphaseCollisionDetection {
 
 		public final void updateValue() {
 			//get the correct axis bounds for each body's AABB
-			Vector3 thisBounds;
+			Vector3 thisBounds = new Vector3();
 			if ( this.begin ) {
-				thisBounds = this.aabb.getMinBounds(); 
+				this.aabb.getMinBounds(thisBounds);  
 			} else {
-				thisBounds = this.aabb.getMaxBounds(); 
+				thisBounds.assign(this.aabb.getMaxBounds(null)); 
 			}
 
 			this.value = thisBounds.get(this.axis);

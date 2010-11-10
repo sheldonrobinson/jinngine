@@ -9,28 +9,49 @@
 package jinngine.physics.solver;
 
 import java.util.List;
-
 import jinngine.math.Vector3;
 import jinngine.physics.Body;
 
+/**
+ * Implementation of the NNCG solver, or nonsmooth nonlinear Conjugate Gradient 
+ * solver, as described in the Visual Computer paper "A nonsmooth nonlinear conjugate 
+ * gradient method for interactive contact force problems". This method can be seen 
+ * as a simple extension of the PGS method, that "reuses" some of the previous solutions
+ * in each iteration, to achieve a better convergence rate. 
+ * 
+ * http://www.springerlink.com/content/e83432544t772126/
+ * 
+ * BibTex:
+ * 
+ * @article{1821968,
+ *  author = {Silcowitz-Hansen, Morten and Niebe, Sarah and Erleben, Kenny},
+ *  title = {A nonsmooth nonlinear conjugate gradient method for interactive contact force problems},
+ *  journal = {Visual Computer},
+ *  volume = {26},
+ *  number = {6-8},
+ *  year = {2010},
+ *  issn = {0178-2789},
+ *  pages = {893--901},
+ *  doi = {http://dx.doi.org/10.1007/s00371-010-0502-6},
+ *  publisher = {Springer-Verlag New York, Inc.},
+ *  address = {Secaucus, NJ, USA},
+ * }
+ */
 public class NonsmoothNonlinearConjugateGradient implements Solver {
-	int max = 10000;
-	private final double eps = 1e-7;
-	
-	public double[] pgsiters = new double[max];
-	public double[] errors = new double[max];
+	private int max = 10000;
+//	private final double eps = 1e-7;
+//	public double[] pgsiters = new double[max];
+//	public double[] errors = new double[max];
 	
 	@Override
 	public void setMaximumIterations(int n) {
-	//	max =n;
-
+		//	max =n;
 	}
 	
 	public NonsmoothNonlinearConjugateGradient(int n ) {
 		this.max = n;
-
-		pgsiters = new double[max];
-		errors = new double[max];
+//		pgsiters = new double[max];
+//		errors = new double[max];
 	}
 
 	@Override
@@ -42,6 +63,7 @@ public class NonsmoothNonlinearConjugateGradient implements Solver {
 		double beta= 0;		
 		int iter = 0;
 		int restarts = 0;
+	    epsilon = 1e-31;
 		
 		
 		// compute external force contribution, clear direction and residual, compute b vector norm
@@ -54,28 +76,22 @@ public class NonsmoothNonlinearConjugateGradient implements Solver {
 			
 			ci.d = 0; ci.residual = 0;
 			
-			bnorm += Math.pow(ci.b+ci.Fext,2);
-			
-//			if ( ci.coupling != null) {
-//				ci.lower = 0;  ci.upper = 0;
-//			}
+			bnorm += Math.pow(ci.b+ci.Fext,2);			
 		}
 		bnorm = Math.sqrt(bnorm);
-//		bnorm=1;
-//		System.out.println("bnorm="+bnorm);
+		final double bnorminv = 1.0/bnorm;
 		
 		// reset search direction
 		for (Body b: bodies) {
-			b.auxDeltav.assignZero();
-			b.auxDeltaOmega.assignZero();
+			b.deltavelocity1.assignZero();
+			b.deltaomega1.assignZero();
 		}
 
 		while (true) {	
-		
 			// copy body velocity
 			for (Body bi: bodies) {
-				bi.auxDeltav2.assign(bi.deltavelocity);
-				bi.auxDeltaOmega2.assign(bi.deltaomega);
+				bi.deltavelocity2.assign(bi.deltavelocity);
+				bi.deltaomega2.assign(bi.deltaomega);
 			}
 			
 			rold = rnew; rnew = 0;
@@ -95,13 +111,8 @@ public class NonsmoothNonlinearConjugateGradient implements Solver {
 				         + ci.lambda*ci.damper ;
 				
 			    
-			    double deltaLambda = -((ci.b+ci.Fext)/bnorm+w)/(ci.diagonal + ci.damper );
+			    double deltaLambda = -((ci.b+ci.Fext)*bnorminv+w)/(ci.diagonal + ci.damper );
 				final double lambda0 = ci.lambda;
-
-//				if (Math.abs(ci.diagonal) < 1e-7 ) {
-//					deltaLambda = 0;
-//					ci.lambda = 0;
-//				}
 				
 				//Clamp the lambda[i] value to the constraints
 				if (ci.coupling != null) {
@@ -109,7 +120,7 @@ public class NonsmoothNonlinearConjugateGradient implements Solver {
 					ci.lower = -Math.abs(ci.coupling.lambda)*ci.coupling.mu;
 					ci.upper =  Math.abs(ci.coupling.lambda)*ci.coupling.mu;
 					
-					//use growing bounds only
+					//use growing bounds only (disabled)
 					//if the constraint is coupled, allow only lambda <= coupled lambda
 //					 double lower = -Math.abs(ci.coupling.lambda)*ci.coupling.mu;					
 //					ci.lower = lower<ci.lower?lower:ci.lower;					
@@ -125,27 +136,29 @@ public class NonsmoothNonlinearConjugateGradient implements Solver {
 				// update the V vector
 				deltaLambda = (newlambda - lambda0);
 				
-//				if (Math.abs(deltaLambda)>eps) {
-					// apply to delta velocities
-					Vector3.multiplyAndAdd( ci.b1, deltaLambda, ci.body1.deltavelocity );
-					Vector3.multiplyAndAdd( ci.b2, deltaLambda, ci.body1.deltaomega );
-					Vector3.multiplyAndAdd( ci.b3, deltaLambda, ci.body2.deltavelocity );
-					Vector3.multiplyAndAdd( ci.b4, deltaLambda, ci.body2.deltaomega );
-					ci.lambda += deltaLambda;
+				// apply to delta velocities
+				Vector3.multiplyAndAdd( ci.b1, deltaLambda, ci.body1.deltavelocity );
+				Vector3.multiplyAndAdd( ci.b2, deltaLambda, ci.body1.deltaomega );
+				Vector3.multiplyAndAdd( ci.b3, deltaLambda, ci.body2.deltavelocity );
+				Vector3.multiplyAndAdd( ci.b4, deltaLambda, ci.body2.deltaomega );
+				ci.lambda += deltaLambda;
 
-					// update residual and squared gradient
-					rnew += deltaLambda*deltaLambda;
-//				}
+				// update residual and squared gradient
+				rnew += deltaLambda*deltaLambda;
 				
 				ci.residual = deltaLambda;
 			} //for constraints	
-
+			
+			// termination condition
 			if (Math.abs(rnew) < epsilon) {
 				break;
 			}	
+
+//			System.out.println("rnew="+rnew);
+
 			
 			// iteration limit
-			if (iter>max || restarts > 17 )
+			if (iter>max || restarts > 13250 )
 				break;
 
 			//compute beta
@@ -159,26 +172,26 @@ public class NonsmoothNonlinearConjugateGradient implements Solver {
 				
 			for (Body bi: bodies) {
 				// compute residual in body space
-				Vector3.sub( bi.auxDeltav2, bi.deltavelocity);
-				Vector3.sub( bi.auxDeltaOmega2, bi.deltaomega);
-				Vector3.multiply( bi.auxDeltav2, -1);
-				Vector3.multiply( bi.auxDeltaOmega2, -1);
+				Vector3.sub( bi.deltavelocity2, bi.deltavelocity);
+				Vector3.sub( bi.deltaomega2, bi.deltaomega);
+				Vector3.multiply( bi.deltavelocity2, -1);
+				Vector3.multiply( bi.deltaomega2, -1);
 
 				// apply to delta velocities
-				Vector3.multiplyStoreAndAdd( bi.auxDeltav, beta, bi.deltavelocity );
-				Vector3.multiplyStoreAndAdd( bi.auxDeltaOmega , beta, bi.deltaomega );
+				Vector3.multiplyStoreAndAdd( bi.deltavelocity1, beta, bi.deltavelocity );
+				Vector3.multiplyStoreAndAdd( bi.deltaomega1 , beta, bi.deltaomega );
 
 				// add gradient from this iteration
-				Vector3.add( bi.auxDeltav, bi.auxDeltav2);
-				Vector3.add( bi.auxDeltaOmega, bi.auxDeltaOmega2);
+				Vector3.add( bi.deltavelocity1, bi.deltavelocity2);
+				Vector3.add( bi.deltaomega1, bi.deltaomega2);
 			} 
 
 			//iteration count
 			iter = iter+1;
-//			System.out.println("rnew="+rnew);
-
 		} // while true
-//		System.out.println("rnew="+rnew+", iters="+iter);
+
+//		System.out.println("rnew="+rnew);
+
 		
 		// scale lambda in the bnorm. This is unnecessary if bnorm is set to 1
 		for (NCPConstraint ci: constraints) {
@@ -188,8 +201,7 @@ public class NonsmoothNonlinearConjugateGradient implements Solver {
 			Vector3.add( ci.body2.deltavelocity, ci.b3.multiply(factor));
 			Vector3.add( ci.body2.deltaomega, ci.b4.multiply(factor));
 		}
-		
-		
+
 		return 0;
 	}
 	
@@ -199,8 +211,8 @@ public class NonsmoothNonlinearConjugateGradient implements Solver {
 		
 		//copy to auxiliary
 		for ( Body bi: bodies) {
-			bi.auxDeltav.assign(bi.deltavelocity);
-			bi.auxDeltaOmega.assign(bi.deltaomega);
+			bi.deltavelocity1.assign(bi.deltavelocity);
+			bi.deltaomega1.assign(bi.deltaomega);
 		}
 		//copy lambda value
 		for (NCPConstraint ci: constraints) {
@@ -210,10 +222,10 @@ public class NonsmoothNonlinearConjugateGradient implements Solver {
 		//use one PGS iteration to compute new residual 
 		for (NCPConstraint ci: constraints) {
 			//calculate (Ax+b)_i 
-			double w =  ci.j1.dot(ci.body1.auxDeltav) 
-			+ ci.j2.dot(ci.body1.auxDeltaOmega)
-			+ ci.j3.dot(ci.body2.auxDeltav) 
-			+ ci.j4.dot(ci.body2.auxDeltaOmega) + ci.s*ci.damper;
+			double w =  ci.j1.dot(ci.body1.deltavelocity1) 
+			+ ci.j2.dot(ci.body1.deltaomega1)
+			+ ci.j3.dot(ci.body2.deltavelocity1) 
+			+ ci.j4.dot(ci.body2.deltaomega1) + ci.s*ci.damper;
 
 			double deltaLambda = (-ci.b-w)/(ci.diagonal + ci.damper );
 			double lambda0 = ci.s;
@@ -236,10 +248,10 @@ public class NonsmoothNonlinearConjugateGradient implements Solver {
 			deltaLambda = newlambda - lambda0;
 			
 			//ci.residual = deltaLambda;
-			Vector3.add( ci.body1.auxDeltav,     ci.b1.multiply(deltaLambda) );
-			Vector3.add( ci.body1.auxDeltaOmega, ci.b2.multiply(deltaLambda) );
-			Vector3.add( ci.body2.auxDeltav,     ci.b3.multiply(deltaLambda));
-			Vector3.add( ci.body2.auxDeltaOmega, ci.b4.multiply(deltaLambda));
+			Vector3.add( ci.body1.deltavelocity1,     ci.b1.multiply(deltaLambda) );
+			Vector3.add( ci.body1.deltaomega1, ci.b2.multiply(deltaLambda) );
+			Vector3.add( ci.body2.deltavelocity1,     ci.b3.multiply(deltaLambda));
+			Vector3.add( ci.body2.deltaomega1, ci.b4.multiply(deltaLambda));
 
 			ci.s += deltaLambda;
 			

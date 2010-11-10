@@ -155,9 +155,9 @@ public final class HingeJoint implements Constraint {
 		
 		//jacobians on matrix form
 		final Matrix3 Ji = Matrix3.identity().multiply(1);
-		final Matrix3 Jangi = Matrix3.crossProductMatrix(ri).multiply(-1);
+		final Matrix3 Jangi = Matrix3.cross(ri).multiply(-1);
 		final Matrix3 Jj = Matrix3.identity().multiply(-1);
-		final Matrix3 Jangj = Matrix3.crossProductMatrix(rj);
+		final Matrix3 Jangj = Matrix3.cross(rj);
 
 //		Matrix3 MiInv = Matrix3.identity().multiply(1/b1.state.mass);
 //		Matrix3 MjInv = Matrix3.identity().multiply(1/b2.state.mass);

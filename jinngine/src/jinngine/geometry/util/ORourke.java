@@ -282,7 +282,6 @@ public class ORourke {
 		}
 		// poly-line
 		if (N>2 && M==2) {
-//			System.out.println("switch");
 			// turn arguments around and wrap result TODO, could be more effective? 
 			final Vector3 p1 = poly2points.next();
 			final Vector3 p2 = poly2points.next();
@@ -508,14 +507,14 @@ public class ORourke {
 		// p1T(p2-p1) + (p2-p1)T(p2-p1) t - xT(p2-p1) = 0
 		//  t =  xT(p2-p1) - p1T(p2-p1) / (p2-p1)T(p2-p1)
 		//  t =  (x-p1)T(p2-p1) / |(p2-p1)|^2
-
+		final double e = 0.1;
 		final Vector3 p2p1 = p2.sub(p1);
 		p2p1.z = 0; // we only work in the xy plane
-		final double t = x.sub(p1).dot(p2p1) / p2p1.squaredNorm();
+		final double t = x.sub(p1).xydot(p2p1) / p2p1.squaredNorm();
 		if (t>= -epsilon && t <= 1+epsilon) {
 			// closest point on line
 			Vector3 lp = p1.add(p2.sub(p1).multiply(t));
-			if (  lp.sub(x).xynorm() < epsilon ) {
+			if (  lp.sub(x).xynorm() < e ) {
 				intPoint.assign(lp);
 				return true;
 			}
@@ -555,7 +554,7 @@ public class ORourke {
 			// intersect line with poly edge
 			if (lineLineIntersection(p1, p2, qm, q, param, epsilon)) {
 				// internal on lines
-				if (0<=param.x && param.x<=1 && 0<=param.y && param.y<=1) {
+				if (-epsilon<=param.x && param.x<=1+epsilon && -epsilon<=param.y && param.y<=1+epsilon) {
 					// calculate intersection points (including the right z-coordinate)
 					final Vector3 ipp = p1.add(p2.sub(p1).multiply(param.x));
 					final Vector3 ipq = qm.add( q.sub(qm).multiply(param.y));
@@ -587,10 +586,13 @@ public class ORourke {
 						// terminate
 						return;
 					}
+				} else {
+//					System.out.println("intersection point not internal = "+param);
 				}
 			} else {
 				// poly edge is parallel with line. There is a special case where the line
 				// is coincident with and edge of the poly
+//				System.out.println("line parallel with poly edge");
 			}
 			
 			
@@ -649,7 +651,10 @@ public class ORourke {
 	 * @return
 	 */
 	public static final boolean isInHalfplane(final Vector3 a, final Vector3 bs, final Vector3 bt) {
-		return (bt.sub(bs)).cross(a.sub(bs)).z >= 0;
+		// optimised to avoid allocation
+		// return (bt.sub(bs)).cross(a.sub(bs)).z >= 0;		
+		return (bt.x-bs.x)*(a.y-bs.y)-(bt.y-bs.y)*(a.x-bs.x) >=0;
+
 	}
 	
 	/**
@@ -738,9 +743,9 @@ public class ORourke {
 		// a = 1/(pd.x*qd.y-pd.y*qd.x)( qd.y*b.x + (-qd.x)*b.y );
 		// b = 1/(pd.x*qd.y-pd.y*qd.x)( (-pd.y)*b.x + pd.x*b.y );
 		
-		// line deltas
-		Vector3 pd = pt.sub(ps);
-		Vector3 qd = qs.sub(qt); // turned around, see derivation
+/*		// line deltas
+ 		Vector3 pd = pt.sub(ps);
+ 		Vector3 qd = qs.sub(qt); // turned around, see derivation
 		
 		// the b-side in the equation in the comments above
 		Vector3 b = qs.sub(ps);
@@ -755,6 +760,37 @@ public class ORourke {
 		// calculate parametrisation values at intersection
 		double alpha = (1/det)* (qd.y*b.x + (-qd.x)*b.y);
 		double beta  = (1/det)* ( (-pd.y)*b.x + pd.x*b.y ); 
+*/
+		
+//		// line deltas
+//		Vector3 pd = pt.sub(ps);
+//		Vector3 qd = qs.sub(qt); // turned around, see derivation
+//		
+//		// pd.x = (pt.x-ps.x)
+//		// pd.y = (pt.y-ps.y)
+//		// pd.z = (pt.z-ps.z)
+//
+//		// qd.x = (qs.x-qt.x)
+//		// qd.y = (qs.y-qt.y)
+//		// qd.z = (qs.z-qt.z)
+//
+//		
+//		// the b-side in the equation in the comments above
+//		Vector3 b = qs.sub(ps);
+//		
+//		b.x = (qs.x-ps.x)
+//		b.y = (qs.y-ps.y)
+		
+		// determinant calculation
+		double det =  (pt.x-ps.x)*(qs.y-qt.y)-(pt.y-ps.y)*(qs.x-qt.x);		
+		
+		// ill-posed problem?
+		if (Math.abs(det)<epsilon)
+			return false;
+		 
+		// calculate parametrisation values at intersection
+		double alpha = (1/det)* ((qs.y-qt.y)*(qs.x-ps.x) + (-(qs.x-qt.x))*(qs.y-ps.y));
+		double beta  = (1/det)* ( (-(pt.y-ps.y))*(qs.x-ps.x) + (pt.x-ps.x)*(qs.y-ps.y) ); 
 		
 		// set return values
 		st.x = alpha;

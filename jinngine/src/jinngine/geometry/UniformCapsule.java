@@ -22,6 +22,7 @@ public final class UniformCapsule implements Geometry, SupportMap3, Material {
 	private final double length;
 	private final InertiaMatrix inertia;
 	private final double uniformmass;
+	private final String name;
 	
 	/**
 	 * A uniform capsule aligned on the z-axis, centred in the origin.
@@ -29,19 +30,31 @@ public final class UniformCapsule implements Geometry, SupportMap3, Material {
 	 * @param length distance between capsule end-points. Note that the total length of the 
 	 *        capsule will be length + 2radius
 	 */
-	public UniformCapsule(double radius, double length) {
+	public UniformCapsule(String name, double radius, double length) {
+		this.name = new String(name);
 		this.radius = radius;
 		this.length = length;
 				
-		// use mass of a cylinder for now
-		this.uniformmass = Math.PI*radius*radius*length;
+		// use mass of a cylinder plus mass of the sphere
+		final double cylinderMass = Math.PI*radius*radius*length;
+		final double sphereMass = (4.0/3.0)*Math.PI*radius*radius*radius;
+		this.uniformmass = cylinderMass + sphereMass;
 		
-//		System.out.println("capsule mass="+uniformmass);
-
-		// angular inertia (for a cylinder for now) TODO 
-		final double Ixx = uniformmass*(1/12.0)*(3*radius*radius+length*length);
+		// angular inertia for cylinder part (scale in cylinders part of total mass) 
+		final double Ixx = (cylinderMass/uniformmass)*(1.0/12.0)*(3*radius*radius+length*length);
 		this.inertia = new InertiaMatrix();
-		this.inertia.assignScale( Ixx, Ixx, 0.5*uniformmass*radius*radius); 
+		this.inertia.assignScale( Ixx, Ixx, 0.5*radius*radius); 
+		
+		// add the contribution from the two half-sphere at the ends 
+		// inertia for half-sphere in (0,0,0) frame (not in centre of mass frame)
+		final double IHalfSphere = (1.0/5.0)*radius*radius;
+		// the following is equivalent to translating two half-sphere tensors to
+		// each side along the z-axis, there after adding them to the inertia of the cylinder
+		this.inertia.a11 += 2*(sphereMass/uniformmass)*(IHalfSphere + (0.25*length*length));
+		this.inertia.a22 += 2*(sphereMass/uniformmass)*(IHalfSphere + (0.25*length*length));
+		
+		// centre of mass for half-sphere in positive z space
+		//final double halfSphereCmZ = (3.0/16.0)*radius;
 	}
 	
 	/**
@@ -64,14 +77,18 @@ public final class UniformCapsule implements Geometry, SupportMap3, Material {
 	
 	private Object auxiliary;
 	private Body body;
-	private double envelope = 0.125;
+	private double envelope = 0.225;
 	private final Matrix3 rotation = new Matrix3(Matrix3.identity());
 	private final Vector3 translation = new Vector3();
+	private final Vector3 worldMaximumBounds = new Vector3();
+	private final Vector3 worldMinimumBounds = new Vector3();
+	private final Matrix4 worldTransform = new Matrix4();
+
 	
 	@Override
-	public final Object getAuxiliary() {return this.auxiliary;}
+	public final Object getUserReference() {return this.auxiliary;}
 	@Override
-	public final void setAuxiliary(Object aux) {this.auxiliary = aux;}
+	public final void setUserReference(Object aux) {this.auxiliary = aux;}
 	@Override
 	public final Body getBody() {return body;}
 	@Override
@@ -79,7 +96,7 @@ public final class UniformCapsule implements Geometry, SupportMap3, Material {
 	@Override
 	public final double getEnvelope() {return envelope;}
 	@Override
-	public final InertiaMatrix getInertialMatrix() { return this.inertia;}
+	public final InertiaMatrix getInertiaMatrix() { return this.inertia;}
 	@Override
 	public final void getLocalTransform(Matrix3 R, Vector3 b) {
 		R.assign(rotation);
@@ -92,9 +109,10 @@ public final class UniformCapsule implements Geometry, SupportMap3, Material {
 	public final double getMass() { return uniformmass; }
 
 	@Override
-	public final Matrix4 getTransform() {
+	public final Matrix4 getWorldTransform() {
 		Matrix4 T =  Transforms.transformAndTranslate4(rotation, translation);
 		return body.getTransform().multiply(T);
+//		return new Matrix4(worldTransform);
 	}
 	@Override
 	public final void setEnvelope(double envelope) { this.envelope = envelope; }
@@ -109,19 +127,26 @@ public final class UniformCapsule implements Geometry, SupportMap3, Material {
 	/*
 	 *  BoundingBox methods
 	 */
-
 	@Override
-	public Vector3 getMaxBounds() {
+	public final Vector3 getMaxBounds(Vector3 bounds) {
+		return bounds.assign(worldMaximumBounds);
+	}
+
+	private final Vector3 getMaxBoundsTmp(Vector3 bounds) {
 		Vector3 p1 = body.state.rotation.multiply(rotation.multiply(new Vector3(0, 0,  0.5*length)).add(translation)).add(body.state.position);
 		Vector3 p2 = body.state.rotation.multiply(rotation.multiply(new Vector3(0, 0, -0.5*length)).add(translation)).add(body.state.position);
-		return new Vector3((p1.x>p2.x?p1.x:p2.x) + envelope+radius, (p1.y>p2.y?p1.y:p2.y)+ envelope+radius, (p1.z>p2.z?p1.z:p2.z)+envelope+radius );
+		return bounds.assign((p1.x>p2.x?p1.x:p2.x) + envelope+radius, (p1.y>p2.y?p1.y:p2.y)+ envelope+radius, (p1.z>p2.z?p1.z:p2.z)+envelope+radius );
 	}
 
 	@Override
-	public Vector3 getMinBounds() {
+	public Vector3 getMinBounds(Vector3 bounds) {
+		return bounds.assign(worldMinimumBounds);
+	}
+
+	private final Vector3 getMinBoundsTmp(Vector3 bounds) {
 		Vector3 p1 = body.state.rotation.multiply(rotation.multiply(new Vector3(0, 0,  0.5*length)).add(translation)).add(body.state.position);
 		Vector3 p2 = body.state.rotation.multiply(rotation.multiply(new Vector3(0, 0, -0.5*length)).add(translation)).add(body.state.position);
-		return new Vector3((p1.x<p2.x?p1.x:p2.x)-envelope-radius, (p1.y<p2.y?p1.y:p2.y)-envelope-radius, (p1.z<p2.z?p1.z:p2.z)-envelope-radius );
+		return bounds.assign((p1.x<p2.x?p1.x:p2.x)-envelope-radius, (p1.y<p2.y?p1.y:p2.y)-envelope-radius, (p1.z<p2.z?p1.z:p2.z)-envelope-radius );
 	}
 
 	/*  
@@ -170,5 +195,25 @@ public final class UniformCapsule implements Geometry, SupportMap3, Material {
 	public void setFrictionCoefficient(double f) { this.friction = f; }
 	@Override
 	public void setRestitution(double e) { this.restitution = e; }
+
+	@Override
+	public Vector3 getLocalCentreOfMass(Vector3 cm) { return cm.assignZero(); }
+
+	@Override
+	public String getName() {
+		return name;
+	}
+
+	@Override
+	public void update() {
+//		System.out.println("Capsule update");
+
+		// update world transform
+        Matrix4.multiply(body.getTransform(), Transforms.transformAndTranslate4(rotation, translation),  worldTransform);
+
+        // update world bounding box
+		getMaxBoundsTmp(worldMaximumBounds);
+		getMinBoundsTmp(worldMinimumBounds);		
+	}
 
 }

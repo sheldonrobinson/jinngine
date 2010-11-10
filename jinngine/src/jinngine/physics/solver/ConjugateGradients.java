@@ -11,6 +11,7 @@ package jinngine.physics.solver;
 import java.util.List;
 import jinngine.math.Vector3;
 import jinngine.physics.Body;
+import jinngine.util.Logger;
 
 /**
  * Preconditioned Conjugate Gradients solver. Solves the given list of constraints, 
@@ -28,80 +29,83 @@ public class ConjugateGradients implements Solver {
 	@Override
 	public double solve(List<NCPConstraint> constraints, List<Body> bodies, double epsilon) {
 		maxIterations = constraints.size();
-		//System.out.println("*) CG "+ n+"x" + n+" system");
-		
+				
+		assert Logger.trace("ConjugateGradients: "+ maxIterations+"x" + maxIterations+" system");
+
 		//Conjugate Gradients
 		double delta_new=0, delta_old=0, delta_zero=0;
 		double delta_low=Double.POSITIVE_INFINITY;
 		double delta_best=delta_low;
 		//double epsilon = 1e-6;
-		double division_epsilon = 1e-12;
+		final double division_epsilon = 1e-31;
 		int iterations=0;
-		
+				
 		//reset auxiliary deltas
 		for (Body b: bodies) {
-			b.auxDeltav.assignZero();
-			b.auxDeltaOmega.assignZero();
+			b.deltavelocity1.assignZero();
+			b.deltaomega1.assignZero();
 		}
+		
+		// compute external force contribution, compute b vector norm
+		double bnorm = 0;
+		for (NCPConstraint ci: constraints) {
+			ci.Fext = ci.j1.dot(ci.body1.externaldeltavelocity)
+			+ ci.j2.dot(ci.body1.externaldeltaomega)
+			+ ci.j3.dot(ci.body2.externaldeltavelocity) 
+			+ ci.j4.dot(ci.body2.externaldeltaomega); 			
+			bnorm += Math.pow(ci.b+ci.Fext,2);			
+		}
+		bnorm = Math.sqrt(bnorm);
+		final double bnorminv = 1.0/bnorm;
 		
 		//We solve Ax+b = 0 => r = -b-Ax
 		//r  = b-Ax
 		//d  = M^(-1)r
 		//delta_new = rTr
 		for (NCPConstraint ci: constraints) {
-			ci.residual = 
-				-ci.b - ci.j1.dot(ci.body1.deltavelocity.add(ci.body1.externaldeltavelocity)) - ci.j2.dot(ci.body1.deltaomega.add(ci.body1.externaldeltaomega))
-						- ci.j3.dot(ci.body2.deltavelocity.add(ci.body2.externaldeltavelocity)) - ci.j4.dot(ci.body2.deltaomega.add(ci.body2.externaldeltaomega))
-						- ci.lambda*ci.damper;
+			// find residual (scaled) 
+			ci.residual = -(
+				(ci.b + ci.Fext)*bnorminv  + (ci.j1.dot(ci.body1.deltavelocity) + ci.j2.dot(ci.body1.deltaomega)
+						+ ci.j3.dot(ci.body2.deltavelocity) + ci.j4.dot(ci.body2.deltaomega)
+						+ ci.lambda*ci.damper));
 							
 			//d = M^-1 r
 			ci.d = ci.residual / (ci.diagonal+ci.damper);
-			
-			//TODO remove
-			if (Math.abs(ci.diagonal)<1e-13) {
-				System.exit(0);
-			}
 
-			//reflect d in the delta velocities
-			Vector3.add( ci.body1.auxDeltav,     ci.b1.multiply(ci.d));
-			Vector3.add( ci.body1.auxDeltaOmega, ci.b2.multiply(ci.d));
-			Vector3.add( ci.body2.auxDeltav,     ci.b3.multiply(ci.d));
-			Vector3.add( ci.body2.auxDeltaOmega, ci.b4.multiply(ci.d));
-
+			//reflect d in the deltavelocity1
+			Vector3.add( ci.body1.deltavelocity1, ci.b1.multiply(ci.d));
+			Vector3.add( ci.body1.deltaomega1,    ci.b2.multiply(ci.d));
+			Vector3.add( ci.body2.deltavelocity1, ci.b3.multiply(ci.d));
+			Vector3.add( ci.body2.deltaomega1,    ci.b4.multiply(ci.d));
 			
 			delta_new += ci.residual * ci.d;
-			//System.out.println("initial residuals "+ci.residual + " b=" + ci.b);
-
 		} 		
 		
 				
 		delta_old = delta_new;
 		delta_zero = delta_new;
 		delta_best = delta_new;
-		
-		//System.out.println(""+FischerNewtonConjugateGradients.fischerMerit(errormeassure, bodies));
-		
-		//CG iterations
+				
+		//begin conjugate gradients iterations
 		while (iterations < maxIterations &&  delta_new>epsilon*epsilon*delta_zero && delta_new > epsilon ) {			
-			//System.out.println("cg iterate");
 			//q = Ad
 			//alpha = delta_new/dTq
 			double dTq = 0;
 			for (NCPConstraint ci: constraints) {
-				ci.q = ci.j1.dot(ci.body1.auxDeltav) + ci.j2.dot(ci.body1.auxDeltaOmega)
-				+ ci.j3.dot(ci.body2.auxDeltav) + ci.j4.dot(ci.body2.auxDeltaOmega)
-				+ ci.d * ci.damper;
+				ci.q = ci.j1.dot(ci.body1.deltavelocity1) + ci.j2.dot(ci.body1.deltaomega1)
+				+ ci.j3.dot(ci.body2.deltavelocity1) + ci.j4.dot(ci.body2.deltaomega1)
+				+ ci.d * ci.damper; 
 				
 				dTq += ci.d*ci.q;
 			} 			
 
-			if (Math.abs(dTq)<division_epsilon) {
-				//System.out.println("at solution, delta_new " + delta_new );
+			if (Math.abs(dTq)< division_epsilon) {
+				assert Logger.trace("ConjugateGradients: at solution, delta_new " + delta_new +", iteration="+iterations );
 				if (iterations==0){
 					delta_best = Double.POSITIVE_INFINITY;
 				}
 				break;
-			}
+			} 
 			
 			double alpha = delta_new/dTq;
 			delta_old = delta_new;
@@ -121,6 +125,8 @@ public class ConjugateGradients implements Solver {
 				delta_new += ci.residual*ci.s;
 			}
 			
+			assert Logger.trace("ConjugateGradients: ("+iterations+") delta_new="+delta_new);
+			
 			//keep track of best solution
 			boolean best_updated = false;
 			if (delta_new < delta_best) {
@@ -129,7 +135,7 @@ public class ConjugateGradients implements Solver {
 			}
 
 			if (Math.abs(delta_old)<division_epsilon) {
-				//System.out.println("old delta too low");
+				assert Logger.trace("ConjugateGradients: old delta too low, stopping");
 				break;
 			}
 			
@@ -139,7 +145,7 @@ public class ConjugateGradients implements Solver {
 //			}
 			
 			if (delta_new > 100*delta_zero) {
-				//System.out.println("error larger then start");
+				assert Logger.trace("ConjugateGradients: solution divergence, stopping");
 				break;
 			}
 			
@@ -147,8 +153,8 @@ public class ConjugateGradients implements Solver {
 
 			//d = s + beta d
 			for (Body b: bodies) { // d = beta d
-				Vector3.multiply( b.auxDeltav,     beta);
-				Vector3.multiply( b.auxDeltaOmega, beta);				
+				Vector3.multiply( b.deltavelocity1, beta);
+				Vector3.multiply( b.deltaomega1,    beta);				
 			}			
 			for (NCPConstraint ci: constraints) { 
 				// d = d + r
@@ -156,10 +162,10 @@ public class ConjugateGradients implements Solver {
 				ci.d = ci.s + beta* ci.d;
 
 				//reflect d in the delta velocities
-				Vector3.add( ci.body1.auxDeltav,     ci.b1.multiply(ci.s));
-				Vector3.add( ci.body1.auxDeltaOmega, ci.b2.multiply(ci.s));
-				Vector3.add( ci.body2.auxDeltav,     ci.b3.multiply(ci.s));
-				Vector3.add( ci.body2.auxDeltaOmega, ci.b4.multiply(ci.s));
+				Vector3.add( ci.body1.deltavelocity1, ci.b1.multiply(ci.s));
+				Vector3.add( ci.body1.deltaomega1,    ci.b2.multiply(ci.s));
+				Vector3.add( ci.body2.deltavelocity1, ci.b3.multiply(ci.s));
+				Vector3.add( ci.body2.deltaomega1,    ci.b4.multiply(ci.s));
 				
 				//if best updated, set the best vector
 				if (best_updated)
@@ -167,37 +173,32 @@ public class ConjugateGradients implements Solver {
 			}	
 			
 			iterations += 1;
+		} // conjugate gradients iterations
 
-			//System.out.println(""+FischerNewtonConjugateGradients.fischerMerit(errormeassure, bodies));
-			//System.out.println("iteration " + iterations +", delta_new=" + delta_new +", alpha=" +alpha +", beta=" + beta);
+		assert Logger.trace("ConjugateGradients: finshed at delta_new="+delta_new+", iterations="+iterations);
 
-		} //CG iterations
+		//apply the lambda values to the final velocities, scaled in the b vector norm
+		for (NCPConstraint ci: constraints) {
+			ci.lambda += ci.bestdlambda*bnorm;
 
+			//reflect in delta velocities
+			Vector3.add( ci.body1.deltavelocity, ci.b1.multiply(ci.bestdlambda*bnorm));
+			Vector3.add( ci.body1.deltaomega,    ci.b2.multiply(ci.bestdlambda*bnorm));
+			Vector3.add( ci.body2.deltavelocity, ci.b3.multiply(ci.bestdlambda*bnorm));
+			Vector3.add( ci.body2.deltaomega,    ci.b4.multiply(ci.bestdlambda*bnorm));
 
-		//if solution was accepted
-		//if (delta_best < epsilon) {
+			//reset
+			ci.dlambda = 0;
+			ci.bestdlambda = 0;
+		}
 
-			//apply the lambda values to the final velocities
-			for (NCPConstraint ci: constraints) {
-				ci.lambda += ci.bestdlambda;
-
-				//reflect in delta velocities
-				Vector3.add( ci.body1.deltavelocity,     ci.b1.multiply(ci.bestdlambda));
-				Vector3.add( ci.body1.deltaomega, ci.b2.multiply(ci.bestdlambda));
-				Vector3.add( ci.body2.deltavelocity,     ci.b3.multiply(ci.bestdlambda));
-				Vector3.add( ci.body2.deltaomega, ci.b4.multiply(ci.bestdlambda));
-
-				//reset
-				ci.dlambda = 0;
-				ci.bestdlambda = 0;
-			}
-		//}
-
-		//if (delta_best>1 && delta_best < 100000)
-			//System.out.println("iterations: " + iterations +" best is "+ delta_best);
-		
-		
-			//System.out.println("delta_best="+delta_best+ "iterations "+iterations);
+//		// write out solution
+//		for (NCPConstraint ci: constraints) {			
+//				System.out.println(((ci.b + ci.Fext) + (ci.j1.dot(ci.body1.deltavelocity) + ci.j2.dot(ci.body1.deltaomega)
+//						+ ci.j3.dot(ci.body2.deltavelocity) + ci.j4.dot(ci.body2.deltaomega)
+//						+ ci.lambda*ci.damper))+"    " + ci.lambda );
+//							
+//		} 	
 		
 		return (iterations+1);
 	}

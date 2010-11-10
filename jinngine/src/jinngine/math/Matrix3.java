@@ -127,6 +127,16 @@ public class Matrix3 {
 	  return this;
   }
 
+  /**
+   * Assign the non-uniform scale matrix given by s1, s2 and s3, to this matrix
+   */
+  public final Matrix3 assignScale(Vector3 s) {
+	  a11 = s.x; a12 = 0.; a13 = 0.;
+	  a21 = 0.; a22 = s.y; a23 = 0.;
+	  a31 = 0.; a32 = 0.; a33 = s.z;
+	  return this;
+  }
+
   
   /**
    * Assign the identity matrix to this matrix
@@ -184,6 +194,12 @@ public class Matrix3 {
 	  }	
   }
 
+  /** 
+   * Get the diagonal of this matrix
+   */
+  public Vector3 diag() {
+	  return new Vector3(a11,a22,a33);
+  }
   
   /**
    * Get all column vectors of this matrix
@@ -234,6 +250,15 @@ public class Matrix3 {
   }
   
   /**
+   * Return a new matrix that is multiplied by the scalar -1
+   */
+  public final Matrix3 negate() {
+	  return new Matrix3( -this.a11, -this.a12, -this.a13, 
+			  -this.a21, -this.a22, -this.a23,
+			  -this.a31, -this.a32, -this.a33 ); 
+  }
+  
+  /**
    * Multiply this matrix by a scalar, return the resulting matrix
    * @param s
    * @return
@@ -275,6 +300,19 @@ public class Matrix3 {
    */
   public Matrix3 assignMultiply(Matrix3 A) {
 	  return multiply(this,A,this);
+  }
+  
+  
+  /**
+   * Multiply by scalar s and store in this matrix.
+   * @param s scalar
+   * @return this matrix
+   */
+  public Matrix3 assignMultiply( double s) {
+	  a11*=s; a12*=s; a13*=s;
+	  a21*=s; a22*=s; a23*=s;
+	  a31*=s; a32*=s; a33*=s;	  
+	  return this;
   }
   
   //C = AxB 
@@ -492,6 +530,16 @@ public class Matrix3 {
   }
   
   /**
+   * Return this matrix as a formated string, that can be 
+   * directly used in a MATLAB script.
+   */
+  public final String toMatlabString() {
+	    return "[" +a11 +" "+a12+ " " +a13+ "; "
+	    +a21+" " + a22 + " " + a23 + "; "
+        + a31+" " + a32 + " " + a33 + "]" ;
+  }
+  
+  /**
    * Check matrix for NaN values 
    */
   public final boolean isNaN() {
@@ -515,15 +563,12 @@ public class Matrix3 {
 	  return Math.sqrt(	a11*a11 + a12*a12 + a13*a13  + a21*a21 + a22*a22  + a23*a23  + a31*a31 + a32*a32 + a33*a33 ); 
   }
     /**
-     *
-     * @param v
-     * @return
-     * @throws NullPointerException
+     * Return the cross product matrix of the vector a, such that M b = a x b.
      */
-    public static Matrix3 crossProductMatrix(Vector3 v) {
+    public static Matrix3 cross(Vector3 a) {
         return new Matrix3(
-                0., -v.z, v.y,
-                v.z, 0., -v.x,
-                -v.y, v.x, 0.);
+                0., -a.z, a.y,
+                a.z, 0., -a.x,
+                -a.y, a.x, 0.);
     }
 }

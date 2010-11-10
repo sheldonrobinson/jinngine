@@ -19,17 +19,18 @@ public class Box implements SupportMap3, Geometry, Material {
 
 	// transforms and body reference
 	private Body body;
-	private final Matrix3 localtransform = new Matrix3();
 	private final Matrix3 localrotation = new Matrix3();
 	private final Vector3 localdisplacement = new Vector3();
-	private final Vector3 bounds = new Vector3();
-	private double envelope = 0.125;
-//	private final double sweep = 1.05;
-//	private final double extra = 2;
-	
+	private final Vector3 worldMaximumBounds = new Vector3();
+	private final Vector3 worldMinimumBounds = new Vector3();
+	private final Matrix4 worldTransform = new Matrix4();
+		
 	// box properties
 	private double xs,ys,zs;
 	private double mass;
+	private final String name;
+	private double envelope = 0.125;
+	private final double sphereSweepRadius;
 	
 	// auxiliary user reference
 	private Object auxiliary;
@@ -44,48 +45,84 @@ public class Box implements SupportMap3, Geometry, Material {
 	 * @param y Box y-axis extend
 	 * @param z Box z-axis extend
 	 */
-	public Box(double x, double y, double z) {
+	public Box(String name, double x, double y, double z) {
+		this.name = new String(name);
 		this.xs = x; this.ys = y; this.zs = z;
 		mass = xs*ys*zs;
+		sphereSweepRadius = 0;
+				
+		// set the local transform
+		setLocalTransform( Matrix3.identity(), new Vector3() );
+	}
+
+	/**
+	 * Create a box with the given side lengths and a
+	 * sphere sweeping radius
+	 * @param x Box x-axis extend
+	 * @param y Box y-axis extend
+	 * @param z Box z-axis extend
+	 */
+	public Box(String name, double x, double y, double z, double radius) {
+		this.name = new String(name);
+		this.xs = x; this.ys = y; this.zs = z;
+		mass = xs*ys*zs;
+		sphereSweepRadius = radius;
+				
+		// set the local transform
+		setLocalTransform( Matrix3.identity(), new Vector3() );
+	}
+
+	
+	/**
+	 * Create a box with the given side lengths
+	 * @param x Box x-axis extend
+	 * @param y Box y-axis extend
+	 * @param z Box z-axis extend
+	 */
+	public Box(String name, Vector3 sides) {
+		this.name = new String(name);
+		this.xs = sides.x; this.ys = sides.y; this.zs = sides.z;
+		mass = xs*ys*zs;
+		sphereSweepRadius = 0;
 				
 		//set the local transform
 		setLocalTransform( Matrix3.identity(), new Vector3() );
 	}
 
-	/**
-	 * Create a new box with the given side lengths and a local translation
-	 * @param x Box x-axis extend
-	 * @param y Box y-axis extend
-	 * @param z Box z-axis extend
-	 * @param posx Box local x-axis translation
-	 * @param posy Box local y-axis translation
-	 * @param posz Box local z-axis translation
-	 */
-	public Box(double x, double y, double z, double posx, double posy, double posz) {
-		this.xs = x; this.ys = y; this.zs = z;
-		mass = xs*ys*zs;
-		
-		//set the local transform
-		setLocalTransform( Matrix3.identity(), new Vector3(posx,posy,posz) );
-	}
+//	/**
+//	 * Create a new box with the given side lengths and a local translation
+//	 * @param x Box x-axis extend
+//	 * @param y Box y-axis extend
+//	 * @param z Box z-axis extend
+//	 * @param posx Box local x-axis translation
+//	 * @param posy Box local y-axis translation
+//	 * @param posz Box local z-axis translation
+//	 */
+//	public Box(double x, double y, double z, double posx, double posy, double posz) {
+//		this.xs = x; this.ys = y; this.zs = z;
+//		mass = xs*ys*zs;
+//		
+//		//set the local transform
+//		setLocalTransform( Matrix3.identity(), new Vector3(posx,posy,posz) );
+//	}
 
-	/** 
-	 * Set new side lengths for this box. Keep in mind that altering geometry changes mass and 
-	 * inertia properties of bodies. This method automatically re-finalises the attached body, 
-	 * should this box be attached to one. This operation is relatively expensive.
-	 */
-	public final void setBoxSideLengths( double xl, double yl, double zl) {
-		this.xs = xl; this.ys = yl; this.zs = zl;
-		mass = xl*yl*zl;
-		
-		// re-finalise body if any present
-		if ( body != null)
-			body.finalize();
-	}
+//	/** 
+//	 * Set new side lengths for this box. Keep in mind that altering geometry changes mass and 
+//	 * inertia properties of bodies. This method automatically re-finalises the attached body, 
+//	 * should this box be attached to one. This operation is relatively expensive.
+//	 */
+//	public final void setBoxSideLengths( double xl, double yl, double zl) {
+//		this.xs = xl; this.ys = yl; this.zs = zl;
+//		mass = xl*yl*zl;
+//		
+//		// re-finalise body if any present
+//		if ( body != null)
+//			body.finalize();
+//	}
 	
 	// user auxiliary methods
-	public Object getAuxiliary() { return auxiliary; }
-	public void setAuxiliary(Object auxiliary) { this.auxiliary = auxiliary; }
+	public Object getUserReference() { return auxiliary; }
+	public void setUserReference(Object auxiliary) { this.auxiliary = auxiliary; }
 
 	@Override
 	public Vector3 supportPoint(Vector3 direction) {
@@ -94,7 +131,7 @@ public class Box implements SupportMap3, Geometry, Material {
 		double sv1 = v.x<0?-0.5:0.5;
 		double sv2 = v.y<0?-0.5:0.5;
 		double sv3 = v.z<0?-0.5:0.5;
-		return body.state.rotation.multiply(localtransform.multiply(new Vector3(sv1, sv2, sv3)).add(localdisplacement)).add(body.state.position);
+		return body.state.rotation.multiply(localrotation.multiply(new Vector3(xs*sv1, ys*sv2, zs*sv3)).add(localdisplacement)).add(body.state.position);
 	}
 
 	@Override
@@ -104,12 +141,12 @@ public class Box implements SupportMap3, Geometry, Material {
 	public void setBody(Body b) { this.body = b; }
 
 	@Override
-	public InertiaMatrix getInertialMatrix() {
+	public InertiaMatrix getInertiaMatrix() {
             // standard inertia matrix for a box with variable side lengths            
             final Matrix3 M = Matrix3.scaleMatrix(
-					(1.0f/12.0f)*mass*(ys*ys+zs*zs),
-					(1.0f/12.0f)*mass*(xs*xs+zs*zs),
-					(1.0f/12.0f)*mass*(ys*ys+xs*xs));
+					(1.0f/12.0f)*1*(ys*ys+zs*zs),
+					(1.0f/12.0f)*1*(xs*xs+zs*zs),
+					(1.0f/12.0f)*1*(ys*ys+xs*xs));
             return new InertiaMatrix(M);
 	}
 	
@@ -127,14 +164,6 @@ public class Box implements SupportMap3, Geometry, Material {
 	public void setLocalTransform(Matrix3 rotation, Vector3 displacement) {
 		this.localdisplacement.assign(displacement);
 		this.localrotation.assign(rotation);
-
-		//set the local transform 
-		localtransform.assign( localrotation.multiply(new Matrix3(new Vector3(xs,0,0), new Vector3(0,ys,0), new Vector3(0,0,zs))));
-		
-		//extremal point on box
-		double max = Matrix3.multiply(localtransform, new Vector3(0.5,0.5,0.5), new Vector3()).norm();
-		bounds.assign(new Vector3(max,max,max));
-		//System.out.println("max="+max);
 	}
 
 	@Override
@@ -149,8 +178,12 @@ public class Box implements SupportMap3, Geometry, Material {
 		
 	}
 
-	@Override
-	public Vector3 getMaxBounds() {
+	@Override	
+	public final Vector3 getMaxBounds(Vector3 bounds) {
+		return bounds.assign(worldMaximumBounds);
+	}
+	
+	private final Vector3 getMaxBoundsTmp(Vector3 bounds) {
 		// find the pricipal axis of the box in world space
 		Matrix3 T = body.state.rotation.multiply(localrotation).transpose();
 		Vector3 vx = new Vector3(), vy = new Vector3(), vz = new Vector3();
@@ -177,12 +210,15 @@ public class Box implements SupportMap3, Geometry, Material {
 		Tb.getRowVectors(rx, ry, rz);
 		
 		// return the final bounds, adding the envelope and sweep size
-		return new Vector3(rx.dot(px)+envelope, ry.dot(py)+envelope, rz.dot(pz)+envelope).add(body.state.position);
+		return bounds.assign(rx.dot(px)+sphereSweepRadius+envelope+body.state.position.x, ry.dot(py)+sphereSweepRadius+envelope+body.state.position.y, rz.dot(pz)+sphereSweepRadius+envelope+body.state.position.z);
 	}
 
 	@Override
-	public Vector3 getMinBounds() {
-
+	public final Vector3 getMinBounds(Vector3 bounds) {
+		return bounds.assign(worldMinimumBounds);
+	}
+	
+	private final Vector3 getMinBoundsTmp(Vector3 bounds) {
 		// get the column vectors of the transform
 		Matrix3 T = body.state.rotation.multiply(localrotation).transpose();
 		Vector3 vx = new Vector3(), vy = new Vector3(), vz = new Vector3();
@@ -203,7 +239,7 @@ public class Box implements SupportMap3, Geometry, Material {
 		Matrix3.multiply( localrotation, py, py);
 		Matrix3.multiply( localrotation, pz, pz);
 		
-		// add local displacement and scale
+		// add local displacement 
 		Vector3.add( px, localdisplacement);
 		Vector3.add( py, localdisplacement);
 		Vector3.add( pz, localdisplacement);
@@ -213,17 +249,18 @@ public class Box implements SupportMap3, Geometry, Material {
 		Vector3 rx = new Vector3(), ry = new Vector3(), rz = new Vector3();
 		Tb.getRowVectors(rx, ry, rz);
 
-		// return final bounds, subtracting the envelope size and sphere sweep size
-		return new Vector3(rx.dot(px)-envelope, ry.dot(py)-envelope, rz.dot(pz)-envelope).add(body.state.position);		
+		// return final bounds, subtracting the envelope size 
+		return bounds.assign(rx.dot(px)-sphereSweepRadius-envelope+body.state.position.x, ry.dot(py)-sphereSweepRadius-envelope+body.state.position.y, rz.dot(pz)-sphereSweepRadius-envelope+body.state.position.z);		
 	}
 
 	@Override
-	public Matrix4 getTransform() {
-		return Matrix4.multiply(body.getTransform(), Transforms.transformAndTranslate4(localtransform, localdisplacement), new Matrix4());
+	public Matrix4 getWorldTransform() {
+//		return Matrix4.multiply(body.getTransform(), Transforms.transformAndTranslate4(localrotation, localdisplacement), new Matrix4());
+		return worldTransform;
 	}	
 
 	@Override
-	public void supportFeature(final Vector3 d, final List<Vector3> featureList) {
+	public final void supportFeature(final Vector3 d, final List<Vector3> featureList) {
 		final double epsilon = 0.09;
 		//get d into the canonical box space
 		Vector3 v = body.state.rotation.multiply(localrotation).transpose().multiply(d);
@@ -251,7 +288,7 @@ public class Box implements SupportMap3, Geometry, Material {
 			final double sv2 = v.y<0?-0.5:0.5;
 			final double sv3 = v.z<0?-0.5:0.5;
 			//return Matrix4.multiply(transform4, new Vector3(sv1, sv2, sv3), new Vector3());
-			featureList.add( body.state.rotation.multiply(localtransform.multiply(new Vector3(sv1, sv2, sv3)).add(localdisplacement)).add(body.state.position) );
+			featureList.add( body.state.rotation.multiply(localrotation.multiply(new Vector3(xs*sv1, ys*sv2, zs*sv3)).add(localdisplacement)).add(body.state.position) );
 		}
 
 		else if (numberOfZeroAxis == 1) {
@@ -263,8 +300,10 @@ public class Box implements SupportMap3, Geometry, Material {
 			p1.set( zeroAxisIndices[0], 0.5);
 			p2.set( zeroAxisIndices[0], -0.5);
 			
-			featureList.add( body.state.rotation.multiply(localtransform.multiply(p1).add(localdisplacement)).add(body.state.position) );
-			featureList.add( body.state.rotation.multiply(localtransform.multiply(p2).add(localdisplacement)).add(body.state.position) );
+			
+			
+			featureList.add( body.state.rotation.multiply(localrotation.multiply(new Vector3(xs*p1.x, ys*p1.y, zs*p1.z) ).add(localdisplacement)).add(body.state.position) );
+			featureList.add( body.state.rotation.multiply(localrotation.multiply(new Vector3(xs*p2.x, ys*p2.y, zs*p2.z) ).add(localdisplacement)).add(body.state.position) );
 		}
 
 		else if (numberOfZeroAxis == 2) {
@@ -321,10 +360,10 @@ public class Box implements SupportMap3, Geometry, Material {
 			}
 			
 			// return transformed vertices
-			featureList.add( body.state.rotation.multiply(localtransform.multiply(p1).add(localdisplacement)).add(body.state.position) );
-			featureList.add( body.state.rotation.multiply(localtransform.multiply(p2).add(localdisplacement)).add(body.state.position) );
-			featureList.add( body.state.rotation.multiply(localtransform.multiply(p3).add(localdisplacement)).add(body.state.position) );
-			featureList.add( body.state.rotation.multiply(localtransform.multiply(p4).add(localdisplacement)).add(body.state.position) );			
+			featureList.add( body.state.rotation.multiply(localrotation.multiply(new Vector3(xs*p1.x, ys*p1.y, zs*p1.z) ).add(localdisplacement)).add(body.state.position) );
+			featureList.add( body.state.rotation.multiply(localrotation.multiply(new Vector3(xs*p2.x, ys*p2.y, zs*p2.z) ).add(localdisplacement)).add(body.state.position) );
+			featureList.add( body.state.rotation.multiply(localrotation.multiply(new Vector3(xs*p3.x, ys*p3.y, zs*p3.z) ).add(localdisplacement)).add(body.state.position) );
+			featureList.add( body.state.rotation.multiply(localrotation.multiply(new Vector3(xs*p4.x, ys*p4.y, zs*p4.z) ).add(localdisplacement)).add(body.state.position) );			
 		}
 
 		else if (numberOfZeroAxis == 3) {
@@ -378,7 +417,25 @@ public class Box implements SupportMap3, Geometry, Material {
 
 	@Override
 	public double sphereSweepRadius() {
-		return 0.0;
+		return sphereSweepRadius;
 	}
+	
+	@Override
+	public Vector3 getLocalCentreOfMass(Vector3 cm) { return cm.assignZero(); }
+
+	@Override
+	public String getName() {
+		return name;
+	}
+
+	@Override
+	public void update() {
+		// update world transform
+        Matrix4.multiply(body.getTransform(), Transforms.transformAndTranslate4(localrotation, localdisplacement),  worldTransform);
+
+        // update world bounding box
+		getMaxBoundsTmp(worldMaximumBounds);
+		getMinBoundsTmp(worldMinimumBounds);		
+	}	
 
 }
