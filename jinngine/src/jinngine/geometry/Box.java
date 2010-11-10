@@ -30,6 +30,7 @@ public class Box implements SupportMap3, Geometry, Material {
 	private double mass;
 	private final String name;
 	private double envelope = 0.125;
+	private final double sphereSweepRadius;
 	
 	// auxiliary user reference
 	private Object auxiliary;
@@ -48,10 +49,29 @@ public class Box implements SupportMap3, Geometry, Material {
 		this.name = new String(name);
 		this.xs = x; this.ys = y; this.zs = z;
 		mass = xs*ys*zs;
+		sphereSweepRadius = 0;
 				
 		// set the local transform
 		setLocalTransform( Matrix3.identity(), new Vector3() );
 	}
+
+	/**
+	 * Create a box with the given side lengths and a
+	 * sphere sweeping radius
+	 * @param x Box x-axis extend
+	 * @param y Box y-axis extend
+	 * @param z Box z-axis extend
+	 */
+	public Box(String name, double x, double y, double z, double radius) {
+		this.name = new String(name);
+		this.xs = x; this.ys = y; this.zs = z;
+		mass = xs*ys*zs;
+		sphereSweepRadius = radius;
+				
+		// set the local transform
+		setLocalTransform( Matrix3.identity(), new Vector3() );
+	}
+
 	
 	/**
 	 * Create a box with the given side lengths
@@ -63,6 +83,7 @@ public class Box implements SupportMap3, Geometry, Material {
 		this.name = new String(name);
 		this.xs = sides.x; this.ys = sides.y; this.zs = sides.z;
 		mass = xs*ys*zs;
+		sphereSweepRadius = 0;
 				
 		//set the local transform
 		setLocalTransform( Matrix3.identity(), new Vector3() );
@@ -189,7 +210,7 @@ public class Box implements SupportMap3, Geometry, Material {
 		Tb.getRowVectors(rx, ry, rz);
 		
 		// return the final bounds, adding the envelope and sweep size
-		return bounds.assign(rx.dot(px)+envelope+body.state.position.x, ry.dot(py)+envelope+body.state.position.y, rz.dot(pz)+envelope+body.state.position.z);
+		return bounds.assign(rx.dot(px)+sphereSweepRadius+envelope+body.state.position.x, ry.dot(py)+sphereSweepRadius+envelope+body.state.position.y, rz.dot(pz)+sphereSweepRadius+envelope+body.state.position.z);
 	}
 
 	@Override
@@ -229,7 +250,7 @@ public class Box implements SupportMap3, Geometry, Material {
 		Tb.getRowVectors(rx, ry, rz);
 
 		// return final bounds, subtracting the envelope size 
-		return bounds.assign(rx.dot(px)-envelope+body.state.position.x, ry.dot(py)-envelope+body.state.position.y, rz.dot(pz)-envelope+body.state.position.z);		
+		return bounds.assign(rx.dot(px)-sphereSweepRadius-envelope+body.state.position.x, ry.dot(py)-sphereSweepRadius-envelope+body.state.position.y, rz.dot(pz)-sphereSweepRadius-envelope+body.state.position.z);		
 	}
 
 	@Override
@@ -396,7 +417,7 @@ public class Box implements SupportMap3, Geometry, Material {
 
 	@Override
 	public double sphereSweepRadius() {
-		return 0.0;
+		return sphereSweepRadius;
 	}
 	
 	@Override
