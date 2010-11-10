@@ -47,8 +47,25 @@ public class ProjectedGaussSeidel implements Solver {
 			
 			bnorm += (ci.b+ci.Fext)*(ci.b+ci.Fext);			
 		} bnorm = Math.sqrt(bnorm);
-		final double bnorminv = 1.0/bnorm;
-
+		final double bnorminv;
+		
+		// avoid division by zero
+		if (bnorm < 1e-15) {
+			bnorm = 1.0;
+			bnorminv= 1.0/bnorm;			
+		} else {
+			bnorminv= 1.0/bnorm;			
+		}
+		
+		// scale system
+		for (NCPConstraint ci: constraints) {
+			ci.lambda *= bnorminv;
+		}
+		for (Body bi: bodies) {
+			Vector3.multiply(bi.deltavelocity, bnorminv);
+			Vector3.multiply(bi.deltaomega, bnorminv);
+		}
+		
 		
 		// perform iterations
 		for (int m=0; m<maximumIterations; m++) {
@@ -115,15 +132,23 @@ public class ProjectedGaussSeidel implements Solver {
 			iterations +=1;
 		}
 		
-		// scale lambda in the bnorm. This is unnecessary if bnorm is set to 1
+//		// scale lambda in the bnorm. This is unnecessary if bnorm is set to 1
+//		for (NCPConstraint ci: constraints) {
+//			final double factor = (bnorm-1)*ci.lambda;
+//			Vector3.add( ci.body1.deltavelocity, ci.b1.multiply(factor));
+//			Vector3.add( ci.body1.deltaomega, ci.b2.multiply(factor));
+//			Vector3.add( ci.body2.deltavelocity, ci.b3.multiply(factor));
+//			Vector3.add( ci.body2.deltaomega, ci.b4.multiply(factor));
+//		}
+		
+		// scale system back
 		for (NCPConstraint ci: constraints) {
-			final double factor = (bnorm-1)*ci.lambda;
-			Vector3.add( ci.body1.deltavelocity, ci.b1.multiply(factor));
-			Vector3.add( ci.body1.deltaomega, ci.b2.multiply(factor));
-			Vector3.add( ci.body2.deltavelocity, ci.b3.multiply(factor));
-			Vector3.add( ci.body2.deltaomega, ci.b4.multiply(factor));
+			ci.lambda *= bnorm;
 		}
-
+		for (Body bi: bodies) {
+			Vector3.multiply(bi.deltavelocity, bnorm);
+			Vector3.multiply(bi.deltaomega, bnorm);
+		}
 		
 		assert Logger.trace("ProjectedGaussSeidel: finshed at deltaResidual="+rnew+", iterations="+iterations);
 		return iterations ;

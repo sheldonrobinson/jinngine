@@ -212,11 +212,13 @@ public final class DefaultScene implements Scene {
 			ncpbodies.add(bodies.getFirst());
 			ncpbodies.add(bodies.getSecond());		
 			
-			// apply the live constraints and run a single pgs iteration to reveal 
-			// any change in force contribution
-			live.applyConstraints(ncpconstraints.listIterator(), timestep);
-			pgs.solve(ncpconstraints, ncpbodies , 1e-7);
-			
+			// only do the check if both of the bodies is deactivated
+			if (bodies.getFirst().deactivated || bodies.getSecond().deactivated) {
+				// apply the live constraints and run a single pgs iteration to reveal 
+				// any change in force contribution
+				live.applyConstraints(ncpconstraints.listIterator(), timestep);
+				pgs.solve(ncpconstraints, ncpbodies , 1e-7);
+			}			
 		} 
 
 		// create a special iterator to be used with constraints. Each constraint will
