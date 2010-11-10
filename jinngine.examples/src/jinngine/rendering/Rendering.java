@@ -29,11 +29,20 @@ public interface Rendering {
 		public int getShadowDisplayList();
 		public void getTransform(Matrix4 T);
 		public Body getReferenceBody();
+		public boolean isInitialized();
+		public Geometry getGeometry();
 	}
 
 	public void    takeScreenShot(String filename);
 	public void    createWindow();
 	public Canvas  getCanvas();
+	
+	
+	public interface TaskCallback {
+		public void doTask();
+	}
+	
+	public void addTask( TaskCallback task );
 	
 	public interface EventCallback {
 		public void mousePressed(double x, double y, Vector3 point, Vector3 direction);
@@ -49,6 +58,7 @@ public interface Rendering {
 	
 	public void addCallback(EventCallback c);
 	public DrawShape drawMe( Geometry g);
+	public void dontDrawMe( Geometry g);
 	public void drawMe( DrawShape shape, Geometry g);
 	public void start();
 	

@@ -92,7 +92,7 @@ public class Interaction implements Rendering.EventCallback {
 
 			this.force = new BallInSocketJoint(target, controller, controller.getPosition(), new Vector3(0,1,0));
 			this.force.setForceLimit(1.5*target.getMass());
-			this.force.setCorrectionVelocityLimit(17);
+			this.force.setCorrectionVelocityLimit(17/scene.getTimestep());
 			
 			// copy angular mass properties
 			inertia = new InertiaMatrix(target.state.inertia);

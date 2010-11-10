@@ -21,8 +21,12 @@ import java.awt.event.WindowAdapter;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Queue;
+import java.util.Random;
 
 import javax.media.opengl.GL;
 import javax.media.opengl.GLAutoDrawable;
@@ -43,6 +47,7 @@ import jinngine.math.Matrix4;
 import jinngine.math.Vector3;
 import jinngine.physics.Body;
 import jinngine.rendering.Rendering;
+import jinngine.rendering.Rendering.TaskCallback;
 
 public class JoglRendering implements Rendering, 
 GLEventListener, MouseListener, MouseMotionListener, MouseWheelListener, KeyListener {
@@ -70,7 +75,7 @@ GLEventListener, MouseListener, MouseMotionListener, MouseWheelListener, KeyList
 	private int cameraClicks = 1;
 	
 	// global light0 position
-	private final float position[] = { -5f, 20.0f, -25.0f, 1.0f };
+	private final float position[] = { -5f, 5.0f, -25.0f, 1.0f };
 //	private final float position[] = { 0f, 0.0f, -0.0f, 1.0f };
 	
 	// uniforms
@@ -81,7 +86,16 @@ GLEventListener, MouseListener, MouseMotionListener, MouseWheelListener, KeyList
 
 	
 	private boolean initialized = false;
-
+	
+	//task queue
+	private final Queue<TaskCallback> taskList = new LinkedList<TaskCallback>();
+		
+	private Random rand = new Random();
+	
+	@Override
+	public void addTask(TaskCallback task) {		
+		taskList.add(task);
+	}
 	
 	public JoglRendering(Callback callback ) {
 		this.callback = callback;
@@ -132,6 +146,15 @@ GLEventListener, MouseListener, MouseMotionListener, MouseWheelListener, KeyList
 			public int getShadowDisplayList() {
 				return shape.getShadowDisplayList();
 			}
+			@Override
+			public boolean isInitialized() {
+				// TODO Auto-generated method stub
+				return false;
+			}
+			@Override
+			public Geometry getGeometry() {
+				return g;
+			}
 		};	
 		
 		toDraw.add(newshape);
@@ -143,8 +166,10 @@ GLEventListener, MouseListener, MouseMotionListener, MouseWheelListener, KeyList
 		DrawShape shape = null;
 		
 		if (g instanceof ConvexHull) {
+			System.out.println("Draw the convex hull");
 			final ConvexHull hull = (ConvexHull)g;			
 			shape = new DrawShape() {
+				private boolean initialized = false;
 				private int list = 0;
 				private int shadowList = 0;
 				@Override
@@ -168,10 +193,19 @@ GLEventListener, MouseListener, MouseMotionListener, MouseWheelListener, KeyList
 					shadowList = startDisplayList(gl);
 					drawBackfaceShadowMesh(hull.getVerticesList(), null, hull.getFaceIndices(), gl);
 					endDisplayList(gl);
+					initialized = true;
 				}
 				@Override
 				public int getShadowDisplayList() {
 					return shadowList;
+				}
+				@Override
+				public boolean isInitialized() {
+					return initialized;
+				}
+				@Override
+				public Geometry getGeometry() {
+					return g;
 				}
 			};			
 		}
@@ -207,6 +241,7 @@ GLEventListener, MouseListener, MouseMotionListener, MouseWheelListener, KeyList
 			shape = new DrawShape() {
 				private int list = 0;
 				private int shadowList = 0;
+				private boolean initialized = false;
 
 				@Override
 				public void getTransform( Matrix4 T) {
@@ -229,11 +264,21 @@ GLEventListener, MouseListener, MouseMotionListener, MouseWheelListener, KeyList
 					shadowList = startDisplayList(gl);
 					drawBackfaceShadowMesh(hullVertices, null, hull.getFaceIndices(), gl);
 					endDisplayList(gl);
+					
+					initialized = true;
 
 				}
 				@Override
 				public int getShadowDisplayList() {
 					return shadowList;
+				}
+				@Override
+				public boolean isInitialized() {
+					return initialized;
+				}
+				@Override
+				public Geometry getGeometry() {					
+					return g;
 				}
 			};
 		}
@@ -280,6 +325,8 @@ GLEventListener, MouseListener, MouseMotionListener, MouseWheelListener, KeyList
 			shape = new DrawShape() {
 				private int list = 0;
 				private int shadowList = 0;
+				private boolean initialized = false;
+
 				@Override
 				public void getTransform( Matrix4 T) {
 					T.assign(g.getWorldTransform());
@@ -301,10 +348,20 @@ GLEventListener, MouseListener, MouseMotionListener, MouseWheelListener, KeyList
 					shadowList = startDisplayList(gl);
 					drawBackfaceShadowMesh(hullVertices, null, hull.getFaceIndices(), gl);
 					endDisplayList(gl);
+					
+					initialized = true;
 				}
 				@Override
 				public int getShadowDisplayList() {
 					return shadowList;
+				}
+				@Override
+				public boolean isInitialized() {
+					return initialized;
+				}
+				@Override
+				public Geometry getGeometry() {
+					return g;
 				}
 			};
 		}
@@ -371,6 +428,13 @@ GLEventListener, MouseListener, MouseMotionListener, MouseWheelListener, KeyList
 	
 	public void display(GLAutoDrawable drawable) {
 		GL gl = drawable.getGL();
+		
+		
+		// process task queue
+		while(taskList.size()>0) {
+			taskList.poll().doTask();
+		}
+		
 
 		// init all drawing objects
 		if (!initialized) {
@@ -382,6 +446,14 @@ GLEventListener, MouseListener, MouseMotionListener, MouseWheelListener, KeyList
 				s.init(gl);
 			initialized = true;
 		}
+		
+		// check if any shape needs initialization
+		for (DrawShape s: toDraw) {
+			if (!s.isInitialized())
+				s.init(gl);
+		}
+		
+		
 
 		if (redoCamera) {
 			// setup camera
@@ -561,11 +633,13 @@ GLEventListener, MouseListener, MouseMotionListener, MouseWheelListener, KeyList
 		gl.glUniform1f(extrutionUniformLocation, 0);
 		gl.glUniform1f(influenceUniformLocation, 0);
 		gl.glUniform3f(colorUniformLocation, 0.95f, 0.95f, 1f);
+//		gl.glUniform3f(colorUniformLocation, 0.6f+rand.nextFloat()*0.4f, 0.6f+rand.nextFloat()*0.4f, 0.6f+rand.nextFloat()*0.4f);
+
 		gl.glCullFace(GL.GL_BACK);
 		drawFaces( vertices, normals, faceIndices, gl);	
 		
-		// draw solid coloured edge mesh
-		gl.glUniform1f(extrutionUniformLocation, 0.04f);
+		// draw solid coloured edge meshf
+		gl.glUniform1f(extrutionUniformLocation, 0.025f);
 		gl.glUniform3f(colorUniformLocation, 0.30f,0.30f,0.30f);
 		gl.glUniform1f(influenceUniformLocation, 1f);
 		drawEdgeMesh( new ConvexHull("edge hull", vertices), gl);
@@ -890,6 +964,17 @@ GLEventListener, MouseListener, MouseMotionListener, MouseWheelListener, KeyList
 		cameraFrom.assign(cameraTo.add(direction));
 
 		redoCamera = true;
+		
+	}
+
+	@Override
+	public void dontDrawMe(Geometry g) {
+		Iterator<DrawShape> iter = toDraw.iterator();
+		while(iter.hasNext()) {
+			if (iter.next().getGeometry() == g) {
+				iter.remove();
+			}
+		}
 		
 	}
 

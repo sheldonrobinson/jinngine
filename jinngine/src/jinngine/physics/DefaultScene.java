@@ -347,7 +347,7 @@ public final class DefaultScene implements Scene {
 		
 		// run the solver (compute delta velocities) for all 
 		// components in the constraint graph
-		solver.solve( ncpconstraints, bodies, 1e-5 );
+		solver.solve( ncpconstraints, bodies, 1e-5);
 //		Multigrid mg = new Multigrid();
 //		mg.solve(contactconstraints, bodies, 1e-31);
 		

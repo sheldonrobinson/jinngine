@@ -143,7 +143,7 @@ public final class FrictionalContactConstraint implements ContactConstraint {
 		double correction = depth*(1/dt); // the true correction velocity. This velocity corrects the contact in the next timestep.
 		final double escape = (cp.envelope-cp.distance)*(1/dt);
 		final double lowerNormalLimit = 0;
-		final double limit = 2;
+		final double limit = 4*dt;
 		
 		
 		// if the unf velocity will make the contact leave the envelope in the next timestep, 
