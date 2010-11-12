@@ -18,6 +18,7 @@ import java.awt.event.MouseMotionListener;
 import java.awt.event.MouseWheelEvent;
 import java.awt.event.MouseWheelListener;
 import java.awt.event.WindowAdapter;
+import java.awt.Font;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -36,7 +37,9 @@ import javax.media.opengl.GLException;
 import javax.media.opengl.glu.GLU;
 
 import com.sun.opengl.util.Animator;
+import com.sun.opengl.util.GLUT;
 import com.sun.opengl.util.Screenshot;
+import com.sun.opengl.util.j2d.TextRenderer;
 
 import jinngine.geometry.Box;
 import jinngine.geometry.ConvexHull;
@@ -59,6 +62,8 @@ GLEventListener, MouseListener, MouseMotionListener, MouseWheelListener, KeyList
 	private final GLCanvas canvas = new GLCanvas();
 	private Animator animator = new Animator(this.canvas);
 	private final GLU glu = new GLU();	
+	private final GLUT glut = new GLUT();	
+
 	private double width;
 	private double height;
 	private double drawHeight;
@@ -83,7 +88,9 @@ GLEventListener, MouseListener, MouseMotionListener, MouseWheelListener, KeyList
 	private int colorUniformLocation;
 	private int influenceUniformLocation;
 	private double[] shadowProjMatrix;
-
+	private int shaderprogram;
+	
+	private TextRenderer text = new TextRenderer( new Font("Ubuntu", Font.PLAIN, 72) );
 	
 	private boolean initialized = false;
 	
@@ -91,6 +98,13 @@ GLEventListener, MouseListener, MouseMotionListener, MouseWheelListener, KeyList
 	private final Queue<TaskCallback> taskList = new LinkedList<TaskCallback>();
 		
 	private Random rand = new Random();
+	
+	public static String Solver = new String();
+	public static String Normals = new String();
+	public static String Friction = new String();
+	public static String Timestep = new String();
+	
+	
 	
 	@Override
 	public void addTask(TaskCallback task) {		
@@ -459,7 +473,9 @@ GLEventListener, MouseListener, MouseMotionListener, MouseWheelListener, KeyList
 			// setup camera
 			gl.glMatrixMode(GL.GL_MODELVIEW);
 			gl.glLoadIdentity();
-						
+
+
+			
 			// Set camera transform
 			glu.gluLookAt(cameraFrom.x, cameraFrom.y, cameraFrom.z, 
 					cameraTo.x, cameraTo.y, cameraTo.z, 
@@ -475,6 +491,8 @@ GLEventListener, MouseListener, MouseMotionListener, MouseWheelListener, KeyList
 			// camera done
 			redoCamera = false;
 		}
+		
+
 		
 		// Perform ratio time-steps on the model
 		callback.tick();
@@ -499,6 +517,35 @@ GLEventListener, MouseListener, MouseMotionListener, MouseWheelListener, KeyList
 			gl.glPopMatrix();
 		}
 
+		
+//		gl.glMatrixMode(GL.GL_PROJECTION);
+//		gl.glPushMatrix();
+//		gl.glLoadIdentity();
+////		gl.glScalef(2f,2f,2f);
+//		gl.glTranslatef(0,0,-4.0f);
+//		gl.glUniform1f(influenceUniformLocation, 0);
+//
+////		gl.glColor4f(0,0,0,1f);
+//		gl.glRasterPos2f(-0.5f , -0.5f);
+//
+//		glut.glutBitmapString(GLUT.BITMAP_HELVETICA_18, 
+//				"Hope you all enjoyed your fucking diner yesterday" );
+//
+//		gl.glPixelZoom(12f, 12f);
+//
+//		gl.glPopMatrix();
+////		gl.glMatrixMode(GL.GL_MODELVIEW);
+
+		gl.glUseProgram(0);
+	    text.beginRendering(drawable.getWidth(), drawable.getHeight());
+	    // optionally set the color
+	    text.setColor(0.5f, 0.5f, 0.5f, 1.0f);
+	    text.draw(Solver+"   "+Timestep+"   "+Normals+"  "+Friction, 20, drawable.getHeight()-70);
+	    // ... more draw commands, color changes, etc.
+	    text.endRendering();
+		gl.glUseProgram(shaderprogram);
+
+		
 		// Finish this frame
 		gl.glFlush();
 		
@@ -620,7 +667,7 @@ GLEventListener, MouseListener, MouseMotionListener, MouseWheelListener, KeyList
 		drawFaces( vertices, normals, faceIndices, gl);	
 		
 		// draw silhouette
-		gl.glUniform1f(extrutionUniformLocation, 0.07f);
+		gl.glUniform1f(extrutionUniformLocation, 0.04f);
 		gl.glUniform1f(influenceUniformLocation, 01f);
 		gl.glUniform3f(colorUniformLocation, 0.30f,0.30f,0.30f);
 		gl.glCullFace(GL.GL_FRONT);
@@ -745,7 +792,7 @@ GLEventListener, MouseListener, MouseMotionListener, MouseWheelListener, KeyList
 
 
 		
-		int shaderprogram = gl.glCreateProgram();
+		shaderprogram = gl.glCreateProgram();
 		gl.glAttachShader(shaderprogram, vertexShaderIndex);
 		gl.glAttachShader(shaderprogram, phongFragmentShaderIndex);
 		gl.glLinkProgram(shaderprogram);
