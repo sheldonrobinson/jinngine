@@ -11,6 +11,7 @@ package jinngine.physics.constraint.contact;
 import java.util.*;
 
 import jinngine.geometry.contact.*;
+import jinngine.geometry.contact.ContactGenerator.ContactPoint;
 import jinngine.math.Matrix3;
 import jinngine.math.Vector3;
 import jinngine.physics.Body;
@@ -35,9 +36,14 @@ public final class FrictionalContactConstraint implements ContactConstraint {
 	private final Body b1, b2;                  //bodies in constraint
 	private final List<ContactGenerator> generators = new ArrayList<ContactGenerator>();
 	private final List<NCPConstraint>       ncpconstraints = new ArrayList<NCPConstraint>();
+	private final List<ContactPoint>       contacts = new ArrayList<ContactPoint>();
+	
 	private double frictionBoundMagnitude = Double.POSITIVE_INFINITY;
 	
 	private boolean enableCoupling = true;
+	
+	public static double frictionStabilisation = 1.0;
+	public static double normalStabilisation = 1.0;
 	
 	/**
 	 * Create a new ContactConstraint, using one initial ContactGenerator
@@ -79,23 +85,45 @@ public final class FrictionalContactConstraint implements ContactConstraint {
 	@Override
 	public final void applyConstraints(ListIterator<NCPConstraint> constraintIterator, double dt) {
 		// clear list of ncp constraints
-		ncpconstraints.clear();
-		
+//		ncpconstraints.clear();
+		contacts.clear();
+
 		// use ContactGenerators to create new contactpoints
 		for ( ContactGenerator cg: generators) {
 			//run contact generator
 			cg.run();
-			
+
 			// generate contacts
 			Iterator<ContactGenerator.ContactPoint> i = cg.getContacts();
 			while (i.hasNext()) {
 				ContactGenerator.ContactPoint cp = i.next();
-				
-				createFrictionalContactConstraint(cp, b1, b2, cp.point, cp.normal, cp.depth, dt, constraintIterator);				
+
+				contacts.add(cp);
 			}
 		}
-		
+
+
+
+		ListIterator<NCPConstraint> ncpiter = ncpconstraints.listIterator();
+
+		for (ContactPoint cp: contacts) {
+			createFrictionalContactConstraint(cp, b1, b2, cp.point, cp.normal, cp.depth, dt, ncpiter);				
+		}
+
+		// kill remaining ncps
+		while (ncpiter.hasNext()) {
+			ncpiter.next(); 
+			ncpiter.remove();
+		}
+
+		// add all ncps to output
+		ncpiter = ncpconstraints.listIterator();
+		while (ncpiter.hasNext()) {
+			constraintIterator.add(ncpiter.next());
+		}
+
 	}
+
 
 	// create a regular contact constraint including tangential friction
 	public final void createFrictionalContactConstraint( 
@@ -103,6 +131,7 @@ public final class FrictionalContactConstraint implements ContactConstraint {
 			Body b1, Body b2, Vector3 p, Vector3 n, double depth, double dt,
 			ListIterator<NCPConstraint> outConstraints 
 	) {
+		
 
 		// use a gram-schmidt process to create a orthonormal basis for the contact point ( normal and tangential directions)
 		final Vector3 t1 = new Vector3(), t2 = new Vector3(), t3 = new Vector3();
@@ -168,12 +197,22 @@ public final class FrictionalContactConstraint implements ContactConstraint {
 		correction = correction>  limit?  limit:correction;
 		
 		// take a factor of real correction velocity
-		correction = correction * 0.9;
+		correction = correction * 0.9 * normalStabilisation;
 		
 		//correction=correction>0?0:correction;
 
+		final NCPConstraint c;
+
+		if (outConstraints.hasNext()) {
+			c = outConstraints.next();
+		} else {
+			c = new NCPConstraint();
+			outConstraints.add(c);
+		}
+
+		double currentNormal = c.lambda;
+		
 		// the normal constraint
-		final NCPConstraint c = new NCPConstraint();
 		c.assign(b1,b2,
 				nB1, nB2, nB3, nB4,
 				nJ1, nJ2, nJ3, nJ4,
@@ -202,10 +241,55 @@ public final class FrictionalContactConstraint implements ContactConstraint {
 
 		// then the tangential friction constraints 
 		final double ut1i = t2J1.dot(b1.state.velocity) + t2J2.dot(b1.state.omega) + t2J3.dot(b2.state.velocity) + t2J4.dot(b2.state.omega);
-		final double ut1f = 0;
+	    double ut1f = 0;
 		
 		// double t2Fext = t2B1.dot(b1.state.FCm) + t2B2.dot(b1.state.tauCm) + t2B3.dot(b2.state.FCm) + t2B4.dot(b2.state.tauCm);
-		final NCPConstraint c2 = new NCPConstraint();
+		final NCPConstraint c2;
+		if (outConstraints.hasNext()) {
+			c2 = outConstraints.next();
+		} else {
+			c2 = new NCPConstraint();
+			outConstraints.add(c2);
+		}
+
+//		best
+//		final double releaseLimit = 1e-4;
+//		final double kickinFactor = 0.5;
+
+		final double releaseLimit = 1e-5;
+		final double kickinFactor = 0.6;
+		final double kcor = 1;
+		
+		if (c2.sticking) {
+			Vector3 cor = new Vector3();
+			// correction vector
+			cor.assign( b1.toWorld(c2.stickA).sub(b2.toWorld(c2.stickB)) );  
+//			System.out.println("cor="+cor);
+
+			ut1f = -t2J1.dot(cor)*kcor*frictionStabilisation;
+		} else {
+			ut1f=0;
+		}
+		
+		// determine sticking
+		if (c2.sticking) {
+			
+			if (currentNormal*c.mu -Math.abs(c2.lambda) < releaseLimit ) {
+				c2.sticking = false;
+			}			
+		} else {	
+			if (Math.abs(c2.lambda) < currentNormal*c.mu*kickinFactor) {
+				// sticking
+				c2.sticking = true;
+				c2.stickA.assign(b1.toModel(cp.point));
+				c2.stickB.assign(b2.toModel(cp.point));
+			} 
+		}
+		
+
+
+		
+		
 		c2.assign(b1,b2,
 				t2B1, t2B2,	t2B3, t2B4,				
 				t2J1, t2J2, t2J3, t2J4,
@@ -226,9 +310,47 @@ public final class FrictionalContactConstraint implements ContactConstraint {
 		final Vector3 t3B4 = b2.isFixed()? new Vector3(): I2.multiply(t3J4);
 
 		final double ut2i = t3J1.dot(b1.state.velocity) + t3J2.dot(b1.state.omega) + t3J3.dot(b2.state.velocity) + t3J4.dot(b2.state.omega); 
-		final double ut2f = 0;
+	    double ut2f = 0;
+
 		
-		final NCPConstraint c3 = new NCPConstraint();
+		final NCPConstraint c3;
+		if (outConstraints.hasNext()) {
+			c3 = outConstraints.next();
+		} else {
+			c3 = new NCPConstraint();
+			outConstraints.add(c3);
+		}
+
+		
+		
+		if (c3.sticking) {
+			Vector3 cor = new Vector3();
+			// correction vector
+			cor.assign( b1.toWorld(c3.stickA).sub(b2.toWorld(c3.stickB)) );  
+			ut2f = -t3J1.dot(cor)*kcor*frictionStabilisation;
+		} else {
+			ut2f=0;
+		}
+		
+		// determine sticking
+		if (c3.sticking) {
+			if (currentNormal*coupling.mu - Math.abs(c3.lambda) < releaseLimit ) {
+//				System.out.println("release");
+				c3.sticking = false;
+			} 			
+		} else {	
+			if (Math.abs(c3.lambda) < currentNormal*coupling.mu*kickinFactor) {
+				// sticking
+//				System.out.println("stick!");
+
+				c3.sticking = true;
+				c3.stickA.assign(b1.toModel(cp.point));
+				c3.stickB.assign(b2.toModel(cp.point));
+			} 
+		}
+
+
+		
 		c3.assign(b1,b2,
 				t3B1, t3B2,	t3B3, t3B4,
 				t3J1, t3J2, t3J3, t3J4,
@@ -237,14 +359,14 @@ public final class FrictionalContactConstraint implements ContactConstraint {
 				-(ut2f-ut2i), 0  
 		);
 
-		outConstraints.add(c);
-		outConstraints.add(c2);
-		outConstraints.add(c3);
+//		outConstraints.add(c);
+//		outConstraints.add(c2);
+//		outConstraints.add(c3);
 		
 		// add to list
-		ncpconstraints.add(c);
-		ncpconstraints.add(c2);
-		ncpconstraints.add(c3);
+//		ncpconstraints.add(c);
+//		ncpconstraints.add(c2);
+//		ncpconstraints.add(c3);
 
 	}
 

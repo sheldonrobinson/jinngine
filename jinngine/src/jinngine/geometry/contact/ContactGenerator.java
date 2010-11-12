@@ -45,7 +45,7 @@ public interface ContactGenerator {
 		/**
 		 * Point on body A in A space
 		 */
-//		public final Vector3 pa = new Vector3();
+		public final Vector3 pa = new Vector3();
 		
 		/**
 		 * Point on body B in world space
@@ -55,7 +55,7 @@ public interface ContactGenerator {
 		/**
 		 * Point on body B in B space
 		 */
-//		public final Vector3 pb = new Vector3();
+		public final Vector3 pb = new Vector3();
 
 		/**
 		 * Interaction point in world space

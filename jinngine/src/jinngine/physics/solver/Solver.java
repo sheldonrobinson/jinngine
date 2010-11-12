@@ -115,7 +115,7 @@ public interface Solver {
 		// hack
 		public final Vector3 stickA = new Vector3();
 		public final Vector3 stickB = new Vector3();
-		
+		public boolean sticking = false;
 		
 		/**
 		 * Assign operator for a constraint

@@ -205,6 +205,7 @@ public final class SupportMapContactGenerator implements ContactGenerator {
 				Matrix3.multiply( B, cp.point, cp.point);
 				Vector3.add( cp.point, midpoint );
 				
+				
 				// distance along the z axis in contact space
 				cp.distance = (p.z-q.z)-spb-spa;  // take into account sphere sweeping
 

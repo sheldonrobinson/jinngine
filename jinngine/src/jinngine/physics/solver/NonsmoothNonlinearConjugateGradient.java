@@ -158,7 +158,7 @@ public class NonsmoothNonlinearConjugateGradient implements Solver {
 
 			
 			// iteration limit
-			if (iter>max || restarts > 13250 )
+			if (iter>max || restarts > max/2 )
 				break;
 
 			//compute beta
