@@ -120,7 +120,7 @@ public final class DefaultScene implements Scene {
 	private final ContactConstraintManager contactmanager;
 
 	// ncp solver
-	private final Solver solver;
+	public Solver solver;
 	
 	// PGS iteration for live constraints
 	private final Solver pgs = new ProjectedGaussSeidel(1, Double.POSITIVE_INFINITY);
