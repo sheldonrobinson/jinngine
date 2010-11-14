@@ -90,7 +90,8 @@ GLEventListener, MouseListener, MouseMotionListener, MouseWheelListener, KeyList
 	private double[] shadowProjMatrix;
 	private int shaderprogram;
 	
-	private TextRenderer text = new TextRenderer( new Font("Ubuntu", Font.PLAIN, 72) );
+	// text rendering size
+	private TextRenderer text = new TextRenderer( new Font("Ubuntu", Font.PLAIN, 45) );
 	
 	private boolean initialized = false;
 	
