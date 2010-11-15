@@ -196,10 +196,15 @@ public class NonsmoothNonlinearConjugateGradient implements Solver {
 		// scale lambda in the bnorm. This is unnecessary if bnorm is set to 1
 		for (NCPConstraint ci: constraints) {
 			final double factor = (bnorm-1)*ci.lambda;
-			Vector3.add( ci.body1.deltavelocity, ci.b1.multiply(factor));
-			Vector3.add( ci.body1.deltaomega, ci.b2.multiply(factor));
-			Vector3.add( ci.body2.deltavelocity, ci.b3.multiply(factor));
-			Vector3.add( ci.body2.deltaomega, ci.b4.multiply(factor));
+//			Vector3.add( ci.body1.deltavelocity, ci.b1.multiply(factor));
+//			Vector3.add( ci.body1.deltaomega, ci.b2.multiply(factor));
+//			Vector3.add( ci.body2.deltavelocity, ci.b3.multiply(factor));
+//			Vector3.add( ci.body2.deltaomega, ci.b4.multiply(factor));
+			Vector3.multiplyAndAdd( ci.b1, factor, ci.body1.deltavelocity );
+			Vector3.multiplyAndAdd( ci.b2, factor, ci.body1.deltaomega );
+			Vector3.multiplyAndAdd( ci.b3, factor, ci.body2.deltavelocity );
+			Vector3.multiplyAndAdd( ci.b4, factor, ci.body2.deltaomega );
+
 		}
 
 		return 0;
@@ -248,11 +253,16 @@ public class NonsmoothNonlinearConjugateGradient implements Solver {
 			deltaLambda = newlambda - lambda0;
 			
 			//ci.residual = deltaLambda;
-			Vector3.add( ci.body1.deltavelocity1,     ci.b1.multiply(deltaLambda) );
-			Vector3.add( ci.body1.deltaomega1, ci.b2.multiply(deltaLambda) );
-			Vector3.add( ci.body2.deltavelocity1,     ci.b3.multiply(deltaLambda));
-			Vector3.add( ci.body2.deltaomega1, ci.b4.multiply(deltaLambda));
+//			Vector3.add( ci.body1.deltavelocity1,     ci.b1.multiply(deltaLambda) );
+//			Vector3.add( ci.body1.deltaomega1, ci.b2.multiply(deltaLambda) );
+//			Vector3.add( ci.body2.deltavelocity1,     ci.b3.multiply(deltaLambda));
+//			Vector3.add( ci.body2.deltaomega1, ci.b4.multiply(deltaLambda));
+			Vector3.multiplyAndAdd( ci.b1, deltaLambda, ci.body1.deltavelocity1);
+			Vector3.multiplyAndAdd( ci.b2, deltaLambda, ci.body1.deltaomega1 );
+			Vector3.multiplyAndAdd( ci.b3, deltaLambda, ci.body2.deltavelocity1 );
+			Vector3.multiplyAndAdd( ci.b4, deltaLambda, ci.body2.deltaomega1 );
 
+			
 			ci.s += deltaLambda;
 			
 			//value += Math.pow(w+ci.b,2);
