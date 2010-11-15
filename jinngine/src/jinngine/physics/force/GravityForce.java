@@ -8,6 +8,7 @@
  */
 package jinngine.physics.force;
 
+import jinngine.math.Matrix3;
 import jinngine.math.Vector3;
 import jinngine.physics.Body;
 
@@ -18,6 +19,8 @@ import jinngine.physics.Body;
 public final class GravityForce implements Force {
 	private final Body a;
 	private final Vector3 d = new Vector3();
+	private final Vector3 interactionPoint = new Vector3();
+	private final Vector3 F = new Vector3();
 
 	/**
 	 * Create a gravity force, accelerating the body 9.8m/s^2. The direction of the force is along the
@@ -43,6 +46,10 @@ public final class GravityForce implements Force {
 
 	@Override
 	public final void apply(double dt) {
-		a.applyForce(new Vector3(), a.state.anisotropicmass.multiply(d.multiply(9.8)), dt );
+		// apply gravity to centre of mass point
+		F.assign(d);
+		F.assignMultiply(9.8);
+		Matrix3.multiply(a.state.anisotropicmass, F, F);
+		a.applyForce( interactionPoint, F, dt );
 	}
 }

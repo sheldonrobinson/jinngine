@@ -21,9 +21,9 @@ public class MassProperties {
 		this.masslimit = masslimit;
 		
 		// start subdivision using initial bounding box
-		divide( Sa.supportPoint(new Vector3(1,0,0)).x, Sa.supportPoint(new Vector3(-1,0,0)).x,
-				Sa.supportPoint(new Vector3(0,1,0)).y, Sa.supportPoint(new Vector3(0,-1,0)).y,     
-				Sa.supportPoint(new Vector3(0,0,1)).z, Sa.supportPoint(new Vector3(0,0,-1)).z, 0 );
+		divide( Sa.supportPoint(new Vector3(1,0,0), new Vector3()).x, Sa.supportPoint(new Vector3(-1,0,0), new Vector3()).x,
+				Sa.supportPoint(new Vector3(0,1,0), new Vector3()).y, Sa.supportPoint(new Vector3(0,-1,0), new Vector3()).y,     
+				Sa.supportPoint(new Vector3(0,0,1), new Vector3()).z, Sa.supportPoint(new Vector3(0,0,-1), new Vector3()).z, 0 );
 //		System.out.println("calculated mass " + totalmass);
 		
 		// finalise calculation of centre of mass
@@ -56,11 +56,11 @@ public class MassProperties {
 		
 		// create a support map for this box
 		SupportMap3 Sb = new SupportMap3() {
-			public final Vector3 supportPoint(Vector3 v) {
+			public final Vector3 supportPoint(Vector3 v, Vector3 result) {
 				double sv1 = v.x<0?xmin:xmax;
 				double sv2 = v.y<0?ymin:ymax;
 				double sv3 = v.z<0?zmin:zmax;
-				return new Vector3(sv1, sv2, sv3);
+				return result.assign(new Vector3(sv1, sv2, sv3));
 			}
 			public final void supportFeature(Vector3 d, List<Vector3> face) {}
 			public final double sphereSweepRadius() {return 0;}
@@ -128,7 +128,7 @@ public class MassProperties {
 		// create a point support map
 		final Vector3 point = new Vector3();
 		SupportMap3 Sb = new SupportMap3() {
-			public final Vector3 supportPoint(Vector3 v) { return point; }
+			public final Vector3 supportPoint(Vector3 v, Vector3 result) { return result.assign(point); }
 			public final void supportFeature(Vector3 d, List<Vector3> face) {}
 			public final double sphereSweepRadius() {return 0;}
 		};

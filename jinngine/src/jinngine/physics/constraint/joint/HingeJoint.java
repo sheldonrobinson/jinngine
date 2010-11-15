@@ -73,7 +73,7 @@ public final class HingeJoint implements Constraint {
 		System.out.println(t2i);
 		
 		//in case v1 and v2 are parallel
-		if ( t2i.isEpsilon(Vector3.e) ) {
+		if ( t2i.isEpsilon(1e-9) ) {
 			v2 = Vector3.j(); v3 = Vector3.k();
 			t2i.assign(v2.sub( t1.multiply(t1.dot(v2)) ).normalize());
 		} else {
@@ -86,7 +86,7 @@ public final class HingeJoint implements Constraint {
 		System.out.println(t2j);
 		
 		//v1 parallel with v3
-		if( v1.cross(v3).isEpsilon(Vector3.e) ) {
+		if( v1.cross(v3).isEpsilon(1e-9) ) {
 			v3 = Vector3.j();
 		}
 		//finally calculate t3

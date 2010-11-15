@@ -177,13 +177,13 @@ public class ConvexHull implements SupportMap3, Geometry, Material {
 				
 		// find extremal bounds to form a bounding box
 		final Vector3 positiveBounds = new Vector3( 
-				this.supportPoint(new Vector3(1,0,0)).x, 
-				this.supportPoint(new Vector3(0,1,0)).y, 
-				this.supportPoint(new Vector3(0,0,1)).z ); 
+				this.supportPoint(new Vector3(1,0,0), new Vector3()).x, 
+				this.supportPoint(new Vector3(0,1,0), new Vector3()).y, 
+				this.supportPoint(new Vector3(0,0,1), new Vector3()).z ); 
 		final Vector3 negativeBounds = new Vector3( 
-				this.supportPoint(new Vector3(-1,0,0)).x, 
-				this.supportPoint(new Vector3(0,-1,0)).y, 
-				this.supportPoint(new Vector3(0,0,-1)).z ); 
+				this.supportPoint(new Vector3(-1,0,0), new Vector3()).x, 
+				this.supportPoint(new Vector3(0,-1,0), new Vector3()).y, 
+				this.supportPoint(new Vector3(0,0,-1), new Vector3()).z ); 
 		
 		boundingBoxPosition.assign( 
 				0.5*(positiveBounds.x+negativeBounds.x), 
@@ -274,7 +274,7 @@ public class ConvexHull implements SupportMap3, Geometry, Material {
 	private final InertiaMatrix inertiamatrix = new InertiaMatrix();
 	
 	@Override
-	public Vector3 supportPoint(Vector3 direction) {
+	public Vector3 supportPoint(Vector3 direction, Vector3 result) {
 		// normals are transformed (RS^-1)
 		Vector3 v = body.state.rotation.multiply(localrotation)./*scale(localscale).*/transpose().multiply(direction);
 		
@@ -302,7 +302,7 @@ public class ConvexHull implements SupportMap3, Geometry, Material {
 //			cachedVertex = index;
 			
 			// return the final support point in world space
-			return body.state.rotation.multiply(localrotation./*scale(localscale).*/multiply(vertices.get(index)).add(localtranslation)).add(body.state.position);
+			return result.assign(body.state.rotation.multiply(localrotation./*scale(localscale).*/multiply(vertices.get(index)).add(localtranslation)).add(body.state.position));
 
 //		} else {
 //			// if not, just check each vertex

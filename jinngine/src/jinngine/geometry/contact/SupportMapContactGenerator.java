@@ -130,7 +130,7 @@ public final class SupportMapContactGenerator implements ContactGenerator {
 
 			// compute the largest possible starting lambda, based on 
 			// the support of A-B along the ray direction
-			Vector3 sp = Sa.supportPoint(direction.negate()).sub(Sb.supportPoint(direction));
+			Vector3 sp = Sa.supportPoint(direction.negate(), new Vector3()).sub(Sb.supportPoint(direction, new Vector3()));
 			double lambda = direction.dot(sp)/direction.dot(direction)-envelope/direction.norm();
 			raycast.run(Sa, Sb, new Vector3(), direction, pa, pb, lambda, envelope, epsilon, false);
 			

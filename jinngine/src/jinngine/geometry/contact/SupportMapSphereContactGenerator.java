@@ -59,7 +59,7 @@ public final class SupportMapSphereContactGenerator implements ContactGenerator 
 
 		// SupportMap for the sphere centre
 		this.pointmap = new SupportMap3() {
-			public final Vector3 supportPoint(Vector3 direction) { return new Vector3(spherecentreworld); }
+			public final Vector3 supportPoint(Vector3 direction, Vector3 result) { return result.assign(new Vector3(spherecentreworld)); }
 			public final void supportFeature(Vector3 d, List<Vector3> face) {}
 			public final double sphereSweepRadius() {return 0;}
 		};
@@ -84,7 +84,7 @@ public final class SupportMapSphereContactGenerator implements ContactGenerator 
 
 		// SupportMap for the sphere centre
 		this.pointmap = new SupportMap3() {
-			public final Vector3 supportPoint(Vector3 direction) { return new Vector3(spherecentreworld); }
+			public final Vector3 supportPoint(Vector3 direction, Vector3 result) { return result.assign(new Vector3(spherecentreworld)); }
 			public final void supportFeature(Vector3 d, List<Vector3> face) {}
 			public final double sphereSweepRadius() { return 0; }
 		};
@@ -162,7 +162,7 @@ public final class SupportMapSphereContactGenerator implements ContactGenerator 
 
 			// compute the largest possible starting lambda, based on 
 			// the support of A-B along the ray direction
-			Vector3 sp = convex.supportPoint(direction.negate()).sub(pointmap.supportPoint(direction));
+			Vector3 sp = convex.supportPoint(direction.negate(), new Vector3()).sub(pointmap.supportPoint(direction, new Vector3()));
 			double lambda = direction.dot(sp)/direction.dot(direction)-envelope/direction.norm();
 			raycast.run(convex, pointmap, new Vector3(), direction, cp.paw, cp.pbw, lambda, sphere.getRadius()+envelope, epsilon, false);
 

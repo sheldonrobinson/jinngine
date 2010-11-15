@@ -66,7 +66,7 @@ public final class RayCast {
 		if (Sc == null) {
 			Sa = new SupportMap3() {
 				@Override
-				public final Vector3 supportPoint(Vector3 direction) { return new Vector3(x); }
+				public final Vector3 supportPoint(Vector3 direction, Vector3 result) { return result.assign(new Vector3(x)); }
 				@Override
 				public final void supportFeature(Vector3 d, List<Vector3> returnList) {}
 				@Override
@@ -76,7 +76,7 @@ public final class RayCast {
 			// if Sc is given, add it to the second support map
 			Sa = new SupportMap3() {
 				@Override
-				public final Vector3 supportPoint(Vector3 direction) { return x.add(Sc.supportPoint(direction)); }
+				public final Vector3 supportPoint(Vector3 direction, Vector3 result) { return result.assign(x.add(Sc.supportPoint(direction, new Vector3()))); }
 				@Override
 				public final void supportFeature(Vector3 d, List<Vector3> returnList) {}
 				@Override

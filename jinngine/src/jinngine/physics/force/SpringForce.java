@@ -99,7 +99,7 @@ public class SpringForce implements Force {
 		
 		Vector3 n;
 		//normal of spring direction
-		if ( x.isEpsilon(Vector3.e)) {
+		if ( x.isEpsilon(1e-9)) {
 			n = x = new Vector3();
 		} else {
 			n = x.normalize();			

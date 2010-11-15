@@ -125,13 +125,26 @@ public class Box implements SupportMap3, Geometry, Material {
 	public void setUserReference(Object auxiliary) { this.auxiliary = auxiliary; }
 
 	@Override
-	public Vector3 supportPoint(Vector3 direction) {
+	public Vector3 supportPoint(Vector3 direction, Vector3 result ) {
 		// calculate a support point in world space
-		Vector3 v = body.state.rotation.multiply(localrotation).transpose().multiply(direction);
-		double sv1 = v.x<0?-0.5:0.5;
-		double sv2 = v.y<0?-0.5:0.5;
-		double sv3 = v.z<0?-0.5:0.5;
-		return body.state.rotation.multiply(localrotation.multiply(new Vector3(xs*sv1, ys*sv2, zs*sv3)).add(localdisplacement)).add(body.state.position);
+//		Vector3 v = body.state.rotation.multiply(localrotation).transpose().multiply(direction);
+		result.assign(direction);
+		Matrix3.multiplyTransposed(body.state.rotation, result, result);
+		Matrix3.multiplyTransposed(localrotation, result, result);
+				
+//		double sv1 = v.x<0?-0.5:0.5;
+//		double sv2 = v.y<0?-0.5:0.5;
+//		double sv3 = v.z<0?-0.5:0.5;
+		result.x = result.x<0 ? -xs*0.5 : xs*0.5;
+		result.y = result.y<0 ? -ys*0.5 : ys*0.5;
+		result.z = result.z<0 ? -zs*0.5 : zs*0.5;
+
+		Matrix3.multiply(localrotation, result, result);
+		Vector3.add( result, localdisplacement );
+		Matrix3.multiply(body.state.rotation, result, result);
+		Vector3.add( result, body.state.position );		
+		return result;
+//		return body.state.rotation.multiply(localrotation.multiply(new Vector3(xs*sv1, ys*sv2, zs*sv3)).add(localdisplacement)).add(body.state.position);
 	}
 
 	@Override

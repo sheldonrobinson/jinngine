@@ -24,9 +24,10 @@ import jinngine.math.Vector3;
 public interface SupportMap3  {
 	/**
 	 * Compute a support point of this geometry, in the given direction 
-	 * @return The farthest point, in the given direction, existing on this geometry
+	 * @param result placeholder of the new support point
+	 * @return the reference to result
 	 */
-	public Vector3 supportPoint( Vector3 direction );
+	public Vector3 supportPoint( Vector3 direction, Vector3 result );
 
 	/**
 	 * Return the feature that supports the direction d. This could be either a point, 

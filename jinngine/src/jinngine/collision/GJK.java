@@ -98,8 +98,8 @@ public final class GJK {
 //		    System.out.println("gjk iteration" + " " + v.norm()+ "  : " + state.simplexSize);
 			
 			// store points of convex objects a and b, and A-B 
-			sa.assign( Sa.supportPoint(state.v.negate()));
-			sb.assign( Sb.supportPoint(state.v));	    							
+			sa.assign( Sa.supportPoint(state.v.negate(), new Vector3()));
+			sb.assign( Sb.supportPoint(state.v, new Vector3()));	    							
 			w.assign( sa.sub(sb) );
 
 			// termination condition
@@ -173,8 +173,8 @@ public final class GJK {
 			final Vector3[] row = state.simplices[state.permutation[i]];
 
 			//store points of convex objects a and b, and A-B (in A space)
-			row[1].assign(Sa.supportPoint(state.simplices[i][3].negate()));
-			row[2].assign(Sb.supportPoint(state.simplices[i][3]));	    							
+			row[1].assign(Sa.supportPoint(state.simplices[i][3].negate(), new Vector3()));
+			row[2].assign(Sb.supportPoint(state.simplices[i][3], new Vector3()));	    							
 			row[0].assign(row[1].sub(row[2]));
 			//row[4] = v.copy(); not needed
 		}
@@ -199,9 +199,9 @@ public final class GJK {
 	 */
 	@SuppressWarnings("unused")
 	private final Vector3 support( final SupportMap3 Sa, final SupportMap3 Sb, final Vector3 v) {
-		final Vector3 sva = Sa.supportPoint(v) ;
+		final Vector3 sva = Sa.supportPoint(v, new Vector3()) ;
 		//We need rotate the vector reverse in B space
-		final Vector3 svb = Sb.supportPoint(v.multiply(-1));   		
+		final Vector3 svb = Sb.supportPoint(v.multiply(-1), new Vector3());   		
 		return sva.sub(svb);
 	}
 	/**

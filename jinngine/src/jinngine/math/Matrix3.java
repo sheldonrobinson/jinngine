@@ -476,6 +476,34 @@ public class Matrix3 {
     
     return r;
   }  
+  
+  /**
+   * Multiply v by A^T, and place result in r, so r = A^Tv
+   * @param A 3 by 3 matrix
+   * @param v Vector to be multiplied
+   * @param r Vector to hold result of multiplication
+   * @return Reference to the given Vector3 r instance
+   */
+  public static Vector3 multiplyTransposed( final Matrix3 A, final Vector3 v, final Vector3 r ) {
+    //                   
+    //               V | v1
+    //                 | v2
+    //                 | v3                     
+    //     -----------------
+    // A^T a11 a21 a31 | c1
+    //     a12 a22 a32 | c2
+    //     a13 a23 a33 | c3   
+    
+    double t1 = v.x*A.a11+v.y*A.a21+v.z*A.a31;
+    double t2 = v.x*A.a12+v.y*A.a22+v.z*A.a32;
+    double t3 = v.x*A.a13+v.y*A.a23+v.z*A.a33;
+    
+    r.x = t1;
+    r.y = t2;
+    r.z = t3;
+    
+    return r;
+  } 
 
   /**
    * Compute the determinant of Matrix3 A

@@ -60,9 +60,9 @@ public class Sphere implements SupportMap3, Geometry, Material {
 	public final double getRadius() { return this.radius; }
 
 	@Override
-	public Vector3 supportPoint(Vector3 direction) {
+	public Vector3 supportPoint(Vector3 direction, Vector3 result) {
 		//sphere is invariant under rotation
-		return direction.normalize().multiply(radius).add(body.state.position).add(Matrix3.multiply(body.state.rotation, displacement, new Vector3()) );
+		return result.assign(direction.normalize().multiply(radius).add(body.state.position).add(Matrix3.multiply(body.state.rotation, displacement, new Vector3()) ));
 	}
 
 	@Override

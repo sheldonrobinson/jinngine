@@ -304,6 +304,43 @@ public class Matrix4 {
                 || Double.isNaN(a44);
     }
 
+    /** A "close to zero" double epsilon value for use */
+    private static final double ZERO_TOLERANCE = 0.0001;
+
+    @Override
+    public boolean equals(final Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (!(o instanceof Matrix4)) {
+            return false;
+        }
+
+        final Matrix4 m = (Matrix4) o;
+        if (//
+        a11 - m.a11 > ZERO_TOLERANCE || //
+                a12 - m.a12 > ZERO_TOLERANCE || //
+                a13 - m.a13 > ZERO_TOLERANCE || //
+                a14 - m.a14 > ZERO_TOLERANCE || //
+                a21 - m.a21 > ZERO_TOLERANCE || //
+                a22 - m.a22 > ZERO_TOLERANCE || //
+                a23 - m.a23 > ZERO_TOLERANCE || //
+                a24 - m.a24 > ZERO_TOLERANCE || //
+                a31 - m.a31 > ZERO_TOLERANCE || //
+                a32 - m.a32 > ZERO_TOLERANCE || //
+                a33 - m.a33 > ZERO_TOLERANCE || //
+                a34 - m.a34 > ZERO_TOLERANCE || //
+                a41 - m.a41 > ZERO_TOLERANCE || //
+                a42 - m.a42 > ZERO_TOLERANCE || //
+                a43 - m.a43 > ZERO_TOLERANCE || //
+                a44 - m.a44 > ZERO_TOLERANCE//
+        ) {
+            return false;
+        }
+
+        return true;
+    }
+
     @Override
     public String toString() {
         return "[" + a11 + ", " + a12 + ", " + a13 + ", " + a14 + "]\n"

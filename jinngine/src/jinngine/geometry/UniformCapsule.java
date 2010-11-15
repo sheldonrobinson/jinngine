@@ -168,11 +168,11 @@ public final class UniformCapsule implements Geometry, SupportMap3, Material {
 	}
 
 	@Override
-	public Vector3 supportPoint(Vector3 direction) {
+	public Vector3 supportPoint(Vector3 direction, Vector3 result) {
 		// calculate a support point in world space
 		Vector3 v = body.state.rotation.multiply(rotation).transpose().multiply(direction);
 		double sv3 = v.z<0?-0.5:0.5;
-		return body.state.rotation.multiply(rotation.multiply(new Vector3(0, 0, sv3*length)).add(translation)).add(body.state.position);
+		return result.assign(body.state.rotation.multiply(rotation.multiply(new Vector3(0, 0, sv3*length)).add(translation)).add(body.state.position));
 	}
 
 	@Override

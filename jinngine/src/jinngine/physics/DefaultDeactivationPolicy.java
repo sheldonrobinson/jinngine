@@ -40,16 +40,11 @@ public class DefaultDeactivationPolicy implements DeactivationPolicy {
 				return true;
 			}
 		}
-		
-		//double accel = b.deltavelocity.dot(b.deltavelocity) + b.deltaomega.dot(b.deltaomega);
-		
-//		Vector3 forcedeviation = b.state.force.minus(b.deactivatedexternalforce);
-//		Vector3 torquedeviation = b.state.torque.minus(b.deactivatedexternaltorque);
 
-		double accel = b.deltavelocity.add(b.externaldeltavelocity).squaredNorm();
-		accel += b.deltaomega.add(b.externaldeltaomega).squaredNorm();		
-
-		
+//		double accel = b.deltavelocity.add(b.externaldeltavelocity).squaredNorm();
+//		accel += b.deltaomega.add(b.externaldeltaomega).squaredNorm();				
+		double accel = Vector3.squaredNormOfSum(b.deltavelocity, b.externaldeltavelocity);
+		accel += Vector3.squaredNormOfSum(b.deltaomega, b.externaldeltaomega);
 		return accel > 1e-1;
 	} 
 	
