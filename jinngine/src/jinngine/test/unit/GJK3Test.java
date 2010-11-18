@@ -9,6 +9,7 @@
 package jinngine.test.unit;
 
 import jinngine.collision.GJK;
+import jinngine.geometry.Box;
 import jinngine.geometry.Sphere;
 import jinngine.math.Matrix3;
 import jinngine.math.Vector3;
@@ -158,6 +159,34 @@ public class GJK3Test extends TestCase {
 			// we want the expected distance 
 			assertTrue( Math.abs( p1.sub(p2).norm() - expected ) < epsilon );
 		}
+	}
+	
+	public void testBoxBox1() {
+		Body body = new Body("");
+		Box box1 = new Box("", 1, 1, 1);
+		Box box2 = new Box("", 1, 1, 1);
+		body.addGeometry(Matrix3.identity(), new Vector3(0,0,0), box1);
+		body.addGeometry(Matrix3.identity(), new Vector3(2,2,2), box2);
+
+		// expected distance
+		double expected = Math.sqrt(3);
+		
+		//closest point vectors
+		Vector3 p1 = new Vector3();
+		Vector3 p2 = new Vector3();
+
+		// create a new gjk every time, to avoid the frame coherence 
+		// heuristic inside GJK
+		GJK gjk = new GJK();
+		
+		// when the distance between objects becomes close to zero, 
+		// the gjk algorithm gegenerates and produces less acurate results.
+		// therefore we use more iterations here
+		gjk.run(box1,box2,p1,p2,Double.POSITIVE_INFINITY, epsilon, 2256);
+		
+		// we want the expected distance 
+		assertTrue( Math.abs( p1.sub(p2).norm() - expected ) < epsilon );
+		
 	}
 
 
