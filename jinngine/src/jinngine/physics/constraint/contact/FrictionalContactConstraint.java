@@ -39,6 +39,8 @@ public final class FrictionalContactConstraint implements ContactConstraint {
 	
 	private boolean enableCoupling = true;
 	
+	
+	
 	/**
 	 * Create a new ContactConstraint, using one initial ContactGenerator
 	 * @param b1
@@ -56,7 +58,7 @@ public final class FrictionalContactConstraint implements ContactConstraint {
 	 * Add a new ContactGenerator for generating contact points and normal vectors
 	 * @param g a new ContactGenerator
 	 */
-	public void addGenerator(ContactGenerator g) {
+	public final void addGenerator(ContactGenerator g) {
 		this.generators.add(g);
 	}
 	
@@ -64,7 +66,7 @@ public final class FrictionalContactConstraint implements ContactConstraint {
 	 * Remove a contact generator
 	 * @param g Previously added contact generator to be removed from this contact constraint
 	 */
-	public void removeGenerator(ContactGenerator g) {
+	public final void removeGenerator(ContactGenerator g) {
 		this.generators.remove(g);
 	}
 	
@@ -72,14 +74,27 @@ public final class FrictionalContactConstraint implements ContactConstraint {
 	 * Return the number of contact point generators
 	 * @return
 	 */
-	public double getNumberOfGenerators() {
+	public final double getNumberOfGenerators() {
 		return generators.size();
+	}
+	
+	private final NCPConstraint getNextNCPConstraint( ListIterator<NCPConstraint> internal, ListIterator<NCPConstraint> external) {
+		if (internal.hasNext()) {
+			NCPConstraint ci = internal.next();
+			external.add(ci);
+			return ci;
+		} else {
+			NCPConstraint ci = new NCPConstraint();
+			internal.add(ci);
+			external.add(ci);
+			return ci;
+		}
 	}
 	
 	@Override
 	public final void applyConstraints(ListIterator<NCPConstraint> constraintIterator, double dt) {
-		// clear list of ncp constraints
-		ncpconstraints.clear();
+		// start iterator for the internal list of constraints
+		ListIterator<NCPConstraint> internalConstraints = ncpconstraints.listIterator();
 		
 		// use ContactGenerators to create new contactpoints
 		for ( ContactGenerator cg: generators) {
@@ -89,10 +104,15 @@ public final class FrictionalContactConstraint implements ContactConstraint {
 			// generate contacts
 			Iterator<ContactGenerator.ContactPoint> i = cg.getContacts();
 			while (i.hasNext()) {
-				ContactGenerator.ContactPoint cp = i.next();
-				
-				createFrictionalContactConstraint(cp, b1, b2, cp.point, cp.normal, cp.depth, dt, constraintIterator);				
+				ContactGenerator.ContactPoint cp = i.next();			
+				createFrictionalContactConstraint(cp, b1, b2, cp.point, cp.normal, cp.depth, dt, internalConstraints, constraintIterator);				
 			}
+		}
+		
+		// clear remaining constraints from the internal list
+		while (internalConstraints.hasNext()) {
+			internalConstraints.next();
+			internalConstraints.remove();
 		}
 		
 	}
@@ -101,8 +121,8 @@ public final class FrictionalContactConstraint implements ContactConstraint {
 	public final void createFrictionalContactConstraint( 
 			ContactGenerator.ContactPoint cp,
 			Body b1, Body b2, Vector3 p, Vector3 n, double depth, double dt,
-			ListIterator<NCPConstraint> outConstraints 
-	) {
+			ListIterator<NCPConstraint> internalConstraints, ListIterator<NCPConstraint> outConstraints 
+	) {		
 
 		// use a gram-schmidt process to create a orthonormal basis for the contact point ( normal and tangential directions)
 		final Vector3 t1 = new Vector3(), t2 = new Vector3(), t3 = new Vector3();
@@ -172,9 +192,8 @@ public final class FrictionalContactConstraint implements ContactConstraint {
 		
 		//correction=correction>0?0:correction;
 
-		// the normal constraint
-		final NCPConstraint c = new NCPConstraint();
-		c.assign(b1,b2,
+		NCPConstraint normalConstraint = getNextNCPConstraint(internalConstraints,outConstraints);
+		normalConstraint.assign(b1,b2,
 				nB1, nB2, nB3, nB4,
 				nJ1, nJ2, nJ3, nJ4,
 				lowerNormalLimit, Double.POSITIVE_INFINITY,
@@ -182,13 +201,13 @@ public final class FrictionalContactConstraint implements ContactConstraint {
 			     -(unf-uni)-correction, -correction) ;
 		
 		// set distance (unused in simulator)
-		c.distance = cp.distance;
+		normalConstraint.distance = cp.distance;
 		
 		// normal-friction coupling 
-		final NCPConstraint coupling = enableCoupling?c:null;
+		final NCPConstraint coupling = enableCoupling?normalConstraint:null;
 		
 		// set the correct friction setting for this contact
-		c.mu = cp.friction;
+		normalConstraint.mu = cp.friction;
 						
 		// first tangent
 		final Vector3 t2J1 = t2;
@@ -205,8 +224,9 @@ public final class FrictionalContactConstraint implements ContactConstraint {
 		final double ut1f = 0;
 		
 		// double t2Fext = t2B1.dot(b1.state.FCm) + t2B2.dot(b1.state.tauCm) + t2B3.dot(b2.state.FCm) + t2B4.dot(b2.state.tauCm);
-		final NCPConstraint c2 = new NCPConstraint();
-		c2.assign(b1,b2,
+		
+		NCPConstraint tangent1Constraint = getNextNCPConstraint(internalConstraints,outConstraints);
+		tangent1Constraint.assign(b1,b2,
 				t2B1, t2B2,	t2B3, t2B4,				
 				t2J1, t2J2, t2J3, t2J4,
 				-frictionBoundMagnitude, frictionBoundMagnitude,
@@ -228,24 +248,14 @@ public final class FrictionalContactConstraint implements ContactConstraint {
 		final double ut2i = t3J1.dot(b1.state.velocity) + t3J2.dot(b1.state.omega) + t3J3.dot(b2.state.velocity) + t3J4.dot(b2.state.omega); 
 		final double ut2f = 0;
 		
-		final NCPConstraint c3 = new NCPConstraint();
-		c3.assign(b1,b2,
+		NCPConstraint tangent2Constraint = getNextNCPConstraint(internalConstraints,outConstraints);
+		tangent2Constraint.assign(b1,b2,
 				t3B1, t3B2,	t3B3, t3B4,
 				t3J1, t3J2, t3J3, t3J4,
 				-frictionBoundMagnitude, frictionBoundMagnitude,
 				coupling,
 				-(ut2f-ut2i), 0  
-		);
-
-		outConstraints.add(c);
-		outConstraints.add(c2);
-		outConstraints.add(c3);
-		
-		// add to list
-		ncpconstraints.add(c);
-		ncpconstraints.add(c2);
-		ncpconstraints.add(c3);
-
+		);		
 	}
 
 	@Override
