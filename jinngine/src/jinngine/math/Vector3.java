@@ -48,13 +48,13 @@ public final class Vector3 implements Serializable {
 //	public transient final static double e = 1e-9f;
 
 	/**
-	 * Constructs and initializes a <code>Vector3</code> to [0., 0., 0.]
+	 * Constructs and initialises a <code>Vector3</code> to [0., 0., 0.]
 	 */
 	public Vector3 () {
 		x=0; y=0; z=0;
 	}
 	/**
-	 * Constructs and initializes a <code>Vector3</code> from the specified
+	 * Constructs and initialises a <code>Vector3</code> from the specified
 	 * xyz coordinates.
 	 * @param x the x coordinate
 	 * @param y the y coordinate
@@ -65,9 +65,9 @@ public final class Vector3 implements Serializable {
 	}
 
 	/**
-	 * Constructs and initializes a <code>Vector3</code> with the coordinates
+	 * Constructs and initialises a <code>Vector3</code> with the coordinates
 	 * of the given <code>Vector3</code>.
-	 * @param v the <code>Vector3</code> containing the initialization x y z data
+	 * @param v the <code>Vector3</code> containing the initialisation x y z data
 	 * @throws NullPointerException when v is null
 	 */
 	public Vector3( Vector3 v ) {
@@ -128,20 +128,20 @@ public final class Vector3 implements Serializable {
 		return Double.isNaN(x)||Double.isNaN(y)||Double.isNaN(z);
 	}
 	/**
-	 * Get a coordinate from a dimention ordinal.
-	 * @param i the dimention ordinal number. 1 is x, 2 is y 3 is z.
+	 * Get a coordinate from a dimension ordinal.
+	 * @param i the dimension ordinal number. 1 is x, 2 is y 3 is z.
 	 * @return <ul>
-	 *<li>         x coordiante when i is 0</li>
-	 *<li>         y coordiante when i is 1</li>
-	 *<li>         z coordiante when i is 2</li>
+	 *<li>         x coordinate when i is 0</li>
+	 *<li>         y coordinate when i is 1</li>
+	 *<li>         z coordinate when i is 2</li>
 	 * </ul>
 	 */
 	public double get( int i ) {
 		return i>0?(i>1?z:y):x; 
 	}
 	/**
-	 * Set a coordinate from a dimention ordinal.
-	 * @param i the dimention ordinal number. 1 is x, 2 is y 3 is z.
+	 * Set a coordinate from a dimension ordinal.
+	 * @param i the dimension ordinal number. 1 is x, 2 is y 3 is z.
 	 * @param v new coordinate value
 	 */
 	public void set( int i, double v ) {
@@ -170,7 +170,7 @@ public final class Vector3 implements Serializable {
 	}
 
 	/**
-	 * Substract two vectors and place the result in v1.
+	 * Subtract two vectors and place the result in v1.
 	 * <code>v2</code> is not modified.
 	 * @param v1 a not null reference, store the difference
 	 * @param v2 a not null reference
@@ -183,7 +183,7 @@ public final class Vector3 implements Serializable {
 	}
 
 	/**
-	 * Substracts a provided vector to this vector creating a resultant
+	 * Subtracts a provided vector to this vector creating a resultant
 	 * vector which is returned.
 	 * Neither <code>this</code> nor <code>v</code> is modified.
 	 *
@@ -194,7 +194,7 @@ public final class Vector3 implements Serializable {
 		return new Vector3( x-v.x, y-v.y, z-v.z );
 	}
 	/**
-	 * Substracts a provided vector to this vector.
+	 * Subtracts a provided vector to this vector.
 	 * <code>this</code> contains the result and <code>v</code> is not modified.
 	 * @param v vector to substract
 	 * @return <code>this</code>
@@ -223,7 +223,7 @@ public final class Vector3 implements Serializable {
 	 * vector which is returned.
 	 * <code>this</code> vector is not modified.
 	 *
-	 * @param s multiplication coeficient
+	 * @param s multiplication coefficient
 	 * @return resultant vector
 	 */
 	public final Vector3 multiply( double s ) {
@@ -269,26 +269,19 @@ public final class Vector3 implements Serializable {
 	}
 
 	/**
-	 * Multiply a given vector by a scalar and place the result in v
-	 * @param v vector multipled
-	 * @param s scalar used to scale the vector
-	 * @throws NullPointerException if v is null
+	 * Multiply v by s and place the result in v, so v = v s
 	 */
 	public static void multiply( Vector3 v, double s) {
 		v.x*=s; v.y*=s; v.z*=s;
 	}
 
 	/**
-	 *
-	 * @param v
-	 * @param s
-	 * @param result
-	 * @throws NullPointerException if v ot result is null
+	 * Multiply v by s and add the result to r, such that r = r + v s
 	 */
-	public static void multiplyAndAdd( Vector3 v, double s, Vector3 result) {
-		result.x += v.x*s; 
-		result.y += v.y*s; 
-		result.z += v.z*s;
+	public static void multiplyAndAdd( Vector3 v, double s, Vector3 r) {
+		r.x += v.x*s; 
+		r.y += v.y*s; 
+		r.z += v.z*s;
 	}
 
 	/**
@@ -308,6 +301,13 @@ public final class Vector3 implements Serializable {
 	}
 
 	/**
+	 * Return the scalar value of (y1-y2)^Ty3
+	 */
+	public static final double subAndDot( final Vector3 y1, final Vector3 y2, final Vector3 y3 ) {
+		return (y1.x-y2.x)*y3.x + (y1.y-y2.y)*y3.y + (y1.z-y2.z)*y3.z; 
+	}
+	
+	/**
 	 * Returns the dot product of this vector and vector v.
 	 * Neither <code>this</code> nor <code>v</code> is modified.
 	 * @param v the other vector
@@ -320,7 +320,7 @@ public final class Vector3 implements Serializable {
 	/**
 	 * Returns the dot product of this vector and vector v.
 	 * Neither <code>this</code> nor <code>v</code> is modified.
-	 * z coordinated if trucated
+	 * z coordinated if truncated
 	 * @param v the other vector
 	 * @return the dot product of this and v1
 	 * @throws NullPointerException
@@ -355,11 +355,11 @@ public final class Vector3 implements Serializable {
 		result.y = tempa2;
 		result.z = tempa3;
 	}
-
+	
 	/**
-	 * Return a new vector set to the normalization of vector v1.
+	 * Return a new vector set to the normalisation of vector v1.
 	 * <code>this</code> vector is not modified.
-	 * @return the normalized vector
+	 * @return the normalised vector
 	 */
 	public final Vector3 normalize() {
 		double l = Math.sqrt(x*x+y*y+z*z);
@@ -409,14 +409,48 @@ public final class Vector3 implements Serializable {
 		z = t3;
 		return this;
 	}
+	
 	/**
-	 *
-	 * @return
+     * Assign the zero vector to this vector 
 	 */
 	public final Vector3 assignZero() {
 		x = 0;
 		y = 0;
 		z = 0;
+		return this;
+	}
+	
+	/**
+	 * Assign the difference of a and b to this vector
+	 * @param a
+	 * @param b
+	 * @return
+	 */
+	public final Vector3 assignDifference(final Vector3 a, final Vector3 b) {
+		x = a.x-b.x;
+		y = a.y-b.y;
+		z = a.z-b.z;
+		return this;
+	}
+	
+	/**
+	 * Negate the value of this vector
+	 */
+	public final Vector3 assignNegate() {
+		x *= -1;
+		y *= -1;
+		z *= -1;
+		return this;
+	}
+	
+	/** 
+	 * Normalise this vector
+	 */
+	public final Vector3 assignNormalize() {
+		double s = 1.0 / this.norm();
+		x *= s;
+		y *= s;
+		z *= s;
 		return this;
 	}
 
@@ -473,7 +507,7 @@ public final class Vector3 implements Serializable {
 		&& -epsilon <= z && z <= epsilon;
 	}
 	/**
-	 * Pack the three coorindates into a new double array
+	 * Pack the three coordinates into a new double array
 	 * <code>this</code> vector is not modified.
 	 * @return a array set with x, y and z
 	 */
@@ -500,7 +534,7 @@ public final class Vector3 implements Serializable {
 	}
 	/**
 	 * Returns a string representation of this vector.  The string
-	 * representation consists of the three dimentions in the order x, y, z,
+	 * representation consists of the three dimensions in the order x, y, z,
 	 * enclosed in square brackets (<tt>"[]"</tt>). Adjacent elements are
 	 * separated by the characters <tt>", "</tt> (comma and space).
 	 * Elements are converted to strings as by {@link Double#toString(double)}.
