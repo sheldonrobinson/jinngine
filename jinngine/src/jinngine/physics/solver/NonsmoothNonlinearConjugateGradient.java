@@ -107,11 +107,10 @@ public class NonsmoothNonlinearConjugateGradient implements Solver {
 				final double w = ci.j1.dot(ci.body1.deltavelocity) 
 				         + ci.j2.dot(ci.body1.deltaomega)
 				         + ci.j3.dot(ci.body2.deltavelocity) 
-				         + ci.j4.dot(ci.body2.deltaomega) 
-				         + ci.lambda*ci.damper ;
+				         + ci.j4.dot(ci.body2.deltaomega);
 				
 			    
-			    double deltaLambda = -((ci.b+ci.Fext)*bnorminv+w)/(ci.diagonal + ci.damper );
+			    double deltaLambda = -((ci.b+ci.Fext)*bnorminv+w)/(ci.diagonal);
 				final double lambda0 = ci.lambda;
 				
 				//Clamp the lambda[i] value to the constraints
@@ -209,80 +208,4 @@ public class NonsmoothNonlinearConjugateGradient implements Solver {
 
 		return 0;
 	}
-	
-
-	public static final double merit(List<NCPConstraint> constraints, List<Body> bodies, boolean onlyfrictions) {
-		double value = 0;
-		
-		//copy to auxiliary
-		for ( Body bi: bodies) {
-			bi.deltavelocity1.assign(bi.deltavelocity);
-			bi.deltaomega1.assign(bi.deltaomega);
-		}
-		//copy lambda value
-		for (NCPConstraint ci: constraints) {
-			ci.s = ci.lambda;
-		}
-		
-		//use one PGS iteration to compute new residual 
-		for (NCPConstraint ci: constraints) {
-			//calculate (Ax+b)_i 
-			double w =  ci.j1.dot(ci.body1.deltavelocity1) 
-			+ ci.j2.dot(ci.body1.deltaomega1)
-			+ ci.j3.dot(ci.body2.deltavelocity1) 
-			+ ci.j4.dot(ci.body2.deltaomega1) + ci.s*ci.damper;
-
-			double deltaLambda = (-ci.b-w)/(ci.diagonal + ci.damper );
-			double lambda0 = ci.s;
-
-			//Clamp the lambda[i] value to the constraints
-			if (ci.coupling != null) {
-				//if the constraint is coupled, allow only lambda <= coupled lambda
-				ci.l = -Math.abs(ci.coupling.s)*ci.coupling.mu;
-				ci.u =  Math.abs(ci.coupling.s)*ci.coupling.mu;
-			} else {
-				ci.l = ci.lower;
-				ci.u = ci.upper;
-			}
-
-			//do projection
-			double newlambda =
-				Math.max(ci.l, Math.min(lambda0 + deltaLambda,ci.u ));
-
-			//update the V vector
-			deltaLambda = newlambda - lambda0;
-			
-			//ci.residual = deltaLambda;
-//			Vector3.add( ci.body1.deltavelocity1,     ci.b1.multiply(deltaLambda) );
-//			Vector3.add( ci.body1.deltaomega1, ci.b2.multiply(deltaLambda) );
-//			Vector3.add( ci.body2.deltavelocity1,     ci.b3.multiply(deltaLambda));
-//			Vector3.add( ci.body2.deltaomega1, ci.b4.multiply(deltaLambda));
-			Vector3.multiplyAndAdd( ci.b1, deltaLambda, ci.body1.deltavelocity1);
-			Vector3.multiplyAndAdd( ci.b2, deltaLambda, ci.body1.deltaomega1 );
-			Vector3.multiplyAndAdd( ci.b3, deltaLambda, ci.body2.deltavelocity1 );
-			Vector3.multiplyAndAdd( ci.b4, deltaLambda, ci.body2.deltaomega1 );
-
-			
-			ci.s += deltaLambda;
-			
-			//value += Math.pow(w+ci.b,2);
-			
-//			if (onlyfrictions) {
-//				if (ci.coupling!=null) {
-//					value += deltaLambda*deltaLambda;
-//				}
-//			} else {
-//				value += deltaLambda*deltaLambda;
-//			}
-			
-//			value += Math.pow(w+ci.b,2);
-			value += deltaLambda*deltaLambda;
-			
-		} //for constraints	
-		
-		//value = FischerNewton.fischerMerit(constraints, bodies);
-		
-		return value;
-	}
-	
 }
