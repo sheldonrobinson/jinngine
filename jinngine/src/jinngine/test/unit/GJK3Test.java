@@ -19,7 +19,7 @@ import junit.framework.TestCase;
 public class GJK3Test extends TestCase {
 	
 	//error tolerance
-	double epsilon = 1e-10;
+	double epsilon = 1e-12;
 
 	
 	/*
@@ -156,8 +156,8 @@ public class GJK3Test extends TestCase {
 			// therefore we use more iterations here
 			gjk.run(s1,s2,p1,p2,Double.POSITIVE_INFINITY, epsilon, 2256);
 			
-			// we want the expected distance 
-			assertTrue( Math.abs( p1.sub(p2).norm() - expected ) < epsilon );
+			// we want the expected distance ( with a high error tolerance )
+			assertTrue( Math.abs( p1.sub(p2).norm() - expected ) < 1e-6 );
 		}
 	}
 	
