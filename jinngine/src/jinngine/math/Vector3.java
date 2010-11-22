@@ -339,6 +339,21 @@ public final class Vector3 implements Serializable {
 	public final Vector3 cross( final Vector3 v ) {
 		return new Vector3( y*v.z-z*v.y, z*v.x-x*v.z, x*v.y-y*v.x ); 
 	}
+	
+	/**
+	 * Compute the cross product between this vector and the given vector v. Place result
+	 * in this vector
+	 */
+	public final Vector3 assignCross( final Vector3 v) {
+		double tmpx = y*v.z-z*v.y;
+		double tmpy = z*v.x-x*v.z; 
+		double tmpz = x*v.y-y*v.x;
+		this.x = tmpx;
+		this.y = tmpy;
+		this.z = tmpz;
+		return this;
+	}
+	
 	/**
 	 * Sets result vector to the vector cross product of vectors v1 and v2.
 	 * Neither <code>v1</code> nor <code>v2</code> is modified.
