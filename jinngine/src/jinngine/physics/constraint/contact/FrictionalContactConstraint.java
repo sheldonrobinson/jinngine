@@ -37,6 +37,10 @@ public final class FrictionalContactConstraint implements ContactConstraint {
 	private final List<NCPConstraint>       ncpconstraints = new ArrayList<NCPConstraint>();
 	private double frictionBoundMagnitude = Double.POSITIVE_INFINITY;
 	
+	// vectors spanning the contact space
+	private final Vector3 t1 = new Vector3(), t2 = new Vector3(), t3 = new Vector3();
+
+	
 	private boolean enableCoupling = true;
 	
 	
@@ -125,38 +129,21 @@ public final class FrictionalContactConstraint implements ContactConstraint {
 	) {		
 
 		// use a gram-schmidt process to create a orthonormal basis for the contact point ( normal and tangential directions)
-		final Vector3 t1 = new Vector3(), t2 = new Vector3(), t3 = new Vector3();
-		final Matrix3 B  = GramSchmidt.run(n);
-		B.getColumnVectors(t1, t2, t3);
+		t1.assign(n); GramSchmidt.run(t1,t2,t3);
 
-		// interaction points and jacobian for normal constraint
-		final Vector3 r1 = p.sub(b1.state.position);
-		final Vector3 r2 = p.sub(b2.state.position);
+		// get the next ncp constraint in local constraint list
+		NCPConstraint t1constraint = getNextNCPConstraint(internalConstraints,outConstraints);
 
-		// jacobians for normal direction
-		final Vector3 nJ1 = n;
-		final Vector3 nJ2 = r1.cross(n);
-		final Vector3 nJ3 = n.negate();
-		final Vector3 nJ4 = r2.cross(n).negate();
+		// assign jacobian and diagonal
+		assignJacobian(b1, b2, t1, p, t1constraint);
 
 		// first off, create the constraint in the normal direction
 		final double e = cp.restitution; // coefficient of restitution
-		final double uni = nJ1.dot(b1.state.velocity) + nJ2.dot(b1.state.omega) + nJ3.dot(b2.state.velocity) + nJ4.dot(b2.state.omega);
+		final double uni = t1constraint.j1.dot(b1.state.velocity) 
+		                 + t1constraint.j2.dot(b1.state.omega) 
+		                 + t1constraint.j3.dot(b2.state.velocity) 
+		                 + t1constraint.j4.dot(b2.state.omega);
 		final double unf = uni<0 ? -e*uni: 0;		
-		
-		// compute B vector
-		final Matrix3 I1 = b1.state.inverseinertia;
-		final Matrix3 M1 = b1.state.inverseanisotropicmass;
-		final Matrix3 I2 = b2.state.inverseinertia;
-		final Matrix3 M2 = b2.state.inverseanisotropicmass;
-		final Vector3 nB1 = M1.multiply(nJ1);
-		final Vector3 nB2 = I1.multiply(nJ2);
-		final Vector3 nB3 = M2.multiply(nJ3);
-		final Vector3 nB4 = I2.multiply(nJ4);
-
-		// clear out B's if mass is "infinity"
-		if (b1.isFixed()) { nB1.assignZero(); nB2.assignZero(); }
-		if (b2.isFixed()) { nB3.assignZero(); nB4.assignZero(); }
 
 		// external forces acing at contact (obsolete, external forces are modelled using the delta velocities)
 		// double Fext = B1.dot(b1.state.force) + B2.dot(b1.state.torque) + B3.dot(b2.state.force) + B4.dot(b2.state.torque);
@@ -164,7 +151,6 @@ public final class FrictionalContactConstraint implements ContactConstraint {
 		final double escape = (cp.envelope-cp.distance)*(1/dt);
 		final double lowerNormalLimit = 0;
 		final double limit = 2;
-		
 		
 		// if the unf velocity will make the contact leave the envelope in the next timestep, 
 		// we ignore corrections
@@ -190,73 +176,126 @@ public final class FrictionalContactConstraint implements ContactConstraint {
 		// take a factor of real correction velocity
 		correction = correction * 0.9;
 		
-		//correction=correction>0?0:correction;
-
-		NCPConstraint normalConstraint = getNextNCPConstraint(internalConstraints,outConstraints);
-		normalConstraint.assign(b1,b2,
-				nB1, nB2, nB3, nB4,
-				nJ1, nJ2, nJ3, nJ4,
-				lowerNormalLimit, Double.POSITIVE_INFINITY,
-				null,
-			     -(unf-uni)-correction, -correction) ;
+		// assign constraint settings
+		t1constraint.body1 = b1;
+		t1constraint.body2 = b2;
+		t1constraint.lower = lowerNormalLimit;
+		t1constraint.upper = Double.POSITIVE_INFINITY;
+		t1constraint.coupling = null;
+		t1constraint.b = -(unf-uni)-correction;
+		t1constraint.c = -correction;
+		t1constraint.lambda = 0;
 		
 		// set distance (unused in simulator)
-		normalConstraint.distance = cp.distance;
+		t1constraint.distance = cp.distance;
 		
 		// normal-friction coupling 
-		final NCPConstraint coupling = enableCoupling?normalConstraint:null;
+		final NCPConstraint coupling = enableCoupling?t1constraint:null;
 		
 		// set the correct friction setting for this contact
-		normalConstraint.mu = cp.friction;
+		t1constraint.mu = cp.friction;
 						
 		// first tangent
-		final Vector3 t2J1 = t2;
-		final Vector3 t2J2 = r1.cross(t2);
-		final Vector3 t2J3 = t2.negate();
-		final Vector3 t2J4 = r2.cross(t2).negate();
-		final Vector3 t2B1 = b1.isFixed()? new Vector3(): M1.multiply(t2J1);
-		final Vector3 t2B2 = b1.isFixed()? new Vector3(): I1.multiply(t2J2);
-		final Vector3 t2B3 = b2.isFixed()? new Vector3(): M2.multiply(t2J3);
-		final Vector3 t2B4 = b2.isFixed()? new Vector3(): I2.multiply(t2J4);
+		NCPConstraint t2constraint = getNextNCPConstraint(internalConstraints,outConstraints);
 
-		// then the tangential friction constraints 
-		final double ut1i = t2J1.dot(b1.state.velocity) + t2J2.dot(b1.state.omega) + t2J3.dot(b2.state.velocity) + t2J4.dot(b2.state.omega);
+		// assign jacobian and diagonal
+		assignJacobian( b1, b2, t2, p, t2constraint);
+		
+		// initial and final velocitu of the first tangent 
+		final double ut1i = t2constraint.j1.dot(b1.state.velocity) + t2constraint.j2.dot(b1.state.omega) + t2constraint.j3.dot(b2.state.velocity) + t2constraint.j4.dot(b2.state.omega);
 		final double ut1f = 0;
-		
-		// double t2Fext = t2B1.dot(b1.state.FCm) + t2B2.dot(b1.state.tauCm) + t2B3.dot(b2.state.FCm) + t2B4.dot(b2.state.tauCm);
-		
-		NCPConstraint tangent1Constraint = getNextNCPConstraint(internalConstraints,outConstraints);
-		tangent1Constraint.assign(b1,b2,
-				t2B1, t2B2,	t2B3, t2B4,				
-				t2J1, t2J2, t2J3, t2J4,
-				-frictionBoundMagnitude, frictionBoundMagnitude,
-				coupling,
-				-(ut1f-ut1i),
-				0
-		);
-		
-		// second tangent
-		final Vector3 t3J1 = t3;
-		final Vector3 t3J2 = r1.cross(t3);
-		final Vector3 t3J3 = t3.negate();
-		final Vector3 t3J4 = r2.cross(t3).negate();
-		final Vector3 t3B1 = b1.isFixed()? new Vector3(): M1.multiply(t3J1);
-		final Vector3 t3B2 = b1.isFixed()? new Vector3(): I1.multiply(t3J2);
-		final Vector3 t3B3 = b2.isFixed()? new Vector3(): M2.multiply(t3J3);
-		final Vector3 t3B4 = b2.isFixed()? new Vector3(): I2.multiply(t3J4);
+				
+		// assign constraint settings
+		t2constraint.body1 = b1;
+		t2constraint.body2 = b2;
+		t2constraint.lower = -frictionBoundMagnitude;
+		t2constraint.upper = frictionBoundMagnitude;
+		t2constraint.coupling = coupling;
+		t2constraint.b = -(ut1f-ut1i);
+		t2constraint.c = 0;
+		t2constraint.lambda = 0;
 
-		final double ut2i = t3J1.dot(b1.state.velocity) + t3J2.dot(b1.state.omega) + t3J3.dot(b2.state.velocity) + t3J4.dot(b2.state.omega); 
+		// get second tangent constraint
+		NCPConstraint t3constraint = getNextNCPConstraint(internalConstraints,outConstraints);
+
+		// assign jacobian and diagonal
+		assignJacobian( b1, b2, t3, p, t3constraint);
+
+		// initial and final velocity
+		final double ut2i = t3constraint.j1.dot(b1.state.velocity) + t3constraint.j2.dot(b1.state.omega) + t3constraint.j3.dot(b2.state.velocity) + t3constraint.j4.dot(b2.state.omega); 
 		final double ut2f = 0;
 		
-		NCPConstraint tangent2Constraint = getNextNCPConstraint(internalConstraints,outConstraints);
-		tangent2Constraint.assign(b1,b2,
-				t3B1, t3B2,	t3B3, t3B4,
-				t3J1, t3J2, t3J3, t3J4,
-				-frictionBoundMagnitude, frictionBoundMagnitude,
-				coupling,
-				-(ut2f-ut2i), 0  
-		);		
+		// assign constraint settings
+		t3constraint.body1 = b1;
+		t3constraint.body2 = b2;
+		t3constraint.lower = -frictionBoundMagnitude;
+		t3constraint.upper =  frictionBoundMagnitude;
+		t3constraint.coupling = coupling;
+		t3constraint.b = -(ut2f-ut2i);
+		t3constraint.c = 0;
+		t3constraint.lambda = 0;
 	}
+	
+	
+	/**
+	 * Assign the jacobian of the given constraint
+	 */
+	private final void assignJacobian( Body b1, Body b2, Vector3 normal, Vector3 point, NCPConstraint constraint ) {
+		// shorthands for the data
+		final Vector3 J1 = constraint.j1;
+		final Vector3 J2 = constraint.j2;
+		final Vector3 J3 = constraint.j3;
+		final Vector3 J4 = constraint.j4;
+		final Vector3 B1 = constraint.b1;
+		final Vector3 B2 = constraint.b2;
+		final Vector3 B3 = constraint.b3;
+		final Vector3 B4 = constraint.b4;
+		final Matrix3 I1 = b1.state.inverseinertia;
+		final Matrix3 M1 = b1.state.inverseanisotropicmass;
+		final Matrix3 I2 = b2.state.inverseinertia;
+		final Matrix3 M2 = b2.state.inverseanisotropicmass;		
+
+		// jacobians for normal direction
+		// j1 = n
+		J1.assign(normal);
+		// j2 = r1 x n
+		J2.assign(point);
+		J2.assignSub(b1.state.position);
+		J2.assignCross(normal);
+		// j3 = -n
+		J3.assign(normal);
+		J3.assignNegate();
+		// j4 = - r2 x n = n x r2
+		J4.assign(b2.state.position);
+		J4.assignSub(point);
+		J4.assignCross(normal);
+
+		// compute (M^-1)(J^T) vector
+		// clear out B's if mass is "infinity"
+		if (b1.isFixed()) { 
+			B1.assignZero(); 
+			B2.assignZero(); 
+		} else {
+			Matrix3.multiply( M1, J1, B1);
+			Matrix3.multiply( I1, J2, B2);
+		}
+
+		if (b2.isFixed()) { 
+			B3.assignZero(); 
+			B4.assignZero(); 
+		} else {
+			Matrix3.multiply( M2, J3, B3);
+			Matrix3.multiply( I2, J4, B4);			
+		}
+		
+		// assign diagonal
+		constraint.diagonal = constraint.j1.dot(constraint.b1) 
+        + constraint.j2.dot(constraint.b2) 
+        + constraint.j3.dot(constraint.b3) 
+        + constraint.j4.dot(constraint.b4);
+	}
+	
+	
 
 	@Override
 	public final Pair<Body> getBodies() {
