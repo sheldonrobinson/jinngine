@@ -34,6 +34,30 @@ public class GramSchmidt {
 
 		return new Matrix3(t1,t2,t3);
 	}
+
+	/**
+	 * Normalise t1, and compute normalised othorgonal tangents in t2 and t3
+	 */
+	public static void run(Vector3 t1, Vector3 t2, Vector3 t3) {
+		t1.assignNormalize();
+		t2.assign(1,0,0);
+		//t2.assign( t2.sub( t1.multiply(t1.dot(t2))));
+		Vector3.multiplyAndAdd(t1, -t1.dot(t2), t2);
+
+		//if t1 and t2 is linearly dependent, chose another vector, not aligned with t2
+		if (t2.norm() < 1e-10) {
+			t2.assign(0,0,1);
+			//t2.assign( t2.sub( t1.multiply(t1.dot(t2))));
+			Vector3.multiplyAndAdd(t1, -t1.dot(t2), t2);
+		}
+		
+		t2.assignNormalize();
+		
+		//having two orthogonal vectors we obtain the third by crossing
+		Vector3.crossProduct(t1, t2, t3);
+		t3.assignNormalize();
+	}
+
 	
 	public static Matrix3 run(Vector3 v1, Vector3 v2) {
 		Vector3 t1 = v1.normalize();
