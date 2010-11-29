@@ -8,7 +8,7 @@
  */
 package jinngine.geometry;
 
-import java.util.List;
+import java.util.Iterator;
 import jinngine.math.InertiaMatrix;
 import jinngine.math.Matrix3;
 import jinngine.math.Matrix4;
@@ -154,16 +154,16 @@ public final class UniformCapsule implements Geometry, SupportMap3, Material {
 	 */
 	
 	@Override
-	public void supportFeature(Vector3 direction, List<Vector3> face) {
+	public void supportFeature(Vector3 direction, Iterator<Vector3> face) {
 		// calculate a support point in world space
 		Vector3 v = body.state.rotation.multiply(rotation).transpose().multiply(direction);
 		
 		if ( Math.abs(v.z) > 0.5 && false) {
 			double sv3 = v.z<0?-0.5:0.5;
-			face.add(body.state.rotation.multiply(rotation.multiply(new Vector3(0, 0, sv3*length)).add(translation)).add(body.state.position));
+			face.next().assign(body.state.rotation.multiply(rotation.multiply(new Vector3(0, 0, sv3*length)).add(translation)).add(body.state.position));
 		} else {
-			face.add(body.state.rotation.multiply(rotation.multiply(new Vector3(0, 0,  0.5*length)).add(translation)).add(body.state.position));
-			face.add(body.state.rotation.multiply(rotation.multiply(new Vector3(0, 0, -0.5*length)).add(translation)).add(body.state.position));			
+			face.next().assign(body.state.rotation.multiply(rotation.multiply(new Vector3(0, 0,  0.5*length)).add(translation)).add(body.state.position));
+			face.next().assign(body.state.rotation.multiply(rotation.multiply(new Vector3(0, 0, -0.5*length)).add(translation)).add(body.state.position));			
 		}
 	}
 

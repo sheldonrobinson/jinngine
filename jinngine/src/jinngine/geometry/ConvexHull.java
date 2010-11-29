@@ -11,6 +11,7 @@ package jinngine.geometry;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.ListIterator;
 
 import quickhull3d.Point3d;
 import quickhull3d.QuickHull3D;
@@ -322,7 +323,7 @@ public class ConvexHull implements SupportMap3, Geometry, Material {
 	}
 
 	@Override
-	public void supportFeature(Vector3 direction, List<Vector3> returnface) {
+	public void supportFeature(Vector3 direction, Iterator<Vector3> returnface) {
 		// the support feature of CovexHull is the face with the face normal closest to the 
 		// given support direction. This is accomplished by hill-climbing the dual hull, that
 		// maps a vertex onto a face in the original convex hull. Therefore, this method will 
@@ -348,7 +349,7 @@ public class ConvexHull implements SupportMap3, Geometry, Material {
 		
 		// output the face according to the dual hull index
 		for (Vector3 p: faces.get(index)) 
-			returnface.add( body.state.rotation.multiply(localrotation./*scale(localscale).*/multiply(p).add(localtranslation)).add(body.state.position) );
+			returnface.next().assign( body.state.rotation.multiply(localrotation./*scale(localscale).*/multiply(p).add(localtranslation)).add(body.state.position) );
 	}
 
 	

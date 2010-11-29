@@ -142,7 +142,8 @@ public class ORourkeTest extends TestCase {
 		expected.add( new Vector3(0.5,1,0) ); 
 
 		// run intersection
-		ORourke.run(box1, box2, result);
+		ORourke orourke = new ORourke();
+		orourke.run(box1, box2, result);
 		
 		// write out the returned polygon
 //		for (Vector3 p: result)
@@ -183,7 +184,8 @@ public class ORourkeTest extends TestCase {
 		expected.add( new Vector3(1.0,1.0,0) ); 
 
 		// run intersection
-		ORourke.run(box1, box2, result);
+		ORourke orourke = new ORourke();
+		orourke.run(box1, box2, result);
 		
 		// write out the returned polygon
 		for (Vector3 p: result)
@@ -226,7 +228,8 @@ public class ORourkeTest extends TestCase {
 		expected.add( new Vector3(1.0,1.0,0) ); 
 
 		// run intersection
-		ORourke.run(box1, box2, result);
+		ORourke orourke = new ORourke();
+		orourke.run(box1, box2, result);
 		
 		// write out the returned polygon
 		for (Vector3 p: result)
@@ -267,7 +270,8 @@ public class ORourkeTest extends TestCase {
 		expected.addAll( box2 ); 
 
 		// run intersection
-		ORourke.run(box1, box2, result);
+		ORourke orourke = new ORourke();
+		orourke.run(box1, box2, result);
 		
 		System.out.println("overlap box case");
 		
@@ -311,7 +315,8 @@ public class ORourkeTest extends TestCase {
 		// we expect an empty list
 
 		// run intersection
-		ORourke.run(box1, box2, result);
+		ORourke orourke = new ORourke();
+		orourke.run(box1, box2, result);
 		
 		// write out the returned polygon
 		for (Vector3 p: result)
@@ -352,7 +357,8 @@ public class ORourkeTest extends TestCase {
 		expected.addAll(box2);
 
 		// run intersection
-		ORourke.run(box1, box2, result);
+		ORourke orourke = new ORourke();
+		orourke.run(box1, box2, result);
 		
 		// check result by first searching for the first vertex.
 		// When found, we traverse the result again to verify the 
@@ -387,7 +393,8 @@ public class ORourkeTest extends TestCase {
 		expected.add(new Vector3(1.0,0.5,0));
 		
 		// run intersection
-		ORourke.run(line, box1, result);	
+		ORourke orourke = new ORourke();
+		orourke.run(line, box1, result);	
 
 		System.out.println("line box case");
 		
@@ -429,7 +436,8 @@ public class ORourkeTest extends TestCase {
 		expected.add(new Vector3(1.0,0.5,0));
 		
 		// run intersection
-		ORourke.run(line, box1, result);	
+		ORourke orourke = new ORourke();
+		orourke.run(line, box1, result);	
 
 		System.out.println("line box case");
 		
@@ -564,7 +572,8 @@ public class ORourkeTest extends TestCase {
 		expected.add(new Vector3(0,1,0));		
 		
 		// run intersection
-		ORourke.run(line, diamond, result);	
+		ORourke orourke = new ORourke();
+		orourke.run(line, diamond, result);	
 
 		System.out.println("line diamond case");
 		
@@ -606,7 +615,8 @@ public class ORourkeTest extends TestCase {
 		expected.add(new Vector3(0,0,0));
 		
 		// run intersection
-		ORourke.run(line1, line2, result);	
+		ORourke orourke = new ORourke();
+		orourke.run(line1, line2, result);	
 
 		System.out.println("line line case");
 		
@@ -649,7 +659,8 @@ public class ORourkeTest extends TestCase {
 		expected.add(new Vector3( 0.5,0,0));
 		
 		// run intersection
-		ORourke.run(line1, line2, result);	
+		ORourke orourke = new ORourke();
+		orourke.run(line1, line2, result);	
 
 		System.out.println("coincident line line case");
 		
@@ -692,7 +703,8 @@ public class ORourkeTest extends TestCase {
 		expected.add(new Vector3( 0.5,0,0));
 		
 		// run intersection
-		ORourke.run(line1, line2, result);	
+		ORourke orourke = new ORourke();
+		orourke.run(line1, line2, result);	
 
 		System.out.println("coincident line line case");
 		
@@ -733,7 +745,8 @@ public class ORourkeTest extends TestCase {
 		expected.add(new Vector3(-5, 1, 0));
 		
 		// run intersection
-		ORourke.run(line1, line2, result);	
+		ORourke orourke = new ORourke();
+		orourke.run(line1, line2, result);	
 
 		System.out.println("coincident line line case");
 		
@@ -773,7 +786,8 @@ public class ORourkeTest extends TestCase {
 		expected.add(new Vector3(0, 0, 0));
 		
 		// run intersection
-		ORourke.run(line1, line2, result);	
+		ORourke orourke = new ORourke();
+		orourke.run(line1, line2, result);	
 
 		System.out.println("orthogonal line line 15 case");
 		
@@ -813,7 +827,8 @@ public class ORourkeTest extends TestCase {
 		expected.add(new Vector3(3, -1, 0));
 		
 		// run intersection
-		ORourke.run(line1, line2, result);	
+		ORourke orourke = new ORourke();
+		orourke.run(line1, line2, result);	
 
 		System.out.println("orthogonal line line 16 case");
 		
@@ -853,7 +868,8 @@ public class ORourkeTest extends TestCase {
 		//expected.add(new Vector3(3, -1, 0));
 		
 		// run intersection
-		ORourke.run(line1, line2, result);	
+		ORourke orourke = new ORourke();
+		orourke.run(line1, line2, result);	
 
 		System.out.println("orthogonal line line 17 case");
 		

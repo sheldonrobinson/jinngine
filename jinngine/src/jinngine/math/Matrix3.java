@@ -98,7 +98,17 @@ public class Matrix3 {
 	  a11 = B.a11; a12 = B.a12; a13 = B.a13;
 	  a21 = B.a21; a22 = B.a22; a23 = B.a23;
 	  a31 = B.a31; a32 = B.a32; a33 = B.a33;
-          return this;
+	  return this;
+  }
+  
+  /**
+   * Assign the matrix with the 3 column vectors b1, b2, and b3
+   */
+  public final Matrix3 assign(final Vector3 b1, final Vector3 b2, final Vector3 b3) {
+	  a11 = b1.x; a12 = b2.x; a13 = b3.x;
+	  a21 = b1.y; a22 = b2.y; a23 = b3.y;
+	  a31 = b1.z; a32 = b2.z; a33 = b3.z;
+	  return this;
   }
 
   public Matrix3( Matrix4 B) {

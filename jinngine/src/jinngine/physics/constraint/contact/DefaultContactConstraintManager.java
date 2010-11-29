@@ -19,9 +19,7 @@ import jinngine.geometry.Geometry;
 import jinngine.geometry.SupportMap3;
 import jinngine.geometry.contact.ContactGenerator;
 import jinngine.geometry.contact.ContactGeneratorClassifier;
-import jinngine.geometry.contact.SphereContactGenerator;
 import jinngine.geometry.contact.SupportMapContactGenerator;
-import jinngine.geometry.contact.SupportMapSphereContactGenerator;
 import jinngine.physics.constraint.Constraint;
 import jinngine.physics.constraint.contact.ContactConstraint;
 import jinngine.physics.constraint.contact.ContactConstraintCreator;
@@ -228,34 +226,35 @@ public class DefaultContactConstraintManager implements ContactConstraintManager
 		broadphase.addHandler(handler);
 		
 		// create some initial ContactGeneratorClassifiers
-		// The Sphere - Sphere classifier
-		geometryClassifiers.add(new ContactGeneratorClassifier() {
-			@Override
-			public final ContactGenerator getGenerator(Geometry a,
-					Geometry b) {
-				if ( a instanceof jinngine.geometry.Sphere && b instanceof jinngine.geometry.Sphere) {
-					return new SphereContactGenerator((jinngine.geometry.Sphere)a, (jinngine.geometry.Sphere)b);
-				}
-				//not recognised
-				return null;	
-			}
-		});
+
+//		// The Sphere - Sphere classifier
+//		geometryClassifiers.add(new ContactGeneratorClassifier() {
+//			@Override
+//			public final ContactGenerator getGenerator(Geometry a,
+//					Geometry b) {
+//				if ( a instanceof jinngine.geometry.Sphere && b instanceof jinngine.geometry.Sphere) {
+//					return new SphereContactGenerator((jinngine.geometry.Sphere)a, (jinngine.geometry.Sphere)b);
+//				}
+//				//not recognised
+//				return null;	
+//			}
+//		});
 		
 		// The Sphere - SupportMap classifier
-		geometryClassifiers.add(new ContactGeneratorClassifier() {
-			@Override
-			public final ContactGenerator getGenerator(Geometry a,
-					Geometry b) {
-				if ( a instanceof jinngine.geometry.SupportMap3 && b instanceof jinngine.geometry.Sphere) {
-					return new SupportMapSphereContactGenerator(a.getBody(), a, (jinngine.geometry.SupportMap3)a, b.getBody(), (jinngine.geometry.Sphere)b);
-				}
-				if ( a instanceof jinngine.geometry.Sphere && b instanceof jinngine.geometry.SupportMap3) {
-					return new SupportMapSphereContactGenerator(a.getBody(), (jinngine.geometry.Sphere)a, b.getBody(), b, (jinngine.geometry.SupportMap3)b);
-				}
-				//not recognised
-				return null;	
-			}
-		});
+//		geometryClassifiers.add(new ContactGeneratorClassifier() {
+//			@Override
+//			public final ContactGenerator getGenerator(Geometry a,
+//					Geometry b) {
+//				if ( a instanceof jinngine.geometry.SupportMap3 && b instanceof jinngine.geometry.Sphere) {
+//					return new SupportMapSphereContactGenerator(a.getBody(), a, (jinngine.geometry.SupportMap3)a, b.getBody(), (jinngine.geometry.Sphere)b);
+//				}
+//				if ( a instanceof jinngine.geometry.Sphere && b instanceof jinngine.geometry.SupportMap3) {
+//					return new SupportMapSphereContactGenerator(a.getBody(), (jinngine.geometry.Sphere)a, b.getBody(), b, (jinngine.geometry.SupportMap3)b);
+//				}
+//				//not recognised
+//				return null;	
+//			}
+//		});
 		
 		
 		// General convex support maps
@@ -265,7 +264,6 @@ public class DefaultContactConstraintManager implements ContactConstraintManager
 					Geometry b) {
 				if ( a instanceof SupportMap3 && b instanceof SupportMap3) {
 					return new SupportMapContactGenerator((SupportMap3)a, a,  (SupportMap3)b, b);
-//					return new BulletNativeContactGenerator(a,b);
 				}
 				//not recognised
 				return null;	

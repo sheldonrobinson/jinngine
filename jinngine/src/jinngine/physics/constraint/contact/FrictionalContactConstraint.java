@@ -10,6 +10,8 @@ package jinngine.physics.constraint.contact;
 
 import java.util.*;
 
+import jinngine.geometry.Geometry;
+import jinngine.geometry.Material;
 import jinngine.geometry.contact.*;
 import jinngine.math.Matrix3;
 import jinngine.math.Vector3;
@@ -39,9 +41,14 @@ public final class FrictionalContactConstraint implements ContactConstraint {
 	
 	// vectors spanning the contact space
 	private final Vector3 t1 = new Vector3(), t2 = new Vector3(), t3 = new Vector3();
+	private final Vector3 point = new Vector3();
 
 	
 	private boolean enableCoupling = true;
+	// temp variables to handle material settings. 
+	double restitution = 0.7;
+	double friction = 0.5;
+	double envelope = 0.125;
 	
 	
 	
@@ -96,21 +103,58 @@ public final class FrictionalContactConstraint implements ContactConstraint {
 	}
 	
 	@Override
-	public final void applyConstraints(ListIterator<NCPConstraint> constraintIterator, double dt) {
-		// start iterator for the internal list of constraints
-		ListIterator<NCPConstraint> internalConstraints = ncpconstraints.listIterator();
+	public final void applyConstraints(final ListIterator<NCPConstraint> constraintIterator, final double dt) {
 		
-		// use ContactGenerators to create new contactpoints
-		for ( ContactGenerator cg: generators) {
-			//run contact generator
-			cg.run();
-			
-			// generate contacts
-			Iterator<ContactGenerator.ContactPoint> i = cg.getContacts();
-			while (i.hasNext()) {
-				ContactGenerator.ContactPoint cp = i.next();			
-				createFrictionalContactConstraint(cp, b1, b2, cp.point, cp.normal, cp.depth, dt, internalConstraints, constraintIterator);				
+		// start iterator for the internal list of constraints
+		final ListIterator<NCPConstraint> internalConstraints = ncpconstraints.listIterator();
+				
+		// setup a result handler for the contact generators
+		ContactGenerator.Result handler = new ContactGenerator.Result()  {
+			public final void contactPoint(final Vector3 normal, final Vector3 pa, final Vector3 pb, final double error) {
+
+				// compute the midpoint
+				point.assignSum( pa, pb);
+				point.assignMultiply(.5);
+				
+				// create the 3 contact Jacobians and constraint  
+				// definitions for the new contact point
+				addContactConstraint( point, normal, error, 0, restitution, friction, 0.125, dt, internalConstraints, constraintIterator);
 			}
+		};
+					
+		// use ContactGenerators to create new contact points
+		for ( ContactGenerator cg: generators) {
+			
+			// find material settings
+			Geometry ga = cg.getFirstGeoemtry();
+			Geometry gb = cg.getSecondGeometry();
+			
+            //select the smallest restitution and friction coefficients 
+            if ( ga instanceof Material && gb instanceof Material) {
+                    double ea = ((Material)ga).getRestitution();
+                    double fa = ((Material)ga).getFrictionCoefficient();
+                    double eb = ((Material)gb).getRestitution();
+                    double fb = ((Material)gb).getFrictionCoefficient();
+                    //pick smallest values
+                    restitution = ea > eb ? eb : ea;
+                    friction    = fa > fb ? fb : fa;
+
+            } else if ( ga instanceof Material ) {
+                    restitution = ((Material)ga).getRestitution();
+                    friction    = ((Material)ga).getFrictionCoefficient();
+            } else if ( gb instanceof Material ) {
+                    restitution = ((Material)gb).getRestitution();
+                    friction    = ((Material)gb).getFrictionCoefficient();
+            } else { // default values
+                    restitution = 0.7;
+                    friction = 0.5;
+            }
+            
+            // envelope size
+            envelope = cg.getEnvelope();
+			
+			//run contact generator
+			cg.run(handler);			
 		}
 		
 		// clear remaining constraints from the internal list
@@ -122,23 +166,29 @@ public final class FrictionalContactConstraint implements ContactConstraint {
 	}
 
 	// create a regular contact constraint including tangential friction
-	public final void createFrictionalContactConstraint( 
-			ContactGenerator.ContactPoint cp,
-			Body b1, Body b2, Vector3 p, Vector3 n, double depth, double dt,
-			ListIterator<NCPConstraint> internalConstraints, ListIterator<NCPConstraint> outConstraints 
-	) {		
+	public final void addContactConstraint( 
+			Vector3 point,
+			Vector3 normal, 
+			double error,
+			double distance,
+			double restitution,
+			double friction,
+			double envelope,
+			double dt,
+			final ListIterator<NCPConstraint> internalConstraints, 
+			final ListIterator<NCPConstraint> outConstraints ) {		
 
 		// use a gram-schmidt process to create a orthonormal basis for the contact point ( normal and tangential directions)
-		t1.assign(n); GramSchmidt.run(t1,t2,t3);
+		t1.assign(normal); GramSchmidt.run(t1,t2,t3);
 
 		// get the next ncp constraint in local constraint list
-		NCPConstraint t1constraint = getNextNCPConstraint(internalConstraints,outConstraints);
+		final NCPConstraint t1constraint = getNextNCPConstraint(internalConstraints,outConstraints);
 
 		// assign jacobian and diagonal
-		assignJacobian(b1, b2, t1, p, t1constraint);
+		assignJacobian(b1, b2, t1, point, t1constraint);
 
 		// first off, create the constraint in the normal direction
-		final double e = cp.restitution; // coefficient of restitution
+		final double e = restitution; // coefficient of restitution
 		final double uni = t1constraint.j1.dot(b1.state.velocity) 
 		                 + t1constraint.j2.dot(b1.state.omega) 
 		                 + t1constraint.j3.dot(b2.state.velocity) 
@@ -147,14 +197,14 @@ public final class FrictionalContactConstraint implements ContactConstraint {
 
 		// external forces acing at contact (obsolete, external forces are modelled using the delta velocities)
 		// double Fext = B1.dot(b1.state.force) + B2.dot(b1.state.torque) + B3.dot(b2.state.force) + B4.dot(b2.state.torque);
-		double correction = depth*(1/dt); // the true correction velocity. This velocity corrects the contact in the next timestep.
-		final double escape = (cp.envelope-cp.distance)*(1/dt);
+		double correction = -error*(1/dt); // the true correction velocity. This velocity corrects the contact in the next timestep.
+		final double escape = (envelope-distance)*(1/dt);
 		final double lowerNormalLimit = 0;
-		final double limit = 2;
+		final double limit = (1/dt)*0.2;
 		
 		// if the unf velocity will make the contact leave the envelope in the next timestep, 
 		// we ignore corrections
-		if (unf > escape) {
+		if (unf > escape ) {
 			//System.out.println("escape");
 			correction = 0;
 		} else {
@@ -174,7 +224,7 @@ public final class FrictionalContactConstraint implements ContactConstraint {
 		correction = correction>  limit?  limit:correction;
 		
 		// take a factor of real correction velocity
-		correction = correction * 0.9;
+		correction = correction * 0.9 ;
 		
 		// assign constraint settings
 		t1constraint.body1 = b1;
@@ -187,19 +237,19 @@ public final class FrictionalContactConstraint implements ContactConstraint {
 		t1constraint.lambda = 0;
 		
 		// set distance (unused in simulator)
-		t1constraint.distance = cp.distance;
+		t1constraint.distance = distance;
 		
 		// normal-friction coupling 
 		final NCPConstraint coupling = enableCoupling?t1constraint:null;
 		
 		// set the correct friction setting for this contact
-		t1constraint.mu = cp.friction;
+		t1constraint.mu = friction;
 						
 		// first tangent
-		NCPConstraint t2constraint = getNextNCPConstraint(internalConstraints,outConstraints);
+		final NCPConstraint t2constraint = getNextNCPConstraint(internalConstraints,outConstraints);
 
 		// assign jacobian and diagonal
-		assignJacobian( b1, b2, t2, p, t2constraint);
+		assignJacobian( b1, b2, t2, point, t2constraint);
 		
 		// initial and final velocitu of the first tangent 
 		final double ut1i = t2constraint.j1.dot(b1.state.velocity) + t2constraint.j2.dot(b1.state.omega) + t2constraint.j3.dot(b2.state.velocity) + t2constraint.j4.dot(b2.state.omega);
@@ -216,10 +266,10 @@ public final class FrictionalContactConstraint implements ContactConstraint {
 		t2constraint.lambda = 0;
 
 		// get second tangent constraint
-		NCPConstraint t3constraint = getNextNCPConstraint(internalConstraints,outConstraints);
+		final NCPConstraint t3constraint = getNextNCPConstraint(internalConstraints,outConstraints);
 
 		// assign jacobian and diagonal
-		assignJacobian( b1, b2, t3, p, t3constraint);
+		assignJacobian( b1, b2, t3, point, t3constraint);
 
 		// initial and final velocity
 		final double ut2i = t3constraint.j1.dot(b1.state.velocity) + t3constraint.j2.dot(b1.state.omega) + t3constraint.j3.dot(b2.state.velocity) + t3constraint.j4.dot(b2.state.omega); 

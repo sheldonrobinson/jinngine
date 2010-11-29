@@ -345,6 +345,7 @@ public final class DefaultScene implements Scene {
 //			}
 //		}
 		
+//		System.out.println("got " + ncpconstraints.size() + " constraints");
 		// run the solver (compute delta velocities) for all 
 		// components in the constraint graph
 		solver.solve( ncpconstraints, bodies, 1e-5 );
@@ -355,6 +356,14 @@ public final class DefaultScene implements Scene {
 		for (Trigger trigger: triggers) {
 			trigger.update(this);
 		}
+		
+//		for (NCPConstraint ci: ncpconstraints) {
+//			double w = ci.j1.dot(ci.body1.deltavelocity)
+//			         + ci.j2.dot(ci.body1.deltaomega)
+//			         + ci.j3.dot(ci.body2.deltavelocity)
+//			         + ci.j4.dot(ci.body2.deltaomega) +ci.b + ci.Fext;
+//			System.out.println(w+","+ci.lambda);
+//		}
 		
 		// go through bodies to advance velocities and positions
 		for (Body body: bodies) {

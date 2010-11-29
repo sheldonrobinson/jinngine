@@ -8,8 +8,7 @@
  */
 package jinngine.collision;
 
-import java.util.List;
-
+import java.util.Iterator;
 import jinngine.geometry.SupportMap3;
 import jinngine.math.Vector3;
 
@@ -68,7 +67,7 @@ public final class RayCast {
 				@Override
 				public final Vector3 supportPoint(Vector3 direction, Vector3 result) { return result.assign(new Vector3(x)); }
 				@Override
-				public final void supportFeature(Vector3 d, List<Vector3> returnList) {}
+				public final void supportFeature(Vector3 d, Iterator<Vector3> returnList) {}
 				@Override
 				public final double sphereSweepRadius() {return 0;}
 			};
@@ -78,7 +77,7 @@ public final class RayCast {
 				@Override
 				public final Vector3 supportPoint(Vector3 direction, Vector3 result) { return result.assign(x.add(Sc.supportPoint(direction, new Vector3()))); }
 				@Override
-				public final void supportFeature(Vector3 d, List<Vector3> returnList) {}
+				public final void supportFeature(Vector3 d, Iterator<Vector3> returnList) {}
 				@Override
 				public final double sphereSweepRadius() {return 0;}
 				

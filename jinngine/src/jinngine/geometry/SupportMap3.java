@@ -8,7 +8,8 @@
  */
 package jinngine.geometry;
 
-import java.util.List;
+import java.util.*;
+
 import jinngine.math.Vector3;
 
 /**
@@ -36,7 +37,7 @@ public interface SupportMap3  {
 	 * 
 	 * @return list of points that constitute either a point, line or a face
 	 */
-	public void supportFeature( Vector3 direction, List<Vector3> face );
+	public void supportFeature( Vector3 direction, Iterator<Vector3> face );
 		
 	/**
 	 * Return the radius of the sweeping sphere for this support mapping. Sphere swept shapes

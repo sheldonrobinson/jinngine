@@ -7,8 +7,8 @@ import java.util.ListIterator;
 
 import jinngine.geometry.Box;
 import jinngine.geometry.contact.ContactGenerator;
+import jinngine.geometry.contact.ContactGenerator.Result;
 import jinngine.geometry.contact.SupportMapContactGenerator;
-import jinngine.geometry.contact.ContactGenerator.ContactPoint;
 import jinngine.math.Matrix3;
 import jinngine.math.Vector3;
 import jinngine.physics.Body;
@@ -18,13 +18,16 @@ import junit.framework.TestCase;
 public class SupportMapContactGeneratorTest extends TestCase {
 	
 	private static final double epsilon = 1e-10;
+
 	
 	public void testBoxBox1() {
-		// Two 1-cubes, one placed with centre in the origin, the other displaced 1.5 along
-		// one of the Cartesian axes. We expect four contact points, one for each contacting corner of the 
-		// boxes. The tests will displace the second box in different directions, and test for the expected
-		// points to be returned. We always expect contact points to be ordered in counter clock wise order
-		// wrt. the contact normal.
+		// Two 1-cubes, one placed with centre in the origin, the 
+		// other displaced 1.5 along one of the Cartesian axes. We 
+		// expect four contact points, one for each contacting corner 
+		// of the boxes. The tests will displace the second box 
+		// in different directions, and test for the expected points
+		// to be returned. We always expect contact points to be ordered 
+		// in counter clock wise order wrt. the contact normal.
 		//
 		//      -0.0----0.75---1.5--->
 		//     -------   x   ------- 
@@ -60,26 +63,39 @@ public class SupportMapContactGeneratorTest extends TestCase {
 		
 		// displace box2
 		body2.setPosition(0, 1.5, 0);
+
+		
+		result.clear();
+		Result resultHandle = new Result() {
+			public void contactPoint(Vector3 normal, Vector3 p, Vector3 q, double error) {
+				// copy contact points to result
+				result.add(new Vector3(p.add(q).multiply(0.5)));
+			}
+		};
+
 		
 		// run contact point generation
-		g.run();
+		g.run(resultHandle);
 		
 		// extract contact points
-		result.clear();
-		Iterator<ContactPoint> i = g.getContacts();
-		while (i.hasNext()) {
-			ContactPoint cp = i.next();
-			System.out.println(cp.point);
-			System.out.println("dist="+cp.distance);
-			result.add(new Vector3(cp.point));
-		}
+//		result.clear();
+//		Iterator<ContactPoint> i = g.getContacts();
+//		while (i.hasNext()) {
+//			ContactPoint cp = i.next();
+//			System.out.println(cp.point);
+//			System.out.println("dist="+cp.distance);
+//			result.add(new Vector3(cp.point));
+//		}
+		
+		for (Vector3 s: result)
+			System.out.println("result: " + s);
 		
 		// expected contact points, in counter clock-wise order 
 		expect.clear();
-		expect.add(new Vector3(0.5,0.75,0.5));
-		expect.add(new Vector3(-0.5,0.75,0.5));
-		expect.add(new Vector3(-0.5,0.75,-0.5));
-		expect.add(new Vector3(0.5,0.75,-0.5));
+		expect.add(new Vector3( 0.5, 0.75, 0.5));
+		expect.add(new Vector3(-0.5, 0.75, 0.5));
+		expect.add(new Vector3(-0.5, 0.75,-0.5));
+		expect.add(new Vector3( 0.5, 0.75,-0.5));
 
 		// check
 		assertTrue(verifyPolygon(expect, result));
@@ -91,19 +107,22 @@ public class SupportMapContactGeneratorTest extends TestCase {
 		
 		// displace box2
 		body2.setPosition(0, -1.5, 0);
-		
-		// run contact point generation
-		g.run();
-		
-		// extract contact points
+
+		// clear results
 		result.clear();
-		i = g.getContacts();
-		while (i.hasNext()) {
-			ContactPoint cp = i.next();
-			System.out.println(cp.point);
-			System.out.println("dist="+cp.distance);
-			result.add(new Vector3(cp.point));
-		}
+			
+		// run contact point generation
+		g.run(resultHandle);
+		
+//		// extract contact points
+//		result.clear();
+//		i = g.getContacts();
+//		while (i.hasNext()) {
+//			ContactPoint cp = i.next();
+//			System.out.println(cp.point);
+//			System.out.println("dist="+cp.distance);
+//			result.add(new Vector3(cp.point));
+//		}
 		
 		// expected contact points, in counter clock-wise order 
 		expect.clear();
@@ -122,19 +141,22 @@ public class SupportMapContactGeneratorTest extends TestCase {
 		
 		// displace box2
 		body2.setPosition(1.5, 0, 0);
+
+		// clear result list
+		result.clear();
 		
 		// run contact point generation
-		g.run();
+		g.run(resultHandle);
 		
 		// extract contact points
-		result.clear();
-		i = g.getContacts();
-		while (i.hasNext()) {
-			ContactPoint cp = i.next();
-			System.out.println(cp.point);
-			System.out.println("dist="+cp.distance);
-			result.add(new Vector3(cp.point));
-		}
+//		result.clear();
+//		i = g.getContacts();
+//		while (i.hasNext()) {
+//			ContactPoint cp = i.next();
+//			System.out.println(cp.point);
+//			System.out.println("dist="+cp.distance);
+//			result.add(new Vector3(cp.point));
+//		}
 		
 		// expected contact points, in counter clock-wise order 
 		expect.clear();
@@ -147,7 +169,12 @@ public class SupportMapContactGeneratorTest extends TestCase {
 		assertTrue(verifyPolygon(expect, result));
 		
 	}
-	
+
+	public void testSphereSweepingBox1() {
+		// two 1-cubes with sphere sweeping
+		
+	}
+
 	
 	
 	private boolean verifyPolygon( List<Vector3> poly1, List<Vector3> poly2) {
@@ -177,8 +204,10 @@ public class SupportMapContactGeneratorTest extends TestCase {
 					p2 = poly2iter.next();
 					
 					// distance less that epsilon
-					if (p2.sub(p1).norm() >= epsilon)
+					if (p2.sub(p1).norm() >= epsilon) {
+						System.out.println("faild test: "+p1+" , " + p2);
 						return false;
+					}
 				} else {
 					// no more vertices
 					return true;
@@ -191,7 +220,10 @@ public class SupportMapContactGeneratorTest extends TestCase {
 		}
 
 		// if here we never found a starting vertex, return false
+		System.out.println("No starting vertex found");
 		return false;	
 	}
+	
+
 
 }

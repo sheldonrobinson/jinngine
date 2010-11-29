@@ -206,6 +206,13 @@ public final class Vector3 implements Serializable {
 		return this;
 	}
 
+	public final Vector3 assignAdd( final Vector3 v) {
+		x+=v.x;
+		y+=v.y;
+		z+=v.z;
+		return this;		
+	}
+	
 	/**
 	 * Multiply this vector by the scalar s
 	 * @param s scalar value
@@ -215,6 +222,16 @@ public final class Vector3 implements Serializable {
 		x *= s;
 		y *= s;
 		z *= s;
+		return this;
+	}
+	
+	/**
+	 * Assign p+q to this vector
+	 */
+	public final Vector3 assignSum( final Vector3 p, final Vector3 q) {
+		x = p.x+q.x;
+		y = p.y+q.y;
+		z = p.z+q.z;
 		return this;
 	}
 
@@ -247,6 +264,14 @@ public final class Vector3 implements Serializable {
 		return Math.sqrt( (a.x-b.x)*(a.x-b.x)+(a.y-b.y)*(a.y-b.y)+(a.z-b.z)*(a.z-b.z) );  
 	}
 
+	/**
+	 * Return the XY norm of a-b, disregarding the value of z 
+	 */
+	public static final double xynormOfDifference( Vector3 a, Vector3 b) {
+		return Math.sqrt( (a.x-b.x)*(a.x-b.x)+(a.y-b.y)*(a.y-b.y) );  
+	}
+
+	
 	/**
 	 * Return the squared norm of a-b
 	 */
@@ -283,6 +308,15 @@ public final class Vector3 implements Serializable {
 		r.y += v.y*s; 
 		r.z += v.z*s;
 	}
+	
+	/**
+	 * r = r + Av
+	 */
+	public static void transformAndAdd( Matrix3 A, Vector3 v, Vector3 r) {
+	    r.x += v.x*A.a11+v.y*A.a12+v.z*A.a13;
+	    r.y += v.x*A.a21+v.y*A.a22+v.z*A.a23;
+	    r.z += v.x*A.a31+v.y*A.a32+v.z*A.a33;
+    }
 
 	/**
 	 * Multiply v by s, and store result in v. Add v to result and store in result
@@ -436,6 +470,20 @@ public final class Vector3 implements Serializable {
 	}
 	
 	/**
+	 * Apply scaling to this vector
+	 * @param x
+	 * @param y
+	 * @param z
+	 * @return
+	 */
+	public final Vector3 assignScale( double xs, double ys, double zs) {
+		this.x *= xs;
+		this.y *= ys;
+		this.z *= zs;
+		return this;
+	}
+	
+	/**
 	 * Assign the difference of a and b to this vector
 	 * @param a
 	 * @param b
@@ -462,11 +510,23 @@ public final class Vector3 implements Serializable {
 	 * Normalise this vector
 	 */
 	public final Vector3 assignNormalize() {
-		double s = 1.0 / this.norm();
+		final double n = this.norm();
+		assert (n>1e-14);
+		final double s = 1.0/n;
 		x *= s;
 		y *= s;
 		z *= s;
 		return this;
+	}
+	
+	/**
+	 *  Multiply v by s, and add the result to this vector
+	 */
+	public final Vector3 assignAddProduct( final Vector3 v, double s ) {
+		x += v.x*s;
+		y += v.y*s;
+		z += v.z*s;
+		return this;		
 	}
 
 	/**
@@ -495,6 +555,15 @@ public final class Vector3 implements Serializable {
 	 */
 	public final double squaredNorm() {
 		return x*x+y*y+z*z;
+	}
+
+	/**
+	 * Returns the length of this vector, in the xy plane.
+	 * <code>this</code> vector is not modified.
+	 * @return the length of this vector
+	 */
+	public final double squaredXYNorm() {
+		return x*x+y*y;
 	}
 
 	/**

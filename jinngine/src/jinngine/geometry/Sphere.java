@@ -8,7 +8,9 @@
  */
 package jinngine.geometry;
 
-import java.util.List;
+import java.util.Iterator;
+import java.util.ListIterator;
+
 import jinngine.math.InertiaMatrix;
 import jinngine.math.Matrix3;
 import jinngine.math.Matrix4;
@@ -130,9 +132,9 @@ public class Sphere implements SupportMap3, Geometry, Material {
 	}
 
 	@Override
-	public void supportFeature(Vector3 d, List<Vector3> ret) {
+	public void supportFeature(Vector3 d, Iterator<Vector3> ret) {
 		// sphere is invariant under rotation
-		ret.add(d.normalize().multiply(radius).add(body.state.position).add(Matrix3.multiply(body.state.rotation, displacement, new Vector3()) ));
+		ret.next().assign(d.normalize().multiply(radius).add(body.state.position).add(Matrix3.multiply(body.state.rotation, displacement, new Vector3()) ));
 	}
 
 	// material getters and setters
