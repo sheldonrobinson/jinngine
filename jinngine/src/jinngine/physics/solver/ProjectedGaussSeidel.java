@@ -41,9 +41,9 @@ public class ProjectedGaussSeidel implements Solver {
 		double bnorm = 0; 
 		for (NCPConstraint ci: constraints) {
 			ci.Fext = ci.j1.dot(ci.body1.externaldeltavelocity)
-			+ ci.j2.dot(ci.body1.externaldeltaomega)
-			+ ci.j3.dot(ci.body2.externaldeltavelocity) 
-			+ ci.j4.dot(ci.body2.externaldeltaomega);
+			        + ci.j2.dot(ci.body1.externaldeltaomega)
+	                + ci.j3.dot(ci.body2.externaldeltavelocity) 
+                    + ci.j4.dot(ci.body2.externaldeltaomega);
 			
 			bnorm += (ci.b+ci.Fext)*(ci.b+ci.Fext);			
 		} bnorm = Math.sqrt(bnorm);
@@ -52,7 +52,7 @@ public class ProjectedGaussSeidel implements Solver {
 		// avoid division by zero
 		if (bnorm < 1e-15) {
 			bnorm = 1.0;
-			bnorminv= 1.0/bnorm;			
+			bnorminv= 1.0;			
 		} else {
 			bnorminv= 1.0/bnorm;			
 		}
@@ -73,14 +73,14 @@ public class ProjectedGaussSeidel implements Solver {
 			rnew = 0;
 			for (NCPConstraint ci: constraints) {				
 				// calculate (Ax+b)_i 
-				final double w =  ci.j1.dot(ci.body1.deltavelocity) 
-			   	+ ci.j2.dot(ci.body1.deltaomega)
-				+ ci.j3.dot(ci.body2.deltavelocity) 
-				+ ci.j4.dot(ci.body2.deltaomega);
+				final double w = ci.j1.dot(ci.body1.deltavelocity) 
+                               + ci.j2.dot(ci.body1.deltaomega)
+                               + ci.j3.dot(ci.body2.deltavelocity) 
+                               + ci.j4.dot(ci.body2.deltaomega);
 				
 				// the change in lambda_i needed to obtain (Ax+b)_i = 0
 //				double deltaLambda = (-ci.b-w)/(ci.diagonal + ci.damper );
-			    double deltaLambda = -((ci.b+ci.Fext)*bnorminv+w)/(ci.diagonal + ci.damper );
+			    double deltaLambda = -((ci.b+ci.Fext)*bnorminv+w)/(ci.diagonal);
 
 				final double lambda0 = ci.lambda;
 
@@ -132,16 +132,8 @@ public class ProjectedGaussSeidel implements Solver {
 			iterations +=1;
 		}
 		
-//		// scale lambda in the bnorm. This is unnecessary if bnorm is set to 1
-//		for (NCPConstraint ci: constraints) {
-//			final double factor = (bnorm-1)*ci.lambda;
-//			Vector3.add( ci.body1.deltavelocity, ci.b1.multiply(factor));
-//			Vector3.add( ci.body1.deltaomega, ci.b2.multiply(factor));
-//			Vector3.add( ci.body2.deltavelocity, ci.b3.multiply(factor));
-//			Vector3.add( ci.body2.deltaomega, ci.b4.multiply(factor));
-//		}
 		
-		// scale system back
+		// scale system back to original
 		for (NCPConstraint ci: constraints) {
 			ci.lambda *= bnorm;
 		}

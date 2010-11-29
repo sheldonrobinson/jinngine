@@ -92,7 +92,7 @@ public interface Solver {
 		/** Friction coupling */
 		public NCPConstraint coupling;
 		/** Damping coefficient */
-		public double damper = 0;
+//		public double damper = 0;
 		/** External force impulse */
 		public double Fext;
 		
@@ -112,18 +112,17 @@ public interface Solver {
 		public double l;
 		public double distance;
 		
-		// hack
-		public final Vector3 stickA = new Vector3();
-		public final Vector3 stickB = new Vector3();
-		
 		
 		/**
 		 * Assign operator for a constraint
 		 * @param c TODO
 		 */
-		public final NCPConstraint assign( Body body1, Body body2, Vector3 b1, Vector3 b2, Vector3 b3, Vector3 b4, 
+		public final NCPConstraint assign( Body body1, Body body2, 
+				Vector3 b1, Vector3 b2, Vector3 b3, Vector3 b4, 
 				Vector3 j1, Vector3 j2, Vector3 j3, Vector3 j4,
-				double lambdaMin, double lambdaMax, NCPConstraint coupledMax, double b, double c ) {
+				double lambdaMin, double lambdaMax, 
+				NCPConstraint coupledMax, 
+				double b, double c ) {
 			
 			this.body1 = body1;
 			this.body2 = body2;

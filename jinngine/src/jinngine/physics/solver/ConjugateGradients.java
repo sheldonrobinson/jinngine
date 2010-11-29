@@ -66,11 +66,10 @@ public class ConjugateGradients implements Solver {
 			// find residual (scaled) 
 			ci.residual = -(
 				(ci.b + ci.Fext)*bnorminv  + (ci.j1.dot(ci.body1.deltavelocity) + ci.j2.dot(ci.body1.deltaomega)
-						+ ci.j3.dot(ci.body2.deltavelocity) + ci.j4.dot(ci.body2.deltaomega)
-						+ ci.lambda*ci.damper));
+						+ ci.j3.dot(ci.body2.deltavelocity) + ci.j4.dot(ci.body2.deltaomega)) );
 							
 			//d = M^-1 r
-			ci.d = ci.residual / (ci.diagonal+ci.damper);
+			ci.d = ci.residual / (ci.diagonal);
 
 			//reflect d in the deltavelocity1
 			Vector3.add( ci.body1.deltavelocity1, ci.b1.multiply(ci.d));
@@ -93,8 +92,7 @@ public class ConjugateGradients implements Solver {
 			double dTq = 0;
 			for (NCPConstraint ci: constraints) {
 				ci.q = ci.j1.dot(ci.body1.deltavelocity1) + ci.j2.dot(ci.body1.deltaomega1)
-				+ ci.j3.dot(ci.body2.deltavelocity1) + ci.j4.dot(ci.body2.deltaomega1)
-				+ ci.d * ci.damper; 
+				+ ci.j3.dot(ci.body2.deltavelocity1) + ci.j4.dot(ci.body2.deltaomega1); 
 				
 				dTq += ci.d*ci.q;
 			} 			
@@ -119,7 +117,7 @@ public class ConjugateGradients implements Solver {
 				ci.residual -= alpha*ci.q;
 				
 				//s = M^(-1) r
-				ci.s = ci.residual / (ci.diagonal+ci.damper);
+				ci.s = ci.residual / (ci.diagonal);
 								
 				//delta_new = rTs
 				delta_new += ci.residual*ci.s;
