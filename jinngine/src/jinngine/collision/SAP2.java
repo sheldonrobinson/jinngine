@@ -1,9 +1,9 @@
 package jinngine.collision;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
@@ -24,6 +24,7 @@ public class SAP2 implements BroadphaseCollisionDetection {
 		public final boolean begin;
 		public final int axis;
 		public final Vector3 bounds = new Vector3();
+
 		public SweepPoint(Geometry geo, boolean begin, int axis) {
 			super();
 			this.geo = geo;
@@ -45,13 +46,12 @@ public class SAP2 implements BroadphaseCollisionDetection {
 	}
 	
 	private final class Counter {
-		public boolean wasOverlapping = false;
 		public int overlaps;		
 	}
 	
 	private ArrayList<Handler> handlers = new ArrayList<Handler>();
 	private ArrayList<Pair<Geometry>> overlaps = new ArrayList<Pair<Geometry>>();
-	private Map<Pair<Geometry>,Counter> counters = new LinkedHashMap<Pair<Geometry>, Counter>();
+	private Map<Pair<Geometry>,Counter> counters = new HashMap<Pair<Geometry>, Counter>();
 	private ArrayList<Geometry> geometries = new ArrayList<Geometry>();
 	private ArrayList<SweepPoint> axis1 = new ArrayList<SweepPoint>();
 	private ArrayList<SweepPoint> axis2 = new ArrayList<SweepPoint>();
@@ -76,7 +76,20 @@ public class SAP2 implements BroadphaseCollisionDetection {
 					// increment overlap (end before begin)
 					final Pair<Geometry> pair = new Pair<Geometry>(keyelement.geo,swapper.geo);
 					if (counters.containsKey(pair)) {
-						counters.get(pair).overlaps++;
+						Counter c = counters.get(pair);
+						c.overlaps++;
+						
+						//check for overlap condition
+						if (c.overlaps == 3) {
+							// add the overlap
+							overlaps.add(pair);
+							
+							// notify handlers
+							for (Handler h: handlers) {
+								h.overlap(pair);
+							}			
+						}						
+						
 					} else {
 						Counter counter = new Counter(); counter.overlaps = 1;
 						counters.put(pair,counter);
@@ -86,9 +99,25 @@ public class SAP2 implements BroadphaseCollisionDetection {
 				if (!keyelement.begin && swapper.begin) {
 					// decrement overlap (begin before end)
 					final Pair<Geometry> pair = new Pair<Geometry>(keyelement.geo,swapper.geo);
+
 					if (counters.containsKey(pair)) {
-						counters.get(pair).overlaps--;
-						
+						Counter c = counters.get(pair);
+						c.overlaps--;
+
+						//check for a separation condition
+						if (c.overlaps == 2) {
+							// add the overlap
+							overlaps.remove(pair);
+							
+							// notify handlers
+							for (Handler h: handlers) {
+								h.separation(pair);
+							}			
+						} else if ( c.overlaps == 0) {
+							// remove the counter from the map
+							counters.remove(pair);
+						}
+
 						
 					} else {
 						//ignore this case
@@ -129,7 +158,7 @@ public class SAP2 implements BroadphaseCollisionDetection {
 
 	@Override
 	public Set<Pair<Geometry>> getOverlappingPairs() {
-		return new LinkedHashSet<Pair<Geometry>>(overlaps);
+		return new HashSet<Pair<Geometry>>(overlaps);
 	}
 
 	@Override
@@ -151,7 +180,7 @@ public class SAP2 implements BroadphaseCollisionDetection {
 				Counter c = entry.getValue();
 				Pair<Geometry> pair = entry.getKey();
 				if ( pair.getFirst() == g || pair.getSecond() == g) {
-					if (c.wasOverlapping) {
+					if (c.overlaps == 3) {
 						// notify handlers
 						for (Handler h: handlers) {
 							h.separation(pair);
@@ -191,48 +220,48 @@ public class SAP2 implements BroadphaseCollisionDetection {
 		sortAxis(axis2);
 		sortAxis(axis3);
 		
-		int countingOverlaps = 0;
-		// go through all counters
-		Iterator<Entry<Pair<Geometry>,Counter>> iter = counters.entrySet().iterator();		
-		while (iter.hasNext()) {
-			Entry<Pair<Geometry>,Counter> entry = iter.next();
-			Counter c = entry.getValue();
-			Pair<Geometry> pair = entry.getKey();
-			
-			if (c.overlaps == 3) 
-				countingOverlaps ++;
-			
-			if (c.wasOverlapping) {
-				// report separation 
-				if (c.overlaps < 3 ) {
-					overlaps.remove(pair);
-					c.wasOverlapping = false;
-					
-					// notify handlers
-					for (Handler h: handlers) {
-						h.separation(pair);
-					}			
-				}
-			} else {
-				// report overlap
-				if (c.overlaps > 2) {
-					overlaps.add(pair);
-					c.wasOverlapping = true;
-					
-					// notify handlers
-					for (Handler h: handlers) {
-						h.overlap(pair);
-					}			
-
-				}
-			} // if was overlapping
-			
-			// if counter is zero at this 
-			// point, remove it
-			if (c.overlaps < 1) {
-				iter.remove();
-			}
-		} // for all counters
+//		int countingOverlaps = 0;
+//		// go through all counters
+//		Iterator<Entry<Pair<Geometry>,Counter>> iter = counters.entrySet().iterator();		
+//		while (iter.hasNext()) {
+//			Entry<Pair<Geometry>,Counter> entry = iter.next();
+//			Counter c = entry.getValue();
+//			Pair<Geometry> pair = entry.getKey();
+//			
+//			if (c.overlaps == 3) 
+//				countingOverlaps ++;
+//			
+//			if (c.wasOverlapping) {
+//				// report separation 
+//				if (c.overlaps < 3 ) {
+//					overlaps.remove(pair);
+//					c.wasOverlapping = false;
+//					
+//					// notify handlers
+//					for (Handler h: handlers) {
+//						h.separation(pair);
+//					}			
+//				}
+//			} else {
+//				// report overlap
+//				if (c.overlaps > 2) {
+//					overlaps.add(pair);
+//					c.wasOverlapping = true;
+//					
+//					// notify handlers
+//					for (Handler h: handlers) {
+//						h.overlap(pair);
+//					}			
+//
+//				}
+//			} // if was overlapping
+//			
+//			// if counter is zero at this 
+//			// point, remove it
+//			if (c.overlaps < 1) {
+//				iter.remove();
+//			}
+//		} // for all counters
 	} 
 
 }
