@@ -302,4 +302,9 @@ public final class SupportMapContactGenerator implements ContactGenerator {
 		return envelope;
 	}
 
+	@Override
+	public void getContactNormal(Vector3 normal) {
+		normal.assign(contactNormal);
+	}
+
 }

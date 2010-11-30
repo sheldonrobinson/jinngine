@@ -60,4 +60,8 @@ public interface ContactGenerator {
 	 */
 	public double getEnvelope();
 	
+	/**
+	 * Return the principal contact normal
+	 */
+	public void getContactNormal( Vector3 normal );
 }
