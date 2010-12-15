@@ -32,7 +32,7 @@ public class Sphere implements SupportMap3, Geometry, Material {
 	private final Vector3 worldMinimumBounds = new Vector3();
 	private final Matrix4 worldTransform = new Matrix4();
 
-	private double envelope = 1;
+	private double envelope = 0.125;
 	private Object auxiliary;
 	private double restitution = 0.7;
 	private double friction = 0.5;
@@ -43,7 +43,6 @@ public class Sphere implements SupportMap3, Geometry, Material {
 	public Sphere(double radius) {
 		this.radius = radius;		
 		this.mass = (4.0/3.0)*Math.PI*radius*radius*radius;
-		this.envelope = 1;
 		this.name = new String("");
 		//set the initial local transform
 		setLocalTransform( Matrix3.identity(), new Vector3());		
@@ -52,7 +51,6 @@ public class Sphere implements SupportMap3, Geometry, Material {
 	public Sphere(String name, double radius) {
 		this.radius = radius;		
 		this.mass = (4.0/3.0)*Math.PI*radius*radius*radius;
-		this.envelope = 1;
 		this.name = new String(name);
 
 		//set the initial local transform

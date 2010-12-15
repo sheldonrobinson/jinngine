@@ -98,19 +98,19 @@ public interface Solver {
 		
 		
 		// Auxiliary variables. These variables is included to aid the implementation of solvers. 
-		/** The Fischer reformulation value */
-		public double fischer;
+//		/** The Fischer reformulation value */
+//		public double fischer;
 		/** Residual, r = b - Ax */
 		public double residual; 
 		public double d;
 		public double q;
-		public double z;
+//		public double z;
 		public double dlambda;
 		public double bestdlambda;
 		public double s;
-		public double u;
-		public double l;
-		public double distance;
+//		public double u;
+//		public double l;
+//		public double distance;
 		
 		
 		/**

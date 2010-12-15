@@ -49,7 +49,25 @@ public final class FrictionalContactConstraint implements ContactConstraint {
 	double restitution = 0.7;
 	double friction = 0.5;
 	double envelope = 0.125;
+	double dt = 0;
+
+	// start iterator for the internal list of constraints
+	private ListIterator<NCPConstraint> internalConstraints;
+	private ListIterator<NCPConstraint> outConstraints;
 	
+	// setup a result handler for the contact generators
+	ContactGenerator.Result handler = new ContactGenerator.Result()  {
+		public final void contactPoint(final Vector3 normal, final Vector3 pa, final Vector3 pb, final double error) {
+
+			// compute the midpoint
+			point.assignSum( pa, pb);
+			point.assignMultiply(.5);
+			
+			// create the 3 contact Jacobians and constraint  
+			// definitions for the new contact point
+			addContactConstraint( point, normal, error, 0, restitution, friction, 0.125, dt, internalConstraints, outConstraints);
+		}
+	};
 	
 	
 	/**
@@ -106,21 +124,9 @@ public final class FrictionalContactConstraint implements ContactConstraint {
 	public final void applyConstraints(final ListIterator<NCPConstraint> constraintIterator, final double dt) {
 		
 		// start iterator for the internal list of constraints
-		final ListIterator<NCPConstraint> internalConstraints = ncpconstraints.listIterator();
-				
-		// setup a result handler for the contact generators
-		ContactGenerator.Result handler = new ContactGenerator.Result()  {
-			public final void contactPoint(final Vector3 normal, final Vector3 pa, final Vector3 pb, final double error) {
-
-				// compute the midpoint
-				point.assignSum( pa, pb);
-				point.assignMultiply(.5);
-				
-				// create the 3 contact Jacobians and constraint  
-				// definitions for the new contact point
-				addContactConstraint( point, normal, error, 0, restitution, friction, 0.125, dt, internalConstraints, constraintIterator);
-			}
-		};
+		internalConstraints = ncpconstraints.listIterator();
+		outConstraints = constraintIterator;
+		this.dt = dt;		
 					
 		// use ContactGenerators to create new contact points
 		for ( ContactGenerator cg: generators) {
@@ -237,7 +243,7 @@ public final class FrictionalContactConstraint implements ContactConstraint {
 		t1constraint.lambda = 0;
 		
 		// set distance (unused in simulator)
-		t1constraint.distance = distance;
+//		t1constraint.distance = distance;
 		
 		// normal-friction coupling 
 		final NCPConstraint coupling = enableCoupling?t1constraint:null;
