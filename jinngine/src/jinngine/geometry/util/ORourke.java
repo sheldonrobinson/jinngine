@@ -33,6 +33,7 @@ public class ORourke {
 	}
 	
 	private final static double epsilon = 1e-8;
+	private final static double envelope = 0.1;
 	
 	/**
 	 *  Internal algorithm state
@@ -106,7 +107,7 @@ public class ORourke {
 			p.assign(poly1points.next());
 			q.assign(poly2points.next());
 			// report intersection
-			if ( p.sub(q).xynorm() < epsilon)
+			if ( p.sub(q).xynorm() < envelope)
 				result.intersection(p, q);
 			
 			return;
@@ -119,7 +120,7 @@ public class ORourke {
 			Vector3 p2 = poly2points.next();
 			Vector3 lp = new Vector3();
 
-			if ( pointLineIntersection(x, p1, p2, lp))
+			if ( pointLineIntersection(x, p1, p2, lp, envelope))
 				result.intersection(x, lp);
 			
 			return;
@@ -131,7 +132,7 @@ public class ORourke {
 			Vector3 p2 = poly1points.next();
 			Vector3 lp = new Vector3();
 
-			if ( pointLineIntersection(x, p1, p2, lp))
+			if ( pointLineIntersection(x, p1, p2, lp, envelope))
 				result.intersection(lp, x);
 			
 			return;
@@ -203,7 +204,7 @@ public class ORourke {
 				p4.assign(tmp);
 			}			
 			
-			final double e = 0.1;
+//			final double e = 0.1;
 			final Vector3 p4p3 = p4.sub(p3);
 			final Vector3 p2p1 = p2.sub(p1);
 			final Vector3 p3p1 = p3.sub(p1);
@@ -212,14 +213,14 @@ public class ORourke {
 			final Vector3 d = new Vector3( -p4p3.y/p4p3n, p4p3.x/p4p3n, 0 );
 			
 			// if lines are not parallel, we can compute two points on l1 where
-			// its distance to l2 is equal to e
+			// its distance to l2 is equal to envelope (in 2d)
 			final double z = p2p1.dot(d);
 			double tlow;
 			double thigh;
 			if (Math.abs(z)>epsilon) {
 				// TODO include derivation
-				tlow = (-e+p3p1.xydot(d))/z;
-				thigh = (e+p3p1.xydot(d))/z;
+				tlow = (-envelope+p3p1.xydot(d))/z;
+				thigh = (envelope+p3p1.xydot(d))/z;
 				// enforce t1<t2
 				if (thigh<tlow) {
 					final double t = tlow;
@@ -517,7 +518,7 @@ public class ORourke {
 		}
 	}
 
-	private static final boolean pointLineIntersection( Vector3 x, Vector3 p1, Vector3 p2, Vector3 result) {
+	private static final boolean pointLineIntersection( Vector3 x, Vector3 p1, Vector3 p2, Vector3 result, double envelope) {
 		// check point line-intersection
 		// l(t) = p1 + (p2-p1)t
 		// (l(t)-x)T(p2-p1) = 0
@@ -532,27 +533,31 @@ public class ORourke {
 		final Vector3 p2p1 = result; 
 		p2p1.assignDifference(p2, p1);
 		
-		p2p1.z = 0; // we only work in the xy plane
+//		p2p1.z = 0; // we only work in the xy plane
 //		final double t = x.sub(p1).xydot(p2p1) / p2p1.squaredNorm();
-		final double t = x.xydot(p2p1)-p1.xydot(p2p1) / p2p1.squaredXYNorm();
+		double t = x.xydot(p2p1)-p1.xydot(p2p1) / p2p1.squaredXYNorm();
+		
+		// clamp t in [0,1]
+		t = Math.min( Math.max(0-epsilon, t), 1+epsilon);
 
-		if (t>= -epsilon && t <= 1+epsilon) {
+//		if (t>= -epsilon && t <= 1+epsilon) {
 			// closest point on line
 //			Vector3 lp = p1.add(p2.sub(p1).multiply(t));
 //			if (  lp.sub(x).xynorm() < e ) {
 //				result.assign(lp);
 //				return true;
 //			}
-			result.assignAddProduct(p2p1, t);
+			result.assignAddProduct(p2p1, t-1);
 			result.assignAdd(p1);
 			
 			// report intersection
-			if ( Vector3.xynormOfDifference(result, x) < epsilon )
+			if ( Vector3.xynormOfDifference(result, x) < envelope ) {
+				// intersection within envelope
 				return true;
-		}
-		
-		// no intersection
-		return false;
+			} else {
+				// no intersection
+				return false;
+			}
 	}
 	
 //	private static final int linePolyIntersection( Vector3 p1, Vector3 p2, List<Vector3> poly, Vector3 polynormal, Vector3 out1, Vector3 out2 ) {
@@ -691,18 +696,22 @@ public class ORourke {
 	
 	/**
 	 * Return true if a is in the positive half-plane define by the two points bs->bt. 
-	 * @param a
-	 * @param bs
-	 * @param bt
-	 * @return
 	 */
 	public static final boolean isInHalfplane(final Vector3 a, final Vector3 bs, final Vector3 bt) {
 		// optimised to avoid allocation
 		// return (bt.sub(bs)).cross(a.sub(bs)).z >= 0;		
-		return (bt.x-bs.x)*(a.y-bs.y)-(bt.y-bs.y)*(a.x-bs.x) >=0;
-
+		return (bt.x-bs.x)*(a.y-bs.y)-(bt.y-bs.y)*(a.x-bs.x)>=0;
 	}
 	
+	/**
+	 * Return the signed distance from the line (bs,bt) to the point a, scaled by |bs-bt|
+	 */
+	public static final double inHalfplane(final Vector3 a, final Vector3 bs, final Vector3 bt) {
+		// optimised to avoid allocation
+		// return (bt.sub(bs)).cross(a.sub(bs)).z >= 0;		
+		return (bt.x-bs.x)*(a.y-bs.y)-(bt.y-bs.y)*(a.x-bs.x);
+	}
+
 	/**
 	 * Return the counter clock-wise normal of the given polygon
 	 * @param poly
@@ -738,16 +747,18 @@ public class ORourke {
 		// test each edge
 		while(poly.hasNext()) {
 			Vector3 pi = poly.next();
-			if (!isInHalfplane(p, pm, pi))
+			if (inHalfplane(p, pm, pi) < -envelope*Vector3.xynormOfDifference(pm, pi) ) {
 				return false;
+			}
 			
 			pm = pi;
 		}
 		
 		// test last edge from final vertex to 
 		// the first vertex, closing the polygon
-		if (!isInHalfplane(p, pm, p0))
+		if (inHalfplane(p, pm, p0)< -envelope*Vector3.xynormOfDifference(pm, p0)) {
 			return false;
+		}
 		
 		// all tests passed
 		return true;

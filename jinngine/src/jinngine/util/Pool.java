@@ -95,4 +95,8 @@ public final class Pool<T> implements Iterator<T>, Iterable<T> {
 		this.iter = list.listIterator();
 		return this;
 	}
+	
+	public final int size() {
+		return this.list.size();
+	}
 }

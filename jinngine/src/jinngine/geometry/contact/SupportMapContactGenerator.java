@@ -160,9 +160,9 @@ public final class SupportMapContactGenerator implements ContactGenerator {
 			// generate contact points
 			generate(result);
 			
-			if (pa.isNaN() || pb.isNaN() ) {
-				System.out.println();
-			}
+//			if (pa.isNaN() || pb.isNaN() ) {
+//				System.out.println();
+//			}
 			
 		// if separation
 		} else {
@@ -180,6 +180,7 @@ public final class SupportMapContactGenerator implements ContactGenerator {
 				if (d<shell*1.01)
 					active = true;
 			}
+			
 			
 			// if active, generate contact points			
 			if (active) {
@@ -212,13 +213,14 @@ public final class SupportMapContactGenerator implements ContactGenerator {
 		contactNormal.assignNegate();		
 		Sb.supportFeature(contactNormal, faceB.insert()); faceB.done();
 
+		// use the principal midpoint as reference point for intersections, r = 0.5a+0.5b
+		reference.assignSum(pa,pb);
+		reference.assignMultiply(.5);
+				
 		// reverse the points in face A, so they will be in counter-clock-wise order
 		// when relating to the normal direction
 		faceA.reverse();
 		
-		// use the principal midpoint as reference point for intersections, r = 0.5a+0.5b
-		reference.assignSum(pa,pb);
-		reference.assignMultiply(.5);
 				
 		// create a result handler for the intersection algorithm. the handler 
 		// simply copies the intersection points into a local list of points
@@ -251,7 +253,7 @@ public final class SupportMapContactGenerator implements ContactGenerator {
 		
 		// clear all remaining result points
 		intersection.done();
-		
+				
 		// report intersection points
 		Iterator<Vector3> intersections = intersection.iterator();
 		while (intersections.hasNext()) {
@@ -262,7 +264,7 @@ public final class SupportMapContactGenerator implements ContactGenerator {
 			// while points are still in contact space, 
 			// find their distance along the normal 
 			double signedDistance = (p.z-q.z)-spb-spa;
-
+			
 			// if distance is within the envelope, pass on
 			// the contact point through the result handler
 			if ( signedDistance < envelope ) {

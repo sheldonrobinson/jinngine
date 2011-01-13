@@ -212,7 +212,14 @@ public final class Vector3 implements Serializable {
 		z+=v.z;
 		return this;		
 	}
-	
+
+	public final Vector3 assignAdd( double q, double w, double e) {
+		x+=q;
+		y+=w;
+		z+=e;
+		return this;		
+	}
+
 	/**
 	 * Multiply this vector by the scalar s
 	 * @param s scalar value

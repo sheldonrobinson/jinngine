@@ -94,7 +94,7 @@ public final class RayCast {
 
 			// run as many gjk iterations as necessary to get a separating axis. If the distance
 			// is within the envelope, run until the error in v is below epsilon. 
-			gjk.run(Sa, Sb, pc, pb, envelope+sphere, epsilon, 31);
+			gjk.run(Sa, Sb, pc, pb, /*envelope+sphere*/Double.POSITIVE_INFINITY, epsilon, 31);
 			//termination
 			if (v.norm() < envelope+sphere  || iterations > 31 )
 				break;

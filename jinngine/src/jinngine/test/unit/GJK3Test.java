@@ -50,8 +50,8 @@ public class GJK3Test extends TestCase {
 		
 		System.out.println( "d="+d);
 		
-		// expect distance to be one
-		assertTrue( Math.abs(d-1) < epsilon );
+		// expect distance to be one ( take into account sphere sweeping)
+		assertTrue( Math.abs(d-1-2) < epsilon );
 	}
 
 	/*
@@ -87,7 +87,7 @@ public class GJK3Test extends TestCase {
 		System.out.println("d="+d);
 		
 		// distance should be 2a within precision
-		assertTrue( (Math.abs(d-2*a) < epsilon) );
+		assertTrue( (Math.abs(d-2*a-2) < epsilon) );
 	}
 	
 	/**
@@ -141,7 +141,7 @@ public class GJK3Test extends TestCase {
 			// displace geometry and find the expected distance
 			b1.setPosition(displacement.multiply((double)i/N));
 			double length = displacement.multiply((double)i/N).norm();
-			double expected = length>2?length-2:0;
+			double expected = length-2;
 
 			//closest point vectors
 			Vector3 p1 = new Vector3();
@@ -157,7 +157,7 @@ public class GJK3Test extends TestCase {
 			gjk.run(s1,s2,p1,p2,Double.POSITIVE_INFINITY, epsilon, 2256);
 			
 			// we want the expected distance ( with a high error tolerance )
-			assertTrue( Math.abs( p1.sub(p2).norm() - expected ) < 1e-6 );
+			assertTrue( Math.abs( p1.sub(p2).norm() - expected -2 ) < 1e-6 );
 		}
 	}
 	

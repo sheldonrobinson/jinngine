@@ -9,8 +9,6 @@
 package jinngine.geometry;
 
 import java.util.Iterator;
-import java.util.ListIterator;
-
 import jinngine.math.InertiaMatrix;
 import jinngine.math.Matrix3;
 import jinngine.math.Matrix4;
@@ -25,14 +23,12 @@ public class Sphere implements SupportMap3, Geometry, Material {
 
 	private Body body;
 	private double radius;
-	private final Vector3 displacement = new Vector3();
+	private final Vector3 translation = new Vector3();
+	private final Matrix3 rotation = new Matrix3();
 	private final Matrix4 transform4 = new Matrix4();
-	private final Matrix4 localtransform4 = new Matrix4();
-	private final Vector3 worldMaximumBounds = new Vector3();
-	private final Vector3 worldMinimumBounds = new Vector3();
-	private final Matrix4 worldTransform = new Matrix4();
+	private final Vector3 worldposition = new Vector3();
 
-	private double envelope = 0.125;
+	private double envelope = 0.225;
 	private Object auxiliary;
 	private double restitution = 0.7;
 	private double friction = 0.5;
@@ -43,7 +39,7 @@ public class Sphere implements SupportMap3, Geometry, Material {
 	public Sphere(double radius) {
 		this.radius = radius;		
 		this.mass = (4.0/3.0)*Math.PI*radius*radius*radius;
-		this.name = new String("");
+		this.name = new String("Give me a name!");
 		//set the initial local transform
 		setLocalTransform( Matrix3.identity(), new Vector3());		
 	}
@@ -62,7 +58,12 @@ public class Sphere implements SupportMap3, Geometry, Material {
 	@Override
 	public Vector3 supportPoint(Vector3 direction, Vector3 result) {
 		//sphere is invariant under rotation
-		return result.assign(direction.normalize().multiply(radius).add(body.state.position).add(Matrix3.multiply(body.state.rotation, displacement, new Vector3()) ));
+//		return result.assign(direction.normalize().multiply(radius).add(body.state.position).add(Matrix3.multiply(body.state.rotation, displacement, new Vector3()) ));
+		
+		// result = Rp + position
+		result.assign(translation);
+		Matrix3.multiply(body.state.rotation, result, result);
+		return result.assignAdd(body.state.position);
 	}
 
 	@Override
@@ -77,29 +78,23 @@ public class Sphere implements SupportMap3, Geometry, Material {
 	
 	@Override
 	public final Vector3 getMaxBounds(Vector3 bounds) {
-		return bounds.assign(worldMaximumBounds);
+		bounds.assign( worldposition );
+		return bounds.assignAdd(radius+envelope,radius+envelope,radius+envelope);
 	}
 
-	private Vector3 getMaxBoundsTmp(Vector3 bounds) {
-		//return new Vector3(radius+envelope,radius+envelope,radius+envelope).add(Matrix3.multiply(body.state.rotation, displacement, new Vector3())).add(body.state.rCm);
-		return bounds.assign(body.state.position.add( Matrix3.multiply(body.state.rotation, displacement, new Vector3())).add( new Vector3(radius+envelope,radius+envelope,radius+envelope)));
-	}
 
 	@Override
 	public Vector3 getMinBounds(Vector3 bounds) {
-		return bounds.assign(worldMinimumBounds);
+		bounds.assign( worldposition );
+		return bounds.assignAdd(-radius-envelope,-radius-envelope,-radius-envelope);
 	}
 	
-	private Vector3 getMinBoundsTmp(Vector3 bounds) {
-		//return  new Vector3(-radius-envelope,-radius-envelope,-radius-envelope).add(Matrix3.multiply(body.state.rotation, displacement, new Vector3())).add(body.state.rCm);	
-		return bounds.assign(body.state.position.add( Matrix3.multiply(body.state.rotation, displacement, new Vector3())).add( new Vector3(-radius-envelope,-radius-envelope,-radius-envelope)));
-	}
 	
 	@Override
 	public InertiaMatrix getInertiaMatrix() {
 		// inertia tensor for the sphere.
 		InertiaMatrix I = new InertiaMatrix();
-                I.assignScale((2/5f)*mass*radius*radius);
+                I.assignScale((2/5f)*radius*radius);
 		return I;
 	}
 
@@ -109,19 +104,18 @@ public class Sphere implements SupportMap3, Geometry, Material {
 	@Override
 	public void setLocalTransform(Matrix3 B, Vector3 b2) {
 		// a sphere only supports translations as local transform
-		displacement.assign(b2);
-		localtransform4.assign(Transforms.transformAndTranslate4(Matrix3.scaleMatrix(radius), displacement));
+		translation.assign(b2);
+		rotation.assign(B);
 	}
 	
 	@Override
 	public void getLocalTranslation(Vector3 t) {
-		t.assign(displacement);
+		t.assign(translation);
 	}
 	
-
 	@Override
 	public Matrix4 getWorldTransform() {
-		return new Matrix4(worldTransform);
+		return transform4;
 	}
 
 	@Override
@@ -132,7 +126,12 @@ public class Sphere implements SupportMap3, Geometry, Material {
 	@Override
 	public void supportFeature(Vector3 d, Iterator<Vector3> ret) {
 		// sphere is invariant under rotation
-		ret.next().assign(d.normalize().multiply(radius).add(body.state.position).add(Matrix3.multiply(body.state.rotation, displacement, new Vector3()) ));
+		final Vector3 result = ret.next();
+		
+		// result = Rp + position
+		result.assign(translation);
+		Matrix3.multiply(body.state.rotation, result, result);
+		result.assignAdd(body.state.position);
 	}
 
 	// material getters and setters
@@ -159,8 +158,8 @@ public class Sphere implements SupportMap3, Geometry, Material {
 
 	@Override
 	public void getLocalTransform(Matrix3 R, Vector3 b) {
-		R.assign(Matrix3.identity());
-		b.assign(this.displacement);	
+		R.assign(this.rotation);
+		b.assign(this.translation);	
 	}
 
 	@Override
@@ -175,7 +174,7 @@ public class Sphere implements SupportMap3, Geometry, Material {
 
 	@Override
 	public double sphereSweepRadius() {
-		return 0;
+		return radius;
 	}
 
 	@Override
@@ -201,11 +200,11 @@ public class Sphere implements SupportMap3, Geometry, Material {
 	@Override
 	public void update() {
 		// update world transform
-		Matrix4.multiply(body.state.transform, localtransform4, worldTransform);	
-
-        // update world bounding box
-		getMaxBoundsTmp(worldMaximumBounds);
-		getMinBoundsTmp(worldMinimumBounds);		
+        Matrix4.multiply(body.getTransform(), Transforms.transformAndTranslate4(rotation, translation),  transform4 );	
+        
+        // update world position point
+        Matrix3.multiply( body.state.rotation, translation, worldposition);
+        worldposition.assignAdd(body.state.position);
 	}
 
 }
