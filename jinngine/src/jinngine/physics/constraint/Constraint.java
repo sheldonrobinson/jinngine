@@ -1,10 +1,11 @@
 /**
- * Copyright (c) 2008-2010  Morten Silcowitz.
+ * Copyright (c) 2010-2011 Morten Silcowitz
  *
- * This file is part of the Jinngine physics library
+ * This file is part of jinngine.
  *
- * Jinngine is published under the GPL license, available 
- * at http://www.gnu.org/copyleft/gpl.html. 
+ * jinngine is free software: you can redistribute it and/or modify it
+ * under the terms of its license which may be found in the accompanying
+ * LICENSE file or at <http://code.google.com/p/jinngine/>.
  */
 package jinngine.physics.constraint;
 
