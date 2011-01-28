@@ -18,9 +18,9 @@ public class Tuple<T,U> {
 		this.second = second;
 	}
 	
-	  @SuppressWarnings("unchecked")
+	@SuppressWarnings("unchecked")
 	public boolean equals( Object other ) {
-		    return this.first.hashCode() == ((Tuple<T,U>)other).first.hashCode()
-		    && this.second.hashCode() == ((Tuple<T,U>)other).second.hashCode();
-	  }
+		return this.first.equals(((Tuple<T,U>)other).first)
+		&& this.second.equals(((Tuple<T,U>)other));
+	}
 }

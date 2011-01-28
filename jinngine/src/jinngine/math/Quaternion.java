@@ -7,335 +7,274 @@
  * under the terms of its license which may be found in the accompanying
  * LICENSE file or at <http://code.google.com/p/jinngine/>.
  */
+
 package jinngine.math;
 
-import java.io.Serializable;
+public final class Quaternion {
+    /**
+     * variables
+     */
+    public double w = 0.0;
+    public double x = 0.0;
+    public double y = 0.0;
+    public double z = 0.0;
 
+    public Quaternion() {}
 
-public final class Quaternion implements Serializable {
-	private static final long serialVersionUID = 1L;
-	
-	/** 
-	 * Vector part
-	 */
-	public final Vector3 v = new Vector3(1,0,0);
-	/**
-	 * Scalar part
-	 */
-	public double s = 0.0;
+    /**
+     * Construct a new quaternion using the given scalar and vector parts
+     */
+    public Quaternion(final double w, final double x, final double y, final double z) {
+        this.w = w;
+        this.x = x;
+        this.y = y;
+        this.z = z;
+    }
 
-	/**
-	 *  Default constructor
-	 */
-	public Quaternion() {}
-	
-	/**
-	 * Construct a new quaternion using the given scalar and vector parts
-	 * @param s
-	 * @param v
-	 */
-	public Quaternion( double s, Vector3 v ) {
-		this.s = s;
-		this.v.assign(v);
-	}
+    /**
+     * Return a quaternion representing a rotation of theta radians about the given n axis
+     * 
+     * @param theta
+     * @param n
+     * @return
+     */
+    public static Quaternion rotation(final double theta, final Vector3 n) {
+        final double f = Math.sin(theta / 2.0);
+        return new Quaternion(Math.cos(theta / 2.0), n.x * f, n.y * f, n.z * f);
+    }
 
-	/**
-	 * Return a quaternion representing a rotation of theta radians about the given n axis
-	 * @param theta
-	 * @param n
-	 * @return
-	 */
-	public static Quaternion rotation( double theta, Vector3 n ) {
-		return new Quaternion ( (double)Math.cos(theta/2.0f), n.multiply( (double)Math.sin(theta/2.0f) ) ); 
-	}
+    /**
+     * Multiply this quaternion by the quaternion q, and return the result in a new quaternion instance
+     */
+    public final Quaternion multiply(final Quaternion q) {
+        // q*q' = [ ss'- v*v', sv' + s'v + v x v' ]
+        final Quaternion qm = new Quaternion();
+        qm.w = w * q.w - x * q.x - y * q.y - z * q.z;
+        qm.x = q.x * w + x * q.w + y * q.z - z * q.y;
+        qm.y = q.y * w + y * q.w + z * q.x - x * q.z;
+        qm.z = q.z * w + z * q.w + x * q.y - y * q.x;
+        return qm;
+    }
 
-	public Quaternion multiply( Quaternion q ) {
-		// q*q' = [ ss'- v*v', sv' + s'v + v x v' ] see 
-		return new Quaternion( s*q.s-v.dot(q.v), 
-				q.v.multiply(s).add( v.multiply(q.s) ).add(  v.cross(q.v) ));  
-	}
+    /**
+     * Multiply this quaternion by the quaternion q
+     */
+    public final Quaternion assignMultiply(final Quaternion q) {
+        final double wt = w * q.w - x * q.x - y * q.y - z * q.z;
+        final double xt = q.x * w + x * q.w + y * q.z - z * q.y;
+        final double yt = q.y * w + y * q.w + z * q.x - x * q.z;
+        final double zt = q.z * w + z * q.w + x * q.y - y * q.x;
+        w = wt;
+        x = xt;
+        y = yt;
+        z = zt;
+        return this;
+    }
 
-	public final void set( Quaternion qmark ) {
-		//TODO, find some way of cleaning up the bad access to the Vector class, all over the code
-		this.s = qmark.s;
-		this.v.assign(qmark.v);
-	}
+    /**
+     * Multiply this quaternion by the scalar s
+     */
+    public final Quaternion assignMultiply(final double s) {
+        w *= s;
+        x *= s;
+        y *= s;
+        z *= s;
+        return this;
+    }
 
-	//q1 *= q2
-	public static Quaternion sMultiply( Quaternion q1, Quaternion q2 ) {
-		double new_s = q1.s*q2.s-q1.v.dot(q2.v);
-		Vector3 new_v = q2.v.multiply(q1.s).add(q1.v.multiply(q2.s)).add(q1.v.cross(q2.v));  
+    /**
+     * Assign this quaternion to [s,v]
+     */
+    public final void assign(final double s, final Vector3 v) {
+        w = s;
+        x = v.x;
+        y = v.y;
+        z = v.z;
+    }
 
-		q1.s = new_s;
-		q1.v.assign(new_v);
+    /**
+     * Assign this quaternion from q1
+     */
+    public final void assign(final Quaternion q1) {
+        w = q1.w;
+        x = q1.x;
+        y = q1.y;
+        z = q1.z;
+    }
 
-		return q1;
-	}
+    /**
+     * Assign this quaternion from rotation matrix
+     */
+    public final void assign(final Matrix3 m) {
+        // TODO needs testing
+        w = Math.sqrt(1.0 + m.a11 + m.a22 + m.a33) / 2.0;
+        final double w4 = 4.0 * w;
+        x = (m.a32 - m.a23) / w4;
+        y = (m.a13 - m.a31) / w4;
+        z = (m.a21 - m.a12) / w4;
+    }
 
-	//Same as constructor
-	public final void assign( double s, Vector3 v) {
-		this.s = s;
-		this.v.assign(v);
-	}
+    /**
+     * Apply this quaternion as a rotation to the vector v
+     */
+    public Vector3 rotate(final Vector3 v) {
+        // PBA Theorem 18.42 p'= qpq*
+        // p is quaternion [0,(x,y,z)]
+        // p' is the rotatet result
+        // q is the unit quaternion representing a rotation
+        // q* is the conjugated q
+        final Quaternion vq = new Quaternion(0.0f, v.x, v.y, v.z);
+        final Quaternion rotatet = this.multiply(vq).multiply(conjugate());
 
-	public final void assign( Quaternion q1) {
-		this.s = q1.s;
-		this.v.assign(q1.v);
-	}
+        return new Vector3(rotatet.x, rotatet.y, rotatet.z);
+    }
 
+    /**
+     * Add the quaternion q to this quaternion
+     */
+    public Quaternion add(final Quaternion q) {
+        return new Quaternion(w + q.w, x + q.x, y + q.y, z + q.z);
+    }
 
-	public final void assign(Matrix3 m) {
-		//TODO needs testing
-		this.s = Math.sqrt(1.0 + m.a11 + m.a22 + m.a33) / 2.0;
-		double w4 = (4.0 * this.s);
-		this.v.x = (m.a32 - m.a23) / w4 ;
-		this.v.y = (m.a13 - m.a31) / w4 ;
-		this.v.z = (m.a21 - m.a12) / w4 ;
-	}
+    /**
+     * Add the quaternion q to this quaternion
+     */
+    public Quaternion assignAdd(final Quaternion q) {
+        w += q.w;
+        x += q.x;
+        y += q.y;
+        z += q.z;
+        return this;
+    }
 
+    /**
+     * Add the product q*s to this quaternion, so this += qs
+     */
+    public Quaternion assignAddProduct(final Quaternion q, final double s) {
+        w += q.w * s;
+        x += q.x * s;
+        y += q.y * s;
+        z += q.z * s;
+        return this;
+    }
 
-	/** 
-	 * Apply this quaternion as a rotation to the vector v
-	 */
-	public Vector3 rotate( Vector3 v ) {
-		// PBA Theorem 18.42  p'= qpq* 
-		// p is quaternion [0,(x,y,z)]
-		// p' is the rotatet result
-		// q  is the unit quaternion representing a rotation
-		// q* is the conjugated q
-		Quaternion vq = new Quaternion(0.0f, v);
-		Quaternion rotatet = this.multiply(vq).multiply( this.conjugate() );
+    /**
+     * Multiply this quaternion by the given scalar a
+     */
+    public Quaternion multiply(final double a) {
+        return new Quaternion(w * a, x * a, y * a, z * a);
+    }
 
-		return new Vector3(rotatet.v);
-	}
+    /**
+     * Return the 2-norm of this quaternion
+     */
+    public double norm() {
+        return Math.sqrt(w * w + x * x + y * y + z * z);
+    }
 
-	/** 
-	 * Apply the quaternion q as a rotation to the vector v
-	 */
-	public static final void applyRotation( Quaternion q, Vector3 v ) {
-		
+    /**
+     * Conjugate this quaternion, so q=(s,v) becomes (s,-v)
+     */
+    public Quaternion conjugate() {
+        return new Quaternion(w, -x, -y, -z);
+    }
 
-		double s = -q.v.dot(v);  //scalar value of quaternion q*qv
-		final Vector3 vtemp = v.multiply(q.s);         //vector part of q*qv, stored in v
-		Vector3.crossProduct(q.v, v, v );        
-		Vector3.add(v,vtemp);
+    /**
+     * Conjugate this quaternion
+     */
+    public final Quaternion assignConjugate() {
+        x *= -1;
+        y *= -1;
+        z *= -1;
+        return this;
+    }
 
-		//reset vtemp
-		vtemp.assign(new Vector3());
+    /**
+     * Convert the given quaternion q into the rotation matrix R. The result is placed in the given Matrix3 R, and the
+     * reference for R is returned
+     */
+    public static Matrix3 rotationMatrix3(final Quaternion v, final Matrix3 R) {
+        final double s = v.w;
+        R.assign(1 - 2 * (v.y * v.y + v.z * v.z), 2 * v.x * v.y - 2 * s * v.z, 2 * s * v.y + 2 * v.x * v.z, 2 * v.x
+                * v.y + 2 * s * v.z, 1 - 2 * (v.x * v.x + v.z * v.z), -2 * s * v.x + 2 * v.y * v.z, -2 * s * v.y + 2
+                * v.x * v.z, 2 * s * v.x + 2 * v.y * v.z, 1 - 2 * (v.x * v.x + v.y * v.y));
 
-		//conjugate q
-		//Quaternion.conjugate(q);
-		Vector3.multiply(q.v, -1);
+        return R;
+    }
 
-		//calculate the vector part of (q*qv)*q'
-		Vector3.multiplyAndAdd( q.v, s, vtemp);
-		Vector3.multiplyAndAdd( v, q.s, vtemp);
-		// v = v x q.v
-		Vector3.crossProduct(v,q.v, v);
+    // /**
+    // * Convert this quaternion into a new rotation matrix
+    // * @return A new rotation matrix
+    // */
+    // public Matrix3 toRotationMatrix3() {
+    // return Quaternion.rotationMatrix3(this, new Matrix3() );
+    // }
 
-		Vector3.add( v, vtemp );  //v is now rotated    
+    /**
+     * Convert the given quaternion q into the rotation matrix R. The result is placed in the given Matrix3 R, and the
+     * reference for R is returned
+     */
+    public final Matrix3 toRotationMatrix3(final Matrix3 R) {
+        final Quaternion v = this;
+        final double s = w;
+        R.assign(1 - 2 * (v.y * v.y + v.z * v.z), 2 * v.x * v.y - 2 * s * v.z, 2 * s * v.y + 2 * v.x * v.z, 2 * v.x
+                * v.y + 2 * s * v.z, 1 - 2 * (v.x * v.x + v.z * v.z), -2 * s * v.x + 2 * v.y * v.z, -2 * s * v.y + 2
+                * v.x * v.z, 2 * s * v.x + 2 * v.y * v.z, 1 - 2 * (v.x * v.x + v.y * v.y));
 
-		//conjugate again so q is restored
-		//Quaternion.conjugate(q);
-		Vector3.multiply(q.v, -1);
-	}
+        return R;
+    }
 
-	/** 
-	 * Add the quaternion q to this quaternion
-	 */
-	public Quaternion add( Quaternion q ) {
-		return new Quaternion( s+q.s, v.add(q.v));
-	}
+    /**
+     * Normalise this quaternion
+     */
+    public void assignNormalize() {
+        final double l = Math.sqrt(w * w + x * x + y * y + z * z);
+        w = w / l;
+        x = x / l;
+        y = y / l;
+        z = z / l;
+    }
 
-	/**
-	 * Add the quaternion a to the quaternion q and place the result in q, such that
-	 * q = q + a
-	 */
-	public static void add( Quaternion q, Quaternion a ) {
-		q.s += a.s;
-		Vector3.add( q.v, a.v );
-	}
+    /**
+     * The inner product of this quaternion and the given quaternion q
+     */
+    public final double dot(final Quaternion q) {
+        return w * q.w + x * q.x + y * q.y + z * q.z;
+    }
 
-	/**
-	 * Multiply this quaternion by the given scalar a
-	 */
-	public Quaternion multiply( double a ) {
-		return new Quaternion( s*a, v.multiply(a) );
-	}
+    /**
+     * Calculate the XYZ Euler angles from the unit quaternion q.
+     * 
+     * The euler angles, [phi,theta,psi], will reflect the rotation obtained by the rotation matrix R(q) =
+     * Rz(psi)Ry(theta)Rx(phi), where R(q) is the rotation matrix computed directly from the unit quaternion q, and
+     * Rx(phi) is the rotation matrix that rotates phi radians about the x-axis, etc.
+     */
+    public final Vector3 toEuler(final Vector3 euler) {
+        final Quaternion q = this;
+        // partially calculate the rotation matrix
+        final double m11 = 1 - 2 * (q.y * q.y + q.z * q.z); // final double m12 = 2*q1.v.x*q1.v.y-2*q1.s*q1.v.z; final
+                                                            // double m13 = 2*q1.s*q1.v.y+2*q1.v.x*q1.v.z;
+        final double m21 = 2 * q.x * q.y + 2 * q.w * q.z; // final double m22 = 1-2*(q1.v.x*q1.v.x+q1.v.z*q1.v.z); final
+                                                          // double m23 = -2*q1.s*q1.v.x+2*q1.v.y*q1.v.z;
+        final double m31 = -2 * q.w * q.y + 2 * q.x * q.z;
+        final double m32 = 2 * q.w * q.x + 2 * q.y * q.z;
+        final double m33 = 1 - 2 * (q.x * q.x + q.y * q.y);
 
+        // calculate the euler angles using the atan2() function
+        final double phi = Math.atan2(m32, m33);
+        final double theta = Math.atan2(-m31, m32 * Math.sin(phi) + m33 * Math.cos(phi));
+        final double psi = Math.atan2(m21, m11);
 
-	/**
-	 * Return the 2-norm of this quaternion
-	 */
-	public double norm() {
-		return (double)Math.sqrt( s*s + this.v.squaredNorm() );
-	}
+        // return result
+        euler.assign(phi, theta, psi);
+        return euler;
+    }
 
-	/**
-	 * Conjugate this quaternion, so q=(s,v) becomes (s,-v)
-	 */
-	public Quaternion conjugate() {
-		return new Quaternion( s, v.multiply(-1) );
-	}
-
-	/** 
-	 * Conjugate the given quaternion q, such that q=(s,v) becomes (s,-v)
-	 */
-	public static final void conjugate( Quaternion q ) {
-		Vector3.multiply(q.v, -1);
-	}
-
-	/**
-	 * Convert the given quaternion q into the rotation matrix R. The result is placed 
-	 * in the given Matrix3 R, and the reference for R is returned
-	 */
-	public static Matrix3 toRotationMatrix3( Quaternion q, Matrix3 R ) {
-		Vector3 v = q.v;
-		double s = q.s;
-
-		R.assign(
-				1-2*(v.y*v.y+v.z*v.z), 2*v.x*v.y-2*s*v.z,       2*s*v.y+2*v.x*v.z, 
-				2*v.x*v.y+2*s*v.z,      1-2*(v.x*v.x+v.z*v.z), -2*s*v.x+2*v.y*v.z,
-				-2*s*v.y+2*v.x*v.z,      2*s*v.x+2*v.y*v.z,       1-2*(v.x*v.x+v.y*v.y));
-
-		return R;
-	}
-
-	/**
-	 * Convert this quaternion into a new rotation matrix
-	 * @return A new rotation matrix
-	 */
-	public Matrix3 toRotationMatrix3() {
-		return Quaternion.toRotationMatrix3(this, new Matrix3() );
-	}
-
-	/**
-	 * Convert this quaternion into a new Matrix4 transformation matrix, consisting of the 
-	 * usual Matrix3 rotation part, and an identity translation part.
-	 */
-	public Matrix4 rotationMatrix4() {
-		Matrix4 M = new Matrix4();
-		Vector3 v = this.v;
-		double s = this.s;
-		M.a11 = 1-2*(v.y*v.y+v.z*v.z); M.a12 =  2*v.x*v.y-2*s*v.z;      M.a13 = 2*s*v.y+2*v.x*v.z;  
-		M.a21 = 2*v.x*v.y+2*s*v.z;      M.a22 =  1-2*(v.x*v.x+v.z*v.z); M.a23 = -2*s*v.x+2*v.y*v.z;
-		M.a31 = -2*s*v.y+2*v.x*v.z;     M.a32 =  2*s*v.x+2*v.y*v.z;      M.a33 =  1-2*(v.x*v.x+v.y*v.y);	  
-		M.a44 = 1;	  
-		return M;
-	}
-
-	/**
-	 * Normalise this quaternion
-	 */
-	public void assignNormalized() {
-		double l = (double)Math.sqrt( s*s + v.x*v.x + v.y*v.y + v.z*v.z );
-		s = s/l;
-		v.x = v.x/l;
-		v.y = v.y/l;
-		v.z = v.z/l;
-	}
-
-	/**
-	 * Return a copy of this quaternion
-	 */
-	public Quaternion copy() {
-		return new Quaternion(this.s,this.v);
-	}
-
-	/**
-	 * The inner product of this quaternion and the given quaternion q
-	 */
-	public final double dot(Quaternion q) {
-		return this.v.dot(q.v) + this.s * q.s;
-	}
-
-	/**
-	 * Return an interpolated quaternion, based on this quaternion, the given quaternion q2, and the
-	 * parameter t. 
-	 * @param q2 quaternion to interpolate against
-	 * @param t interpolation parameter in [0,1]
-	 * @return
-	 */
-	public final Quaternion interpolate( Quaternion q2, double t) {
-		//seems to be slerp interpolation of quaterions [02 03 2008]
-		Quaternion qa = this;
-		Quaternion qb = q2;
-		//      qa sin((1-t) theta) + qb sin( t theta )
-		//qm = ---------------------------------------  0<t<1 
-		//                    sin theta
-		//  	  
-		//  theta = arccos( qa dot qb )
-		double theta = Math.acos(qa.dot(qb));
-
-		if (Math.abs(theta) < 1e-7 ) {
-			return this;
-		}
-
-		return qa.multiply(Math.sin((1-t)*theta))
-		.add( qb.multiply( Math.sin( t*theta )))
-		.multiply( 1/Math.sin(theta));
-	}
-
-	public static final Vector3 anguarVelocity(Quaternion q0, Quaternion q1) {
-		Quaternion q0inv = new Quaternion(q0.s,q0.v.multiply(-1)).multiply(1/q0.dot(q0));
-		Quaternion r = q0inv.multiply(q1);
-
-		double sinomeganormhalf = r.v.norm();
-
-		//zero angular velocity
-		if (sinomeganormhalf < 1e-7 ) {
-			return new Vector3();
-		}
-
-		Vector3 n = r.v.multiply(1/sinomeganormhalf);
-
-		double omegaNorm = Math.asin(sinomeganormhalf)*2;
-
-		return n.multiply(omegaNorm);
-	}
-
-	public static final Quaternion orientation( Vector3 unit) {
-		Vector3 i = Vector3.i();
-
-		double theta = Math.acos(i.dot(unit));
-		Vector3 v = i.cross(unit);
-
-		System.out.println("rotation axis is");
-		System.out.println(v);
-		System.out.println("and angle is " + theta );
-
-
-		return Quaternion.rotation(theta, v);
-	}
-
-	
-	/**
-	 * Calculate the XYZ Euler angles from the unit quaternion q. 
-	 * 
-	 * The euler angles, [phi,theta,psi], will reflect the rotation obtained by 
-	 * the rotation matrix R(q) = Rz(psi)Ry(theta)Rx(phi), where R(q) is the 
-	 * rotation matrix computed directly from the unit quaternion q, and Rx(phi) is
-	 * the rotation matrix that rotates phi radians about the x-axis, etc.  
-	 */
-	public static final void quaternionToEuler(final Quaternion q, final Vector3 euler) {		
-		// partially calculate the rotation matrix
-		final double m11 = 1-2*(q.v.y*q.v.y+q.v.z*q.v.z); // final double m12 = 2*q1.v.x*q1.v.y-2*q1.s*q1.v.z; final double m13 = 2*q1.s*q1.v.y+2*q1.v.x*q1.v.z; 
-		final double m21 = 2*q.v.x*q.v.y+2*q.s*q.v.z; // final double m22 = 1-2*(q1.v.x*q1.v.x+q1.v.z*q1.v.z); final double m23 = -2*q1.s*q1.v.x+2*q1.v.y*q1.v.z;
-		final double m31 = -2*q.s*q.v.y+2*q.v.x*q.v.z; final double m32 = 2*q.s*q.v.x+2*q.v.y*q.v.z; final double m33 = 1-2*(q.v.x*q.v.x+q.v.y*q.v.y);
-		
-		// calculate the euler angles using the atan2() function
-		final double phi = Math.atan2( m32, m33 );
-		final double theta = Math.atan2( -m31, m32*Math.sin(phi)+m33*Math.cos(phi));
-		final double psi = Math.atan2( m21, m11 );
-
-		// return result
-		euler.assign(phi,theta,psi);
-	}
-	
-
-	public void Print() {
-		System.out.println( "[ "+ s );
-		System.out.println(v);
-		System.out.println("]");
-	}
+    /**
+     * Default toString() override
+     */
+    @Override
+    public final String toString() {
+        return "[ " + w + "," + x + "," + y + "," + z + "]";
+    }
 }

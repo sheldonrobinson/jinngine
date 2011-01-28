@@ -7,6 +7,7 @@
  * under the terms of its license which may be found in the accompanying
  * LICENSE file or at <http://code.google.com/p/jinngine/>.
  */
+
 package jinngine.rendering.jogl;
 
 import java.awt.Canvas;
@@ -32,12 +33,10 @@ import javax.media.opengl.GLEventListener;
 import javax.media.opengl.GLException;
 import javax.media.opengl.glu.GLU;
 
-import com.sun.opengl.util.Animator;
-import com.sun.opengl.util.Screenshot;
-
 import jinngine.geometry.Box;
 import jinngine.geometry.ConvexHull;
 import jinngine.geometry.Geometry;
+import jinngine.geometry.Sphere;
 import jinngine.geometry.UniformCapsule;
 import jinngine.math.Matrix3;
 import jinngine.math.Matrix4;
@@ -45,857 +44,925 @@ import jinngine.math.Vector3;
 import jinngine.physics.Body;
 import jinngine.rendering.Rendering;
 
-public class JoglRendering implements Rendering, 
-GLEventListener, MouseListener, MouseMotionListener, MouseWheelListener, KeyListener {
-	
-	private static final long serialVersionUID = 1L;
-	public List<DrawShape> toDraw = new ArrayList<DrawShape>();
-	private final Callback callback;
-	private final List<EventCallback> mouseCallbacks = new ArrayList<EventCallback>();
-	private final GLCanvas canvas = new GLCanvas();
-	private Animator animator = new Animator(this.canvas);
-	private final GLU glu = new GLU();	
-	private double width;
-	private double height;
-	private double drawHeight;
-	private volatile boolean takeScreenShot = false;
-	private volatile String screenShotFilename;
-	private volatile boolean redoCamera;
+import com.sun.opengl.util.Animator;
+import com.sun.opengl.util.Screenshot;
 
-	//camera transform
-	public double[] proj = new double[16];
-	public double[] camera = new double[16];
-	public double zoom = 0.95;
-	private final Vector3 cameraTo = new Vector3(-12,-3,0).multiply(1);	
-	private final Vector3 cameraFrom = cameraTo.add(new Vector3(0,0.5,1).multiply(5));
-	private int cameraClicks = 1;
-	
-	// global light0 position
-	private final float position[] = { -5f, 20.0f, -25.0f, 1.0f };
-//	private final float position[] = { 0f, 0.0f, -0.0f, 1.0f };
-	
-	// uniforms
-	private int extrutionUniformLocation;
-	private int colorUniformLocation;
-	private int influenceUniformLocation;
-	private double[] shadowProjMatrix;
+public class JoglRendering implements Rendering, GLEventListener, MouseListener, MouseMotionListener,
+        MouseWheelListener, KeyListener {
 
-	
-	private boolean initialized = false;
+    private static final long serialVersionUID = 1L;
+    public List<DrawShape> toDraw = new ArrayList<DrawShape>();
+    private final Callback callback;
+    private final List<EventCallback> mouseCallbacks = new ArrayList<EventCallback>();
+    private final GLCanvas canvas = new GLCanvas();
+    private final Animator animator = new Animator(canvas);
+    private final GLU glu = new GLU();
+    private double width;
+    private double height;
+    private double drawHeight;
+    private volatile boolean takeScreenShot = false;
+    private volatile String screenShotFilename;
+    private volatile boolean redoCamera;
 
-	
-	public JoglRendering(Callback callback ) {
-		this.callback = callback;
-		canvas.setSize(1024,(int)(1024/(1.77777)));
-		canvas.setIgnoreRepaint( true );
-		canvas.addGLEventListener(this);
-		canvas.setVisible(true);
-		canvas.addMouseListener(this);
-		canvas.addMouseMotionListener(this);
-		canvas.addMouseWheelListener(this);
-		canvas.addKeyListener(this);
-		canvas.setVisible(true);
-	}
-	
-	public void createWindow() {
-		Frame frame = new Frame();
-		frame.setTitle("jinngine.example");
-		frame.setSize(1024,(int)(1024/(1.77777)));
-		//Setup exit function
-		frame.addWindowListener(new WindowAdapter() {public void windowClosing(java.awt.event.WindowEvent e) {			
-			System.exit(0);} 
-		} );
+    // camera transform
+    public double[] proj = new double[16];
+    public double[] camera = new double[16];
+    public double zoom = 0.95;
+    private final Vector3 cameraTo = new Vector3(-12, -3, 0).multiply(1);
+    private final Vector3 cameraFrom = cameraTo.add(new Vector3(0, 0.5, 1).multiply(5));
+    private int cameraClicks = 1;
 
-		frame.add(canvas, java.awt.BorderLayout.CENTER);
-		frame.setVisible(true);
-	}
+    // global light0 position
+    private final float position[] = { -5f, 20.0f, -25.0f, 1.0f };
+    // private final float position[] = { 0f, 0.0f, -0.0f, 1.0f };
 
-	@Override
-	public void drawMe(final DrawShape shape, final Geometry g) {
-		DrawShape newshape = new DrawShape() {
-			@Override
-			public void getTransform( Matrix4 T) {
-				T.assign(g.getWorldTransform());
-			}
-			@Override
-			public Body getReferenceBody() {
-				return g.getBody();
-			}
-			@Override
-			public int getDisplayList() {
-				return shape.getDisplayList();
-			}
-			@Override
-			public void init(GL gl) {
-				// init is not needed
-			}
-			@Override
-			public int getShadowDisplayList() {
-				return shape.getShadowDisplayList();
-			}
-		};	
-		
-		toDraw.add(newshape);
-	}
+    // uniforms
+    private int extrutionUniformLocation;
+    private int colorUniformLocation;
+    private int influenceUniformLocation;
+    private double[] shadowProjMatrix;
 
-	
-	@Override
-	public DrawShape drawMe(final Geometry g) {
-		DrawShape shape = null;
-		
-		if (g instanceof ConvexHull) {
-			final ConvexHull hull = (ConvexHull)g;			
-			shape = new DrawShape() {
-				private int list = 0;
-				private int shadowList = 0;
-				@Override
-				public void getTransform( Matrix4 T) {
-					T.assign(g.getWorldTransform());
-				}
-				@Override
-				public Body getReferenceBody() {
-					return g.getBody();
-				}
-				@Override
-				public int getDisplayList() {
-					return list;
-				}
-				@Override
-				public void init(GL gl) {
-					list = startDisplayList(gl);
-					drawPolygonShape(hull.getVerticesList(), null, hull.getFaceIndices(), gl);
-					endDisplayList(gl);
+    private boolean initialized = false;
 
-					shadowList = startDisplayList(gl);
-					drawBackfaceShadowMesh(hull.getVerticesList(), null, hull.getFaceIndices(), gl);
-					endDisplayList(gl);
-				}
-				@Override
-				public int getShadowDisplayList() {
-					return shadowList;
-				}
-			};			
-		}
-		
-		if ( g instanceof Box  ) {
-			final List<Vector3> inputVertices = new ArrayList<Vector3>();
-			final List<Vector3> hullVertices = new ArrayList<Vector3>();
+    public JoglRendering(final Callback callback) {
+        this.callback = callback;
+        canvas.setSize(1024, (int) (1024 / 1.77777));
+        canvas.setIgnoreRepaint(true);
+        canvas.addGLEventListener(this);
+        canvas.setVisible(true);
+        canvas.addMouseListener(this);
+        canvas.addMouseMotionListener(this);
+        canvas.addMouseWheelListener(this);
+        canvas.addKeyListener(this);
+        canvas.setVisible(true);
+    }
 
-			inputVertices.add( new Vector3(  0.5,  0.5,  0.5));
-			inputVertices.add( new Vector3( -0.5,  0.5,  0.5));
-			inputVertices.add( new Vector3(  0.5, -0.5,  0.5));
-			inputVertices.add( new Vector3( -0.5, -0.5,  0.5));
-			inputVertices.add( new Vector3(  0.5,  0.5, -0.5));
-			inputVertices.add( new Vector3( -0.5,  0.5, -0.5));
-			inputVertices.add( new Vector3(  0.5, -0.5, -0.5));
-			inputVertices.add( new Vector3( -0.5, -0.5, -0.5));
-			
-			// apply scaling to the box vertices
-			Matrix3 S = new Matrix3().assignScale(((Box)g).getDimentions());
-			for (Vector3 v: inputVertices) {
-				v.assign(S.multiply(v));
-			}
-			
-			final ConvexHull hull = new ConvexHull("box hull",inputVertices);
-			
-			// get the vertices in the final hull
-			Iterator<Vector3> i = hull.getVertices();
-			while(i.hasNext()) {
-				Vector3 point = i.next();
-				hullVertices.add(point);				
-			}
-			
-			shape = new DrawShape() {
-				private int list = 0;
-				private int shadowList = 0;
+    @Override
+    public void createWindow() {
+        final Frame frame = new Frame();
+        frame.setTitle("jinngine.example");
+        frame.setSize(1024, (int) (1024 / 1.77777));
+        // Setup exit function
+        frame.addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosing(final java.awt.event.WindowEvent e) {
+                System.exit(0);
+            }
+        });
 
-				@Override
-				public void getTransform( Matrix4 T) {
-					T.assign(g.getWorldTransform());
-				}
-				@Override
-				public Body getReferenceBody() {
-					return g.getBody();
-				}
-				@Override
-				public int getDisplayList() {
-//					System.out.println(""+list);
-					return list;
-				}
-				@Override
-				public void init(GL gl) {
-					list = startDisplayList(gl);
-					drawPolygonShape(hullVertices, null, hull.getFaceIndices(), gl);
-					endDisplayList(gl);					
-					shadowList = startDisplayList(gl);
-					drawBackfaceShadowMesh(hullVertices, null, hull.getFaceIndices(), gl);
-					endDisplayList(gl);
+        frame.add(canvas, java.awt.BorderLayout.CENTER);
+        frame.setVisible(true);
+    }
 
-				}
-				@Override
-				public int getShadowDisplayList() {
-					return shadowList;
-				}
-			};
-		}
-		
-		if ( g instanceof UniformCapsule  ) {
-			UniformCapsule cap = (UniformCapsule)g;
-			final List<Vector3> inputVertices = new ArrayList<Vector3>();
-			final List<Vector3> inputNormals = new ArrayList<Vector3>();
-			final List<Vector3> hullNormals = new ArrayList<Vector3>();
-			final List<Vector3> hullVertices = new ArrayList<Vector3>();
-			
+    @Override
+    public void drawMe(final DrawShape shape, final Geometry g) {
+        final DrawShape newshape = new DrawShape() {
+            @Override
+            public void getTransform(final Matrix4 T) {
+                T.assign(g.getWorldTransform());
+            }
 
-			ConvexHull icosphere = buildIcosphere(1, 3);
-			
-			// add two ico-spheres to vertices
-			Iterator<Vector3> iter = icosphere.getVertices();
-			while(iter.hasNext()) {
-				Vector3 v = iter.next();
-				inputVertices.add( v.multiply(cap.getRadius()).add(0,0,cap.getLength()/2));
-				inputNormals.add(v.normalize());
-			}
-			
-			iter = icosphere.getVertices();
-			while(iter.hasNext()) {
-				Vector3 v = iter.next();
-				inputVertices.add( v.multiply(cap.getRadius()).add(0,0,-cap.getLength()/2));
-				inputNormals.add(v.normalize());
-			}
+            @Override
+            public Body getReferenceBody() {
+                return g.getBody();
+            }
 
-			
-			final ConvexHull hull = new ConvexHull("hull",inputVertices);
-			
-			// build normal array
-			for( int index :hull.getOriginalVertexIndices()) {
-				hullNormals.add( inputNormals.get(index) );
-			}
-			
-			// get the vertices in the final hull
-			Iterator<Vector3> i = hull.getVertices();
-			while(i.hasNext()) {
-				hullVertices.add(i.next());
-			}
-			
-			shape = new DrawShape() {
-				private int list = 0;
-				private int shadowList = 0;
-				@Override
-				public void getTransform( Matrix4 T) {
-					T.assign(g.getWorldTransform());
-				}
-				@Override
-				public Body getReferenceBody() {
-					return g.getBody();
-				}
-				@Override
-				public int getDisplayList() {
-					return list;
-				}
-				@Override
-				public void init(GL gl) {
-					list = startDisplayList(gl); 
-					drawSmoothShape( hullVertices, hullNormals, hull.getFaceIndices(), gl);
-					endDisplayList(gl);
-					
-					shadowList = startDisplayList(gl);
-					drawBackfaceShadowMesh(hullVertices, null, hull.getFaceIndices(), gl);
-					endDisplayList(gl);
-				}
-				@Override
-				public int getShadowDisplayList() {
-					return shadowList;
-				}
-			};
-		}
-		
-		if (shape!=null) {
-			toDraw.add(shape);
-			return shape;
-		} else {
-			throw new IllegalArgumentException("Unknown Geometry type");
-		}
-	}
-	
-	private ConvexHull buildIcosphere(double r, int depth) {
-		final List<Vector3> vertices = new ArrayList<Vector3>();
-//		vertices.add(new Vector3( 1, 1, 1).normalize());
-//		vertices.add(new Vector3(-1,-1, 1).normalize());
-//		vertices.add(new Vector3(-1, 1,-1).normalize());
-//		vertices.add(new Vector3( 1,-1,-1).normalize());
-		// point on icosahedron
-		final double t = (1.0 + Math.sqrt(5.0))/ 2.0;
-		vertices.add(new Vector3(-1,  t,  0).normalize());
-		vertices.add( new Vector3( 1,  t,  0).normalize());
-		vertices.add( new Vector3(-1, -t,  0).normalize());
-		vertices.add( new Vector3( 1, -t,  0).normalize());
-		vertices.add( new Vector3( 0, -1,  t).normalize());
-		vertices.add( new Vector3( 0,  1,  t).normalize());
-		vertices.add( new Vector3( 0, -1, -t).normalize());
-		vertices.add( new Vector3( 0,  1, -t).normalize());
-		vertices.add( new Vector3( t,  0, -1).normalize());
-		vertices.add( new Vector3( t,  0,  1).normalize());
-		vertices.add( new Vector3(-t,  0, -1).normalize());
-		vertices.add( new Vector3(-t,  0,  1).normalize());
+            @Override
+            public int getDisplayList() {
+                return shape.getDisplayList();
+            }
 
-		int n = 0;
-		while (true) {
-			ConvexHull hull = new ConvexHull("hull",vertices);
+            @Override
+            public void init(final GL gl) {
+                // init is not needed
+            }
 
-			if (n>=depth)
-				return hull;
+            @Override
+            public int getShadowDisplayList() {
+                return shape.getShadowDisplayList();
+            }
+        };
 
-			// for each face, add a new sphere support 
-			// point in direction of the face normal
-			Iterator<Vector3[]> iter = hull.getFaces();
-			while(iter.hasNext()) {
-				Vector3[] face = iter.next();
-				Vector3 normal =face[1].sub(face[0]).cross(face[2].sub(face[1])).normalize();
-				vertices.add(new Vector3(normal));
-			}
-			
-			// depth level done
-			n++;
-		}
-	}
+        toDraw.add(newshape);
+    }
 
-	@Override
-	public void start() {
-		animator.start();
-	}
+    @Override
+    public DrawShape drawMe(final Geometry g) {
+        DrawShape shape = null;
 
-	
-	// transformation matrix
-	final double[] transform = new double[4*4];
-	final Matrix4  jMatrix4 = new Matrix4();
-	
-	public void display(GLAutoDrawable drawable) {
-		GL gl = drawable.getGL();
+        if (g instanceof ConvexHull) {
+            final ConvexHull hull = (ConvexHull) g;
+            shape = new DrawShape() {
+                private int list = 0;
+                private int shadowList = 0;
 
-		// init all drawing objects
-		if (!initialized) {
-			// calculate shadow matrix
-            shadowProjMatrix = shadowProjectionMatrix(new Vector3(0,350,0), new Vector3(0,-20 + 0.0,0), new Vector3(0,-1,0));
+                @Override
+                public void getTransform(final Matrix4 T) {
+                    T.assign(g.getWorldTransform());
+                }
+
+                @Override
+                public Body getReferenceBody() {
+                    return g.getBody();
+                }
+
+                @Override
+                public int getDisplayList() {
+                    return list;
+                }
+
+                @Override
+                public void init(final GL gl) {
+                    list = startDisplayList(gl);
+                    drawPolygonShape(hull.getVerticesList(), null, hull.getFaceIndices(), gl);
+                    endDisplayList(gl);
+
+                    shadowList = startDisplayList(gl);
+                    drawBackfaceShadowMesh(hull.getVerticesList(), null, hull.getFaceIndices(), gl);
+                    endDisplayList(gl);
+                }
+
+                @Override
+                public int getShadowDisplayList() {
+                    return shadowList;
+                }
+            };
+        }
+
+        if (g instanceof Box) {
+            final List<Vector3> inputVertices = new ArrayList<Vector3>();
+            final List<Vector3> hullVertices = new ArrayList<Vector3>();
+
+            inputVertices.add(new Vector3(0.5, 0.5, 0.5));
+            inputVertices.add(new Vector3(-0.5, 0.5, 0.5));
+            inputVertices.add(new Vector3(0.5, -0.5, 0.5));
+            inputVertices.add(new Vector3(-0.5, -0.5, 0.5));
+            inputVertices.add(new Vector3(0.5, 0.5, -0.5));
+            inputVertices.add(new Vector3(-0.5, 0.5, -0.5));
+            inputVertices.add(new Vector3(0.5, -0.5, -0.5));
+            inputVertices.add(new Vector3(-0.5, -0.5, -0.5));
+
+            // apply scaling to the box vertices
+            final Matrix3 S = new Matrix3().assignScale(((Box) g).getDimentions());
+            for (final Vector3 v : inputVertices) {
+                v.assign(S.multiply(v));
+            }
+
+            final ConvexHull hull = new ConvexHull("box hull", inputVertices);
+
+            // get the vertices in the final hull
+            final Iterator<Vector3> i = hull.getVertices();
+            while (i.hasNext()) {
+                final Vector3 point = i.next();
+                hullVertices.add(point);
+            }
+
+            shape = new DrawShape() {
+                private int list = 0;
+                private int shadowList = 0;
+
+                @Override
+                public void getTransform(final Matrix4 T) {
+                    T.assign(g.getWorldTransform());
+                }
+
+                @Override
+                public Body getReferenceBody() {
+                    return g.getBody();
+                }
+
+                @Override
+                public int getDisplayList() {
+                    // System.out.println(""+list);
+                    return list;
+                }
+
+                @Override
+                public void init(final GL gl) {
+                    list = startDisplayList(gl);
+                    drawPolygonShape(hullVertices, null, hull.getFaceIndices(), gl);
+                    endDisplayList(gl);
+                    shadowList = startDisplayList(gl);
+                    drawBackfaceShadowMesh(hullVertices, null, hull.getFaceIndices(), gl);
+                    endDisplayList(gl);
+
+                }
+
+                @Override
+                public int getShadowDisplayList() {
+                    return shadowList;
+                }
+            };
+        }
+
+        if (g instanceof UniformCapsule) {
+            final UniformCapsule cap = (UniformCapsule) g;
+            final List<Vector3> inputVertices = new ArrayList<Vector3>();
+            final List<Vector3> inputNormals = new ArrayList<Vector3>();
+            final List<Vector3> hullNormals = new ArrayList<Vector3>();
+            final List<Vector3> hullVertices = new ArrayList<Vector3>();
+
+            final ConvexHull icosphere = buildIcosphere(1, 3);
+
+            // add two ico-spheres to vertices
+            Iterator<Vector3> iter = icosphere.getVertices();
+            while (iter.hasNext()) {
+                final Vector3 v = iter.next();
+                inputVertices.add(v.multiply(cap.getRadius()).add(0, 0, cap.getLength() / 2));
+                inputNormals.add(v.normalize());
+            }
+
+            iter = icosphere.getVertices();
+            while (iter.hasNext()) {
+                final Vector3 v = iter.next();
+                inputVertices.add(v.multiply(cap.getRadius()).add(0, 0, -cap.getLength() / 2));
+                inputNormals.add(v.normalize());
+            }
+
+            final ConvexHull hull = new ConvexHull("hull", inputVertices);
+
+            // build normal array
+            for (final int index : hull.getOriginalVertexIndices()) {
+                hullNormals.add(inputNormals.get(index));
+            }
+
+            // get the vertices in the final hull
+            final Iterator<Vector3> i = hull.getVertices();
+            while (i.hasNext()) {
+                hullVertices.add(i.next());
+            }
+
+            shape = new DrawShape() {
+                private int list = 0;
+                private int shadowList = 0;
+
+                @Override
+                public void getTransform(final Matrix4 T) {
+                    T.assign(g.getWorldTransform());
+                }
+
+                @Override
+                public Body getReferenceBody() {
+                    return g.getBody();
+                }
+
+                @Override
+                public int getDisplayList() {
+                    return list;
+                }
+
+                @Override
+                public void init(final GL gl) {
+                    list = startDisplayList(gl);
+                    drawSmoothShape(hullVertices, hullNormals, hull.getFaceIndices(), gl);
+                    endDisplayList(gl);
+
+                    shadowList = startDisplayList(gl);
+                    drawBackfaceShadowMesh(hullVertices, null, hull.getFaceIndices(), gl);
+                    endDisplayList(gl);
+                }
+
+                @Override
+                public int getShadowDisplayList() {
+                    return shadowList;
+                }
+            };
+        }
+
+        if (g instanceof Sphere) {
+            final Sphere sphere = (Sphere) g;
+            final List<Vector3> inputVertices = new ArrayList<Vector3>();
+            final List<Vector3> inputNormals = new ArrayList<Vector3>();
+            final List<Vector3> hullNormals = new ArrayList<Vector3>();
+            final List<Vector3> hullVertices = new ArrayList<Vector3>();
+
+            final ConvexHull icosphere = buildIcosphere(1, 3);
+
+            // add two ico-spheres to vertices
+            final Iterator<Vector3> iter = icosphere.getVertices();
+            while (iter.hasNext()) {
+                final Vector3 v = iter.next();
+                inputVertices.add(v.multiply(sphere.getRadius()));
+                inputNormals.add(v.normalize());
+            }
+
+            final ConvexHull hull = new ConvexHull("hull", inputVertices);
+
+            // build normal array
+            for (final int index : hull.getOriginalVertexIndices()) {
+                hullNormals.add(inputNormals.get(index));
+            }
+
+            // get the vertices in the final hull
+            final Iterator<Vector3> i = hull.getVertices();
+            while (i.hasNext()) {
+                hullVertices.add(i.next());
+            }
+
+            shape = new DrawShape() {
+                private int list = 0;
+                private int shadowList = 0;
+
+                @Override
+                public void getTransform(final Matrix4 T) {
+                    T.assign(g.getWorldTransform());
+                }
+
+                @Override
+                public Body getReferenceBody() {
+                    return g.getBody();
+                }
+
+                @Override
+                public int getDisplayList() {
+                    return list;
+                }
+
+                @Override
+                public void init(final GL gl) {
+                    list = startDisplayList(gl);
+                    drawSmoothShape(hullVertices, hullNormals, hull.getFaceIndices(), gl);
+                    endDisplayList(gl);
+
+                    shadowList = startDisplayList(gl);
+                    drawBackfaceShadowMesh(hullVertices, null, hull.getFaceIndices(), gl);
+                    endDisplayList(gl);
+                }
+
+                @Override
+                public int getShadowDisplayList() {
+                    return shadowList;
+                }
+            };
+        }
+
+        if (shape != null) {
+            toDraw.add(shape);
+            return shape;
+        } else {
+            throw new IllegalArgumentException("Unknown Geometry type");
+        }
+    }
+
+    private ConvexHull buildIcosphere(final double r, final int depth) {
+        final List<Vector3> vertices = new ArrayList<Vector3>();
+        // vertices.add(new Vector3( 1, 1, 1).normalize());
+        // vertices.add(new Vector3(-1,-1, 1).normalize());
+        // vertices.add(new Vector3(-1, 1,-1).normalize());
+        // vertices.add(new Vector3( 1,-1,-1).normalize());
+        // point on icosahedron
+        final double t = (1.0 + Math.sqrt(5.0)) / 2.0;
+        vertices.add(new Vector3(-1, t, 0).normalize());
+        vertices.add(new Vector3(1, t, 0).normalize());
+        vertices.add(new Vector3(-1, -t, 0).normalize());
+        vertices.add(new Vector3(1, -t, 0).normalize());
+        vertices.add(new Vector3(0, -1, t).normalize());
+        vertices.add(new Vector3(0, 1, t).normalize());
+        vertices.add(new Vector3(0, -1, -t).normalize());
+        vertices.add(new Vector3(0, 1, -t).normalize());
+        vertices.add(new Vector3(t, 0, -1).normalize());
+        vertices.add(new Vector3(t, 0, 1).normalize());
+        vertices.add(new Vector3(-t, 0, -1).normalize());
+        vertices.add(new Vector3(-t, 0, 1).normalize());
+
+        int n = 0;
+        while (true) {
+            final ConvexHull hull = new ConvexHull("hull", vertices);
+
+            if (n >= depth) {
+                return hull;
+            }
+
+            // for each face, add a new sphere support
+            // point in direction of the face normal
+            final Iterator<Vector3[]> iter = hull.getFaces();
+            while (iter.hasNext()) {
+                final Vector3[] face = iter.next();
+                final Vector3 normal = face[1].sub(face[0]).cross(face[2].sub(face[1])).normalize();
+                vertices.add(new Vector3(normal));
+            }
+
+            // depth level done
+            n++;
+        }
+    }
+
+    @Override
+    public void start() {
+        animator.start();
+    }
+
+    // transformation matrix
+    final double[] transform = new double[4 * 4];
+    final Matrix4 jMatrix4 = new Matrix4();
+
+    @Override
+    public void display(final GLAutoDrawable drawable) {
+        final GL gl = drawable.getGL();
+
+        // init all drawing objects
+        if (!initialized) {
+            // calculate shadow matrix
+            shadowProjMatrix = shadowProjectionMatrix(new Vector3(0, 350, 0), new Vector3(0, -20 + 0.0, 0),
+                    new Vector3(0, -1, 0));
 
             // init all display lists
-			for (DrawShape s: toDraw)
-				s.init(gl);
-			initialized = true;
-		}
+            for (final DrawShape s : toDraw) {
+                s.init(gl);
+            }
+            initialized = true;
+        }
 
-		if (redoCamera) {
-			// setup camera
-			gl.glMatrixMode(GL.GL_MODELVIEW);
-			gl.glLoadIdentity();
-						
-			// Set camera transform
-			glu.gluLookAt(cameraFrom.x, cameraFrom.y, cameraFrom.z, 
-					cameraTo.x, cameraTo.y, cameraTo.z, 
-					0, 1, 0); 
+        if (redoCamera) {
+            // setup camera
+            gl.glMatrixMode(GL.GL_MODELVIEW);
+            gl.glLoadIdentity();
 
-			//copy camera transform (needed for picking)
-			gl.glGetDoublev(GL.GL_MODELVIEW_MATRIX, camera, 0);
-			
-			// set light position in world space
-			gl.glLightfv(GL.GL_LIGHT0, GL.GL_POSITION, position,0);
+            // Set camera transform
+            glu.gluLookAt(cameraFrom.x, cameraFrom.y, cameraFrom.z, cameraTo.x, cameraTo.y, cameraTo.z, 0, 1, 0);
 
-			
-			// camera done
-			redoCamera = false;
-		}
-		
-		// Perform ratio time-steps on the model
-		callback.tick();
+            // copy camera transform (needed for picking)
+            gl.glGetDoublev(GL.GL_MODELVIEW_MATRIX, camera, 0);
 
-		// Clear buffer, etc.
-		gl.glClearColor(1.0f, 1.0f,1.0f, 1.0f);
-		gl.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT | GL.GL_STENCIL_BUFFER_BIT);
+            // set light position in world space
+            gl.glLightfv(GL.GL_LIGHT0, GL.GL_POSITION, position, 0);
 
-		for ( DrawShape shape: toDraw) {
-			gl.glPushMatrix();
-			shape.getTransform(jMatrix4);
-			jMatrix4.toArray(transform);
-			gl.glMultMatrixd(transform, 0);
-			gl.glCallList(shape.getDisplayList());
-			gl.glPopMatrix();
-			
-			// draw projected shadow
-			gl.glPushMatrix();		
-			gl.glMultMatrixd(shadowProjMatrix, 0);
-			gl.glMultMatrixd(transform, 0);
-			gl.glCallList(shape.getShadowDisplayList());
-			gl.glPopMatrix();
-		}
+            // camera done
+            redoCamera = false;
+        }
 
-		// Finish this frame
-		gl.glFlush();
-		
-		// take screenshot
-		if (takeScreenShot) {
-			gl.glFinish();
-			
-			takeScreenShot = false;
-			try {
-				Screenshot.writeToTargaFile(new File(screenShotFilename), (int)this.width, (int)this.height);
-			} catch (GLException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-		}
-		
-	}
-	
-	private void drawEdgeMesh( ConvexHull hull, GL gl ) {		
-		// build level 0 ico-sphere for edge endings
-		ConvexHull icosphere = buildIcosphere(1, 0);
-	
-		// grap all edges in the hull
-		List<Vector3> vertices = hull.getVerticesList();
-		ArrayList<ArrayList<Integer>> adjacent = hull.getVertexAdjacencyMatrix();
-		int i = 0;
-		for ( ArrayList<Integer> indices : adjacent ) {
-			for ( int j: indices) {
-				// for each edge, create a thick line hull
-				List<Vector3> inputEdgeVertices = new ArrayList<Vector3>();
-				List<Vector3> inputEdgeNormals = new ArrayList<Vector3>();
-			
-//				System.out.println("edge " + vertices.get(i) +","+vertices.get(j));
-				
-				for (Vector3 p: icosphere.getVerticesList()) {
-					// at i
-					Vector3 normal = p.normalize();
-					inputEdgeVertices.add(normal.add(vertices.get(i)));
-					inputEdgeNormals.add(normal);
-					
-					// at j
-					inputEdgeVertices.add(normal.add(vertices.get(j)));
-					inputEdgeNormals.add(normal);
+        // Perform ratio time-steps on the model
+        callback.tick();
+        // callback.tick();
+        // callback.tick();
+        // callback.tick();
 
-				}
-				// build a hull for this edge
-				ConvexHull edgehull = new ConvexHull("hull",inputEdgeVertices);
-				
-				
-				// build normal array
-				List<Vector3> hullNormals = new ArrayList<Vector3>();
-				for( int index : edgehull.getOriginalVertexIndices()) {
-					hullNormals.add( inputEdgeNormals.get(index) );
-				}
-				
-				// collapse edge mesh (extrudet later by vertex shader)
-				int k=0; for ( Vector3 v: edgehull.getVerticesList() ) {
-					v.assign(v.sub(hullNormals.get(k)));
-					k++;
-				}
-				
-				// draw this edge
-				drawFaces(edgehull.getVerticesList(), hullNormals, edgehull.getFaceIndices(), gl);				
-			}
-			i = i+1;
-		}
-		
-	}
-	
-	private void drawFaces( List<Vector3> vertices, List<Vector3> normals, int[][] faceIndices, GL gl) {
-		for (int[] face :  faceIndices) {
-			gl.glBegin(GL.GL_POLYGON);
+        // Clear buffer, etc.
+        gl.glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+        gl.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT | GL.GL_STENCIL_BUFFER_BIT);
 
-			Vector3 n = new Vector3();
-			
-			//compute normal face
-			if (normals==null) { 
-				Vector3 v1 = vertices.get(face[0]);
-				Vector3 v2 = vertices.get(face[1]);
-				Vector3 v3 = vertices.get(face[2]);			
-				n.assign((v2.sub(v1).cross(v3.sub(v2))).normalize());
-			}
-				
-			for ( int index: face) {
-				Vector3 v = vertices.get(index);
-				
-				// if normals are given, use them (if not, use face normal)
-				if (normals!=null)
-					n.assign(normals.get(index));
-				
-				gl.glNormal3d(n.x, n.y, n.z);
-				gl.glVertex3d(v.x, v.y, v.z);
-			}
-			gl.glEnd();
-		}
-	}
-	
-	
-	private int startDisplayList(GL gl) {
-		int displayList = gl.glGenLists(1);
-		gl.glNewList(displayList, GL.GL_COMPILE);
-		return displayList;
-	}
-	
-	private void endDisplayList(GL gl) {
-		// end display list
-		gl.glEndList();		
-	}
-	
-	private void drawSmoothShape( List<Vector3> vertices, List<Vector3> normals, int[][] faceIndices, GL gl) {
-		// draw shaded mesh
-		gl.glUniform1f(extrutionUniformLocation, 0);
-		gl.glUniform3f(colorUniformLocation, 1f, 0.95f, 1f);
-		gl.glUniform1f(influenceUniformLocation, 0);
-		gl.glCullFace(GL.GL_BACK);
-		drawFaces( vertices, normals, faceIndices, gl);	
-		
-		// draw silhouette
-		gl.glUniform1f(extrutionUniformLocation, 0.07f);
-		gl.glUniform1f(influenceUniformLocation, 01f);
-		gl.glUniform3f(colorUniformLocation, 0.30f,0.30f,0.30f);
-		gl.glCullFace(GL.GL_FRONT);
-		drawFaces( vertices, normals, faceIndices, gl);	
-//		drawEdgeMesh( new ConvexHull(vertices), gl);
-	}
-	
-	private void drawPolygonShape( List<Vector3> vertices, List<Vector3> normals, int[][] faceIndices, GL gl) {
-		// draw shaded mesh
-		gl.glUniform1f(extrutionUniformLocation, 0);
-		gl.glUniform1f(influenceUniformLocation, 0);
-		gl.glUniform3f(colorUniformLocation, 0.95f, 0.95f, 1f);
-		gl.glCullFace(GL.GL_BACK);
-		drawFaces( vertices, normals, faceIndices, gl);	
-		
-		// draw solid coloured edge mesh
-		gl.glUniform1f(extrutionUniformLocation, 0.04f);
-		gl.glUniform3f(colorUniformLocation, 0.30f,0.30f,0.30f);
-		gl.glUniform1f(influenceUniformLocation, 1f);
-		drawEdgeMesh( new ConvexHull("edge hull", vertices), gl);
-	}
+        for (final DrawShape shape : toDraw) {
+            gl.glPushMatrix();
+            shape.getTransform(jMatrix4);
+            jMatrix4.toArray(transform);
+            gl.glMultMatrixd(transform, 0);
+            gl.glCallList(shape.getDisplayList());
+            gl.glPopMatrix();
 
-	private void drawBackfaceShadowMesh( List<Vector3> vertices, List<Vector3> normals, int[][] faceIndices, GL gl) {
-		gl.glUniform1f(extrutionUniformLocation, 0);
-		gl.glUniform1f(influenceUniformLocation, 1);
-		gl.glUniform3f(colorUniformLocation, 0.85f, 0.85f, 0.85f);
-		gl.glCullFace(GL.GL_FRONT);
-		drawFaces( vertices, normals, faceIndices, gl);	
-	}
+            // draw projected shadow
+            gl.glPushMatrix();
+            gl.glMultMatrixd(shadowProjMatrix, 0);
+            gl.glMultMatrixd(transform, 0);
+            gl.glCallList(shape.getShadowDisplayList());
+            gl.glPopMatrix();
+        }
 
+        // Finish this frame
+        gl.glFlush();
 
-	@Override
-	public void displayChanged(GLAutoDrawable arg0, boolean arg1, boolean arg2) { }
+        // take screenshot
+        if (takeScreenShot) {
+            gl.glFinish();
 
-	@Override
-	public void init(GLAutoDrawable drawable) {
-		// Setup GL 
-		GL gl = drawable.getGL();
-		gl.glEnable (GL.GL_DEPTH_TEST);
-		gl.glEnable(GL.GL_CULL_FACE);
-		gl.glEnable(GL.GL_LINE_SMOOTH);
-	    gl.glHint(GL.GL_PERSPECTIVE_CORRECTION_HINT, GL.GL_NICEST);
-		gl.glBlendFunc(GL.GL_SRC_ALPHA, GL.GL_ONE_MINUS_SRC_ALPHA);
-		//enable vsync
-		gl.setSwapInterval(1);
-				
-		// init some lighting
-		gl.glEnable(GL.GL_LIGHTING);
-		gl.glEnable(GL.GL_LIGHT0);
+            takeScreenShot = false;
+            try {
+                Screenshot.writeToTargaFile(new File(screenShotFilename), (int) width, (int) height);
+            } catch (final GLException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            } catch (final IOException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
+        }
 
-		// Create light components
-		float ambientLight[] = { 2.0f, 2.0f, 2.0f, 1.0f };
-		float diffuseLight[] = { 0.2f, 0.2f, 0.2f, 1.0f };
-		float specularLight[] = { 0.5f, 0.5f, 0.5f, 1.0f };
+    }
 
+    private void drawEdgeMesh(final ConvexHull hull, final GL gl) {
+        // build level 0 ico-sphere for edge endings
+        final ConvexHull icosphere = buildIcosphere(1, 0);
 
-		
-		gl.glMatrixMode(GL.GL_MODELVIEW);
-		gl.glLoadIdentity();
-		// Set camera transform
-		glu.gluLookAt(cameraFrom.x, cameraFrom.y, cameraFrom.z, 
-				cameraTo.x, cameraTo.y, cameraTo.z, 
-				0, 1, 0); 
+        // grap all edges in the hull
+        final List<Vector3> vertices = hull.getVerticesList();
+        final ArrayList<ArrayList<Integer>> adjacent = hull.getVertexAdjacencyMatrix();
+        int i = 0;
+        for (final ArrayList<Integer> indices : adjacent) {
+            for (final int j : indices) {
+                // for each edge, create a thick line hull
+                final List<Vector3> inputEdgeVertices = new ArrayList<Vector3>();
+                final List<Vector3> inputEdgeNormals = new ArrayList<Vector3>();
 
-		//copy camera transform
-		gl.glGetDoublev(GL.GL_MODELVIEW_MATRIX, camera, 0);
+                // System.out.println("edge " + vertices.get(i) +","+vertices.get(j));
 
-		// Assign created components to GL_LIGHT0
-		gl.glLightfv(GL.GL_LIGHT0, GL.GL_AMBIENT, ambientLight,0);
-		gl.glLightfv(GL.GL_LIGHT0, GL.GL_DIFFUSE, diffuseLight,0);
-		gl.glLightfv(GL.GL_LIGHT0, GL.GL_SPECULAR, specularLight,0);
-		gl.glLightfv(GL.GL_LIGHT0, GL.GL_POSITION, position,0);
-		
-		
-		String[] vertexShader = {
-				"uniform float extrution;\n ",
-				"varying vec3 point;   \n",
-				"varying vec3 normal;  \n",
-				"void main(void) {     \n",
-				"  normal = normalize(gl_NormalMatrix * gl_Normal); \n",
-                "  point = vec3(gl_ModelViewMatrix * gl_Vertex); \n", 
+                for (final Vector3 p : icosphere.getVerticesList()) {
+                    // at i
+                    final Vector3 normal = p.normalize();
+                    inputEdgeVertices.add(normal.add(vertices.get(i)));
+                    inputEdgeNormals.add(normal);
+
+                    // at j
+                    inputEdgeVertices.add(normal.add(vertices.get(j)));
+                    inputEdgeNormals.add(normal);
+
+                }
+                // build a hull for this edge
+                final ConvexHull edgehull = new ConvexHull("hull", inputEdgeVertices);
+
+                // build normal array
+                final List<Vector3> hullNormals = new ArrayList<Vector3>();
+                for (final int index : edgehull.getOriginalVertexIndices()) {
+                    hullNormals.add(inputEdgeNormals.get(index));
+                }
+
+                // collapse edge mesh (extrudet later by vertex shader)
+                int k = 0;
+                for (final Vector3 v : edgehull.getVerticesList()) {
+                    v.assign(v.sub(hullNormals.get(k)));
+                    k++;
+                }
+
+                // draw this edge
+                drawFaces(edgehull.getVerticesList(), hullNormals, edgehull.getFaceIndices(), gl);
+            }
+            i = i + 1;
+        }
+
+    }
+
+    private void drawFaces(final List<Vector3> vertices, final List<Vector3> normals, final int[][] faceIndices,
+            final GL gl) {
+        for (final int[] face : faceIndices) {
+            gl.glBegin(GL.GL_POLYGON);
+
+            final Vector3 n = new Vector3();
+
+            // compute normal face
+            if (normals == null) {
+                final Vector3 v1 = vertices.get(face[0]);
+                final Vector3 v2 = vertices.get(face[1]);
+                final Vector3 v3 = vertices.get(face[2]);
+                n.assign(v2.sub(v1).cross(v3.sub(v2)).normalize());
+            }
+
+            for (final int index : face) {
+                final Vector3 v = vertices.get(index);
+
+                // if normals are given, use them (if not, use face normal)
+                if (normals != null) {
+                    n.assign(normals.get(index));
+                }
+
+                gl.glNormal3d(n.x, n.y, n.z);
+                gl.glVertex3d(v.x, v.y, v.z);
+            }
+            gl.glEnd();
+        }
+    }
+
+    private int startDisplayList(final GL gl) {
+        final int displayList = gl.glGenLists(1);
+        gl.glNewList(displayList, GL.GL_COMPILE);
+        return displayList;
+    }
+
+    private void endDisplayList(final GL gl) {
+        // end display list
+        gl.glEndList();
+    }
+
+    private void drawSmoothShape(final List<Vector3> vertices, final List<Vector3> normals, final int[][] faceIndices,
+            final GL gl) {
+        // draw shaded mesh
+        gl.glUniform1f(extrutionUniformLocation, 0);
+        gl.glUniform3f(colorUniformLocation, 1f, 0.95f, 1f);
+        gl.glUniform1f(influenceUniformLocation, 0);
+        gl.glCullFace(GL.GL_BACK);
+        drawFaces(vertices, normals, faceIndices, gl);
+
+        // draw silhouette
+        gl.glUniform1f(extrutionUniformLocation, 0.07f);
+        gl.glUniform1f(influenceUniformLocation, 01f);
+        gl.glUniform3f(colorUniformLocation, 0.30f, 0.30f, 0.30f);
+        gl.glCullFace(GL.GL_FRONT);
+        drawFaces(vertices, normals, faceIndices, gl);
+        // drawEdgeMesh( new ConvexHull(vertices), gl);
+    }
+
+    private void drawPolygonShape(final List<Vector3> vertices, final List<Vector3> normals, final int[][] faceIndices,
+            final GL gl) {
+        // draw shaded mesh
+        gl.glUniform1f(extrutionUniformLocation, 0);
+        gl.glUniform1f(influenceUniformLocation, 0);
+        gl.glUniform3f(colorUniformLocation, 0.95f, 0.95f, 1f);
+        gl.glCullFace(GL.GL_BACK);
+        drawFaces(vertices, normals, faceIndices, gl);
+
+        // draw solid coloured edge mesh
+        gl.glUniform1f(extrutionUniformLocation, 0.04f);
+        gl.glUniform3f(colorUniformLocation, 0.30f, 0.30f, 0.30f);
+        gl.glUniform1f(influenceUniformLocation, 1f);
+        drawEdgeMesh(new ConvexHull("edge hull", vertices), gl);
+    }
+
+    private void drawBackfaceShadowMesh(final List<Vector3> vertices, final List<Vector3> normals,
+            final int[][] faceIndices, final GL gl) {
+        gl.glUniform1f(extrutionUniformLocation, 0);
+        gl.glUniform1f(influenceUniformLocation, 1);
+        gl.glUniform3f(colorUniformLocation, 0.85f, 0.85f, 0.85f);
+        gl.glCullFace(GL.GL_FRONT);
+        drawFaces(vertices, normals, faceIndices, gl);
+    }
+
+    @Override
+    public void displayChanged(final GLAutoDrawable arg0, final boolean arg1, final boolean arg2) {}
+
+    @Override
+    public void init(final GLAutoDrawable drawable) {
+        // Setup GL
+        final GL gl = drawable.getGL();
+        gl.glEnable(GL.GL_DEPTH_TEST);
+        gl.glEnable(GL.GL_CULL_FACE);
+        gl.glEnable(GL.GL_LINE_SMOOTH);
+        gl.glHint(GL.GL_PERSPECTIVE_CORRECTION_HINT, GL.GL_NICEST);
+        gl.glBlendFunc(GL.GL_SRC_ALPHA, GL.GL_ONE_MINUS_SRC_ALPHA);
+        // enable vsync
+        gl.setSwapInterval(1);
+
+        // init some lighting
+        gl.glEnable(GL.GL_LIGHTING);
+        gl.glEnable(GL.GL_LIGHT0);
+
+        // Create light components
+        final float ambientLight[] = { 2.0f, 2.0f, 2.0f, 1.0f };
+        final float diffuseLight[] = { 0.2f, 0.2f, 0.2f, 1.0f };
+        final float specularLight[] = { 0.5f, 0.5f, 0.5f, 1.0f };
+
+        gl.glMatrixMode(GL.GL_MODELVIEW);
+        gl.glLoadIdentity();
+        // Set camera transform
+        glu.gluLookAt(cameraFrom.x, cameraFrom.y, cameraFrom.z, cameraTo.x, cameraTo.y, cameraTo.z, 0, 1, 0);
+
+        // copy camera transform
+        gl.glGetDoublev(GL.GL_MODELVIEW_MATRIX, camera, 0);
+
+        // Assign created components to GL_LIGHT0
+        gl.glLightfv(GL.GL_LIGHT0, GL.GL_AMBIENT, ambientLight, 0);
+        gl.glLightfv(GL.GL_LIGHT0, GL.GL_DIFFUSE, diffuseLight, 0);
+        gl.glLightfv(GL.GL_LIGHT0, GL.GL_SPECULAR, specularLight, 0);
+        gl.glLightfv(GL.GL_LIGHT0, GL.GL_POSITION, position, 0);
+
+        final String[] vertexShader = { "uniform float extrution;\n ", "varying vec3 point;   \n",
+                "varying vec3 normal;  \n", "void main(void) {     \n",
+                "  normal = normalize(gl_NormalMatrix * gl_Normal); \n",
+                "  point = vec3(gl_ModelViewMatrix * gl_Vertex); \n",
                 "  vec4 newpos = gl_ModelViewProjectionMatrix * gl_Vertex; \n",
                 "  gl_Position = gl_ModelViewProjectionMatrix * vec4(newpos.w*extrution*0.04*gl_Normal,0) + newpos;\n",
-                "}\n\n"	
-		};
-		
-		String[] phongFragmentShader = {
-				"uniform vec3 color;\n",
-				"uniform float influence;\n",
-				"varying vec3 point;\n",
-				"varying vec3 normal;\n",
-				"void main(void) { \n",
-				" vec3 L = normalize(gl_LightSource[0].position.xyz-point);\n",
-				" vec3 E = normalize(-point);\n",
-				" vec3 R = normalize(reflect(-L,normal));\n",
-				" float diff = 0.3 * max(dot(normal,L), 0.0);\n",
-				" float spec = 0.1 * pow(max(dot(R,E),0.0), 35.0);\n",
-				" gl_FragColor = vec4( (1.0-influence)*color*(0.5+diff+spec)+influence*color, 1.0);\n",
-				"}\n\n"};
-		
-		
-		int phongFragmentShaderIndex = gl.glCreateShader(GL.GL_FRAGMENT_SHADER);
-		gl.glShaderSource(phongFragmentShaderIndex, phongFragmentShader.length, phongFragmentShader, (int[])null, 0);
-		gl.glCompileShader(phongFragmentShaderIndex);
-		
-		int vertexShaderIndex = gl.glCreateShader(GL.GL_VERTEX_SHADER);
-		gl.glShaderSource(vertexShaderIndex, vertexShader.length, vertexShader, (int[])null, 0);
-		gl.glCompileShader(vertexShaderIndex);
+                "}\n\n" };
 
-		
-		byte[] chars = new byte[1000];
-		int[] ints = new int[1];
-		ints[0]=1000;
-		gl.glGetShaderInfoLog(phongFragmentShaderIndex, 1000, ints , 0, chars , 0);
-		System.out.println(new String(chars,0,1000));
+        final String[] phongFragmentShader = { "uniform vec3 color;\n", "uniform float influence;\n",
+                "varying vec3 point;\n", "varying vec3 normal;\n", "void main(void) { \n",
+                " vec3 L = normalize(gl_LightSource[0].position.xyz-point);\n", " vec3 E = normalize(-point);\n",
+                " vec3 R = normalize(reflect(-L,normal));\n", " float diff = 0.3 * max(dot(normal,L), 0.0);\n",
+                " float spec = 0.1 * pow(max(dot(R,E),0.0), 35.0);\n",
+                " gl_FragColor = vec4( (1.0-influence)*color*(0.5+diff+spec)+influence*color, 1.0);\n", "}\n\n" };
 
-		ints[0]=1000;
-		gl.glGetShaderInfoLog(vertexShaderIndex, 1000, ints , 0, chars , 0);
-		System.out.println(new String(chars,0,1000));
+        final int phongFragmentShaderIndex = gl.glCreateShader(GL.GL_FRAGMENT_SHADER);
+        gl.glShaderSource(phongFragmentShaderIndex, phongFragmentShader.length, phongFragmentShader, (int[]) null, 0);
+        gl.glCompileShader(phongFragmentShaderIndex);
 
+        final int vertexShaderIndex = gl.glCreateShader(GL.GL_VERTEX_SHADER);
+        gl.glShaderSource(vertexShaderIndex, vertexShader.length, vertexShader, (int[]) null, 0);
+        gl.glCompileShader(vertexShaderIndex);
 
-		
-		int shaderprogram = gl.glCreateProgram();
-		gl.glAttachShader(shaderprogram, vertexShaderIndex);
-		gl.glAttachShader(shaderprogram, phongFragmentShaderIndex);
-		gl.glLinkProgram(shaderprogram);
-		gl.glValidateProgram(shaderprogram);
-		gl.glUseProgram(shaderprogram);
+        final byte[] chars = new byte[1000];
+        final int[] ints = new int[1];
+        ints[0] = 1000;
+        gl.glGetShaderInfoLog(phongFragmentShaderIndex, 1000, ints, 0, chars, 0);
+        System.out.println(new String(chars, 0, 1000));
 
-		extrutionUniformLocation = gl.glGetUniformLocation(shaderprogram, "extrution");
-		colorUniformLocation = gl.glGetUniformLocation(shaderprogram, "color");
-		influenceUniformLocation = gl.glGetUniformLocation(shaderprogram, "influence");
+        ints[0] = 1000;
+        gl.glGetShaderInfoLog(vertexShaderIndex, 1000, ints, 0, chars, 0);
+        System.out.println(new String(chars, 0, 1000));
 
+        final int shaderprogram = gl.glCreateProgram();
+        gl.glAttachShader(shaderprogram, vertexShaderIndex);
+        gl.glAttachShader(shaderprogram, phongFragmentShaderIndex);
+        gl.glLinkProgram(shaderprogram);
+        gl.glValidateProgram(shaderprogram);
+        gl.glUseProgram(shaderprogram);
 
-	}
+        extrutionUniformLocation = gl.glGetUniformLocation(shaderprogram, "extrution");
+        colorUniformLocation = gl.glGetUniformLocation(shaderprogram, "color");
+        influenceUniformLocation = gl.glGetUniformLocation(shaderprogram, "influence");
 
-	@Override
-	public void reshape(GLAutoDrawable drawable ,int x,int y, int w, int h) {
-		// Setup wide screen view port
-		GL gl = drawable.getGL();
-		gl.glMatrixMode(GL.GL_PROJECTION);
-		gl.glLoadIdentity();
-		gl.glFrustum (-1.77777*zoom, 1.777777*zoom, -1.0*zoom, 1.0*zoom, 4.0, 200.0); 	
-		this.height = h; this.width = w;
-		this.drawHeight = (int)((double)width/1.77777);
-		gl.glViewport (0, (int)((height-drawHeight)/2.0), (int)width, (int)drawHeight);
-		// copy projection matrix (needed for pick ray)
-		gl.glGetDoublev(GL.GL_PROJECTION_MATRIX, proj, 0);
-		
-		// setup camera
-		gl.glMatrixMode(GL.GL_MODELVIEW);
-		gl.glLoadIdentity();
-		// Set camera transform
-		glu.gluLookAt(cameraFrom.x, cameraFrom.y, cameraFrom.z, 
-				cameraTo.x, cameraTo.y, cameraTo.z, 
-				0, 1, 0); 
+    }
 
-		//copy camera transform (needed for picking)
-		gl.glGetDoublev(GL.GL_MODELVIEW_MATRIX, camera, 0);
-	}
-	
-	
-	private Matrix4 getCameraMatrix() {
-		return new Matrix4(camera);
-	}
+    @Override
+    public void reshape(final GLAutoDrawable drawable, final int x, final int y, final int w, final int h) {
+        // Setup wide screen view port
+        final GL gl = drawable.getGL();
+        gl.glMatrixMode(GL.GL_PROJECTION);
+        gl.glLoadIdentity();
+        gl.glFrustum(-1.77777 * zoom, 1.777777 * zoom, -1.0 * zoom, 1.0 * zoom, 4.0, 200.0);
+        height = h;
+        width = w;
+        drawHeight = (int) (width / 1.77777);
+        gl.glViewport(0, (int) ((height - drawHeight) / 2.0), (int) width, (int) drawHeight);
+        // copy projection matrix (needed for pick ray)
+        gl.glGetDoublev(GL.GL_PROJECTION_MATRIX, proj, 0);
 
-	private Matrix4 getProjectionMatrix() {		
-		return new Matrix4(proj);
-	}
-	
-	public void getPointerRay(Vector3 p, Vector3 d, double x, double y) {
-		// clipping planes
-		Vector3 near = new Vector3(2*x/(double)width-1,-2*(y-((height-drawHeight)*0.5))/(double)drawHeight+1, 0.7);
-		Vector3 far = new Vector3(2*x/(double)width-1,-2*(y-((height-drawHeight)*0.5))/(double)drawHeight+1, 0.9);
+        // setup camera
+        gl.glMatrixMode(GL.GL_MODELVIEW);
+        gl.glLoadIdentity();
+        // Set camera transform
+        glu.gluLookAt(cameraFrom.x, cameraFrom.y, cameraFrom.z, cameraTo.x, cameraTo.y, cameraTo.z, 0, 1, 0);
 
-		//inverse transform
-		Matrix4 T = getProjectionMatrix().multiply(getCameraMatrix()).inverse();
-	
-		Vector3 p1 = new Vector3();
-		Vector3 p2 = new Vector3();
-		
-		Matrix4.multiply(T,near,p1);
-		Matrix4.multiply(T,far,p2);
-		
-		p.assign(p1);
-		d.assign(p2.sub(p1).normalize());
-	}
-	
-	/**
-	 * This is where the "magic" is done:
-	 *
-	 * Multiply the current ModelView-Matrix with a shadow-projetion
-	 * matrix.
-	 *
-	 * l is the position of the light source
-	 * e is a point on within the plane on which the shadow is to be
-	 *   projected.  
-	 * n is the normal vector of the plane.
-	 *
-	 * Everything that is drawn after this call is "squashed" down
-	 * to the plane. Hint: Gray or black color and no lighting 
-	 * looks good for shadows *g*
-	 */
-	private double[] shadowProjectionMatrix(Vector3 l, Vector3 e, Vector3  n)
-	{
-	  double d, c;
-	  double[] mat = new double[16];
+        // copy camera transform (needed for picking)
+        gl.glGetDoublev(GL.GL_MODELVIEW_MATRIX, camera, 0);
+    }
 
-	  // These are c and d (corresponding to the tutorial)
-	  
-	  d = n.x*l.x + n.y*l.y + n.z*l.z;
-	  c = e.x*n.x + e.y*n.y + e.z*n.z - d;
+    private Matrix4 getCameraMatrix() {
+        return new Matrix4(camera);
+    }
 
-	  // Create the matrix. OpenGL uses column by column
-	  // ordering
+    private Matrix4 getProjectionMatrix() {
+        return new Matrix4(proj);
+    }
 
-	  mat[0]  = l.x*n.x+c; 
-	  mat[4]  = n.y*l.x; 
-	  mat[8]  = n.z*l.x; 
-	  mat[12] = -l.x*c-l.x*d;
-	  
-	  mat[1]  = n.x*l.y;        
-	  mat[5]  = l.y*n.y+c;
-	  mat[9]  = n.z*l.y; 
-	  mat[13] = -l.y*c-l.y*d;
-	  
-	  mat[2]  = n.x*l.z;        
-	  mat[6]  = n.y*l.z; 
-	  mat[10] = l.z*n.z+c; 
-	  mat[14] = -l.z*c-l.z*d;
-	  
-	  mat[3]  = n.x;        
-	  mat[7]  = n.y; 
-	  mat[11] = n.z; 
-	  mat[15] = -d;
+    public void getPointerRay(final Vector3 p, final Vector3 d, final double x, final double y) {
+        // clipping planes
+        final Vector3 near = new Vector3(2 * x / width - 1, -2 * (y - (height - drawHeight) * 0.5) / drawHeight + 1,
+                0.7);
+        final Vector3 far = new Vector3(2 * x / width - 1, -2 * (y - (height - drawHeight) * 0.5) / drawHeight + 1, 0.9);
 
-	  return mat;
-	}
+        // inverse transform
+        final Matrix4 T = getProjectionMatrix().multiply(getCameraMatrix()).inverse();
 
+        final Vector3 p1 = new Vector3();
+        final Vector3 p2 = new Vector3();
 
-	public void getCamera(Vector3 from, Vector3 to) {
-		from.assign(cameraFrom);
-		to.assign(cameraTo);
-	}
+        Matrix4.multiply(T, near, p1);
+        Matrix4.multiply(T, far, p2);
 
+        p.assign(p1);
+        d.assign(p2.sub(p1).normalize());
+    }
 
-	@Override
-	public void mouseClicked(MouseEvent e) {}
+    /**
+     * This is where the "magic" is done:
+     * 
+     * Multiply the current ModelView-Matrix with a shadow-projetion matrix.
+     * 
+     * l is the position of the light source e is a point on within the plane on which the shadow is to be projected. n
+     * is the normal vector of the plane.
+     * 
+     * Everything that is drawn after this call is "squashed" down to the plane. Hint: Gray or black color and no
+     * lighting looks good for shadows *g*
+     */
+    private double[] shadowProjectionMatrix(final Vector3 l, final Vector3 e, final Vector3 n) {
+        double d, c;
+        final double[] mat = new double[16];
 
-	@Override
-	public void mouseEntered(MouseEvent e) {}
+        // These are c and d (corresponding to the tutorial)
 
-	@Override
-	public void mouseExited(MouseEvent e) {} 
+        d = n.x * l.x + n.y * l.y + n.z * l.z;
+        c = e.x * n.x + e.y * n.y + e.z * n.z - d;
 
-	@Override
-	public void mousePressed(MouseEvent e) {
-		Vector3 p = new Vector3();
-		Vector3 d = new Vector3();
-		getPointerRay(p, d, e.getX(), e.getY());
-		
-		for (EventCallback call: this.mouseCallbacks)
-			call.mousePressed((double)e.getX(), (double)e.getY(), p, d );
-	}
+        // Create the matrix. OpenGL uses column by column
+        // ordering
 
-	@Override
-	public void mouseReleased(MouseEvent e) {
-		for (EventCallback call: this.mouseCallbacks)
-			call.mouseReleased();
-	}
+        mat[0] = l.x * n.x + c;
+        mat[4] = n.y * l.x;
+        mat[8] = n.z * l.x;
+        mat[12] = -l.x * c - l.x * d;
 
-	@Override
-	public void mouseDragged(MouseEvent e) {
-		Vector3 p = new Vector3();
-		Vector3 d = new Vector3();
-		getPointerRay(p, d, e.getX(), e.getY());
-		
-		for (EventCallback call: this.mouseCallbacks)
-			call.mouseDragged((double)e.getX(), (double)e.getY(), p, d );
-	}
+        mat[1] = n.x * l.y;
+        mat[5] = l.y * n.y + c;
+        mat[9] = n.z * l.y;
+        mat[13] = -l.y * c - l.y * d;
 
-	@Override
-	public void mouseMoved(MouseEvent e) {}
+        mat[2] = n.x * l.z;
+        mat[6] = n.y * l.z;
+        mat[10] = l.z * n.z + c;
+        mat[14] = -l.z * c - l.z * d;
 
-	@Override
-	public void keyPressed(KeyEvent arg0) {
-		if (arg0.getKeyChar()==' ') {
-			for (EventCallback call: this.mouseCallbacks)
-				call.spacePressed();
-		}
-		
-		if ( arg0.getKeyCode() == java.awt.event.KeyEvent.VK_ENTER ) {
-			for (EventCallback call: this.mouseCallbacks)
-				call.enterPressed();			
-		}
-		
-		for (EventCallback call: this.mouseCallbacks)
-			call.keyPressed(arg0.getKeyChar());
+        mat[3] = n.x;
+        mat[7] = n.y;
+        mat[11] = n.z;
+        mat[15] = -d;
 
-	}
+        return mat;
+    }
 
-	@Override
-	public void keyReleased(KeyEvent arg0) {
-		if (arg0.getKeyChar()==' ') {
-			for (EventCallback call: this.mouseCallbacks)
-				call.spaceReleased();
-		}
+    public void getCamera(final Vector3 from, final Vector3 to) {
+        from.assign(cameraFrom);
+        to.assign(cameraTo);
+    }
 
-		for (EventCallback call: this.mouseCallbacks)
-			call.keyReleased(arg0.getKeyChar());
-		
-	}
+    @Override
+    public void mouseClicked(final MouseEvent e) {}
 
-	@Override
-	public void keyTyped(KeyEvent arg0) {}
+    @Override
+    public void mouseEntered(final MouseEvent e) {}
 
-	@Override
-	public void addCallback(EventCallback c) {
-		mouseCallbacks.add(c);
-	}
+    @Override
+    public void mouseExited(final MouseEvent e) {}
 
-	@Override
-	public Canvas getCanvas() {
-		return canvas;
-	}
+    @Override
+    public void mousePressed(final MouseEvent e) {
+        final Vector3 p = new Vector3();
+        final Vector3 d = new Vector3();
+        getPointerRay(p, d, e.getX(), e.getY());
 
-	@Override
-	public void takeScreenShot(String filename) {
-		screenShotFilename = filename;
-		takeScreenShot = true;		
-	}
+        for (final EventCallback call : mouseCallbacks) {
+            call.mousePressed(e.getX(), e.getY(), p, d);
+        }
+    }
 
-	@Override
-	public void mouseWheelMoved(MouseWheelEvent e) {
-		cameraClicks += e.getWheelRotation();
-		
-		Vector3 direction = new Vector3(0,0.5,1).normalize();
-		cameraTo.assign(new Vector3(-12,-3,0).add(direction.multiply(cameraClicks*5)));	
-		cameraFrom.assign(cameraTo.add(direction));
+    @Override
+    public void mouseReleased(final MouseEvent e) {
+        for (final EventCallback call : mouseCallbacks) {
+            call.mouseReleased();
+        }
+    }
 
-		redoCamera = true;
-		
-	}
+    @Override
+    public void mouseDragged(final MouseEvent e) {
+        final Vector3 p = new Vector3();
+        final Vector3 d = new Vector3();
+        getPointerRay(p, d, e.getX(), e.getY());
 
+        for (final EventCallback call : mouseCallbacks) {
+            call.mouseDragged(e.getX(), e.getY(), p, d);
+        }
+    }
 
+    @Override
+    public void mouseMoved(final MouseEvent e) {}
 
+    @Override
+    public void keyPressed(final KeyEvent arg0) {
+        if (arg0.getKeyChar() == ' ') {
+            for (final EventCallback call : mouseCallbacks) {
+                call.spacePressed();
+            }
+        }
 
+        if (arg0.getKeyCode() == java.awt.event.KeyEvent.VK_ENTER) {
+            for (final EventCallback call : mouseCallbacks) {
+                call.enterPressed();
+            }
+        }
+
+        for (final EventCallback call : mouseCallbacks) {
+            call.keyPressed(arg0.getKeyChar());
+        }
+
+    }
+
+    @Override
+    public void keyReleased(final KeyEvent arg0) {
+        if (arg0.getKeyChar() == ' ') {
+            for (final EventCallback call : mouseCallbacks) {
+                call.spaceReleased();
+            }
+        }
+
+        for (final EventCallback call : mouseCallbacks) {
+            call.keyReleased(arg0.getKeyChar());
+        }
+
+    }
+
+    @Override
+    public void keyTyped(final KeyEvent arg0) {}
+
+    @Override
+    public void addCallback(final EventCallback c) {
+        mouseCallbacks.add(c);
+    }
+
+    @Override
+    public Canvas getCanvas() {
+        return canvas;
+    }
+
+    @Override
+    public void takeScreenShot(final String filename) {
+        screenShotFilename = filename;
+        takeScreenShot = true;
+    }
+
+    @Override
+    public void mouseWheelMoved(final MouseWheelEvent e) {
+        cameraClicks += e.getWheelRotation();
+
+        final Vector3 direction = new Vector3(0, 0.5, 1).normalize();
+        cameraTo.assign(new Vector3(-12, -3, 0).add(direction.multiply(cameraClicks * 5)));
+        cameraFrom.assign(cameraTo.add(direction));
+
+        redoCamera = true;
+
+    }
 
 }

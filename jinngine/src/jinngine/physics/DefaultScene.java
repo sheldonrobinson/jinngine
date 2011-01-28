@@ -7,584 +7,669 @@
  * under the terms of its license which may be found in the accompanying
  * LICENSE file or at <http://code.google.com/p/jinngine/>.
  */
-package jinngine.physics;
-import java.util.*;
 
+package jinngine.physics;
+
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+
+import jinngine.collision.BroadphaseCollisionDetection;
+import jinngine.collision.SAP2;
+import jinngine.geometry.Geometry;
 import jinngine.math.Matrix3;
 import jinngine.math.Vector3;
-import jinngine.physics.constraint.*;
+import jinngine.physics.constraint.Constraint;
 import jinngine.physics.constraint.contact.ContactConstraintManager;
 import jinngine.physics.constraint.contact.DefaultContactConstraintManager;
-import jinngine.physics.solver.*;
+import jinngine.physics.solver.NonsmoothNonlinearConjugateGradient;
+import jinngine.physics.solver.SinglePGSIteration;
+import jinngine.physics.solver.Solver;
 import jinngine.physics.solver.Solver.NCPConstraint;
-import jinngine.collision.*;
-import jinngine.geometry.*;
-import jinngine.physics.force.*;
-import jinngine.util.*;
+import jinngine.util.ComponentGraph;
+import jinngine.util.ComponentGraphHashMapDataHandler;
+import jinngine.util.HashMapComponentGraph;
+import jinngine.util.Pair;
 
 /**
- * A basic fixed time stepping rigid body simulator. It uses a contact graph to organise constraints, and generates
- * contact constraints upon intersecting/touching geometries. The engine is limited to having one constraint per. 
- * body pair. This means that if a joint constraint is present, there can be no contact constraints simultaneously. 
- * Such behaviour should be modelled using joint limits. 
+ * A basic fixed time stepping rigid body simulator. It uses a contact graph to
+ * organise constraints, and generates contact constraints upon
+ * intersecting/touching geometries. The engine is limited to having one
+ * constraint per. body pair. This means that if a joint constraint is present,
+ * there can be no contact constraints simultaneously. Such behaviour should be
+ * modelled using joint limits.
  */
 public final class DefaultScene implements Scene {
-	// bodies in model
-	public final List<Body> bodies = new ArrayList<Body>();
-	
-	// constraints, joints and forces
-	public final List<NCPConstraint> ncpconstraints = new ArrayList<NCPConstraint>();
-	public final List<NCPConstraint> coarsencpconstraints = new ArrayList<NCPConstraint>();
-	
-	private final List<Body> ncpbodies = new ArrayList<Body>();
-	private final List<Force> forces = new ArrayList<Force>(); 
-	private final List<Constraint> liveconstraints = new ArrayList<Constraint>();
-	
-	// triggers
-	public final List<Trigger> triggers = new LinkedList<Trigger>();
-	
-	// create a contact graph classifier, used by the contact graph for determining
-	// fixed bodies, i.e. bodies considered to have infinite mass. 
-	private final ComponentGraph.NodeClassifier<Body> classifier = 
-		new ComponentGraph.NodeClassifier<Body>() {
-			public boolean isDelimitor(Body node) {
-				return node.isFixed();
-			}
-	};
-	
-	// inner class for storing data in components in constraint graph
-	public final class ConstraintGroup {
-		public boolean deactivated = false;
-		@Override
-		public String toString() {
-			return deactivated?"deactivated":"active";
-		}
-	}
-	
-	// make a component creator for the constraint graph. This only makes sure that we get some data
-	// stored in the component elements of the constraint graph. In this data, we will store information
-	// about the group of bodies that are interacting. Most importantly, it makes sure that when constraint
-	// components are merged, all the bodies in both components are activated if one of the components was  
-	// active to begin with. 
-	private final ComponentGraph.ComponentHandler<Body,ConstraintGroup> componenthandler = 
-		new ComponentGraph.ComponentHandler<Body,ConstraintGroup>() {
-		public ConstraintGroup newComponent() {return new ConstraintGroup();}
-		public void mergeComponent( ConstraintGroup remaining, ConstraintGroup leaving) {
-			if ( remaining.deactivated && leaving.deactivated ) {
-				// we let the deactivated setting live
-			} else {
-				// activate the new group
-				remaining.deactivated = false;
-				
-				// all bodies from the remaining group
-				Iterator<Body> bodies = constraintGraph.getNodesInComponent(remaining);
-				while(bodies.hasNext()){
-					policy.activate(bodies.next());
-				}
-				
-				// all bodies from the leaving group
-				bodies = constraintGraph.getNodesInComponent(leaving);
-				while(bodies.hasNext()){
-					policy.activate(bodies.next());
-				}
-			}
-		}
 
-		public void nodeAddedToComponent(ConstraintGroup component, Body node) {
-			// if the Body is active and the group is deactivated, activate the component 
-			if (!node.deactivated && component.deactivated) {
-				// all bodies from the remaining group
-				Iterator<Body> bodies = constraintGraph.getNodesInComponent(component);
-				while(bodies.hasNext()){
-					policy.activate(bodies.next());
-				}
-				
-				// set the group activation setting
-				component.deactivated = false;
-			}
-		}
+    // triggers
+    public final List<Trigger> triggers = new LinkedList<Trigger>();
 
-		public void nodeRemovedFromComponent(ConstraintGroup component, Body node) {
-			// no need for action here
-		}
-	};
+    // create a contact graph classifier, used by the contact graph for determining
+    // fixed bodies, i.e. bodies considered to have infinite mass.
+    private final ComponentGraph.NodeClassifier<Body> classifier = new ComponentGraph.NodeClassifier<Body>() {
+        @Override
+        public boolean isDelimiter(final Body node) {
+            return node.isFixed();
+        }
+    };
 
-	
-	// create the contact graph using the classifier above
-	private final ComponentGraph<Body,Constraint,ConstraintGroup> constraintGraph = 
-		new HashMapComponentGraph<Body,Constraint,ConstraintGroup>(classifier,componenthandler);
+    // inner class for storing data in components in constraint graph
+    public final class ConstraintGroup {
 
-	// broadphase collision detection
-	private final BroadphaseCollisionDetection broadphase;
-	
-	// contact constraints
-	private final ContactConstraintManager contactmanager;
+        // maintain constraints and bodies in groups
+        public final List<Constraint> constraints = new ArrayList<Constraint>();
+        public final List<Constraint> externalconstraints = new ArrayList<Constraint>();
+        public final List<Constraint> monitoredconstraints = new ArrayList<Constraint>();
 
-	// ncp solver
-	private final Solver solver;
-	
-	// PGS iteration for live constraints
-	private final Solver pgs = new ProjectedGaussSeidel(1, Double.POSITIVE_INFINITY);
-	
-	// deactivation policy
-	private final DeactivationPolicy policy;
-	
-	// time-step size
-	private double timestep = 0.08; 
+        // all bodies in group
+        public final List<Body> bodies = new ArrayList<Body>();
 
-	/** 
-	 * Create a new fixed time-stepping simulator 
-	 * @param broadphase Broadphase collision detection method
-	 * @param solver Solver to be used
-	 * @param policy the deactivation policy to be used
-	 */
-	public DefaultScene( BroadphaseCollisionDetection broadphase,  Solver solver, DeactivationPolicy policy ) {	
-		
-		this.broadphase = broadphase;
-		this.solver = solver;
-		this.policy = policy;
-		
-		// start the new contact constraint manager
-		this.contactmanager = new DefaultContactConstraintManager( broadphase, constraintGraph);
-	}
-	
-	/**
-	 * Create a new fixed time-stepping simulator with general purpose settings.
-	 */
-	public DefaultScene() {	
-		
-		// some default choices
-		this.policy = new DefaultDeactivationPolicy();
-//		this.broadphase = new SweepAndPrune();
-//		this.broadphase = new ExhaustiveSearch();
-		this.broadphase = new SAP2();
-		
-//		this.solver = new ProjectedGaussSeidel(55);
-//		this.solver = new NonsmoothNonlinearConjugateGradient(55);
-		this.solver = new NonsmoothNonlinearConjugateGradient(45);
-		
-		// start the new contact constraint manager
-		this.contactmanager = new DefaultContactConstraintManager( broadphase, constraintGraph);
-	}
+        // we track monitored constraints in each component
+        // public final Set<Body> monitoredbodies = new HashSet<Body>();
 
+        // components can be deactivated
+        public boolean deactivated = false;
+    }
 
-	@Override
-	public final void tick() {
-		// since an awful lot of things are going on in this method, a summarising explanation will be
-		// given here. First, the broad phase collision detection is executed. Since the ContactConstraintManager
-		// has installed event handlers into the BPC, allot of things will happen during the call to broadphase.run(), 
-		// but in short, ContactConstraintManager will insert ContactConstraints into the constraintGraph, and update 
-		// these constraints. See ContactConstraintManager for more details on this.
-		
-		// update transforms of active bodies
-		for (Body bi: bodies) {
-			if (!bi.isFixed()) {
-				if (!bi.deactivated) {
-					bi.update();
-				}
-			}
-		}
-		
-		// run the broad-phase collision detection (this automatically updates the contactGraph,
-		// through the BroadfaseCollisionDetection.Handler type)
-		broadphase.run();
-				
-		// clear acting forces and delta velocities
-		for (Body bi:bodies) {
-			bi.externaldeltavelocity.assignZero();
-			bi.externaldeltaomega.assignZero();
+    // setup the data handler for the constraint graph. Here, some methods are overridden
+    // to handle the way we like to order stuff in each constraint component
+    final ComponentGraphHashMapDataHandler<Body, Constraint, ConstraintGroup> data = new ComponentGraphHashMapDataHandler<Body, Constraint, ConstraintGroup>(
+            new ComponentGraphHashMapDataHandler.ComponentFactory<ConstraintGroup>() {
+                // just a simple factory for new components
+                @Override
+                public ConstraintGroup createComponent() {
+                    return new ConstraintGroup();
+                }
+            }) {
 
-		}
+        @Override
+        public void addNodeToComponent(final ConstraintGroup c, final Body node) {
+            super.addNodeToComponent(c, node);
 
-		// apply all forces	to external delta velocities
-		for (Force fi: forces) {
-			fi.apply(timestep);
-		}
-						
-		// Process live constraints. Live constraints are constraints which is not purely
-		// a function of the velocities in the system, such as user controlled motors.
-		// The behaviour of such constraints cannot be predicted by the deactivation system, 
-		// and they have to be treated separately. Basically we perform a single PGS iteration
-		// on the ncp constraints given by the live constraint. This will update the delta 
-		// velocities of the involved bodies, and they can thus be activated.
-		for ( Constraint live: liveconstraints) {
-			ncpconstraints.clear(); ncpbodies.clear();
-			Pair<Body> bodies = live.getBodies();
-			ncpbodies.add(bodies.getFirst());
-			ncpbodies.add(bodies.getSecond());		
-			
-			// only do the check if both of the bodies is deactivated
-			if (bodies.getFirst().deactivated || bodies.getSecond().deactivated) {
-				// apply the live constraints and run a single pgs iteration to reveal 
-				// any change in force contribution
-				live.applyConstraints(ncpconstraints.listIterator(), timestep);
-				pgs.solve(ncpconstraints, ncpbodies , 1e-7);
-			}			
-		} 
+            // add body to the component
+            c.bodies.add(node);
+        }
 
-		// create a special iterator to be used with constraints. Each constraint will
-		// insert its ncp-constraints into this list
-		ncpconstraints.clear();
-		ListIterator<NCPConstraint> constraintIterator = ncpconstraints.listIterator();
-		
-		// iterate through groups/components in the constraint graph
-		Iterator<ConstraintGroup> components = 
-			constraintGraph.getComponents();
-		
-		// for each component in constraint graph
-		while (components.hasNext()) {
-			// get the component 
-			ConstraintGroup g = components.next();
-			
-			// if the component is marked as active
-			if ( !g.deactivated) {
-				// check if the whole component can be deactivated
-				Iterator<Body> bodyiter =constraintGraph.getNodesInComponent(g);
-				boolean activefound = false;
-				while (bodyiter.hasNext()) {
-					if ( !policy.shouldBeDeactivated(bodyiter.next()) ) {
-						activefound = true;
-						break;
-					}
-				}
+        @Override
+        public void removeNodeFromComponent(final ConstraintGroup c, final Body node) {
+            super.removeNodeFromComponent(c, node);
 
-				// if there are active bodies in the group, apply constraints
-				if (activefound) {
-					// mark the group as active in the component data
-					ConstraintGroup data = g;
-					data.deactivated = false;
-					
-					// apply all constraints in interaction component
-					Iterator<Constraint> constraints = constraintGraph.getEdgesInComponent(g);
-					while (constraints.hasNext()) {
-						Constraint c = constraints.next();
-						c.applyConstraints(constraintIterator, timestep);
-					} // while
-				} // if active found
-				else {
-					// if we don't find an active body, we mark the whole group as deactivated
-					ConstraintGroup data = g;
-					data.deactivated = true;
+            // remove body from the component
+            c.bodies.remove(node);
+        }
 
-					// deactivate all bodies in component
-					bodyiter =constraintGraph.getNodesInComponent(g);
-					while (bodyiter.hasNext()) {
-						policy.deactivate(bodyiter.next());
-					}
-				}
-			} // if component active
-			else {
-				// component is deactivated
-				// check if the whole component can be activated
-				Iterator<Body> bodyiter =constraintGraph.getNodesInComponent(g);
-				boolean activefound = false;
-				while (bodyiter.hasNext()) {
-					if ( policy.shouldBeActivated(bodyiter.next()) ) {
-						activefound = true;
-						break;
-					}
-				}
-				
-				if (activefound) {
-					// mark component as active
-					ConstraintGroup data = g;
-					data.deactivated = false;
+        @Override
+        public void addEdgeToComponent(final ConstraintGroup c, final Constraint e) {
+            super.addEdgeToComponent(c, e);
 
-					// activate all bodies in component
-					bodyiter =constraintGraph.getNodesInComponent(g);
-					while (bodyiter.hasNext()) {
-						policy.activate(bodyiter.next());
-					}
+            // add constraint to component
+            if (e.isExternal()) {
+                c.externalconstraints.add(e);
+            } else {
+                c.constraints.add(e);
+            }
 
-					
-					// apply all constraints in interaction component
-					Iterator<Constraint> constraints = constraintGraph.getEdgesInComponent(g);
-					while (constraints.hasNext()) {
-						Constraint c = constraints.next();
-						c.applyConstraints(constraintIterator, timestep);
-					} // while					
-				} // if activatable body found
-				
-			}
-		} //while components
-		
-		// handle free bodies, not in any components
-		Iterator<Body> freebodies = constraintGraph.getFreeNodes();
-		while (freebodies.hasNext()) {
-			Body body = freebodies.next();
-			if (body.deactivated) {
-				if (policy.shouldBeActivated(body)) {
-					policy.activate(body);
-				}
-			} else {
-				if (policy.shouldBeDeactivated(body)) {
-					policy.deactivate(body);
-				}
-			}
-		}
-		
-		// clear acting forces and delta velocities
-		for (Body c:bodies) {
-			// clear delta velocities for active bodies. This is reflects the
-			// fact that all constraints on active bodies starts of with lambda = 0
-			// when solved
-			if (!c.deactivated) {
-				c.deltavelocity.assignZero();
-				c.deltaomega.assignZero();
-			}
-		}
-		
-		
-//		List<Constraint> contactconstraints = new ArrayList<Constraint>();
-//		// grap a list of contact constraints
-//		Iterator<ConstraintGroup> iter1 = constraintGraph.getComponents();
-//		while (iter1.hasNext()) {
-//			Iterator<Constraint> iter2 = constraintGraph.getEdgesInComponent(iter1.next());
-//			while (iter2.hasNext()) {
-//				Constraint c = iter2.next();
-//				contactconstraints.add(c);
-//			}
-//		}
-		
-//		System.out.println("got " + ncpconstraints.size() + " constraints");
-		// run the solver (compute delta velocities) for all 
-		// components in the constraint graph
-		solver.solve( ncpconstraints, bodies, 1e-5 );
-//		Multigrid mg = new Multigrid();
-//		mg.solve(contactconstraints, bodies, 1e-31);
-		
-		// update triggers
-		for (Trigger trigger: triggers) {
-			trigger.update(this);
-		}
-		
-//		for (NCPConstraint ci: ncpconstraints) {
-//			double w = ci.j1.dot(ci.body1.deltavelocity)
-//			         + ci.j2.dot(ci.body1.deltaomega)
-//			         + ci.j3.dot(ci.body2.deltavelocity)
-//			         + ci.j4.dot(ci.body2.deltaomega) +ci.b + ci.Fext;
-//			System.out.println(w+","+ci.lambda);
-//		}
-		
-		// go through bodies to advance velocities and positions
-		for (Body body: bodies) {
-			if ( !body.deactivated ) {
-				if ( !body.isFixed() ) {
-					if (body.deltavelocity.isNaN() || body.deltaomega.isNaN() ) 
-						throw new IllegalStateException("DefaultScene: delta velocities containes NaN");
-					if (body.externaldeltavelocity.isNaN() || body.externaldeltaomega.isNaN() ) 
-						throw new IllegalStateException("DefaultScene: external delta velocities containes NaN");
+            // handle monitored constraints
+            if (e.isMonitored()) {
+                c.monitoredconstraints.add(e);
+            }
 
-					// apply delta velocities
-					body.state.velocity.assign( body.state.velocity.add( body.deltavelocity).add(body.externaldeltavelocity) );
-					body.state.omega.assign( body.state.omega.add( body.deltaomega).add(body.externaldeltaomega));
+            // activate the component whenever
+            // topological changes occur
+            c.deactivated = false;
+        }
 
-					// integrate forward on positions
-					body.advancePositions(timestep);
-				}
-			}
-		}
-	} //time-step
+        @Override
+        public void removeEdgeFromComponent(final ConstraintGroup c, final Constraint e) {
+            super.removeEdgeFromComponent(c, e);
 
+            // remove constraint from component
+            if (e.isExternal()) {
+                c.externalconstraints.remove(e);
+            } else {
+                c.constraints.remove(e);
+            }
 
-	@Override
-	public void addForce( Force f ) {
-		forces.add(f);
-	}
+            // handle monitored constraints
+            if (e.isMonitored()) {
+                c.monitoredconstraints.remove(e);
+            }
 
-	@Override
-	public void removeForce(Force f) {
-		forces.remove(f);
-	}
+            // activate the component whenever
+            // topological changes occur
+            c.deactivated = false;
+        }
+    };
 
-	@Override
-	public void addBody( Body c) {
-		bodies.add(c);
-		c.updateTransformations();
-		
-		// install geometries into the broad-phase collision detection
-		Iterator<Geometry> i = c.getGeometries();
-		while (i.hasNext()) {
-			Geometry g = i.next();
-			broadphase.add(g);
-		}
-	}
-	
-	@Override
-	public void addConstraint(Constraint joint) {
-		constraintGraph.addEdge(joint.getBodies(), joint);
-	}
-	
-	@Override
-	public Iterator<Constraint> getConstraints() {
-		List<Constraint> list = new ArrayList<Constraint>();
-		Iterator<ConstraintGroup> ci = constraintGraph.getComponents();
-		while(ci.hasNext()) {
-			Iterator<Constraint> ei = constraintGraph.getEdgesInComponent(ci.next());
-			while(ei.hasNext())
-				list.add(ei.next());
-		}
-			
-		return list.iterator();
-	}
-	
-	public final void removeConstraint(Constraint c) {
-		if (c!=null) {
-			constraintGraph.removeEdge(c.getBodies());
-			
-			// force activation for affected bodies
-			Pair<Body> pair = c.getBodies();
-			policy.forceActivate(pair.getFirst());
-			policy.forceActivate(pair.getSecond());
-			
-		} else {
-			throw new IllegalArgumentException("DefaultScene: attempt to remove null constraint");
-		}
-	}
-	
-	@Override
-	public final void removeBody(Body body) {
-		// force connected bodies to activate in next time-step, because the
-		// deactivation system will not discover such a change 
-		Iterator<Body> iter = constraintGraph.getConnectedNodes(body);
-		while(iter.hasNext()) {
-			policy.forceActivate(iter.next());
-		}
-		
-		// remove associated geometries from collision detection
-		Iterator<Geometry> i = body.getGeometries();
-		while( i.hasNext()) {
-			broadphase.remove(i.next());			
-		}
-		
-		// finally remove from body list
-		bodies.remove(body);		
-	}
+    // create the contact graph using the classifier above
+    private final ComponentGraph<Body, Constraint, ConstraintGroup> constraintGraph = new HashMapComponentGraph<Body, Constraint, ConstraintGroup>(
+            classifier, data);
 
-	@Override
-	public Iterator<Body> getBodies() {
-		return bodies.iterator();
-	}
-	
-	@Override
-	public void setTimestep(double dt) {
-		this.timestep = dt;
-	}
+    // broadphase collision detection
+    private final BroadphaseCollisionDetection broadphase;
 
-	@Override
-	public void fixBody(Body b, boolean fixed) {		
-		//check if the body is in the animation
-		if (!bodies.contains(b)) {
-			throw new IllegalArgumentException("Attempt to fix a body that is not in the scene");
-		}		
-		// check if body is already the at the correct 
-		// fixed setting, in which case do nothing
-		if (b.isFixed() == fixed) 
-			return;
-		
-		// remove the body from simulation 
-		removeBody(b);
+    // contact constraints
+    private final ContactConstraintManager contactmanager;
 
-		//change the fixed setting
-		b.setFixed(fixed);
+    // constraint solver
+    private final Solver solver;
 
-		// reinsert body
-		addBody(b);	
-		
-		// make sure transforms are in order, because the fixed
-		// body will no longer be updated
-		b.update();
-	}
-	
-	@Override
-	public void addLiveConstraint( Constraint c) {
-		liveconstraints.add(c);
-	}
-	
-	@Override
-	public void removeLiveConstraint( Constraint c) {
-		liveconstraints.remove(c);
-	}
+    // deactivation policy
+    private final DeactivationPolicy policy;
 
-	
-	@Override
-	public void addTrigger(Trigger t) {
-		t.setup(this);
-		triggers.add(t);		
-	}
+    // time-step size
+    private double timestep = 0.08;
 
-	@Override
-	public void removeTrigger(Trigger t) {
-		triggers.remove(t);
-		t.cleanup(this);
-	}
+    /**
+     * Create a new fixed time-stepping simulator
+     * 
+     * @param broadphase
+     *            Broadphase collision detection method
+     * @param solver
+     *            Solver to be used
+     * @param policy
+     *            the deactivation policy to be used
+     */
+    public DefaultScene(final BroadphaseCollisionDetection broadphase, final Solver solver,
+            final DeactivationPolicy policy) {
 
-	@Override
-	public double getTimestep() {
-		return this.timestep;
-	}
+        this.broadphase = broadphase;
+        this.solver = solver;
+        this.policy = policy;
 
-	@Override
-	public Iterator<Constraint> getConstraints(Body body) {
-		return constraintGraph.getConnectedEdges(body);
-	}
+        // start the new contact constraint manager
+        contactmanager = new DefaultContactConstraintManager(broadphase, constraintGraph);
+    }
 
-	@Override
-	public ContactConstraintManager getContactConstraintManager() {
-		return this.contactmanager;
-	}
-	
-	@Override
-	public BroadphaseCollisionDetection getBroadphase() {
-		return this.broadphase;
-	}
+    /**
+     * Create a new fixed time-stepping simulator with general purpose settings.
+     */
+    public DefaultScene() {
 
-	@Override
-	public void addGeometry(Matrix3 orientation, Vector3 position, Geometry g) {
-		// create a new body
-		Body body = new Body(g.getName());
-		body.addGeometry(orientation, position, g);
+        // some default choices
+        policy = new DefaultDeactivationPolicy();
+        // this.broadphase = new SweepAndPrune();
+        // this.broadphase = new ExhaustiveSearch();
+        broadphase = new SAP2();
 
-		// add the geometry to broadphase
-		broadphase.add(g);
-		
-		// add the new body
-		bodies.add(body);		
-	}
-	
-	@Override
-	public void addGeometry(Body body, Matrix3 orientation, Vector3 position,
-			Geometry g) {
-		//check if the body is in the animation
-		if (!bodies.contains(body)) {
-			throw new IllegalArgumentException("The given body does not exist in this scene");
-		}						
-		
-		// add geometry to the body
-		body.addGeometry(orientation, position, g);
+        // this.solver = new ProjectedGaussSeidel(55);
+        // this.solver = new NonsmoothNonlinearConjugateGradient(55);
+        solver = new NonsmoothNonlinearConjugateGradient(45);
 
-		// add the geometry to broadphase
-		broadphase.add(g);		
-	}
+        // start the new contact constraint manager
+        contactmanager = new DefaultContactConstraintManager(broadphase, constraintGraph);
+    }
 
+    // private final void clearExternal( ConstraintGroup g) {
+    // // hack
+    // List<Body> bodies = new ArrayList<Body>();
+    //
+    // // active constraints
+    // List<Constraint> constraints = new ArrayList<Constraint>();
+    //
+    // {
+    // Iterator<Body> bi = data.getNodesInComponent(g);
+    // while(bi.hasNext()) bodies.add(bi.next());
+    //
+    // Iterator<Constraint> ci = data.getEdgesInComponent(g);
+    // while(ci.hasNext()) {
+    // Constraint c = ci.next();
+    // // if (c.isPassive()) {
+    // // external.add(c);
+    // // } else {
+    // constraints.add(c);
+    // // }
+    // }
+    //
+    // }
+    //
+    // // clear the delta velocities in the group
+    // for (Body bi: bodies) {
+    // bi.externaldeltaomega.assignZero();
+    // bi.externaldeltavelocity.assignZero();
+    // }
+    // }
 
-	@Override
-	public void removeGeometry(Geometry g) {		
-		// if the geometry has no body assigned, it 
-		// means that it was never added to the scene
-		Body body = g.getBody();
-		if (body==null) {
-			throw new IllegalStateException("Attempt to remove a geometry that does not exist in the scene");
-		}
-		
-		// remove from body
-		body.removeGeometry(g);
-				
-		if (body.getNumberOfGeometries() < 1) {
-			// body has no geometries remove it
-			removeBody(body);
-		}
-	}
+    /**
+     * Perform a step on a constraint group, or a equivalently, a portion of the
+     * constraint graph. This portion will consist of constraints (edges) and
+     * bodies (nodes).
+     */
+    private final void step(final ConstraintGroup group) {
+        // any constraints to be handled?
+        if (group.constraints.size() > 0 || group.externalconstraints.size() > 0) {
+            // update with hard warm-start
+            // clear the delta velocities in the group
+            for (final Body bi : group.bodies) {
+                bi.deltavelocity.assignZero();
+                bi.deltaomega.assignZero();
+                bi.externaldeltavelocity.assignZero();
+                bi.externaldeltaomega.assignZero();
+            }
 
+            // update external constraints
+            for (final Constraint ci : group.externalconstraints) {
+                ci.update(timestep);
+
+                // clear contribution
+                for (final NCPConstraint cj : ci) {
+                    cj.lambda = 0;
+                }
+
+                // run single pgs on external constraint
+                SinglePGSIteration.run(ci, ci.getBody1(), ci.getBody2());
+            }
+
+            // clear the delta velocities in the group
+            for (final Body bi : group.bodies) {
+                bi.externaldeltavelocity.assign(bi.deltavelocity);
+                bi.externaldeltaomega.assign(bi.deltaomega);
+
+                bi.deltavelocity.assignZero();
+                bi.deltaomega.assignZero();
+            }
+
+            // update constraints
+            for (final Constraint ci : group.constraints) {
+                final Body body1 = ci.getBody1();
+                final Body body2 = ci.getBody2();
+                final double b1mask = body1.isFixed() ? 0 : 1;
+                final double b2mask = body2.isFixed() ? 0 : 1;
+
+                ci.update(timestep);
+
+                // calculate current contribution
+                for (final NCPConstraint cj : ci) {
+                    // cj.lambda=0;
+                    // get contribution from current lambda into the delta velocities
+                    Vector3.multiplyAndAdd(body1.state.inverseanisotropicmass, cj.j1, cj.lambda * b1mask,
+                            body1.deltavelocity);
+                    Vector3.multiplyAndAdd(body1.state.inverseinertia, cj.j2, cj.lambda * b1mask, body1.deltaomega);
+                    Vector3.multiplyAndAdd(body2.state.inverseanisotropicmass, cj.j3, cj.lambda * b2mask,
+                            body2.deltavelocity);
+                    Vector3.multiplyAndAdd(body2.state.inverseinertia, cj.j4, cj.lambda * b2mask, body2.deltaomega);
+                }
+            }
+
+            // solve constraints
+            solver.solve(group.constraints, group.bodies, 1e-15);
+        } else {
+            // clear the delta velocities in the group
+            for (final Body bi : group.bodies) {
+                bi.deltavelocity.assignZero();
+                bi.deltaomega.assignZero();
+            }
+
+        }
+
+        // advance positions
+        for (final Body body : group.bodies) {
+            // check for corrupted velocities
+            if (body.deltavelocity.isNaN() || body.deltaomega.isNaN()) {
+                throw new IllegalStateException("DefaultScene: delta velocities containes NaN");
+            }
+            if (body.externaldeltavelocity.isNaN() || body.externaldeltaomega.isNaN()) {
+                throw new IllegalStateException("DefaultScene: external delta velocities containes NaN");
+            }
+
+            // apply delta velocities
+            body.state.velocity.assign(body.state.velocity.add(body.deltavelocity).add(body.externaldeltavelocity));
+            body.state.omega.assign(body.state.omega.add(body.deltaomega).add(body.externaldeltaomega));
+
+            // integrate forward on positions
+            body.advancePositions(timestep);
+        }
+
+        // check for possible deactivation
+        boolean deactivate = true;
+        // update bodies after position updates
+        for (final Body bi : group.bodies) {
+            if (!policy.shouldBeDeactivated(bi, timestep)) {
+                deactivate = false;
+            }
+
+            // update transformations
+            bi.update();
+        }
+
+        // deactivate this contact component
+        if (deactivate) {
+            group.deactivated = true;
+        }
+    } // step()
+
+    @Override
+    public final void tick() {
+        // run the broad-phase collision detection (this automatically updates the contactGraph,
+        // through the BroadfaseCollisionDetection.Handler type)
+        broadphase.run();
+
+        // iterate through groups/components in the constraint graph
+        final Iterator<ConstraintGroup> components = data.getComponents();
+        while (components.hasNext()) {
+            // get the component
+            final ConstraintGroup group = components.next();
+
+            if (!group.deactivated) {
+                // if active, take a simulation step
+                step(group);
+
+            } else {
+                // if not active, then handle monitored constraints
+                if (group.monitoredconstraints.size() > 0) {
+
+                    // update the monitored constraints
+                    for (final Constraint ci : group.monitoredconstraints) {
+                        ci.update(timestep);
+
+                        // get bodies
+                        final Body body1 = ci.getBody1();
+                        final Body body2 = ci.getBody2();
+
+                        if (ci.isExternal()) {
+                            // if external, swap the delta velocities
+                            body1.deltavelocity1.assign(body1.deltavelocity);
+                            body1.deltaomega1.assign(body1.deltaomega);
+                            body1.deltavelocity.assign(body1.externaldeltavelocity);
+                            body1.deltaomega.assign(body1.externaldeltaomega);
+                            body1.externaldeltavelocity.assign(body1.deltavelocity1);
+                            body1.externaldeltaomega.assign(body1.deltaomega1);
+
+                            body2.deltavelocity1.assign(body2.deltavelocity);
+                            body2.deltaomega1.assign(body2.deltaomega);
+                            body2.deltavelocity.assign(body2.externaldeltavelocity);
+                            body2.deltaomega.assign(body2.externaldeltaomega);
+                            body2.externaldeltavelocity.assign(body2.deltavelocity1);
+                            body2.externaldeltaomega.assign(body2.deltaomega1);
+                        }
+
+                        // perform a pgs step on the constraint, to check for any changes
+                        // in force contributions
+                        SinglePGSIteration.run(ci, body1, body2);
+
+                        if (ci.isExternal()) {
+                            // if external, swap the delta velocities
+                            body1.deltavelocity1.assign(body1.deltavelocity);
+                            body1.deltaomega1.assign(body1.deltaomega);
+                            body1.deltavelocity.assign(body1.externaldeltavelocity);
+                            body1.deltaomega.assign(body1.externaldeltaomega);
+                            body1.externaldeltavelocity.assign(body1.deltavelocity1);
+                            body1.externaldeltaomega.assign(body1.deltaomega1);
+
+                            body2.deltavelocity1.assign(body2.deltavelocity);
+                            body2.deltaomega1.assign(body2.deltaomega);
+                            body2.deltavelocity.assign(body2.externaldeltavelocity);
+                            body2.deltaomega.assign(body2.externaldeltaomega);
+                            body2.externaldeltavelocity.assign(body2.deltavelocity1);
+                            body2.externaldeltaomega.assign(body2.deltaomega1);
+                        }
+
+                    }
+                    // a single activating body will activate the whole group
+                    boolean activate = false;
+                    // for (final Body bi: group.monitoredbodies) {
+                    for (final Constraint ci : group.monitoredconstraints) {
+                        if (policy.shouldBeActivated(ci.getBody1(), timestep)
+                                || policy.shouldBeActivated(ci.getBody2(), timestep)) {
+                            activate = true;
+                            break;
+                        }
+                    }
+
+                    // activate component?
+                    if (activate) {
+                        group.deactivated = false;
+                    }
+                } // if monitored constraints
+            } // if deactivated
+        } // for each group
+
+        // update triggers
+        for (final Trigger trigger : triggers) {
+            trigger.update(this);
+        }
+    } // time-step
+
+    //    @Override
+    //    public void addForce(final Force f) {
+    //        forces.add(f);
+    //    }
+    //
+    //    @Override
+    //    public void removeForce(final Force f) {
+    //        forces.remove(f);
+    //    }
+
+    @Override
+    public void addBody(final Body c) {
+        c.updateTransformations();
+
+        // install geometries into the broad-phase collision detection
+        final Iterator<Geometry> i = c.getGeometries();
+        while (i.hasNext()) {
+            final Geometry g = i.next();
+            broadphase.add(g);
+        }
+
+        // add node to graph
+        constraintGraph.addNode(c);
+    }
+
+    @Override
+    public void addConstraint(final Constraint joint) {
+        constraintGraph.addEdge(new Pair<Body>(joint.getBody1(), joint.getBody2()), joint);
+    }
+
+    @Override
+    public Iterator<Constraint> getConstraints() {
+        final List<Constraint> list = new ArrayList<Constraint>();
+        final Iterator<ConstraintGroup> ci = data.getComponents();
+        while (ci.hasNext()) {
+            final Iterator<Constraint> ei = data.getEdgesInComponent(ci.next());
+            while (ei.hasNext()) {
+                list.add(ei.next());
+            }
+        }
+
+        return list.iterator();
+    }
+
+    @Override
+    public final void removeConstraint(final Constraint c) {
+        if (c != null) {
+            constraintGraph.removeEdge(new Pair<Body>(c.getBody1(), c.getBody2()));
+        } else {
+            throw new IllegalArgumentException("DefaultScene: attempt to remove null constraint");
+        }
+    }
+
+    @Override
+    public final void removeBody(final Body body) {
+        // remove associated geometries from collision detection
+        final Iterator<Geometry> i = body.getGeometries();
+        while (i.hasNext()) {
+            broadphase.remove(i.next());
+        }
+
+        // remove node from graph
+        constraintGraph.removeNode(body);
+    }
+
+    @Override
+    public Iterator<Body> getBodies() {
+        // gather all bodies up in a new list
+        final List<Body> bodies = new ArrayList<Body>();
+
+        // go thru all components and add all bodies in them to the list
+        final Iterator<ConstraintGroup> i = data.getComponents();
+        while (i.hasNext()) {
+            final Iterator<Body> j = data.getNodesInComponent(i.next());
+            while (j.hasNext()) {
+                bodies.add(j.next());
+            }
+        }
+
+        // pass back an iterator on this list
+        return bodies.iterator();
+
+    }
+
+    @Override
+    public void setTimestep(final double dt) {
+        timestep = dt;
+    }
+
+    @Override
+    public void fixBody(final Body b, final boolean fixed) {
+        // check if the body is in the animation
+        if (!data.containsNode(b)) {
+            throw new IllegalArgumentException("Attempt to fix a body that is not in the scene");
+        }
+        // check if body is already the at the correct
+        // fixed setting, in which case do nothing
+        if (b.isFixed() == fixed) {
+            return;
+        }
+
+        // remove the body from simulation
+        removeBody(b);
+
+        // change the fixed setting
+        b.setFixed(fixed);
+
+        // reinsert body
+        addBody(b);
+
+        // make sure transforms are in order, because the fixed
+        // body will no longer be updated
+        b.update();
+    }
+
+    @Override
+    public void monitorConstraint(final Constraint constraint) {
+        // check if the constraint is in the graph
+        if (!data.containsEdge(constraint.getBody1(), constraint.getBody2())) {
+            throw new IllegalArgumentException("Scene.monitorConstraint: given constraint is not in the scene");
+        }
+
+        // mark the constraint monitored
+        if (!constraint.isMonitored()) {
+            constraint.setMonitored(true);
+        } else {
+            throw new IllegalArgumentException("Constraint is already monitored");
+        }
+
+        // remove constraint
+        removeConstraint(constraint);
+
+        // add constraint
+        addConstraint(constraint);
+    }
+
+    @Override
+    public void unmonitorConstraint(final Constraint constraint) {
+        // check if the constraint is in the graph
+        if (!data.containsEdge(constraint.getBody1(), constraint.getBody2())) {
+            throw new IllegalArgumentException("Scene: given constraint is not in the scene");
+        }
+
+        // mark the constraint monitored
+        if (constraint.isMonitored()) {
+            constraint.setMonitored(false);
+        } else {
+            throw new IllegalArgumentException("Constraint was not monitored");
+        }
+
+        // remove constraint
+        removeConstraint(constraint);
+
+        // add constraint
+        addConstraint(constraint);
+    }
+
+    @Override
+    public void addTrigger(final Trigger t) {
+        t.setup(this);
+        triggers.add(t);
+    }
+
+    @Override
+    public void removeTrigger(final Trigger t) {
+        triggers.remove(t);
+        t.cleanup(this);
+    }
+
+    @Override
+    public double getTimestep() {
+        return timestep;
+    }
+
+    @Override
+    public ContactConstraintManager getContactConstraintManager() {
+        return contactmanager;
+    }
+
+    @Override
+    public BroadphaseCollisionDetection getBroadphase() {
+        return broadphase;
+    }
+
+    @Override
+    public void addGeometry(final Matrix3 orientation, final Vector3 position, final Geometry g) {
+        // create a new body
+        final Body body = new Body(g.getName());
+        body.addGeometry(orientation, position, g);
+
+        // add the geometry to broadphase
+        broadphase.add(g);
+
+        // add the new body to the graph
+        constraintGraph.addNode(body);
+    }
+
+    @Override
+    public void addGeometry(final Body body, final Matrix3 orientation, final Vector3 position, final Geometry g) {
+        // check if the body is in the animation
+        if (!data.containsNode(body)) {
+            throw new IllegalArgumentException("The given body does not exist in this scene");
+        }
+
+        // add geometry to the body
+        body.addGeometry(orientation, position, g);
+
+        // add the geometry to broadphase
+        broadphase.add(g);
+    }
+
+    @Override
+    public void removeGeometry(final Geometry g) {
+        // if the geometry has no body assigned, it
+        // means that it was never added to the scene
+        final Body body = g.getBody();
+        if (body == null) {
+            throw new IllegalStateException("Attempt to remove a geometry that does not exist in the scene");
+        }
+
+        // remove from body
+        body.removeGeometry(g);
+
+        if (body.getNumberOfGeometries() < 1) {
+            // body has no geometries remove it
+            removeBody(body);
+        }
+    }
+
+    @Override
+    public Iterator<Constraint> getConnectedConstraints(final Body body) {
+        final List<Constraint> returnList = new ArrayList<Constraint>();
+        final Iterator<Body> nodes = data.getConnectedNodes(body);
+        while (nodes.hasNext()) {
+            returnList.add(data.getEdge(body, nodes.next()));
+        }
+
+        // return iterator with constraints
+        return returnList.iterator();
+    }
 
 }

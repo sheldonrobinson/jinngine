@@ -62,7 +62,6 @@ public class ORourke {
 			}
 		});
 	}
-
 	
 	// data
 	final Vector3 p = new Vector3(), pm = new Vector3(), pd = new Vector3();
@@ -73,40 +72,29 @@ public class ORourke {
 	final Vector3 previouslyAddedPoint = new Vector3();
 	final Vector3 ipp = new Vector3();
 	final Vector3 ipq = new Vector3();
+	final Vector3 poly1normal = new Vector3();
+	final Vector3 poly2normal = new Vector3();
+	final Vector3 projectedPoint = new Vector3();
 
 	
+
 	/**
 	 * @param poly1
 	 * @param poly2
 	 * @param result
 	 */
 	public final void run( final List<Vector3> poly1, final List<Vector3> poly2, final ResultHandler result ) {
-		// transform polygons into projection space, leave for now
-		int iter = 0;
-		int intersections = 0;
-		int addedpoints = 0;
-		int firstIntersectionIter = 0;
-		State inside = State.none; 
-//		final Vector3 pnormal = new Vector3();
-//		final Vector3 qnormal = new Vector3();	
 		final int N = poly1.size();
 		final int M = poly2.size();
-
-		// get iterators
-		Iterator<Vector3> poly1points = poly1.iterator();
-		Iterator<Vector3> poly2points = poly2.iterator();
 		
-//		System.out.println(N+","+M);
-		
-		// trival cases
 		// if any one polygon is empty, so is intersection
 		if (N == 0 || M == 0)
 			return;
 		
 		// point-point case
 		if ( N==1 && M == 1) {
-			p.assign(poly1points.next());
-			q.assign(poly2points.next());
+			p.assign(poly1.get(0));
+			q.assign(poly2.get(0));
 			// report intersection
 			if ( p.sub(q).xynorm() < envelope)
 				result.intersection(p, q);
@@ -116,206 +104,203 @@ public class ORourke {
 
 		// point-line case
 		if ( N==1 && M == 2) {
-			Vector3 x = poly1points.next();
-			Vector3 p1 = poly2points.next();
-			Vector3 p2 = poly2points.next();
-			Vector3 lp = new Vector3();
+			Vector3 x = poly1.get(0);
+			Vector3 p1 = poly2.get(0);
+			Vector3 p2 = poly2.get(1);
 
-			if ( pointLineIntersection(x, p1, p2, lp, envelope))
-				result.intersection(x, lp);
+			if ( pointLineIntersection(x, p1, p2, projectedPoint, envelope))
+				result.intersection(x, projectedPoint);
 			
 			return;
 		}
 		// line-point case
 		if ( N==2 && M == 1) {
-			Vector3 x = poly2points.next();
-			Vector3 p1 = poly1points.next();
-			Vector3 p2 = poly1points.next();
-			Vector3 lp = new Vector3();
+			Vector3 x = poly2.get(0);
+			Vector3 p1 = poly1.get(0);
+			Vector3 p2 = poly1.get(1);
 
-			if ( pointLineIntersection(x, p1, p2, lp, envelope))
-				result.intersection(lp, x);
+			if ( pointLineIntersection(x, p1, p2, projectedPoint, envelope))
+				result.intersection(projectedPoint, x);
 			
 			return;
 		}
 		
-		// point-poly case
+		// point-polygon case
 		if (N==1 && M > 2) {
-			Vector3 x = poly1points.next();
-			if (isContained(x, poly2points)) {
+			Vector3 x = poly1.get(0);
+			if (isContained(x, poly2)) {
 				// polygon normal in 3d
 				Vector3 polypoint = poly2.get(0);
-				final Vector3 poly2normal = new Vector3();
 				polyNormal(poly2, poly2normal);
 
 				// report
-				result.intersection(x, projectToPlane(x, poly2normal, polypoint, new Vector3()));				
+				result.intersection(x, projectToPlane(x, poly2normal, polypoint, projectedPoint));				
 			}
 			
 			return;
 		}
 
-		// poly-point case
+		// polygon-point case
 		if (N>2 && M==1) {
-			Vector3 x = poly2points.next();
-			if (isContained(x, poly1points)) {
+			Vector3 x = poly2.get(0);
+			if (isContained(x, poly1)) {
 				// polygon normal in 3d
 				Vector3 polypoint = poly1.get(0);
-				final Vector3 poly1normal = new Vector3();
 				polyNormal(poly1, poly1normal);
 				// report
-				result.intersection(projectToPlane(x, poly1normal, polypoint, new Vector3()),x);	
+				result.intersection(projectToPlane(x, poly1normal, polypoint, projectedPoint),x);	
 			}
 			return;
 		}
 		
 		// line-line case
 		if (N==2 && M==2) {
-			final Vector3 p1 = poly1points.next();
-			final Vector3 p2 = poly1points.next();
-			final Vector3 p3 = poly2points.next();
-			final Vector3 p4 = poly2points.next();
-			final Vector3 par = new Vector3();
-			
-			// alternative version
-			// the two lines are
-			// l1(t) = p1 + (p2-p1)t
-			// l2(s) = p3 + (p4-p3)s
-
-			// if lines are orthogonal, use the unique intersection test (this is rare)
-			final double p4p3Tp2p1 = p4.sub(p3).xydot(p2.sub(p1));		
-			if ( Math.abs(p4p3Tp2p1) < epsilon) {
-				lineLineIntersection(p1, p2, p3, p4, par, epsilon); 
-				// intersection in internal part of lines?
-				if (par.x>=-epsilon && par.x <=1+epsilon && par.y>=-epsilon && par.y<=1+epsilon) {
-					// report intersection
-					result.intersection(p1.add(p2.sub(p1).multiply(par.x)), p3.add(p4.sub(p3).multiply(par.y)));
-					// done
-					return;
-				} else {
-					// no intersection
-					return;
-				}	
-			}
-			// we require (p4-p3)T(p2-p1) > 0. if not, swap p3 and p4
-			else if ( p4p3Tp2p1<0) {
-				// swap
-				Vector3 tmp = new Vector3(p3);
-				p3.assign(p4);
-				p4.assign(tmp);
-			}			
-			
-//			final double e = 0.1;
-			final Vector3 p4p3 = p4.sub(p3);
-			final Vector3 p2p1 = p2.sub(p1);
-			final Vector3 p3p1 = p3.sub(p1);
-			// d is the normalised tangent of l2
-			final double p4p3n =p4p3.xynorm();
-			final Vector3 d = new Vector3( -p4p3.y/p4p3n, p4p3.x/p4p3n, 0 );
-			
-			// if lines are not parallel, we can compute two points on l1 where
-			// its distance to l2 is equal to envelope (in 2d)
-			final double z = p2p1.dot(d);
-			double tlow;
-			double thigh;
-			if (Math.abs(z)>epsilon) {
-				// TODO include derivation
-				tlow = (-envelope+p3p1.xydot(d))/z;
-				thigh = (envelope+p3p1.xydot(d))/z;
-				// enforce t1<t2
-				if (thigh<tlow) {
-					final double t = tlow;
-					tlow=thigh;
-					thigh=t;
-				}
-			} else {
-				// if lines are parallel, we send tlow and thigh to their limits
-				tlow = Double.NEGATIVE_INFINITY;
-				thigh = Double.POSITIVE_INFINITY;
-			}
-
-//			System.out.println("z="+z);
-//			System.out.println("p4p3norm="+p4p3n);
-//			System.out.println("p2p1 norm="+p2p1.xynorm());
-
-//			System.out.println("(tlow,thigh)=("+tlow+","+thigh+")");
-
-			// transform t <-> s
-			final double k1 = (1/(p4p3n*p4p3n))*p4p3.xydot(p1.sub(p3));
-			final double k2 = (1/(p4p3n*p4p3n))*p4p3.xydot(p2p1);
-
-//			System.out.println("(k1,k2)=("+k1+","+k2+")");
-
-			// all candidate points end-points
-			final double slow = k1+k2*tlow;
-			final double st0 = k1;
-			final double s0 = 0;
-			final double shigh = k1+k2*thigh;
-			final double st1 = k1+k2;
-			final double s1 = 1;
-
-			// highest possible plow
-			double plow = slow>st0? (slow>s0? slow:s0) : (st0>s0? st0:s0);
-			// smallest possible phigh
-			double phigh = shigh<st1? (shigh<s1? shigh:s1) : (st1<s1? st1:s1);
-
-			// generate intersections
-			if ( Math.abs(plow-phigh) < epsilon) {
-				result.intersection(p1.add(p2p1.multiply((plow-k1)/k2)), p3.add(p4.sub(p3).multiply(plow)));					
-			} else if ( plow < phigh) {
-				result.intersection(p1.add(p2p1.multiply((plow-k1)/k2)), p3.add(p4.sub(p3).multiply(plow)));
-				result.intersection(p1.add(p2p1.multiply((phigh-k1)/k2)), p3.add(p4.sub(p3).multiply(phigh)));
-			}
-
-//			System.out.println("(plow,phigh)=("+plow+","+phigh+")");
-
+			// do line-line intersection
+			final Vector3 p1 = poly1.get(0);
+			final Vector3 p2 = poly1.get(1);
+			final Vector3 p3 = poly2.get(0);
+			final Vector3 p4 = poly2.get(1);
+			lineLineIntersection(p1, p2, p3, p4, result);
 			return;
-			
-		} // if line-line case
-
-		// line-poly
+		}
+		
+		// line-polygon case
 		if (N==2 && M>2) {
-			final Vector3 p1 = poly1points.next();
-			final Vector3 p2 = poly1points.next();
-			final Vector3 p3 = poly2points.next();
-			final Vector3 p4 = poly2points.next();
-			final Vector3 p5 = poly2points.next();
-			// counter clock-wise normal
-			final Vector3 poly2normal = p5.sub(p3).cross(p3.sub(p4));
-			linePolyIntersection(p1, p2, poly2, poly2normal, result);
+			// compute the normal of polygon 1
+			polyNormal(poly2, poly2normal);
+			// run line polygon intersection (reversing input and output)
+			linePolyIntersection(poly1.get(0), poly1.get(1), poly2, poly2normal, false, result);
 			return;
 		}
-		// poly-line
+		// polygon-line case
 		if (N>2 && M==2) {
-			// turn arguments around and wrap result TODO, could be more effective? 
-			final Vector3 p1 = poly2points.next();
-			final Vector3 p2 = poly2points.next();
-			final Vector3 p3 = poly1points.next();
-			final Vector3 p4 = poly1points.next();
-			final Vector3 p5 = poly1points.next();
-			// counter clock-wise normal
-			final Vector3 poly1normal = p5.sub(p3).cross(p3.sub(p4));
-			linePolyIntersection(p1, p2, poly1, poly1normal, new ResultHandler() {
-				public final void intersection(Vector3 arg0, Vector3 arg1) {
-					result.intersection(arg1, arg0);
-				}});
+			// compute the normal of polygon 1
+			polyNormal(poly1, poly1normal);
+			// run line polygon intersection (reversing input and output)
+			linePolyIntersection(poly2.get(0), poly2.get(1), poly1, poly1normal, true, result);
 			return;
-
 		}
-			
 		
+		// polygon-polygon case
+		if (N>2 && M>2) {
+			// run the o'rourke intersection algorithm for 2d polygons
+			orourke(poly1, poly2, result);
+			return;
+		}
 		
-//		if (poly1.size() < 2 || poly2.size() < 2 ) {
-//			throw new IllegalArgumentException("Polygons must contain at least 2 vertices, N="+N+", M="+M );
-//		}
+	}
 	
-		// projected point place holder
-		Vector3 projectedPoint = new Vector3();
+	/**
+	 * Special method for handling line-line intersections
+	 */
+	private final void lineLineIntersection( final Vector3 p1, final Vector3 p2, final Vector3 p3, final Vector3 p4, ResultHandler result) {
+		// alternative version
+		// the two lines are
+		// l1(t) = p1 + (p2-p1)t
+		// l2(s) = p3 + (p4-p3)s
+
+		// if lines are orthogonal, use the unique intersection test (this is rare)
+		final double p4p3Tp2p1 = p4.sub(p3).xydot(p2.sub(p1));		
+		if ( Math.abs(p4p3Tp2p1) < epsilon) {
+			lineLineIntersection(p1, p2, p3, p4, parameter, epsilon); 
+			// intersection in internal part of lines?
+			if (parameter.x>=-epsilon && parameter.x <=1+epsilon && parameter.y>=-epsilon && parameter.y<=1+epsilon) {
+				// report intersection
+				result.intersection(p1.add(p2.sub(p1).multiply(parameter.x)), p3.add(p4.sub(p3).multiply(parameter.y)));
+				// done
+				return;
+			} else {
+				// no intersection
+				return;
+			}	
+		}
+		// we require (p4-p3)T(p2-p1) > 0. if not, swap p3 and p4
+		else if ( p4p3Tp2p1<0) {
+			// swap
+			Vector3 tmp = new Vector3(p3);
+			p3.assign(p4);
+			p4.assign(tmp);
+		}			
+
+		//			final double e = 0.1;
+		final Vector3 p4p3 = p4.sub(p3);
+		final Vector3 p2p1 = p2.sub(p1);
+		final Vector3 p3p1 = p3.sub(p1);
+		// d is the normalised tangent of l2
+		final double p4p3n =p4p3.xynorm();
+		final Vector3 d = new Vector3( -p4p3.y/p4p3n, p4p3.x/p4p3n, 0 );
+
+		// if lines are not parallel, we can compute two points on l1 where
+		// its distance to l2 is equal to envelope (in 2d)
+		final double z = p2p1.dot(d);
+		double tlow;
+		double thigh;
+		if (Math.abs(z)>epsilon) {
+			// TODO include derivation
+			tlow = (-envelope+p3p1.xydot(d))/z;
+			thigh = (envelope+p3p1.xydot(d))/z;
+			// enforce t1<t2
+			if (thigh<tlow) {
+				final double t = tlow;
+				tlow=thigh;
+				thigh=t;
+			}
+		} else {
+			// if lines are parallel, we send tlow and thigh to their limits
+			tlow = Double.NEGATIVE_INFINITY;
+			thigh = Double.POSITIVE_INFINITY;
+		}
+
+		// transform t <-> s
+		final double k1 = (1/(p4p3n*p4p3n))*p4p3.xydot(p1.sub(p3));
+		final double k2 = (1/(p4p3n*p4p3n))*p4p3.xydot(p2p1);
+
+		// all candidate points end-points
+		final double slow = k1+k2*tlow;
+		final double st0 = k1;
+		final double s0 = 0;
+		final double shigh = k1+k2*thigh;
+		final double st1 = k1+k2;
+		final double s1 = 1;
+
+		// highest possible plow
+		double plow = slow>st0? (slow>s0? slow:s0) : (st0>s0? st0:s0);
+		// smallest possible phigh
+		double phigh = shigh<st1? (shigh<s1? shigh:s1) : (st1<s1? st1:s1);
+
+		// generate intersections
+		if ( Math.abs(plow-phigh) < epsilon) {
+			result.intersection(p1.add(p2p1.multiply((plow-k1)/k2)), p3.add(p4.sub(p3).multiply(plow)));					
+		} else if ( plow < phigh) {
+			result.intersection(p1.add(p2p1.multiply((plow-k1)/k2)), p3.add(p4.sub(p3).multiply(plow)));
+			result.intersection(p1.add(p2p1.multiply((phigh-k1)/k2)), p3.add(p4.sub(p3).multiply(phigh)));
+		}
+
+		return;			
+	}
+		
+	private final void orourke( final List<Vector3> poly1, final List<Vector3> poly2, final ResultHandler result ) {
+		// transform polygons into projection space, leave for now
+		int iter = 0;
+		int intersections = 0;
+		int addedpoints = 0;
+		int firstIntersectionIter = 0;
+		State inside = State.none; 
+		final int N = poly1.size();
+		final int M = poly2.size();
+		//counters
+		int n=0;
+		int m=0;
+
+		// get iterators
+//		Iterator<Vector3> poly1points = poly1.iterator();
+//		Iterator<Vector3> poly2points = poly2.iterator();
+		
 		
 		// polygon normal in 3d
-		final Vector3 poly1normal = new Vector3();
+//		final Vector3 poly1normal = new Vector3();
 		polyNormal(poly1, poly1normal);
-		final Vector3 poly2normal = new Vector3();
+//		final Vector3 poly2normal = new Vector3();
 		polyNormal(poly2, poly2normal);
 		
 		
@@ -327,9 +312,9 @@ public class ORourke {
 		pm.assign(p);
 		qm.assign(q);
 
-		// next vertices
-		p.assign(poly1points.next());
-		q.assign(poly2points.next());
+		// first vertices
+		p.assign(poly1.get(n++));
+		q.assign(poly2.get(m++));
 		
 		// deltas
 //		pd.assign( p.sub(pm));
@@ -351,14 +336,12 @@ public class ORourke {
 					ipq.assign(qm); ipq.assignAddProduct(qd, parameter.y);
 
 					intersections = intersections+1;
-					//System.out.println("computed intersection="+ipp);
 					// check if intersection is the same point
 					// as first time an intersection was encountered. This
 					// means that the algorithm should terminate
 					if (intersections > 1) {
 						// the firstIntersectionIter condition makes the algorithm able to handle some
 						// degenerate cases, as treated in the O'Rourke paper
-//						if (firstIntersection.sub(ipp).xynorm() < epsilon && firstIntersectionIter!=iter-1) {
 					    if (Vector3.xynormOfDifference(firstIntersection, ipp) < epsilon && firstIntersectionIter!=iter-1) {
 							// termination 
 							//System.out.println("intersection termination");
@@ -372,7 +355,7 @@ public class ORourke {
 					
 					// add intersection point
 					if (testPoint(firstAddedPoint, previouslyAddedPoint, ipp, addedpoints)) {
-						//System.out.println("point added from intersection");
+						// report intersection
 						result.intersection(ipp, ipq);
 						addedpoints = addedpoints+1;
 					}
@@ -388,14 +371,13 @@ public class ORourke {
 			
 			// advance q or p
 			// if (qd X pd)_z >= 0
-			// if (qd.cross(pd).z >= 0) {
 		    if (qd.x*pd.y-qd.y*pd.x >= 0 ) {
 				if (isInHalfplane(p, qm, q)) {
-					//advance q
+					// advance q
 					if (inside == State.Q)
-						//intersection.add(q.copy());
-						//addPoint(previouslyAddedPoint, q, result);
+						// check point
 						if ( testPoint(firstAddedPoint, previouslyAddedPoint, q, addedpoints)) {
+							// report intersection
 							result.intersection(projectToPlane(q, poly1normal, p, projectedPoint), q);
 							addedpoints = addedpoints+1;
 						}
@@ -403,11 +385,12 @@ public class ORourke {
 					qm.assign(q);
 
 					// rewind iterator
-					if (!poly2points.hasNext())
-						poly2points = poly2.iterator();
-
-					q.assign(poly2points.next());
-//					qd.assign( q.sub(qm));
+//					if (!poly2points.hasNext())
+//						poly2points = poly2.iterator();
+					if (!(m<M)) {m=0;}					
+					q.assign(poly2.get(m++));
+					
+					// qd = q - qm
 					qd.assignDifference( q, qm);
 				} else {
 					//advance p
@@ -420,16 +403,20 @@ public class ORourke {
 					pm.assign(p);
 					
 					// rewind iterator
-					if (!poly1points.hasNext())
-						poly1points = poly1.iterator();
-
-					p.assign(poly1points.next());
-//					pd.assign( p.sub(pm));
+//					if (!poly1points.hasNext())
+//						poly1points = poly1.iterator();
+//
+//					p.assign(poly1points.next());
+					
+					if (!(n<N)) {n=0;}
+					p.assign(poly1.get(n++));
+					
+					// pd = p - pm
 					pd.assignDifference(p, pm);
 				}
 			} else { // qd X pd < 0
 				if (isInHalfplane(q, pm, p)) {
-					//advance p
+					// advance p
 					if (inside == State.P)
 						if ( testPoint(firstAddedPoint, previouslyAddedPoint, p, addedpoints)) {
 							result.intersection(p, projectToPlane(p, poly2normal, q, projectedPoint));
@@ -439,13 +426,16 @@ public class ORourke {
 					pm.assign(p);
 					
 					// rewind iterator
-					if (!poly1points.hasNext())
-						poly1points = poly1.iterator();
-
-					p.assign(poly1points.next());
+//					if (!poly1points.hasNext())
+//						poly1points = poly1.iterator();
+//
+//					p.assign(poly1points.next());
+					if (!(n<N)) {n=0;}
+					p.assign(poly1.get(n++));
+					
 					pd.assignDifference(p, pm);
 				} else {
-					//advance q
+					// advance q
 					if (inside == State.Q)
 						if ( testPoint(firstAddedPoint, previouslyAddedPoint, q, addedpoints)) {
 							result.intersection(projectToPlane(q, poly1normal, p, projectedPoint), q);
@@ -455,11 +445,15 @@ public class ORourke {
 					qm.assign(q);
 					
 					// rewind iterator
-					if (!poly2points.hasNext())
-						poly2points = poly2.iterator();
-
-					q.assign(poly2points.next());
-//					qd.assign( q.sub(qm));
+//					if (!poly2points.hasNext())
+//						poly2points = poly2.iterator();
+//
+//					q.assign(poly2points.next());
+					
+					if (!(m<M)) {m=0;}
+					q.assign(poly2.get(m++));
+					
+					// qd = q - qm
 					qd.assignDifference(q, qm);
 				}	
 			}
@@ -472,16 +466,16 @@ public class ORourke {
 		
 		// if we end up here, the polygons is either 
 		// separated or contained inside each other
-		if ( isContained(p, poly2.iterator()) && M > 2) {
+		if ( isContained(p, poly2) && M > 2) {
 			// add all points from P as intersection
 			for (Vector3 pi: poly1) {
-				result.intersection(pi, projectToPlane(pi, poly2normal, q, new Vector3()));
+				result.intersection(pi, projectToPlane(pi, poly2normal, q, projectedPoint));
 			}
 			return;
-		} else if ( isContained(q, poly1.iterator()) && N > 2) {
+		} else if ( isContained(q, poly1) && N > 2) {
 			// add all points from Q as intersection
 			for (Vector3 qi: poly2) {
-				result.intersection(projectToPlane(qi, poly1normal, p, new Vector3()), qi);
+				result.intersection(projectToPlane(qi, poly1normal, p, projectedPoint), qi);
 			}
 			return;
 		}
@@ -519,6 +513,9 @@ public class ORourke {
 		}
 	}
 
+	/**
+	 * Private method that determines if a point intersects a line, within the given envelope size
+	 */
 	private static final boolean pointLineIntersection( Vector3 x, Vector3 p1, Vector3 p2, Vector3 result, double envelope) {
 		// check point line-intersection
 		// l(t) = p1 + (p2-p1)t
@@ -527,65 +524,50 @@ public class ORourke {
 		// p1T(p2-p1) + (p2-p1)T(p2-p1) t - xT(p2-p1) = 0
 		//  t =  xT(p2-p1) - p1T(p2-p1) / (p2-p1)T(p2-p1)
 		//  t =  (x-p1)T(p2-p1) / |(p2-p1)|^2
-//		final double e = 0.1;
-//		final Vector3 p2p1 = p2.sub(p1);
-		
+		//		final double e = 0.1;
+		//		final Vector3 p2p1 = p2.sub(p1);
+
 		// use result as temporary vector to hold p2-p1
 		final Vector3 p2p1 = result; 
 		p2p1.assignDifference(p2, p1);
-		
-//		p2p1.z = 0; // we only work in the xy plane
-//		final double t = x.sub(p1).xydot(p2p1) / p2p1.squaredNorm();
+
+		// calculate parametrisation of closest point
 		double t = x.xydot(p2p1)-p1.xydot(p2p1) / p2p1.squaredXYNorm();
-		
+
 		// clamp t in [0,1]
 		t = Math.min( Math.max(0-epsilon, t), 1+epsilon);
 
-//		if (t>= -epsilon && t <= 1+epsilon) {
-			// closest point on line
-//			Vector3 lp = p1.add(p2.sub(p1).multiply(t));
-//			if (  lp.sub(x).xynorm() < e ) {
-//				result.assign(lp);
-//				return true;
-//			}
-			result.assignAddProduct(p2p1, t-1);
-			result.assignAdd(p1);
-			
-			// report intersection
-			if ( Vector3.xynormOfDifference(result, x) < envelope ) {
-				// intersection within envelope
-				return true;
-			} else {
-				// no intersection
-				return false;
-			}
+		// calculate actual intersection point
+		result.assignAddProduct(p2p1, t-1);
+		result.assignAdd(p1);
+
+		// report intersection
+		if ( Vector3.xynormOfDifference(result, x) < envelope ) {
+			// intersection within envelope
+			return true;
+		} else {
+			// no intersection
+			return false;
+		}
 	}
 	
-//	private static final int linePolyIntersection( Vector3 p1, Vector3 p2, List<Vector3> poly, Vector3 polynormal, Vector3 out1, Vector3 out2 ) {
-//		final int N = poly.size();
-//		while (iter<N) {
-//			qm.assign(q);
-//			q.assign(poly.get(iter));
-//
-//		
-//		return 0;
-//	}
-	
-	private static final void linePolyIntersection( Vector3 p1, Vector3 p2, List<Vector3> poly, Vector3 polynormal, ResultHandler result ) {
+		
+	private final void linePolyIntersection( Vector3 p1, Vector3 p2, List<Vector3> poly, Vector3 polynormal, boolean reverse, ResultHandler result ) {
 		// we maintain two candidate points
-		final Vector3 out1 = new Vector3();
-		final Vector3 out2 = new Vector3();	
+//		final Vector3 out1 = new Vector3();
+//		final Vector3 out2 = new Vector3();	
 		boolean keepp1 = true;
 		boolean keepp2 = true;
-		int intersections = 0;
+		int hits = 0;
 		
 		final int N = poly.size();
 		int iter = 0;
 		
-		final Vector3 qm = new Vector3();
-		final Vector3 q = new Vector3(poly.get(N-1));
-		final Vector3 polypoint = new Vector3(q);
-		final Vector3 param = new Vector3();
+//		final Vector3 qm = new Vector3();
+//		final Vector3 q = new Vector3(poly.get(N-1));
+		q.assign(poly.get(N-1));
+//		final Vector3 polypoint = new Vector3(q);
+//		final Vector3 param = new Vector3();
 
 		while (iter<N) {
 			qm.assign(q);
@@ -602,38 +584,24 @@ public class ORourke {
 					keepp2 = false;
 			
 			// intersect line with poly edge
-			if (lineLineIntersection(p1, p2, qm, q, param, epsilon)) {
+			if (lineLineIntersection(p1, p2, qm, q, parameter, epsilon)) {
 				// internal on lines
-				if (-epsilon<=param.x && param.x<=1+epsilon && -epsilon<=param.y && param.y<=1+epsilon) {
+				if (-epsilon<=parameter.x && parameter.x<=1+epsilon && -epsilon<=parameter.y && parameter.y<=1+epsilon) {
 					// calculate intersection points (including the right z-coordinate)
-					final Vector3 ipp = p1.add(p2.sub(p1).multiply(param.x));
-					final Vector3 ipq = qm.add( q.sub(qm).multiply(param.y));
-
-					switch (intersections) {
-					case 0:
-						if (out1.sub(ipp).norm() > epsilon) {
-							out1.assign(ipp);
-							
-							//report
-							result.intersection(ipp, ipq);
-							
-							intersections++;
-						}
-						break;
-					case 1: 
-						if (out2.sub(ipp).norm() > epsilon) {
-							out2.assign(ipp);
-							
-							//report
-							result.intersection(ipp, ipq);
-
-							intersections++;
-						}
-						break;
+					final Vector3 ipp = p1.add(p2.sub(p1).multiply(parameter.x));
+					final Vector3 ipq = qm.add( q.sub(qm).multiply(parameter.y));
+	
+					if (reverse) {
+						result.intersection(ipq, ipp);
+					} else {
+						result.intersection(ipp, ipq);
 					}
 					
-					if (intersections > 1) {
-						// terminate
+					//count intersections
+					hits++;
+					
+					if (hits > 1) {
+						// terminate if we found two intersections
 						return;
 					}
 				} else {
@@ -644,43 +612,28 @@ public class ORourke {
 				// is coincident with and edge of the poly
 			}
 			
-			
 			// go forward to next edge
 			iter++;
 		}
-
-		// if no intersections, check if boundary line points have survived
-		if (intersections < 1) {
-			if (keepp1 && keepp2) {
-				// return both end-points
-				result.intersection(p1, projectToPlane(p1, polynormal, polypoint, new Vector3()));
-				result.intersection(p2, projectToPlane(p2, polynormal, polypoint, new Vector3()));
-				return;
+		
+		if (keepp1) {
+			// return first end-point
+			if (reverse) {
+				result.intersection(projectToPlane(p1, polynormal, q, projectedPoint), p1);				
+			} else {
+				result.intersection(p1, projectToPlane(p1, polynormal, q, projectedPoint));
 			}
-			
-			if (!keepp1 && !keepp2) {
-				// empty intersection
-				return;
-			}			
-			//if here, only one boundary point survived, which should not happen. 
-			// We default to separation in this case
-			return;
 		}
 		
-		if (intersections < 2) {
-			if (keepp1) {
-				// return p1 
-				result.intersection(p1, projectToPlane(p1, polynormal, polypoint, new Vector3()));
-				return;
-			} else if (keepp2) {
-				// report p2
-				result.intersection(p2, projectToPlane(p2, polynormal, polypoint, new Vector3()));
-				return;
-			} else {
-				// no boundary points
-				return;
+		if (keepp2) {
+			// return second end-point
+			if (reverse) {
+				result.intersection(projectToPlane(p2, polynormal, q, projectedPoint), p2);				
+			} else {			
+				result.intersection(p2, projectToPlane(p2, polynormal, q, projectedPoint));
 			}
-		}		
+		}
+		
 	}
 
 	
@@ -723,10 +676,7 @@ public class ORourke {
 		final Vector3 p4 = poly.get(1);
 		final Vector3 p5 = poly.get(2);
 		// counter clock-wise normal
-//		 N = (p5-p3) X (p3-p4)
-//		final Vector3 poly1normal = p5.sub(p3).cross(p3.sub(p4));
-//		// return
-//		normal.assign(poly1normal.normalize());		
+        // N = (p5-p3) X (p3-p4)
 		normal.assign(
 				(p5.y-p3.y)*(p3.z-p4.z)-(p5.z-p3.z)*(p3.y-p4.y), 
 				(p5.z-p3.z)*(p3.x-p4.x)-(p5.x-p3.x)*(p3.z-p4.z),
@@ -741,13 +691,14 @@ public class ORourke {
 	 * @param poly
 	 * @return
 	 */
-	public static final boolean isContained( final Vector3 p, final Iterator<Vector3> poly ) {
-		Vector3 p0 = poly.next();
+	public static final boolean isContained( final Vector3 p, final List<Vector3> poly ) {
+		final int N = poly.size();
+		Vector3 p0 = poly.get(0);
 		Vector3 pm = p0;
 		
 		// test each edge
-		while(poly.hasNext()) {
-			Vector3 pi = poly.next();
+		for (int i=0; i<N; i++) {
+			final Vector3 pi = poly.get(i);
 			if (inHalfplane(p, pm, pi) < -envelope*Vector3.xynormOfDifference(pm, pi) ) {
 				return false;
 			}
@@ -807,45 +758,7 @@ public class ORourke {
 		// and then
 		// a = 1/(pd.x*qd.y-pd.y*qd.x)( qd.y*b.x + (-qd.x)*b.y );
 		// b = 1/(pd.x*qd.y-pd.y*qd.x)( (-pd.y)*b.x + pd.x*b.y );
-		
-/*		// line deltas
- 		Vector3 pd = pt.sub(ps);
- 		Vector3 qd = qs.sub(qt); // turned around, see derivation
-		
-		// the b-side in the equation in the comments above
-		Vector3 b = qs.sub(ps);
-		
-		// determinant calculation
-		double det =  pd.x*qd.y-pd.y*qd.x;		
-		
-		// ill-posed problem?
-		if (Math.abs(det)<epsilon)
-			return false;
-		 
-		// calculate parametrisation values at intersection
-		double alpha = (1/det)* (qd.y*b.x + (-qd.x)*b.y);
-		double beta  = (1/det)* ( (-pd.y)*b.x + pd.x*b.y ); 
-*/
-		
-//		// line deltas
-//		Vector3 pd = pt.sub(ps);
-//		Vector3 qd = qs.sub(qt); // turned around, see derivation
-//		
-//		// pd.x = (pt.x-ps.x)
-//		// pd.y = (pt.y-ps.y)
-//		// pd.z = (pt.z-ps.z)
-//
-//		// qd.x = (qs.x-qt.x)
-//		// qd.y = (qs.y-qt.y)
-//		// qd.z = (qs.z-qt.z)
-//
-//		
-//		// the b-side in the equation in the comments above
-//		Vector3 b = qs.sub(ps);
-//		
-//		b.x = (qs.x-ps.x)
-//		b.y = (qs.y-ps.y)
-		
+				
 		// determinant calculation
 		double det =  (pt.x-ps.x)*(qs.y-qt.y)-(pt.y-ps.y)*(qs.x-qt.x);		
 		
@@ -864,5 +777,4 @@ public class ORourke {
 		// all well
 		return true;
 	}
-
 }

@@ -10,7 +10,11 @@
 
 package jinngine.collision;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Set;
 
 import jinngine.geometry.BoundingBox;
 import jinngine.geometry.Geometry;
@@ -18,122 +22,123 @@ import jinngine.math.Vector3;
 import jinngine.util.Pair;
 
 /**
- * A naive broad-phase collision detection algorithm. ExhaustiveSearch obviously just performs an
- * overlap test on each possible pair in the considered configuration. Despite its O(n^2) complexity, 
- * the method sometimes out-performs more advanced implementations on configurations with few objects.
- * In addition, all pairs test is often useful for test purposes.
+ * A naive broad-phase collision detection algorithm. ExhaustiveSearch obviously just performs an overlap test on each
+ * possible pair in the considered configuration. Despite its O(n^2) complexity, the method sometimes out-performs more
+ * advanced implementations on configurations with few objects. In addition, all pairs test is often useful for test
+ * purposes.
  */
 public class ExhaustiveSearch implements BroadphaseCollisionDetection {
-	
-	private final Set<Pair<Geometry>> existingPairs = new LinkedHashSet<Pair<Geometry>>();
-	private final Set<Pair<Geometry>> leavingPairs = new LinkedHashSet<Pair<Geometry>>();
-	private final List<Geometry> geometries = new ArrayList<Geometry>();
-	private final List<BroadphaseCollisionDetection.Handler> handlers = new ArrayList<Handler>();
 
-	public ExhaustiveSearch() {}
-	
-	public ExhaustiveSearch(BroadphaseCollisionDetection.Handler handler) {
-		this.handlers.add(handler);
-	}
+    private final Set<Pair<Geometry>> existingPairs = new LinkedHashSet<Pair<Geometry>>();
+    private final Set<Pair<Geometry>> leavingPairs = new LinkedHashSet<Pair<Geometry>>();
+    private final List<Geometry> geometries = new ArrayList<Geometry>();
+    private final List<BroadphaseCollisionDetection.Handler> handlers = new ArrayList<Handler>();
 
-	public void run() {
-		leavingPairs.addAll(existingPairs);
+    public ExhaustiveSearch() {}
 
-//		O(N^2) broad-phase collision detection
-		int size = geometries.size();
-		for ( int i=0; i<size; i++) {
-			Geometry c1 = geometries.get(i);
-			for (int j=i+1; j<size; j++ ) {
-				Geometry c2 = geometries.get(j);
-				if (c1 != c2 ) {
-					if ( overlap(c1,c2)  ) {
-						Pair<Geometry> pair = new Pair<Geometry>(c1,c2);
-						
-						//if we discover a new pair, report it and add to table
-						if ( !existingPairs.contains(pair)) {
-							existingPairs.add( pair );
-							
-							//notify handlers
-							for ( Handler handler: handlers)
-								handler.overlap(pair);
-						}
-						
-						//any pair we observe is not leaving
-						leavingPairs.remove(pair);
-					}
-				}
-			}
-		}
-		
-		//handle disappearing pairs
-		Iterator<Pair<Geometry>> leaving = leavingPairs.iterator();
-		while (leaving.hasNext()) {
-			Pair<Geometry> pair = leaving.next();
-			
-			for ( Handler handler: handlers)
-				handler.separation(pair);
+    public ExhaustiveSearch(final BroadphaseCollisionDetection.Handler handler) {
+        handlers.add(handler);
+    }
 
-			existingPairs.remove(pair);
-		}
-		
-		leavingPairs.clear();
-	}
-	
-	private static final boolean overlap( BoundingBox i , BoundingBox j) {
+    @Override
+    public void run() {
+        leavingPairs.addAll(existingPairs);
 
-		final Vector3 bi = i.getMinBounds(new Vector3());
-		final Vector3 ei = i.getMaxBounds(new Vector3());
-		final Vector3 bj = j.getMinBounds(new Vector3());
-		final Vector3 ej = j.getMaxBounds(new Vector3());
-		
-		double bix = bi.x;
-		double biy = bi.y;
-		double biz = bi.z;
-		double eix = ei.x;
-		double eiy = ei.y;
-		double eiz = ei.z;
-		double bjx = bj.x;
-		double bjy = bj.y;
-		double bjz = bj.z;
-		double ejx = ej.x;
-		double ejy = ej.y;
-		double ejz = ej.z;
+        // O(N^2) broad-phase collision detection
+        final int size = geometries.size();
+        for (int i = 0; i < size; i++) {
+            final Geometry c1 = geometries.get(i);
+            for (int j = i + 1; j < size; j++) {
+                final Geometry c2 = geometries.get(j);
+                if (c1 != c2) {
+                    if (overlap(c1, c2)) {
+                        final Pair<Geometry> pair = new Pair<Geometry>(c1, c2);
 
-		//TODO test this 
-		if( (((bjx < bix) && (bix <= ejx)) || ((bix <= bjx) && (bjx < eix ))) &&
-				(((bjy < biy) && (biy <= ejy)) || ((biy <= bjy) && (bjy < eiy ))) &&
-				(((bjz < biz) && (biz <= ejz)) || ((biz <= bjz) && (bjz < eiz )))) {			
-			return true;
-		} else {
-			return false;
-		}
-	}
+                        // if we discover a new pair, report it and add to table
+                        if (!existingPairs.contains(pair)) {
+                            existingPairs.add(pair);
 
-	@Override
-	public void add(Geometry a) {
-		geometries.add(a);
-	}
+                            // notify handlers
+                            for (final Handler handler : handlers) {
+                                handler.overlap(pair);
+                            }
+                        }
 
-	@Override
-	public void remove(Geometry a) {
-		geometries.remove(a);
-	}
+                        // any pair we observe is not leaving
+                        leavingPairs.remove(pair);
+                    }
+                }
+            }
+        }
 
-	@Override
-	public void addHandler(Handler h) {
-		handlers.add(h);		
-	}
+        // handle disappearing pairs
+        final Iterator<Pair<Geometry>> leaving = leavingPairs.iterator();
+        while (leaving.hasNext()) {
+            final Pair<Geometry> pair = leaving.next();
 
-	@Override
-	public void removeHandler(Handler h) {
-		handlers.remove(h);
-	}
+            for (final Handler handler : handlers) {
+                handler.separation(pair);
+            }
 
-	@Override
-	public Set<Pair<Geometry>> getOverlappingPairs() {
-		return new LinkedHashSet<Pair<Geometry>>(existingPairs);
-	}
-	
-	
+            existingPairs.remove(pair);
+        }
+
+        leavingPairs.clear();
+    }
+
+    private static final boolean overlap(final BoundingBox i, final BoundingBox j) {
+
+        final Vector3 bi = i.getMinBounds(new Vector3());
+        final Vector3 ei = i.getMaxBounds(new Vector3());
+        final Vector3 bj = j.getMinBounds(new Vector3());
+        final Vector3 ej = j.getMaxBounds(new Vector3());
+
+        final double bix = bi.x;
+        final double biy = bi.y;
+        final double biz = bi.z;
+        final double eix = ei.x;
+        final double eiy = ei.y;
+        final double eiz = ei.z;
+        final double bjx = bj.x;
+        final double bjy = bj.y;
+        final double bjz = bj.z;
+        final double ejx = ej.x;
+        final double ejy = ej.y;
+        final double ejz = ej.z;
+
+        // TODO test this
+        if ((bjx < bix && bix <= ejx || bix <= bjx && bjx < eix)
+                && (bjy < biy && biy <= ejy || biy <= bjy && bjy < eiy)
+                && (bjz < biz && biz <= ejz || biz <= bjz && bjz < eiz)) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    @Override
+    public void add(final Geometry a) {
+        geometries.add(a);
+    }
+
+    @Override
+    public void remove(final Geometry a) {
+        geometries.remove(a);
+    }
+
+    @Override
+    public void addHandler(final Handler h) {
+        handlers.add(h);
+    }
+
+    @Override
+    public void removeHandler(final Handler h) {
+        handlers.remove(h);
+    }
+
+    @Override
+    public Set<Pair<Geometry>> getOverlappingPairs() {
+        return new LinkedHashSet<Pair<Geometry>>(existingPairs);
+    }
 
 }

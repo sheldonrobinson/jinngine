@@ -13,14 +13,15 @@ package jinngine.util;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
-import java.util.ListIterator;
 
 public final class Pool<T> implements Iterator<T>, Iterable<T> {
 
 	private final Factory<T> factory;
 	private final List<T> list;
-	private ListIterator<T> iter;
 	private boolean allocate = false;
+	
+	private int position = 0;
+	private int size = 0;
 	
 	public interface Factory<T> {
 		public T getNewInstance();
@@ -29,37 +30,39 @@ public final class Pool<T> implements Iterator<T>, Iterable<T> {
 	public Pool( List<T> list, Factory<T> factory) {
 		this.list = list;
 		this.factory = factory;
-		// initially create the iterator
-		this.iter = list.listIterator();
 	}
 	
-//	public final Iterator<T> start() {		
-//		// rewind iterator
-//		this.iter = list.listIterator();
-//		return this;
-//	}
-
 	@Override
 	public final boolean hasNext() {
 		if (allocate) {
 			return true;
 		} else {
-			return iter.hasNext();
+			return position<size;//iter.hasNext();
 		}
 	}
 	
 	@Override
 	public final T next() {
 		if (allocate) {
-			if (iter.hasNext()) {
-				return iter.next();
+			if (position<size) {
+				T e = list.get(position);
+				position++;
+				return e;
 			} else {
 				T instance = factory.getNewInstance();
-				iter.add(instance);
+				list.add(instance);
+				position++;
+				size++;
 				return instance;
 			}
 		} else {
-			return iter.next();
+			if (position<size) {
+				T e = list.get(position);
+				position++;
+				return e;				
+			} else {
+				return null;
+			}
 		}
 	}
 
@@ -77,11 +80,11 @@ public final class Pool<T> implements Iterator<T>, Iterable<T> {
 	public final List<T> getList() {
 		return list;
 	}
-
 	
 	public final Iterator<T> insert() {
 		this.allocate = true;
-		this.iter = list.listIterator();
+//		this.iter = list.listIterator();
+		position=0;
 		return this;
 	}
 	
@@ -91,9 +94,10 @@ public final class Pool<T> implements Iterator<T>, Iterable<T> {
 	public final void done() {
 		// clear remaining entries (from last call to fill)
 		if (this.allocate) {
-			while (iter.hasNext()) {
-				iter.next();
-				iter.remove();
+			if (position<size) {
+				for (int i=size-1; i>=position; i--)
+					list.remove(i);
+				size = list.size();
 			}
 		} else {
 			throw new IllegalAccessError("Pool: call to clearRemaining() without previous call to overwrite()");
@@ -102,11 +106,12 @@ public final class Pool<T> implements Iterator<T>, Iterable<T> {
 	
 	public final Iterator<T> iterator() {
 		this.allocate = false;
-		this.iter = list.listIterator();
+//		this.iter = list.listIterator();
+		position=0;
 		return this;
 	}
 	
 	public final int size() {
-		return this.list.size();
+		return size;
 	}
 }

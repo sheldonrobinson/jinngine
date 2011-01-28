@@ -7,233 +7,275 @@
  * under the terms of its license which may be found in the accompanying
  * LICENSE file or at <http://code.google.com/p/jinngine/>.
  */
+
 package jinngine.examples;
 
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import java.util.ListIterator;
 
 import jinngine.collision.SAP2;
 import jinngine.geometry.Box;
-import jinngine.geometry.UniformCapsule;
 import jinngine.math.Matrix3;
 import jinngine.math.Quaternion;
 import jinngine.math.Vector3;
-import jinngine.physics.*;
+import jinngine.physics.Body;
+import jinngine.physics.DefaultDeactivationPolicy;
+import jinngine.physics.DefaultScene;
+import jinngine.physics.Scene;
 import jinngine.physics.constraint.Constraint;
 import jinngine.physics.force.GravityForce;
 import jinngine.physics.solver.NonsmoothNonlinearConjugateGradient;
 import jinngine.physics.solver.Solver.NCPConstraint;
+import jinngine.rendering.Interaction;
 import jinngine.rendering.Rendering;
 import jinngine.rendering.Rendering.EventCallback;
-import jinngine.util.Pair;
 
-public class ControlExample implements Rendering.Callback {	
-	private final Scene scene;
-	
-	public ControlExample() {		
-		// setup jinngine 
-		scene = new DefaultScene(
-				new SAP2(), 
-				new NonsmoothNonlinearConjugateGradient(44), 
-				new DisabledDeactivationPolicy());
-		
-		scene.setTimestep(0.09);
-		
-		// add a fixed floor to the scene 
-		Box floor = new Box("floor",1500,20,1500);
-		scene.addGeometry(Matrix3.identity(), new Vector3(0,-30,0), floor);
-		scene.fixBody(floor.getBody(), true);
-					
-		// setup the rendering
-		Rendering rendering = new jinngine.rendering.jogl.JoglRendering(this);
+public class ControlExample implements Rendering.Callback {
+    private final Scene scene;
 
-		// setup androidish figure using capsule shapes
-		final Body figure = new Body("Figure");
-		scene.addBody(figure);
-		UniformCapsule head = new UniformCapsule("head", 1, 1);
-		scene.addGeometry(figure, Quaternion.rotation(Math.PI/2, Vector3.i()).toRotationMatrix3(), new Vector3(-20,-10,-25), head);
-		rendering.drawMe(head);
-		UniformCapsule arm1 = new UniformCapsule("arm", 0.5, 0.5);
-		scene.addGeometry(figure, Quaternion.rotation(Math.PI/2, Vector3.i()).toRotationMatrix3(), new Vector3(-21,-10,-25), arm1);
-		rendering.drawMe(arm1);
-		UniformCapsule arm2 = new UniformCapsule("arm", 0.5, 0.5);
-		scene.addGeometry(figure, Quaternion.rotation(Math.PI/2, Vector3.i()).toRotationMatrix3(), new Vector3(-19,-10,-25), arm2);
-		rendering.drawMe(arm2);
-		UniformCapsule foot1 = new UniformCapsule("arm", 0.7, 0.5);
-		scene.addGeometry(figure, Matrix3.identity(), new Vector3(-19.5,-11.2,-25), foot1);
-		rendering.drawMe(foot1);
-		UniformCapsule foot2 = new UniformCapsule("arm", 0.7, 0.5);
-		scene.addGeometry(figure, Matrix3.identity(), new Vector3(-20.5,-11.2,-25), foot2);
-		rendering.drawMe(foot2);
-		scene.addForce( new GravityForce(figure));
-		
-		// remove restitution from feet
-		foot1.setRestitution(0.1);
-		foot2.setRestitution(0.1);
-		
-		// only allow Yaw motion for the figure. By doing this, the figure becomes
-		// "Infinitely" hard to move along two of the angular axes. So it will stay 
-		// locked on those. 
-		Matrix3.multiply( Matrix3.identity().scale(new Vector3(0,1,0)), 
-				figure.state.inverseinertia,
-				figure.state.inverseinertia);
+    public ControlExample() {
+        // setup jinngine
+        scene = new DefaultScene(new SAP2(), new NonsmoothNonlinearConjugateGradient(5),
+                new DefaultDeactivationPolicy());
 
-		// create a fixed body to move the figure around with. This body will just 
-		// stay still all the time, so its just there to connect the constraint with it. 
-		final Body majonet = new Body("Majonet");
-		scene.addBody(majonet);
-		scene.fixBody(majonet, true);
+        scene.setTimestep(0.1);
 
-		// create a list of constraints, needed for the 
-		// control constraint. They are only here because we
-		// can't define a constructor in the control Constraint below
-		final NCPConstraint linear1 = new NCPConstraint();
-		final NCPConstraint linear2 = new NCPConstraint();
-		final NCPConstraint linear3 = new NCPConstraint();
-		final NCPConstraint angular1 = new NCPConstraint();
-		
-		// list needed for the constraint below
-		final List<NCPConstraint> ncps = new ArrayList<NCPConstraint>();
-		ncps.add(linear1);
-		ncps.add(linear2);
-		ncps.add(angular1);
-		
-		// the target figure velocity
-		final Vector3 targetVelocity = new Vector3();
+        // add a fixed floor to the scene
+        final Box floor = new Box("floor", 1500, 20, 1500);
+        scene.addGeometry(Matrix3.identity(), new Vector3(0, -30, 0), floor);
+        scene.fixBody(floor.getBody(), true);
 
-		// create constraint controller for figure
-		Constraint control = new Constraint() {
-			public Iterator<NCPConstraint> getNcpConstraints() { return ncps.iterator(); }			
-			public Pair<Body> getBodies() { return new Pair<Body>(figure,majonet); }
-			
-			public void applyConstraints(ListIterator<NCPConstraint> iterator, double dt) {
-				Vector3 u = figure.state.velocity.sub(targetVelocity);
-				
-				// the next two constraints takes care of the movement in the XZ plane. They
-				// use the targetVelocity, but allow half the amount for force. Having the 
-				// force limit set too high results in the figure "bulldozing" through the
-				// world, possible creating blow up effects. However, the constraint ensures
-				// that we use exactly the force needed to get to the desired velocity.
-				linear1.assign(figure, majonet, 
-        				new Vector3(1,0,0), new Vector3(), new Vector3(), new Vector3(),
-        				new Vector3(1,0,0), new Vector3(), new Vector3(), new Vector3(), 
-        				Math.min(targetVelocity.x*0.5,0), Math.max(targetVelocity.x*0.5,0), null, u.x, 0);
-				iterator.add(linear1);
-				
-				linear2.assign(figure, majonet, 
-        				new Vector3(0,0,1), new Vector3(), new Vector3(), new Vector3(),
-        				new Vector3(0,0,1), new Vector3(), new Vector3(), new Vector3(), 
-        				Math.min(targetVelocity.z*0.5,0), Math.max(targetVelocity.z*0.5,0), null, u.z, 0);
-				iterator.add(linear2);
+        // setup the rendering
+        final Rendering rendering = new jinngine.rendering.jogl.JoglRendering(this);
 
-				// this constraint asks for a body velocity going upwards. The maximum 
-				// force is the same as the velocity. The lower limit of the force is 0,
-				// so it can never "pull" the figure down
-				linear3.assign(figure, majonet, 
-        				new Vector3(0,1,0), new Vector3(), new Vector3(), new Vector3(),
-        				new Vector3(0,1,0), new Vector3(), new Vector3(), new Vector3(), 
-        				0, Math.max(targetVelocity.y,0), null, u.y, 0);
-				iterator.add(linear3);
-				
-				// remove the jump target velocity when "used"
-				if (targetVelocity.y>0)
-					targetVelocity.y=0;
-												
-				// prevent spinning. Since we completely removed angular freedom of the
-				// body, some unintended artifacts can occur in relation to contacts. It can set 
-				// a body "spinning" on a single contact point, like a base ball on a finger.  This 
-				// is expected, and we counter it by applying torque that counters the movement. We limit
-				// the allowed torque so that the figure is not completely locked in rotation.
-				angular1.assign(figure, majonet, 
-						new Vector3(), figure.state.inverseinertia.multiply(new Vector3(0,1,0)), new Vector3(), new Vector3(), 
-						new Vector3(), new Vector3(0,1,0), new Vector3(), new Vector3(0,0,0),
-						-0.9, 0.9,
-						null,
-						figure.state.omega.sub(majonet.state.omega).y, 0  );	
-				iterator.add(angular1);
-			}
-		};
-		
-		// add the control constraint to the scene
-		scene.addConstraint(control);
-		
-		// create a callback to receive input from view. We communicate 
-		// with the physics through the targetVelocity vector. The control
-		// constraints looks at this vector, ask the solver to give us the
-		// desired motion. The controls are WASD, plus space for jumping
-		rendering.addCallback( new EventCallback() {
-			public void spaceReleased() {}			
-			public void spacePressed() {}
-			public void mousePressed(double x, double y, Vector3 point, Vector3 direction) {}
-			public void mouseDragged(double x, double y, Vector3 point,Vector3 direction) {}
-			public void mouseReleased() {}
-			public void enterPressed() {}
+        // setup figure using sphere swept box shape
+        final Body figure = new Body("Figure");
+        scene.addBody(figure);
+        //        final UniformCapsule head = new UniformCapsule("head", 1.5, 2);
+        final Box head = new Box("head", 2, 4, 2, 1);
 
-			public void keyPressed(char key) {
-//				System.out.println("got key="+key);
-				switch (key) {
-				case 'w': targetVelocity.z -=3; break;
-				case 's': targetVelocity.z +=3; break;
-				case 'a': targetVelocity.x -=3; break;
-				case 'd': targetVelocity.x +=3; break;
-				case ' ': targetVelocity.y +=9; break;
-				}
-			}
-			@Override
-			public void keyReleased(char key) {
-				switch (key) {
-				case 'w': targetVelocity.z +=3; break;
-				case 's': targetVelocity.z -=3; break;
-				case 'a': targetVelocity.x +=3; break;
-				case 'd': targetVelocity.x -=3; break;
-				}
-			}
-		});
-		
-		// create the static world grid
-		Body grid = new Body("Grid");
-		scene.addBody(grid);
-		
-		// make a grid of static boxes
-		for (int i=0;i<7;i++) {
-			for (int j=0;j<7;j++) {
-				final double sigma = 0.5;
-				int height = (int)(7*Math.exp( -((((i-4.0)*(i-4.0))/2*sigma*sigma)+(((j-4.0)*(j-4.0))/2*sigma*sigma)) ) );
-				Box box = new Box("box", 3,3,3);
-				scene.addGeometry(grid, Matrix3.identity(), new Vector3(3*i-15,-18.1+height,3*j-35), box);
-				rendering.drawMe(box);
-			}
-		}
+        // final Box head = new Box("head", 1, 1, 1);
+        scene.addGeometry(figure, Matrix3.identity(), new Vector3(-20, -10, -25), head);
+        // scene.addGeometry(figure, Quaternion.rotation(Math.PI / 2, Vector3.i()).toRotationMatrix3(), new Vector3(-20,
+        // -10, -25), head);
+        rendering.drawMe(head);
+        // scene.addForce(new GravityForce(figure));
 
-		// rotate the grid world a bit
-		grid.state.orientation.assign(Quaternion.rotation(Math.PI*.25, Vector3.j()));
-		
-		// fix the grid
-		scene.fixBody(grid, true);
+        final Body ground = new Body("ground");
+        scene.addBody(ground);
+        scene.fixBody(ground, true);
 
-		// create a box for androidish figure to play with
-		Box box = new Box("box", 3,4,3);
-		scene.addGeometry(Matrix3.identity(), new Vector3(-19,-9.1,-20), box);
-		scene.addForce( new GravityForce(box.getBody()));		
-		rendering.drawMe(box);
-		
-		// disable interaction due to a bug in it 
-        // rendering.addCallback(new Interaction(scene));
-		rendering.createWindow();
-		
-		// go go go :) 
-		rendering.start();
-	}
+        scene.addConstraint(new GravityForce(figure, ground));
 
-	@Override
-	public void tick() {
-		// each frame, to a time step on the Scene
-		scene.tick();
-	}
-	
-	public static void main( String[] args) {
-		new ControlExample();
-	}
+        // remove restitution from feet
+        head.setFrictionCoefficient(0.5);
+        head.setRestitution(0.0);
+        head.setEnvelope(0); // force surroundings to determine the envelope size
+
+        // mask out angular movement
+        figure.state.inverseinertia.assignZero();
+
+        // create a fixed body to move the figure around with. This body will just
+        // stay still all the time, so its just there to connect the constraint with it.
+        final Body majonet = new Body("Majonet");
+        scene.addBody(majonet);
+        scene.fixBody(majonet, true);
+
+        // create a list of constraints, needed for the
+        // control constraint. They are only here because we
+        // can't define a constructor in the control Constraint below
+        final NCPConstraint linear1 = new NCPConstraint();
+        final NCPConstraint linear2 = new NCPConstraint();
+        final NCPConstraint linear3 = new NCPConstraint();
+
+        // list needed for the constraint below
+        final List<NCPConstraint> ncps = new ArrayList<NCPConstraint>();
+        ncps.add(linear1);
+        ncps.add(linear2);
+        ncps.add(linear3);
+
+        // the target figure velocity
+        final Vector3 targetVelocity = new Vector3();
+
+        // create constraint controller for figure
+        final Constraint control = new Constraint() {
+
+            private boolean monitored = false;
+
+            @Override
+            public void update(final double dt) {
+                final Vector3 u = figure.state.velocity.sub(targetVelocity);
+
+                // if the target jump velocity is reached, set it back to zero
+                if (Math.abs(u.y) < 1e-1) {
+                    targetVelocity.y = 0;
+                }
+
+                // the next two constraints takes care of the movement in the XZ plane. They
+                // use the targetVelocity, but allow half the amount for force. Having the
+                // force limit set too high results in the figure "bulldozing" through the
+                // world, possible creating blow up effects. However, the constraint ensures
+                // that we use exactly the force needed to get to the desired velocity.
+                linear1.assign(new Vector3(1, 0, 0), new Vector3(), new Vector3(-1, 0, 0), new Vector3(),
+                        Math.min(targetVelocity.x * figure.getMass() * 10, 0) * dt,
+                        Math.max(targetVelocity.x * figure.getMass() * 10, 0) * dt, null, u.x);
+
+                linear2.assign(new Vector3(0, 0, 1), new Vector3(), new Vector3(0, 0, -1), new Vector3(),
+                        Math.min(targetVelocity.z * figure.getMass() * 10, 0) * dt,
+                        Math.max(targetVelocity.z * figure.getMass() * 10, 0) * dt, null, u.z);
+
+                // this constraint asks for a body velocity going upwards. The maximum
+                // force is the same as the velocity. The lower limit of the force is 0,
+                // so it can never "pull" the figure down
+                linear3.assign(new Vector3(0, 1, 0), new Vector3(), new Vector3(0, -1, 0), new Vector3(), 0,
+                        Math.max(targetVelocity.y * figure.getMass() * 1000, 0) * dt, null, u.y);
+
+            }
+
+            @Override
+            public Iterator<NCPConstraint> iterator() {
+                return ncps.iterator();
+            }
+
+            @Override
+            public Body getBody1() {
+                return figure;
+            }
+
+            @Override
+            public Body getBody2() {
+                return majonet;
+            }
+
+            @Override
+            public boolean isExternal() {
+                return false;
+            }
+
+            @Override
+            public boolean isMonitored() {
+                return monitored;
+            }
+
+            @Override
+            public void setMonitored(final boolean monitored) {
+                this.monitored = monitored;
+            }
+        };
+
+        // add the control constraint to the scene
+        scene.addConstraint(control);
+        scene.monitorConstraint(control);
+
+        // create a callback to receive input from view. We communicate
+        // with the physics through the targetVelocity vector. The control
+        // constraints looks at this vector, ask the solver to give us the
+        // desired motion. The controls are WASD, plus space for jumping
+        rendering.addCallback(new EventCallback() {
+            @Override
+            public void spaceReleased() {}
+
+            @Override
+            public void spacePressed() {}
+
+            @Override
+            public void mousePressed(final double x, final double y, final Vector3 point, final Vector3 direction) {}
+
+            @Override
+            public void mouseDragged(final double x, final double y, final Vector3 point, final Vector3 direction) {}
+
+            @Override
+            public void mouseReleased() {}
+
+            @Override
+            public void enterPressed() {}
+
+            @Override
+            public void keyPressed(final char key) {
+                // System.out.println("got key="+key);
+                switch (key) {
+                    case 'w':
+                        targetVelocity.z = -2;
+                        break;
+                    case 's':
+                        targetVelocity.z = 2;
+                        break;
+                    case 'a':
+                        targetVelocity.x = -2;
+                        break;
+                    case 'd':
+                        targetVelocity.x = 2;
+                        break;
+                    case ' ':
+                        targetVelocity.y = 9;
+                        break;
+                }
+            }
+
+            @Override
+            public void keyReleased(final char key) {
+                switch (key) {
+                    case 'w':
+                        targetVelocity.z = 0;
+                        break;
+                    case 's':
+                        targetVelocity.z = 0;
+                        break;
+                    case 'a':
+                        targetVelocity.x = 0;
+                        break;
+                    case 'd':
+                        targetVelocity.x = 0;
+                        break;
+                }
+            }
+        });
+
+        // create the static world grid
+        final Body grid = new Body("Grid");
+        scene.addBody(grid);
+
+        // make a grid of static boxes
+        for (int i = 0; i < 17; i++) {
+            for (int j = 0; j < 17; j++) {
+                final double sigma = 0.3;
+                final double height = 14 * Math.exp(-((i - 6.0) * (i - 6.0) / 2 * sigma * sigma + (j - 6.0) * (j - 6.0)
+                        / 2 * sigma * sigma));
+                final Box box = new Box("box", 2.8, 3, 2.8);
+                box.setEnvelope(0.25);
+                scene.addGeometry(grid, Matrix3.identity(), new Vector3(3 * i - 15, -18.1 + height, 3 * j - 35), box);
+                rendering.drawMe(box);
+            }
+        }
+
+        // rotate the grid world a bit
+        grid.state.orientation.assign(Quaternion.rotation(Math.PI * .25, Vector3.j()));
+
+        // fix the grid
+        scene.fixBody(grid, true);
+
+        // create a box for androidish figure to play with
+        final Box box = new Box("box", 5, 4, 5);
+        scene.addGeometry(Matrix3.identity(), new Vector3(-0, -12, -26), box);
+        scene.addConstraint(new GravityForce(box.getBody(), ground));
+        rendering.drawMe(box);
+
+        // setup rendering
+        rendering.addCallback(new Interaction(scene));
+        rendering.createWindow();
+
+        // go go go :)
+        rendering.start();
+    }
+
+    @Override
+    public void tick() {
+        // each frame, to a time step on the Scene
+        scene.tick();
+    }
+
+    public static void main(final String[] args) {
+        new ControlExample();
+    }
 }

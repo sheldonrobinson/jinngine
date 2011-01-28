@@ -7,32 +7,42 @@
  * under the terms of its license which may be found in the accompanying
  * LICENSE file or at <http://code.google.com/p/jinngine/>.
  */
+
 package jinngine.physics.constraint;
 
-import java.util.Iterator;
-import java.util.ListIterator;
 import jinngine.physics.Body;
 import jinngine.physics.solver.Solver.NCPConstraint;
-import jinngine.util.Pair;
 
-public interface Constraint {
-	
-	/**
-	 * Insert the ConstraintEntries of this Constraint into the list modelled by iterator
-	 * @param iterator
-	 * @param dt
-	 */
-	public void applyConstraints( ListIterator<NCPConstraint> iterator, double dt );
+public interface Constraint extends Iterable<NCPConstraint> {
 
-	/**
-	 * Get the NCP constraints associated with this Constraint 
-	 * @param constraints
-	 */
-	public Iterator<NCPConstraint> getNcpConstraints(); 
-	
-	/**
-	 * Return the pair of bodies that this constraint is acting upon 
-	 */
-	public Pair<Body> getBodies();
+    /**
+     * Insert the ConstraintEntries of this Constraint into the list modelled by iterator
+     * 
+     * @param dt
+     */
+    public void update(double dt);
+
+    /**
+     * Get the first body in this constraint definition
+     * 
+     * @return
+     */
+    public Body getBody1();
+
+    /**
+     * Get the second body in this constraint definition
+     * 
+     * @return
+     */
+    public Body getBody2();
+
+    /**
+     * Return true if this constraint is to be treated as an external force contribution
+     */
+    public boolean isExternal();
+
+    public boolean isMonitored();
+
+    public void setMonitored(boolean monitored);
 
 }
