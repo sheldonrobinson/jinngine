@@ -101,7 +101,7 @@ public class Interaction implements Rendering.EventCallback {
             target.updateTransformations();
 
             force = new BallInSocketJoint(target, controller, controller.getPosition(), new Vector3(0, 1, 0));
-            force.setForceLimit(50 * target.getMass());
+            force.setForceLimit(20 * target.getMass());
             force.setCorrectionVelocityLimit(17);
 
             // copy angular mass properties

@@ -426,8 +426,15 @@ public final class DefaultScene implements Scene {
         } // for each group
 
         // update triggers
-        for (final Trigger trigger : triggers) {
-            trigger.update(this);
+        final Iterator<Trigger> iter = triggers.iterator();
+        while (iter.hasNext()) {
+            final Trigger trigger = iter.next();
+
+            // run trigger, and remove if requested 
+            if (!trigger.update(this, timestep)) {
+                iter.remove();
+                trigger.cleanup(this);
+            }
         }
     } // time-step
 

@@ -22,8 +22,9 @@ import jinngine.physics.solver.Solver.NCPConstraint;
 import jinngine.util.Pair;
 
 /**
- * The contact trigger monitors a specific body for contact interactions. When the total contact force of some contact
- * interaction exceeds the user defined value, an event is triggered. Likewise, when the total force drops below the
+ * The contact trigger monitors a specific body for contact interactions. When
+ * the total contact force of some contact interaction exceeds the user defined
+ * value, an event is triggered. Likewise, when the total force drops below the
  * threshold, or the contact vanishes all together, another event is triggered.
  */
 public class ContactTrigger implements Trigger {
@@ -58,7 +59,8 @@ public class ContactTrigger implements Trigger {
      * @param body
      *            Body to monitor
      * @param impulsethreshold
-     *            the total normal impulse exerted by the contact in last time-step
+     *            the total normal impulse exerted by the contact in last
+     *            time-step
      */
     public ContactTrigger(final Body body, final double impulsethreshold, final ContactTrigger.Callback callback) {
         this.body = body;
@@ -67,7 +69,7 @@ public class ContactTrigger implements Trigger {
     }
 
     @Override
-    public void update(final Scene s) {
+    public boolean update(final Scene s, final double dt) {
         // timestep = s.getTimestep();
 
         // see if the monitored constraints can trigger an event
@@ -130,7 +132,10 @@ public class ContactTrigger implements Trigger {
                 callback.contactBelowThreshold(interacting, constraint);
 
             } // if force > forcethreshold
-        } // for monitored constraints
+        } // for monitored constraints 
+
+        // keep constraint
+        return true;
     }
 
     @Override

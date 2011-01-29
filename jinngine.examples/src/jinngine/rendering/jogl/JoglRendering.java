@@ -25,6 +25,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Random;
 
 import javax.media.opengl.GL;
 import javax.media.opengl.GLAutoDrawable;
@@ -63,6 +64,7 @@ public class JoglRendering implements Rendering, GLEventListener, MouseListener,
     private volatile boolean takeScreenShot = false;
     private volatile String screenShotFilename;
     private volatile boolean redoCamera;
+    private static final Random rand = new Random();
 
     // camera transform
     public double[] proj = new double[16];
@@ -633,14 +635,17 @@ public class JoglRendering implements Rendering, GLEventListener, MouseListener,
     private void drawSmoothShape(final List<Vector3> vertices, final List<Vector3> normals, final int[][] faceIndices,
             final GL gl) {
         // draw shaded mesh
-        gl.glUniform1f(extrutionUniformLocation, 0);
-        gl.glUniform3f(colorUniformLocation, 1f, 0.95f, 1f);
+        gl.glUniform1f(extrutionUniformLocation, -0.06f);
+        //gl.glUniform3f(colorUniformLocation, 1f, 0.95f, 1f);
+        final float shade = rand.nextFloat() * 0.3f;
+        gl.glUniform3f(colorUniformLocation, 1f - shade, 1f - shade, 1f - shade);
+
         gl.glUniform1f(influenceUniformLocation, 0);
         gl.glCullFace(GL.GL_BACK);
         drawFaces(vertices, normals, faceIndices, gl);
 
         // draw silhouette
-        gl.glUniform1f(extrutionUniformLocation, 0.07f);
+        gl.glUniform1f(extrutionUniformLocation, -0.01f);
         gl.glUniform1f(influenceUniformLocation, 01f);
         gl.glUniform3f(colorUniformLocation, 0.30f, 0.30f, 0.30f);
         gl.glCullFace(GL.GL_FRONT);
@@ -653,12 +658,15 @@ public class JoglRendering implements Rendering, GLEventListener, MouseListener,
         // draw shaded mesh
         gl.glUniform1f(extrutionUniformLocation, 0);
         gl.glUniform1f(influenceUniformLocation, 0);
-        gl.glUniform3f(colorUniformLocation, 0.95f, 0.95f, 1f);
+        final float shade = rand.nextFloat() * 0.3f;
+        gl.glUniform3f(colorUniformLocation, 1f - shade, 1f - shade, 1f - shade);
+        //        gl.glUniform3f(colorUniformLocation, 0.95f, 0.95f, 1f);
+
         gl.glCullFace(GL.GL_BACK);
         drawFaces(vertices, normals, faceIndices, gl);
 
         // draw solid coloured edge mesh
-        gl.glUniform1f(extrutionUniformLocation, 0.04f);
+        gl.glUniform1f(extrutionUniformLocation, 0.03f);
         gl.glUniform3f(colorUniformLocation, 0.30f, 0.30f, 0.30f);
         gl.glUniform1f(influenceUniformLocation, 1f);
         drawEdgeMesh(new ConvexHull("edge hull", vertices), gl);
@@ -813,11 +821,11 @@ public class JoglRendering implements Rendering, GLEventListener, MouseListener,
      * 
      * Multiply the current ModelView-Matrix with a shadow-projetion matrix.
      * 
-     * l is the position of the light source e is a point on within the plane on which the shadow is to be projected. n
-     * is the normal vector of the plane.
+     * l is the position of the light source e is a point on within the plane on
+     * which the shadow is to be projected. n is the normal vector of the plane.
      * 
-     * Everything that is drawn after this call is "squashed" down to the plane. Hint: Gray or black color and no
-     * lighting looks good for shadows *g*
+     * Everything that is drawn after this call is "squashed" down to the plane.
+     * Hint: Gray or black color and no lighting looks good for shadows *g*
      */
     private double[] shadowProjectionMatrix(final Vector3 l, final Vector3 e, final Vector3 n) {
         double d, c;

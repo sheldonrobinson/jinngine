@@ -83,7 +83,7 @@ public final class UniformCapsule implements Geometry, SupportMap3, Material {
 
     private Object auxiliary;
     private Body body;
-    private double envelope = 0.225;
+    private double envelope = 0.125;
     private final Matrix3 rotation = new Matrix3(Matrix3.identity());
     private final Vector3 translation = new Vector3();
     private final Vector3 worldMaximumBounds = new Vector3();

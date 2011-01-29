@@ -19,6 +19,7 @@ import jinngine.math.Matrix3;
 import jinngine.math.Quaternion;
 import jinngine.math.Vector3;
 import jinngine.physics.Body;
+import jinngine.physics.BreakageTrigger;
 import jinngine.physics.DefaultDeactivationPolicy;
 import jinngine.physics.DefaultScene;
 import jinngine.physics.Scene;
@@ -60,26 +61,29 @@ public class RagdollExample implements Rendering.Callback {
         scene.fixBody(right.getBody(), true);
 
         // fun box
-        final Box fun = new Box("Fun", 5, 5, 5);
-        scene.addGeometry(Matrix3.identity(), new Vector3(-8, -17.5, -25), fun);
+        final Box fun = new Box("Fun", 4.8, 2, 4.8);
+        scene.addGeometry(Matrix3.identity(), new Vector3(-7, -19.0, -25), fun);
         scene.fixBody(fun.getBody(), true);
-
-        // body for attracting gravity
-        final Body gravity = new Body("Gravity");
-        scene.addBody(gravity);
-        scene.fixBody(gravity, true);
-
-        scene.addConstraint(new GravityForce(fun.getBody(), gravity));
+        // fun box
+        final Box fun1 = new Box("Fun", 4.8, 3, 4.8);
+        scene.addGeometry(Matrix3.identity(), new Vector3(-12, -18.5, -25), fun1);
+        scene.fixBody(fun1.getBody(), true);
+        // fun box
+        final Box fun2 = new Box("Fun", 4.8, 1, 4.8);
+        scene.addGeometry(Matrix3.identity(), new Vector3(-17, -19.5, -25), fun2);
+        scene.fixBody(fun2.getBody(), true);
 
         // handle drawing
         final Rendering rendering = new jinngine.rendering.jogl.JoglRendering(this);
         rendering.drawMe(fun);
+        rendering.drawMe(fun1);
+        rendering.drawMe(fun2);
         rendering.addCallback(new Interaction(scene));
 
-        doDoll(scene, rendering, new Vector3());
-        doDoll(scene, rendering, new Vector3(-5, 0, 0));
-        doDoll(scene, rendering, new Vector3(-10, 0, 0));
-        doDoll(scene, rendering, new Vector3(-15, 0, 0));
+        // make 3 dolls
+        doDoll(scene, rendering, new Vector3(-2, 0, 0));
+        doDoll(scene, rendering, new Vector3(-7, 2, 0));
+        doDoll(scene, rendering, new Vector3(-12, 0, 0));
 
         rendering.createWindow();
         rendering.start();
@@ -101,6 +105,8 @@ public class RagdollExample implements Rendering.Callback {
         neck.getSecondAxisControler().setFrictionMagnitude(0.1);
         scene.addConstraint(neck);
 
+        scene.addTrigger(new BreakageTrigger(neck, 2000));
+
         // torso2
         final Geometry torso2 = new Box("torso2", 1.5, 1, 1.5);
         scene.addGeometry(Matrix3.identity(), new Vector3(-5, -12.5, -25).add(offset), torso2);
@@ -111,6 +117,8 @@ public class RagdollExample implements Rendering.Callback {
         spine.getSecondAxisControler().setLimits(-0.2, 0.2);
         scene.addConstraint(spine);
 
+        scene.addTrigger(new BreakageTrigger(spine, 2000));
+
         // torso3
         final Geometry torso3 = new Box("torso3", 1.2, 1, 1.2);
         scene.addGeometry(Matrix3.identity(), new Vector3(-5, -14, -25).add(offset), torso3);
@@ -120,6 +128,8 @@ public class RagdollExample implements Rendering.Callback {
         spine2.getFirstAxisControler().setLimits(-0.2, 0.2);
         spine2.getSecondAxisControler().setLimits(-0.2, 0.2);
         scene.addConstraint(spine2);
+
+        scene.addTrigger(new BreakageTrigger(spine2, 2000));
 
         // upper left arm
         final Quaternion rotation = Quaternion.rotation(Math.PI * 0.5, Vector3.i());
@@ -133,6 +143,8 @@ public class RagdollExample implements Rendering.Callback {
         leftshoulder.getFirstAxisControler().setFrictionMagnitude(0.1);
         leftshoulder.getSecondAxisControler().setFrictionMagnitude(0.1);
         scene.addConstraint(leftshoulder);
+
+        scene.addTrigger(new BreakageTrigger(leftshoulder, 2000));
 
         // upper right arm
         final Geometry uprightarm = new UniformCapsule("uprightarm", 0.5, 1);

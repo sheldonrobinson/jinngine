@@ -16,19 +16,24 @@ package jinngine.physics;
 public interface Trigger {
 
     /**
-     * Called by {@link Scene} when the triller is added to it. The trigger should setup event handlers etc during this
-     * call.
+     * Called by {@link Scene} when the triller is added to it. The trigger
+     * should setup event handlers etc during this call.
      */
     public void setup(Scene s);
 
     /**
-     * Update this trigger. Called by {@link Scene}, should not be called by the user directly.
+     * Update this trigger. Called by {@link Scene}, should not be called by the
+     * user directly.
+     * 
+     * @param dt
+     *            the current time-step
+     * @return false if this trigger wishes to remove it self. True otherwise.
      */
-    public void update(Scene s);
+    public boolean update(Scene s, double dt);
 
     /**
-     * Called by {@link Scene} just before the trigger is removed from the scene. The trigger should remove all
-     * installed event handlers etc.
+     * Called by {@link Scene} just before the trigger is removed from the
+     * scene. The trigger should remove all installed event handlers etc.
      */
     public void cleanup(Scene s);
 
