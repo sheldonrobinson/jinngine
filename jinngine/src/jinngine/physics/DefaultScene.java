@@ -314,8 +314,12 @@ public final class DefaultScene implements Scene {
             }
 
             // apply delta velocities
-            body.state.velocity.assign(body.state.velocity.add(body.deltavelocity).add(body.externaldeltavelocity));
-            body.state.omega.assign(body.state.omega.add(body.deltaomega).add(body.externaldeltaomega));
+            // body.state.velocity.assign(body.state.velocity.add(body.deltavelocity).add(body.externaldeltavelocity));
+            body.state.velocity.assignAdd(body.deltavelocity);
+            body.state.velocity.assignAdd(body.externaldeltavelocity);
+            // body.state.omega.assign(body.state.omega.add(body.deltaomega).add(body.externaldeltaomega));
+            body.state.omega.assignAdd(body.deltaomega);
+            body.state.omega.assignAdd(body.externaldeltaomega);
 
             // integrate forward on positions
             body.advancePositions(timestep);
