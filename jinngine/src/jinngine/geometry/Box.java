@@ -93,13 +93,6 @@ public class Box implements SupportMap3, Geometry, Material {
 
     /**
      * Create a box with the given side lengths
-     * 
-     * @param x
-     *            Box x-axis extend
-     * @param y
-     *            Box y-axis extend
-     * @param z
-     *            Box z-axis extend
      */
     public Box(final String name, final Vector3 sides) {
         this.name = new String(name);
@@ -108,6 +101,21 @@ public class Box implements SupportMap3, Geometry, Material {
         zs = sides.z;
         mass = xs * ys * zs;
         sphereSweepRadius = 0;
+
+        // set the local transform
+        setLocalTransform(Matrix3.identity(), new Vector3());
+    }
+
+    /**
+     * Create a box with the given side lengths and sweep radius
+     */
+    public Box(final String name, final Vector3 sides, final double radius) {
+        this.name = new String(name);
+        xs = sides.x;
+        ys = sides.y;
+        zs = sides.z;
+        mass = xs * ys * zs;
+        sphereSweepRadius = radius;
 
         // set the local transform
         setLocalTransform(Matrix3.identity(), new Vector3());

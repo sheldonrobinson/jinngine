@@ -35,7 +35,7 @@ public class RagdollExample implements Rendering.Callback {
     public RagdollExample() {
 
         // start jinngine
-        scene = new DefaultScene(new SAP2(), new NonsmoothNonlinearConjugateGradient(25),
+        scene = new DefaultScene(new SAP2(), new NonsmoothNonlinearConjugateGradient(35),
                 new DefaultDeactivationPolicy());
         scene.setTimestep(0.1);
 
@@ -60,16 +60,28 @@ public class RagdollExample implements Rendering.Callback {
         scene.addGeometry(Matrix3.identity(), new Vector3(10, 0, 0), right);
         scene.fixBody(right.getBody(), true);
 
+        //        // fun box
+        //        final Box fun = new Box("Fun", 4.3, 1.5, 4.8, 0.25);
+        //        scene.addGeometry(Matrix3.identity(), new Vector3(-7, -19.0, -25), fun);
+        //        scene.fixBody(fun.getBody(), true);
+        //        // fun box
+        //        final Box fun1 = new Box("Fun", 4.3, 2.5, 4.8, 0.25);
+        //        scene.addGeometry(Matrix3.identity(), new Vector3(-12, -18.5, -25), fun1);
+        //        scene.fixBody(fun1.getBody(), true);
+        //        // fun box
+        //        final Box fun2 = new Box("Fun", 4.3, 0.5, 4.8, 0.25);
+        //        scene.addGeometry(Matrix3.identity(), new Vector3(-17, -19.5, -25), fun2);
+        //        scene.fixBody(fun2.getBody(), true);
         // fun box
-        final Box fun = new Box("Fun", 4.8, 2, 4.8);
+        final Box fun = new Box("Fun", 4.5, 1.5, 4.8, 0.25);
         scene.addGeometry(Matrix3.identity(), new Vector3(-7, -19.0, -25), fun);
         scene.fixBody(fun.getBody(), true);
         // fun box
-        final Box fun1 = new Box("Fun", 4.8, 3, 4.8);
+        final Box fun1 = new Box("Fun", 4.5, 2.5, 4.8, 0.25);
         scene.addGeometry(Matrix3.identity(), new Vector3(-12, -18.5, -25), fun1);
         scene.fixBody(fun1.getBody(), true);
         // fun box
-        final Box fun2 = new Box("Fun", 4.8, 1, 4.8);
+        final Box fun2 = new Box("Fun", 4.5, 0.5, 4.8, 0.25);
         scene.addGeometry(Matrix3.identity(), new Vector3(-17, -19.5, -25), fun2);
         scene.fixBody(fun2.getBody(), true);
 
@@ -96,39 +108,44 @@ public class RagdollExample implements Rendering.Callback {
         scene.addGeometry(Matrix3.identity(), new Vector3(-5, -9.5, -25).add(offset), head);
 
         // torso1
-        final Geometry torso1 = new Box("torso1", 1.7, 1, 1.7);
+        final Geometry torso1 = new Box("torso1", 1.7, 0.75, 1.7, 0.20);
         scene.addGeometry(Matrix3.identity(), new Vector3(-5, -11, -25).add(offset), torso1);
 
         final UniversalJoint neck = new UniversalJoint(head.getBody(), torso1.getBody(),
                 new Vector3(-5, -10, -25).add(offset), new Vector3(0, 0, 1), new Vector3(1, 0, 0));
-        neck.getFirstAxisControler().setFrictionMagnitude(0.1);
-        neck.getSecondAxisControler().setFrictionMagnitude(0.1);
+        neck.getFirstAxisControler().setFrictionMagnitude(0.25);
+        neck.getSecondAxisControler().setFrictionMagnitude(0.25);
         scene.addConstraint(neck);
 
         scene.addTrigger(new BreakageTrigger(neck, 2000));
 
         // torso2
-        final Geometry torso2 = new Box("torso2", 1.5, 1, 1.5);
+        final Geometry torso2 = new Box("torso2", 1.5, 0.75, 1.5, 0.20);
         scene.addGeometry(Matrix3.identity(), new Vector3(-5, -12.5, -25).add(offset), torso2);
 
         final UniversalJoint spine = new UniversalJoint(torso1.getBody(), torso2.getBody(),
                 new Vector3(-5, -12, -25).add(offset), new Vector3(0, 0, 1), new Vector3(1, 0, 0));
         spine.getFirstAxisControler().setLimits(-0.2, 0.2);
         spine.getSecondAxisControler().setLimits(-0.2, 0.2);
+        spine.getFirstAxisControler().setFrictionMagnitude(0.25);
+        spine.getSecondAxisControler().setFrictionMagnitude(0.25);
+
         scene.addConstraint(spine);
 
         scene.addTrigger(new BreakageTrigger(spine, 2000));
 
         // torso3
-        final Geometry torso3 = new Box("torso3", 1.2, 1, 1.2);
+        final Geometry torso3 = new Box("torso3", 1.2, 0.75, 1.2, 0.20);
         scene.addGeometry(Matrix3.identity(), new Vector3(-5, -14, -25).add(offset), torso3);
 
         final UniversalJoint spine2 = new UniversalJoint(torso2.getBody(), torso3.getBody(),
                 new Vector3(-5, -13, -25).add(offset), new Vector3(0, 0, 1), new Vector3(1, 0, 0));
         spine2.getFirstAxisControler().setLimits(-0.2, 0.2);
         spine2.getSecondAxisControler().setLimits(-0.2, 0.2);
-        scene.addConstraint(spine2);
+        spine2.getFirstAxisControler().setFrictionMagnitude(0.25);
+        spine2.getSecondAxisControler().setFrictionMagnitude(0.25);
 
+        scene.addConstraint(spine2);
         scene.addTrigger(new BreakageTrigger(spine2, 2000));
 
         // upper left arm
@@ -140,8 +157,8 @@ public class RagdollExample implements Rendering.Callback {
                 -11, -25).add(offset), new Vector3(0, 0, 1), new Vector3(0, 1, 0));
         leftshoulder.getFirstAxisControler().setLimits(-0.5, 0.5);
         leftshoulder.getSecondAxisControler().setLimits(-0.5, 0.5);
-        leftshoulder.getFirstAxisControler().setFrictionMagnitude(0.1);
-        leftshoulder.getSecondAxisControler().setFrictionMagnitude(0.1);
+        leftshoulder.getFirstAxisControler().setFrictionMagnitude(0.25);
+        leftshoulder.getSecondAxisControler().setFrictionMagnitude(0.25);
         scene.addConstraint(leftshoulder);
 
         scene.addTrigger(new BreakageTrigger(leftshoulder, 2000));
@@ -154,8 +171,8 @@ public class RagdollExample implements Rendering.Callback {
                 -6.5, -11, -25).add(offset), new Vector3(0, 0, 1), new Vector3(0, 1, 0));
         rightshoulder.getFirstAxisControler().setLimits(-1.5, 1.5);
         rightshoulder.getSecondAxisControler().setLimits(-1.5, 1.5);
-        rightshoulder.getFirstAxisControler().setFrictionMagnitude(0.1);
-        rightshoulder.getSecondAxisControler().setFrictionMagnitude(0.1);
+        rightshoulder.getFirstAxisControler().setFrictionMagnitude(0.25);
+        rightshoulder.getSecondAxisControler().setFrictionMagnitude(0.25);
         scene.addConstraint(rightshoulder);
 
         // lower left arm
@@ -167,8 +184,8 @@ public class RagdollExample implements Rendering.Callback {
                 -3.5, -13.25, -25).add(offset), new Vector3(1, 0, 0), new Vector3(0, 1, 0));
         leftelbow.getFirstAxisControler().setLimits(-0.5, 0.5);
         leftelbow.getSecondAxisControler().setLimits(-1.5, 1.5);
-        leftelbow.getFirstAxisControler().setFrictionMagnitude(0.1);
-        leftelbow.getSecondAxisControler().setFrictionMagnitude(0.1);
+        leftelbow.getFirstAxisControler().setFrictionMagnitude(0.25);
+        leftelbow.getSecondAxisControler().setFrictionMagnitude(0.25);
         scene.addConstraint(leftelbow);
 
         // lower right arm
@@ -180,8 +197,8 @@ public class RagdollExample implements Rendering.Callback {
                 new Vector3(-6.5, -13.25, -25).add(offset), new Vector3(1, 0, 0), new Vector3(0, 1, 0));
         rightelbow.getFirstAxisControler().setLimits(-0.5, 0.5);
         rightelbow.getSecondAxisControler().setLimits(-1.5, 1.5);
-        rightelbow.getFirstAxisControler().setFrictionMagnitude(0.1);
-        rightelbow.getSecondAxisControler().setFrictionMagnitude(0.1);
+        rightelbow.getFirstAxisControler().setFrictionMagnitude(0.25);
+        rightelbow.getSecondAxisControler().setFrictionMagnitude(0.25);
         scene.addConstraint(rightelbow);
 
         // left thigh
@@ -193,8 +210,8 @@ public class RagdollExample implements Rendering.Callback {
                 -25).add(offset), new Vector3(1, 0, 0), new Vector3(0, 0, 1));
         lefthip.getFirstAxisControler().setLimits(-0.5, 0.5);
         lefthip.getSecondAxisControler().setLimits(-0.5, 0.5);
-        lefthip.getFirstAxisControler().setFrictionMagnitude(0.1);
-        lefthip.getSecondAxisControler().setFrictionMagnitude(0.1);
+        lefthip.getFirstAxisControler().setFrictionMagnitude(0.25);
+        lefthip.getSecondAxisControler().setFrictionMagnitude(0.25);
         scene.addConstraint(lefthip);
 
         // left taiba
@@ -206,8 +223,8 @@ public class RagdollExample implements Rendering.Callback {
                 -16, -25).add(offset), new Vector3(1, 0, 0), new Vector3(0, 0, 1));
         lefttknee.getFirstAxisControler().setLimits(-0.5, 0.5);
         lefttknee.getSecondAxisControler().setLimits(-0.1, 0.1);
-        lefttknee.getFirstAxisControler().setFrictionMagnitude(0.1);
-        lefttknee.getSecondAxisControler().setFrictionMagnitude(0.1);
+        lefttknee.getFirstAxisControler().setFrictionMagnitude(0.25);
+        lefttknee.getSecondAxisControler().setFrictionMagnitude(0.25);
         scene.addConstraint(lefttknee);
 
         // right thigh
@@ -219,8 +236,8 @@ public class RagdollExample implements Rendering.Callback {
                 -14, -25).add(offset), new Vector3(1, 0, 0), new Vector3(0, 0, 1));
         righthip.getFirstAxisControler().setLimits(-0.5, 0.5);
         righthip.getSecondAxisControler().setLimits(-0.5, 0.5);
-        righthip.getFirstAxisControler().setFrictionMagnitude(0.1);
-        righthip.getSecondAxisControler().setFrictionMagnitude(0.1);
+        righthip.getFirstAxisControler().setFrictionMagnitude(0.25);
+        righthip.getSecondAxisControler().setFrictionMagnitude(0.25);
         scene.addConstraint(righthip);
 
         // right taiba
@@ -232,8 +249,8 @@ public class RagdollExample implements Rendering.Callback {
                 -4.0, -16, -25).add(offset), new Vector3(1, 0, 0), new Vector3(0, 0, 1));
         righttknee.getFirstAxisControler().setLimits(-0.5, 0.5);
         righttknee.getSecondAxisControler().setLimits(-0.1, 0.1);
-        righttknee.getFirstAxisControler().setFrictionMagnitude(0.1);
-        righttknee.getSecondAxisControler().setFrictionMagnitude(0.1);
+        righttknee.getFirstAxisControler().setFrictionMagnitude(0.25);
+        righttknee.getSecondAxisControler().setFrictionMagnitude(0.25);
         scene.addConstraint(righttknee);
 
         final Body ground = new Body("ground");

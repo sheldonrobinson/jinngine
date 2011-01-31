@@ -71,7 +71,9 @@ public class RotundaExample implements Rendering.Callback {
                 final double x = Math.sin(theta) * 9;
                 final double y = Math.cos(theta) * 9;
 
-                final Box box = new Box("box", 4, 2, 2);
+                //                final Box box = new Box("box", 3.5, 1.5, 1.5, 0.25);
+                final Box box = new Box("box", 4, 2, 2, 0.0);
+
                 box.setCorrectionVelocityLimit(2);
                 scene.addGeometry(Quaternion.rotation(theta, Vector3.j()).toRotationMatrix3(new Matrix3()),
                         new Vector3(-12 + x, -19 + 0.09375 + j * 2.09375, -27 + y), box);

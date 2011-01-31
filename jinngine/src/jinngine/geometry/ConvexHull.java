@@ -38,6 +38,7 @@ public class ConvexHull implements SupportMap3, Geometry, Material {
     private final Vector3 centreOfMass = new Vector3();
     private final double referenceMass;
     private final int numberOfVertices;
+    private final double radius;
     // private int cachedVertex = 0;
 
     // bounding box
@@ -111,13 +112,17 @@ public class ConvexHull implements SupportMap3, Geometry, Material {
     /**
      * Create a convex hull geometry, based on the points given
      * 
-     * @param input
+     * @param radius
+     *            TODO
      */
-    public ConvexHull(final String name, final List<Vector3> input) {
+    public ConvexHull(final String name, final List<Vector3> input, final double radius) {
         this.name = new String(name);
 
         final QuickHull3D dualhull = new QuickHull3D();
         final QuickHull3D hull = new QuickHull3D();
+
+        // set sweep radius
+        this.radius = radius;
 
         // build the hull
         hull.build(Vector3.toArray(input));
@@ -200,7 +205,7 @@ public class ConvexHull implements SupportMap3, Geometry, Material {
                 Math.abs(positiveBounds.y - negativeBounds.y), Math.abs(positiveBounds.z - negativeBounds.z));
 
         // set the initial bounding box
-        boundingBox = new Box("boundingBox", boundingBoxSideLengths);
+        boundingBox = new Box("boundingBox", boundingBoxSideLengths, this.radius);
 
         updateBoundingBoxTransform();
     }
@@ -484,7 +489,7 @@ public class ConvexHull implements SupportMap3, Geometry, Material {
 
     @Override
     public double sphereSweepRadius() {
-        return 0;
+        return radius;
     }
 
     @Override

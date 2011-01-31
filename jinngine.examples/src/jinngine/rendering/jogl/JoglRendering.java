@@ -84,6 +84,8 @@ public class JoglRendering implements Rendering, GLEventListener, MouseListener,
     private int influenceUniformLocation;
     private double[] shadowProjMatrix;
 
+    private final ConvexHull icosphere = buildIcosphere(1, 3);
+
     private boolean initialized = false;
 
     public JoglRendering(final Callback callback) {
@@ -148,13 +150,75 @@ public class JoglRendering implements Rendering, GLEventListener, MouseListener,
         toDraw.add(newshape);
     }
 
-    @Override
-    public DrawShape drawMe(final Geometry g) {
-        DrawShape shape = null;
+    public DrawShape doShape(final Geometry g, final List<Vector3> vertices, final double radius) {
+        if (radius > 0) {
+            final List<Vector3> inputVertices = new ArrayList<Vector3>();
+            final List<Vector3> inputNormals = new ArrayList<Vector3>();
+            final List<Vector3> hullNormals = new ArrayList<Vector3>();
+            final List<Vector3> hullVertices = new ArrayList<Vector3>();
 
-        if (g instanceof ConvexHull) {
-            final ConvexHull hull = (ConvexHull) g;
-            shape = new DrawShape() {
+            // add ico-spheres for each vertex in hull
+            for (final Vector3 vertex : vertices) {
+                final Iterator<Vector3> iter = icosphere.getVertices();
+                while (iter.hasNext()) {
+                    final Vector3 v = iter.next();
+                    inputVertices.add(v.multiply(radius).add(vertex));
+                    inputNormals.add(v.normalize());
+                }
+            }
+
+            final ConvexHull hull = new ConvexHull("hull", inputVertices, 0.0);
+
+            // build normal array
+            for (final int index : hull.getOriginalVertexIndices()) {
+                hullNormals.add(inputNormals.get(index));
+            }
+
+            // get the vertices in the final hull
+            final Iterator<Vector3> i = hull.getVertices();
+            while (i.hasNext()) {
+                hullVertices.add(i.next());
+            }
+
+            return new DrawShape() {
+                private int list = 0;
+                private int shadowList = 0;
+
+                @Override
+                public void getTransform(final Matrix4 T) {
+                    T.assign(g.getWorldTransform());
+                }
+
+                @Override
+                public Body getReferenceBody() {
+                    return g.getBody();
+                }
+
+                @Override
+                public int getDisplayList() {
+                    return list;
+                }
+
+                @Override
+                public void init(final GL gl) {
+                    list = startDisplayList(gl);
+                    drawSmoothShape(hullVertices, hullNormals, hull.getFaceIndices(), gl);
+                    endDisplayList(gl);
+
+                    shadowList = startDisplayList(gl);
+                    drawBackfaceShadowMesh(hullVertices, null, hull.getFaceIndices(), gl);
+                    endDisplayList(gl);
+                }
+
+                @Override
+                public int getShadowDisplayList() {
+                    return shadowList;
+                }
+            };
+        } else {
+            final ConvexHull hull = new ConvexHull("hull", vertices, 0.0);
+
+            return new DrawShape() {
                 private int list = 0;
                 private int shadowList = 0;
 
@@ -190,11 +254,20 @@ public class JoglRendering implements Rendering, GLEventListener, MouseListener,
                 }
             };
         }
+    }
+
+    @Override
+    public DrawShape drawMe(final Geometry g) {
+        DrawShape shape = null;
+
+        if (g instanceof ConvexHull) {
+            final ConvexHull orghull = (ConvexHull) g;
+            shape = doShape(orghull, orghull.getVerticesList(), orghull.sphereSweepRadius());
+        }
 
         if (g instanceof Box) {
             final List<Vector3> inputVertices = new ArrayList<Vector3>();
             final List<Vector3> hullVertices = new ArrayList<Vector3>();
-
             inputVertices.add(new Vector3(0.5, 0.5, 0.5));
             inputVertices.add(new Vector3(-0.5, 0.5, 0.5));
             inputVertices.add(new Vector3(0.5, -0.5, 0.5));
@@ -210,192 +283,27 @@ public class JoglRendering implements Rendering, GLEventListener, MouseListener,
                 v.assign(S.multiply(v));
             }
 
-            final ConvexHull hull = new ConvexHull("box hull", inputVertices);
+            // do the box shape
+            shape = doShape(g, inputVertices, ((Box) g).sphereSweepRadius());
 
-            // get the vertices in the final hull
-            final Iterator<Vector3> i = hull.getVertices();
-            while (i.hasNext()) {
-                final Vector3 point = i.next();
-                hullVertices.add(point);
-            }
-
-            shape = new DrawShape() {
-                private int list = 0;
-                private int shadowList = 0;
-
-                @Override
-                public void getTransform(final Matrix4 T) {
-                    T.assign(g.getWorldTransform());
-                }
-
-                @Override
-                public Body getReferenceBody() {
-                    return g.getBody();
-                }
-
-                @Override
-                public int getDisplayList() {
-                    // System.out.println(""+list);
-                    return list;
-                }
-
-                @Override
-                public void init(final GL gl) {
-                    list = startDisplayList(gl);
-                    drawPolygonShape(hullVertices, null, hull.getFaceIndices(), gl);
-                    endDisplayList(gl);
-                    shadowList = startDisplayList(gl);
-                    drawBackfaceShadowMesh(hullVertices, null, hull.getFaceIndices(), gl);
-                    endDisplayList(gl);
-
-                }
-
-                @Override
-                public int getShadowDisplayList() {
-                    return shadowList;
-                }
-            };
         }
 
         if (g instanceof UniformCapsule) {
             final UniformCapsule cap = (UniformCapsule) g;
             final List<Vector3> inputVertices = new ArrayList<Vector3>();
-            final List<Vector3> inputNormals = new ArrayList<Vector3>();
-            final List<Vector3> hullNormals = new ArrayList<Vector3>();
-            final List<Vector3> hullVertices = new ArrayList<Vector3>();
 
-            final ConvexHull icosphere = buildIcosphere(1, 3);
+            inputVertices.add(new Vector3(0, 0, cap.getLength() / 2));
+            inputVertices.add(new Vector3(0, 0, -cap.getLength() / 2));
 
-            // add two ico-spheres to vertices
-            Iterator<Vector3> iter = icosphere.getVertices();
-            while (iter.hasNext()) {
-                final Vector3 v = iter.next();
-                inputVertices.add(v.multiply(cap.getRadius()).add(0, 0, cap.getLength() / 2));
-                inputNormals.add(v.normalize());
-            }
-
-            iter = icosphere.getVertices();
-            while (iter.hasNext()) {
-                final Vector3 v = iter.next();
-                inputVertices.add(v.multiply(cap.getRadius()).add(0, 0, -cap.getLength() / 2));
-                inputNormals.add(v.normalize());
-            }
-
-            final ConvexHull hull = new ConvexHull("hull", inputVertices);
-
-            // build normal array
-            for (final int index : hull.getOriginalVertexIndices()) {
-                hullNormals.add(inputNormals.get(index));
-            }
-
-            // get the vertices in the final hull
-            final Iterator<Vector3> i = hull.getVertices();
-            while (i.hasNext()) {
-                hullVertices.add(i.next());
-            }
-
-            shape = new DrawShape() {
-                private int list = 0;
-                private int shadowList = 0;
-
-                @Override
-                public void getTransform(final Matrix4 T) {
-                    T.assign(g.getWorldTransform());
-                }
-
-                @Override
-                public Body getReferenceBody() {
-                    return g.getBody();
-                }
-
-                @Override
-                public int getDisplayList() {
-                    return list;
-                }
-
-                @Override
-                public void init(final GL gl) {
-                    list = startDisplayList(gl);
-                    drawSmoothShape(hullVertices, hullNormals, hull.getFaceIndices(), gl);
-                    endDisplayList(gl);
-
-                    shadowList = startDisplayList(gl);
-                    drawBackfaceShadowMesh(hullVertices, null, hull.getFaceIndices(), gl);
-                    endDisplayList(gl);
-                }
-
-                @Override
-                public int getShadowDisplayList() {
-                    return shadowList;
-                }
-            };
+            shape = doShape(g, inputVertices, ((UniformCapsule) g).sphereSweepRadius());
         }
 
         if (g instanceof Sphere) {
             final Sphere sphere = (Sphere) g;
             final List<Vector3> inputVertices = new ArrayList<Vector3>();
-            final List<Vector3> inputNormals = new ArrayList<Vector3>();
-            final List<Vector3> hullNormals = new ArrayList<Vector3>();
-            final List<Vector3> hullVertices = new ArrayList<Vector3>();
+            inputVertices.add(new Vector3());
+            shape = doShape(g, inputVertices, sphere.getRadius());
 
-            final ConvexHull icosphere = buildIcosphere(1, 3);
-
-            // add two ico-spheres to vertices
-            final Iterator<Vector3> iter = icosphere.getVertices();
-            while (iter.hasNext()) {
-                final Vector3 v = iter.next();
-                inputVertices.add(v.multiply(sphere.getRadius()));
-                inputNormals.add(v.normalize());
-            }
-
-            final ConvexHull hull = new ConvexHull("hull", inputVertices);
-
-            // build normal array
-            for (final int index : hull.getOriginalVertexIndices()) {
-                hullNormals.add(inputNormals.get(index));
-            }
-
-            // get the vertices in the final hull
-            final Iterator<Vector3> i = hull.getVertices();
-            while (i.hasNext()) {
-                hullVertices.add(i.next());
-            }
-
-            shape = new DrawShape() {
-                private int list = 0;
-                private int shadowList = 0;
-
-                @Override
-                public void getTransform(final Matrix4 T) {
-                    T.assign(g.getWorldTransform());
-                }
-
-                @Override
-                public Body getReferenceBody() {
-                    return g.getBody();
-                }
-
-                @Override
-                public int getDisplayList() {
-                    return list;
-                }
-
-                @Override
-                public void init(final GL gl) {
-                    list = startDisplayList(gl);
-                    drawSmoothShape(hullVertices, hullNormals, hull.getFaceIndices(), gl);
-                    endDisplayList(gl);
-
-                    shadowList = startDisplayList(gl);
-                    drawBackfaceShadowMesh(hullVertices, null, hull.getFaceIndices(), gl);
-                    endDisplayList(gl);
-                }
-
-                @Override
-                public int getShadowDisplayList() {
-                    return shadowList;
-                }
-            };
         }
 
         if (shape != null) {
@@ -429,7 +337,7 @@ public class JoglRendering implements Rendering, GLEventListener, MouseListener,
 
         int n = 0;
         while (true) {
-            final ConvexHull hull = new ConvexHull("hull", vertices);
+            final ConvexHull hull = new ConvexHull("hull", vertices, 0.0);
 
             if (n >= depth) {
                 return hull;
@@ -568,7 +476,7 @@ public class JoglRendering implements Rendering, GLEventListener, MouseListener,
 
                 }
                 // build a hull for this edge
-                final ConvexHull edgehull = new ConvexHull("hull", inputEdgeVertices);
+                final ConvexHull edgehull = new ConvexHull("hull", inputEdgeVertices, 0.0);
 
                 // build normal array
                 final List<Vector3> hullNormals = new ArrayList<Vector3>();
@@ -635,9 +543,11 @@ public class JoglRendering implements Rendering, GLEventListener, MouseListener,
     private void drawSmoothShape(final List<Vector3> vertices, final List<Vector3> normals, final int[][] faceIndices,
             final GL gl) {
         // draw shaded mesh
-        gl.glUniform1f(extrutionUniformLocation, -0.06f);
-        //gl.glUniform3f(colorUniformLocation, 1f, 0.95f, 1f);
-        final float shade = rand.nextFloat() * 0.3f;
+        gl.glUniform1f(extrutionUniformLocation, -0.045f);
+        //        gl.glUniform3f(colorUniformLocation, 1f, 0.95f, 1f);
+        final float shade = rand.nextFloat() * 0.25f;
+        //        final float shade2 = rand.nextFloat() * 0.2f;
+        //        final float shade3 = rand.nextFloat() * 0.2f;
         gl.glUniform3f(colorUniformLocation, 1f - shade, 1f - shade, 1f - shade);
 
         gl.glUniform1f(influenceUniformLocation, 0);
@@ -645,7 +555,7 @@ public class JoglRendering implements Rendering, GLEventListener, MouseListener,
         drawFaces(vertices, normals, faceIndices, gl);
 
         // draw silhouette
-        gl.glUniform1f(extrutionUniformLocation, -0.01f);
+        gl.glUniform1f(extrutionUniformLocation, -0.00f);
         gl.glUniform1f(influenceUniformLocation, 01f);
         gl.glUniform3f(colorUniformLocation, 0.30f, 0.30f, 0.30f);
         gl.glCullFace(GL.GL_FRONT);
@@ -658,7 +568,7 @@ public class JoglRendering implements Rendering, GLEventListener, MouseListener,
         // draw shaded mesh
         gl.glUniform1f(extrutionUniformLocation, 0);
         gl.glUniform1f(influenceUniformLocation, 0);
-        final float shade = rand.nextFloat() * 0.3f;
+        final float shade = rand.nextFloat() * 0.2f;
         gl.glUniform3f(colorUniformLocation, 1f - shade, 1f - shade, 1f - shade);
         //        gl.glUniform3f(colorUniformLocation, 0.95f, 0.95f, 1f);
 
@@ -669,7 +579,7 @@ public class JoglRendering implements Rendering, GLEventListener, MouseListener,
         gl.glUniform1f(extrutionUniformLocation, 0.03f);
         gl.glUniform3f(colorUniformLocation, 0.30f, 0.30f, 0.30f);
         gl.glUniform1f(influenceUniformLocation, 1f);
-        drawEdgeMesh(new ConvexHull("edge hull", vertices), gl);
+        drawEdgeMesh(new ConvexHull("edge hull", vertices, 0.0), gl);
     }
 
     private void drawBackfaceShadowMesh(final List<Vector3> vertices, final List<Vector3> normals,
@@ -731,7 +641,8 @@ public class JoglRendering implements Rendering, GLEventListener, MouseListener,
                 "varying vec3 point;\n", "varying vec3 normal;\n", "void main(void) { \n",
                 " vec3 L = normalize(gl_LightSource[0].position.xyz-point);\n", " vec3 E = normalize(-point);\n",
                 " vec3 R = normalize(reflect(-L,normal));\n", " float diff = 0.3 * max(dot(normal,L), 0.0);\n",
-                " float spec = 0.1 * pow(max(dot(R,E),0.0), 35.0);\n",
+                //                " float spec = 0.2 * pow(max(dot(R,E),0.0), 35.0);\n",
+                " float spec = 0.27 * pow(max(dot(R,E),0.0), 55.0);\n",
                 " gl_FragColor = vec4( (1.0-influence)*color*(0.5+diff+spec)+influence*color, 1.0);\n", "}\n\n" };
 
         final int phongFragmentShaderIndex = gl.glCreateShader(GL.GL_FRAGMENT_SHADER);

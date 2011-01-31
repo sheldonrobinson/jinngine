@@ -72,15 +72,15 @@ public class CapsuleExample implements Rendering.Callback {
         scene.addGeometry(Matrix3.identity(), new Vector3(-10, -11, -25), capgeo4);
 
         // create a box
-        final Box boxgeometry = new Box("box", 3, 3, 3);
+        final Box boxgeometry = new Box("box", 3, 3, 3, 0.25);
         scene.addGeometry(Matrix3.identity(), new Vector3(-4, -11, -25), boxgeometry);
 
         // create a box
-        final Box boxgeometry2 = new Box("box2", 4, 4, 4);
+        final Box boxgeometry2 = new Box("box2", 4, 4, 4, 0.25);
         scene.addGeometry(Matrix3.identity(), new Vector3(-3, -11, -25), boxgeometry2);
 
         // create a box
-        final Box boxgeometry3 = new Box("box3", 5, 5, 5);
+        final Box boxgeometry3 = new Box("box3", 5, 5, 5, 0.25);
         scene.addGeometry(Matrix3.identity(), new Vector3(-3, -11, -25), boxgeometry3);
 
         // create ico
@@ -101,9 +101,42 @@ public class CapsuleExample implements Rendering.Callback {
         for (final Vector3 v : vertices) {
             v.assign(v.multiply(3));
         }
-        final ConvexHull ico = new ConvexHull("ico", vertices);
+        final ConvexHull ico = new ConvexHull("ico", vertices, 0.4);
 
         scene.addGeometry(Matrix3.identity(), new Vector3(0, -11, -25), ico);
+
+        // create dodecahedron
+        final List<Vector3> dodecahedron = new ArrayList<Vector3>();
+        dodecahedron.add(new Vector3(1, 1, 1).normalize());
+        dodecahedron.add(new Vector3(-1, 1, 1).normalize());
+        dodecahedron.add(new Vector3(1, -1, 1).normalize());
+        dodecahedron.add(new Vector3(-1, -1, 1).normalize());
+        dodecahedron.add(new Vector3(1, 1, -1).normalize());
+        dodecahedron.add(new Vector3(-1, 1, -1).normalize());
+        dodecahedron.add(new Vector3(1, -1, -1).normalize());
+        dodecahedron.add(new Vector3(-1, -1, -1).normalize());
+
+        dodecahedron.add(new Vector3(0, -1 / t, t).normalize());
+        dodecahedron.add(new Vector3(0, 1 / t, -t).normalize());
+        dodecahedron.add(new Vector3(0, -1 / t, -t).normalize());
+        dodecahedron.add(new Vector3(0, 1 / t, t).normalize());
+
+        dodecahedron.add(new Vector3(-1 / t, t, 0).normalize());
+        dodecahedron.add(new Vector3(1 / t, -t, 0).normalize());
+        dodecahedron.add(new Vector3(-1 / t, -t, 0).normalize());
+        dodecahedron.add(new Vector3(1 / t, t, 0).normalize());
+
+        dodecahedron.add(new Vector3(t, 0, 1 / t).normalize());
+        dodecahedron.add(new Vector3(-t, 0, 1 / t).normalize());
+        dodecahedron.add(new Vector3(t, 0, -1 / t).normalize());
+        dodecahedron.add(new Vector3(-t, 0, -1 / t).normalize());
+
+        for (final Vector3 v : dodecahedron) {
+            v.assign(v.multiply(3));
+        }
+        final ConvexHull dodeca = new ConvexHull("dodeca", dodecahedron, 0.25);
+
+        scene.addGeometry(Matrix3.identity(), new Vector3(0, -11, -25), dodeca);
 
         // gravity absorbing body
         final Body gravity = new Body("gravity");
@@ -119,6 +152,7 @@ public class CapsuleExample implements Rendering.Callback {
         scene.addConstraint(new GravityForce(capgeo3.getBody(), gravity));
         scene.addConstraint(new GravityForce(capgeo4.getBody(), gravity));
         scene.addConstraint(new GravityForce(ico.getBody(), gravity));
+        scene.addConstraint(new GravityForce(dodeca.getBody(), gravity));
 
         // handle drawing
         final Rendering rendering = new jinngine.rendering.jogl.JoglRendering(this);
@@ -131,6 +165,7 @@ public class CapsuleExample implements Rendering.Callback {
         rendering.drawMe(capgeo3);
         rendering.drawMe(capgeo4);
         rendering.drawMe(ico);
+        rendering.drawMe(dodeca);
 
         rendering.createWindow();
         rendering.start();

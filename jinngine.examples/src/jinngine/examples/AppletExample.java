@@ -113,7 +113,7 @@ public class AppletExample extends Applet implements Rendering.Callback {
         for (final Vector3 v : vertices) {
             v.assign(v.multiply(3));
         }
-        final ConvexHull ico = new ConvexHull("ico", vertices);
+        final ConvexHull ico = new ConvexHull("ico", vertices, 0.0);
 
         scene.addGeometry(Matrix3.identity(), new Vector3(0, -11, -25), ico);
 

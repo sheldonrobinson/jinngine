@@ -31,7 +31,7 @@ public class Sphere implements SupportMap3, Geometry, Material {
     private final Matrix4 transform4 = new Matrix4();
     private final Vector3 worldposition = new Vector3();
 
-    private final double envelope = 0.225;
+    private final double envelope = 0.125;
     private Object auxiliary;
     private double restitution = 0.7;
     private double friction = 0.5;
