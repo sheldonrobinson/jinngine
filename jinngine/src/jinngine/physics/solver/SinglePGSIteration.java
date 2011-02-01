@@ -49,7 +49,7 @@ public class SinglePGSIteration {
 
             // the change in lambda_i needed to obtain (Ax+b)_i = 0
             // double deltaLambda = (-ci.b-w)/(ci.diagonal + ci.damper );
-            double deltalambda = -(ncpj.Fext + w) / diagonal;
+            double deltalambda = Math.abs(diagonal) > 1e-14 ? -(ncpj.Fext + w) / diagonal : 0;
 
             final double lambda0 = ncpj.lambda;
 
