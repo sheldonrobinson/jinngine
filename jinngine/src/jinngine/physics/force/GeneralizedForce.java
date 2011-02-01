@@ -95,7 +95,7 @@ public class GeneralizedForce implements Constraint, Iterator<NCPConstraint> {
         angular.j2.assign(angularDirection);
         angular.j3.assignZero();
         angular.j4.assign(angularDirection);
-        angular.j4.assignZero();
+        angular.j4.assignNegate();
         angular.b = 0;
         // fixed magnitude
         angular.lower = angularMagnitude * dt;
