@@ -137,8 +137,10 @@ public class GeneralizedForce implements Constraint, Iterator<NCPConstraint> {
     public NCPConstraint next() {
         switch (iter) {
             case 0:
+                iter = iter + 1;
                 return linear;
             case 1:
+                iter = iter + 1;
                 return angular;
             default:
                 return null;
