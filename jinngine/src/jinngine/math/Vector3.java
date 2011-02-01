@@ -14,13 +14,16 @@ import java.io.Serializable;
 import java.util.Collection;
 
 /**
- * <code>Vector3d</code> defines a Vector for a three double value tuple. <code>Vector3d</code> can represent any three
- * dimensional value, such as a vertex or normal.
+ * <code>Vector3d</code> defines a Vector for a three double value tuple.
+ * <code>Vector3d</code> can represent any three dimensional value, such as a
+ * vertex or normal.
  * 
- * The functional methods like add, sub, multiply that returns new instances, and left <code>this</code> unchanged.
+ * The functional methods like add, sub, multiply that returns new instances,
+ * and left <code>this</code> unchanged.
  * 
- * Static methods store the resulting vector on a existing reference, which avoid allocation an can improve performances
- * around 20% (profiling performed on vector addition).
+ * Static methods store the resulting vector on a existing reference, which
+ * avoid allocation an can improve performances around 20% (profiling performed
+ * on vector addition).
  * 
  * Depreciated methods will be removed on October 2010
  * 
@@ -55,7 +58,8 @@ public final class Vector3 implements Serializable {
     }
 
     /**
-     * Constructs and initialises a <code>Vector3</code> from the specified xyz coordinates.
+     * Constructs and initialises a <code>Vector3</code> from the specified xyz
+     * coordinates.
      * 
      * @param x
      *            the x coordinate
@@ -71,10 +75,12 @@ public final class Vector3 implements Serializable {
     }
 
     /**
-     * Constructs and initialises a <code>Vector3</code> with the coordinates of the given <code>Vector3</code>.
+     * Constructs and initialises a <code>Vector3</code> with the coordinates of
+     * the given <code>Vector3</code>.
      * 
      * @param v
-     *            the <code>Vector3</code> containing the initialisation x y z data
+     *            the <code>Vector3</code> containing the initialisation x y z
+     *            data
      * @throws NullPointerException
      *             when v is null
      */
@@ -112,8 +118,8 @@ public final class Vector3 implements Serializable {
     }
 
     /**
-     * Adds a provided vector to this vector creating a resultant vector which is returned. Neither <code>this</code>
-     * nor <code>v</code> is modified.
+     * Adds a provided vector to this vector creating a resultant vector which
+     * is returned. Neither <code>this</code> nor <code>v</code> is modified.
      * 
      * @param v
      *            the vector to add to this.
@@ -126,8 +132,8 @@ public final class Vector3 implements Serializable {
     }
 
     /**
-     * Multiply the vector coordinates by -1. creating a resultant vector which is returned. <code>this</code> vector is
-     * not modified.
+     * Multiply the vector coordinates by -1. creating a resultant vector which
+     * is returned. <code>this</code> vector is not modified.
      * 
      * @return resultant vector
      * @throws NullPointerException
@@ -138,7 +144,8 @@ public final class Vector3 implements Serializable {
     }
 
     /**
-     * Returns true if one of the coordinated is not a number <code>this</code> vector is not modified.
+     * Returns true if one of the coordinated is not a number <code>this</code>
+     * vector is not modified.
      * 
      * @return true if one of the coordinated is not a number
      */
@@ -182,7 +189,8 @@ public final class Vector3 implements Serializable {
     }
 
     /**
-     * Add two vectors and place the result in v1. <code>v2</code> is not modified.
+     * Add two vectors and place the result in v1. <code>v2</code> is not
+     * modified.
      * 
      * @param v1
      *            a not null reference, store the sum
@@ -198,7 +206,8 @@ public final class Vector3 implements Serializable {
     }
 
     /**
-     * Subtract two vectors and place the result in v1. <code>v2</code> is not modified.
+     * Subtract two vectors and place the result in v1. <code>v2</code> is not
+     * modified.
      * 
      * @param v1
      *            a not null reference, store the difference
@@ -214,8 +223,9 @@ public final class Vector3 implements Serializable {
     }
 
     /**
-     * Subtracts a provided vector to this vector creating a resultant vector which is returned. Neither
-     * <code>this</code> nor <code>v</code> is modified.
+     * Subtracts a provided vector to this vector creating a resultant vector
+     * which is returned. Neither <code>this</code> nor <code>v</code> is
+     * modified.
      * 
      * @param v
      *            the vector to add to this.
@@ -226,8 +236,8 @@ public final class Vector3 implements Serializable {
     }
 
     /**
-     * Subtracts a provided vector to this vector. <code>this</code> contains the result and <code>v</code> is not
-     * modified.
+     * Subtracts a provided vector to this vector. <code>this</code> contains
+     * the result and <code>v</code> is not modified.
      * 
      * @param v
      *            vector to substract
@@ -279,8 +289,8 @@ public final class Vector3 implements Serializable {
     }
 
     /**
-     * Multiply this vector by a provided scalar creating a resultant vector which is returned. <code>this</code> vector
-     * is not modified.
+     * Multiply this vector by a provided scalar creating a resultant vector
+     * which is returned. <code>this</code> vector is not modified.
      * 
      * @param s
      *            multiplication coefficient
@@ -291,7 +301,8 @@ public final class Vector3 implements Serializable {
     }
 
     /**
-     * Scale vector by the scale matrix given by s. <code>this</code> vector is not modified.
+     * Scale vector by the scale matrix given by s. <code>this</code> vector is
+     * not modified.
      * 
      * @param s
      *            scale direction and factor
@@ -373,7 +384,8 @@ public final class Vector3 implements Serializable {
     }
 
     /**
-     * Multiply v by s, and store result in v. Add v to result and store in result
+     * Multiply v by s, and store result in v. Add v to result and store in
+     * result
      * 
      * @param v
      * @param s
@@ -398,7 +410,8 @@ public final class Vector3 implements Serializable {
     }
 
     /**
-     * Returns the dot product of this vector and vector v. Neither <code>this</code> nor <code>v</code> is modified.
+     * Returns the dot product of this vector and vector v. Neither
+     * <code>this</code> nor <code>v</code> is modified.
      * 
      * @param v
      *            the other vector
@@ -411,8 +424,9 @@ public final class Vector3 implements Serializable {
     }
 
     /**
-     * Returns the dot product of this vector and vector v. Neither <code>this</code> nor <code>v</code> is modified. z
-     * coordinated if truncated
+     * Returns the dot product of this vector and vector v. Neither
+     * <code>this</code> nor <code>v</code> is modified. z coordinated if
+     * truncated
      * 
      * @param v
      *            the other vector
@@ -424,8 +438,8 @@ public final class Vector3 implements Serializable {
     }
 
     /**
-     * Return a new new set to the cross product of this vectors and v Neither <code>this</code> nor <code>v</code> is
-     * modified.
+     * Return a new new set to the cross product of this vectors and v Neither
+     * <code>this</code> nor <code>v</code> is modified.
      * 
      * @param v
      *            a not null vector
@@ -438,7 +452,8 @@ public final class Vector3 implements Serializable {
     }
 
     /**
-     * Compute the cross product between this vector and the given vector v. Place result in this vector
+     * Compute the cross product between this vector and the given vector v.
+     * Place result in this vector
      */
     public final Vector3 assignCross(final Vector3 v) {
         final double tmpx = y * v.z - z * v.y;
@@ -451,8 +466,8 @@ public final class Vector3 implements Serializable {
     }
 
     /**
-     * Sets result vector to the vector cross product of vectors v1 and v2. Neither <code>v1</code> nor <code>v2</code>
-     * is modified.
+     * Sets result vector to the vector cross product of vectors v1 and v2.
+     * Neither <code>v1</code> nor <code>v2</code> is modified.
      * 
      * @param v1
      *            the first vector
@@ -471,21 +486,24 @@ public final class Vector3 implements Serializable {
     }
 
     /**
-     * Return a new vector set to the normalisation of vector v1. <code>this</code> vector is not modified.
+     * Return a new vector set to the normalisation of vector v1.
+     * <code>this</code> vector is not modified.
      * 
      * @return the normalised vector
      */
     public final Vector3 normalize() {
-        double l = Math.sqrt(x * x + y * y + z * z);
-        if (l == 0.0) {
-            return new Vector3(1, 0, 0);
-        }
-        l = 1. / l;
-        return new Vector3(x * l, y * l, z * l);
+        return new Vector3(this).assignNormalize();
+        //        double l = Math.sqrt(x * x + y * y + z * z);
+        //        if (l == 0.0) {
+        //            return new Vector3(1, 0, 0);
+        //        }
+        //        l = 1. / l;
+        //        return new Vector3(x * l, y * l, z * l);
     }
 
     /**
-     * Sets the value of this <code>Vector3</code> to the specified x, y and coordinates.
+     * Sets the value of this <code>Vector3</code> to the specified x, y and
+     * coordinates.
      * 
      * @param x
      *            the x coordinate
@@ -503,8 +521,8 @@ public final class Vector3 implements Serializable {
     }
 
     /**
-     * A this vector to the provided coordinates creating a new resultant vector. <code>this</code> vector is not
-     * modified
+     * A this vector to the provided coordinates creating a new resultant
+     * vector. <code>this</code> vector is not modified
      * 
      * @param x
      *            the x coordinate
@@ -519,8 +537,8 @@ public final class Vector3 implements Serializable {
     }
 
     /**
-     * Sets the value of this vector to the value of the xyz coordinates of the given vector. <code>v</code> is not
-     * modified
+     * Sets the value of this vector to the value of the xyz coordinates of the
+     * given vector. <code>v</code> is not modified
      * 
      * @param v
      *            the vector to be copied
@@ -610,7 +628,8 @@ public final class Vector3 implements Serializable {
     }
 
     /**
-     * Returns the length of this vector. <code>this</code> vector is not modified.
+     * Returns the length of this vector. <code>this</code> vector is not
+     * modified.
      * 
      * @return Returns the length of this vector.
      */
@@ -619,7 +638,8 @@ public final class Vector3 implements Serializable {
     }
 
     /**
-     * Returns the length of this vector. z coordinate is truncated. <code>this</code> vector is not modified.
+     * Returns the length of this vector. z coordinate is truncated.
+     * <code>this</code> vector is not modified.
      * 
      * @return Double.NaN when Double.isNaN(x) || Double.isNaN(y)
      */
@@ -628,7 +648,8 @@ public final class Vector3 implements Serializable {
     }
 
     /**
-     * Returns the length of this vector. <code>this</code> vector is not modified.
+     * Returns the length of this vector. <code>this</code> vector is not
+     * modified.
      * 
      * @return the length of this vector
      */
@@ -637,7 +658,8 @@ public final class Vector3 implements Serializable {
     }
 
     /**
-     * Returns the length of this vector, in the xy plane. <code>this</code> vector is not modified.
+     * Returns the length of this vector, in the xy plane. <code>this</code>
+     * vector is not modified.
      * 
      * @return the length of this vector
      */
@@ -655,11 +677,13 @@ public final class Vector3 implements Serializable {
     }
 
     /**
-     * Returns <tt>true</tt> if the absolute value of the three coordinates are smaller or equal to epsilon.
+     * Returns <tt>true</tt> if the absolute value of the three coordinates are
+     * smaller or equal to epsilon.
      * 
      * @param epsilon
      *            positive tolerance around zero
-     * @return true when the coordinates are next to zero false in the other cases
+     * @return true when the coordinates are next to zero false in the other
+     *         cases
      */
     public final boolean isEpsilon(final double epsilon) {
         if (epsilon < 0.) {
@@ -669,7 +693,8 @@ public final class Vector3 implements Serializable {
     }
 
     /**
-     * Pack the three coordinates into a new double array <code>this</code> vector is not modified.
+     * Pack the three coordinates into a new double array <code>this</code>
+     * vector is not modified.
      * 
      * @return a array set with x, y and z
      */
@@ -678,8 +703,9 @@ public final class Vector3 implements Serializable {
     }
 
     /**
-     * Build an array of {@link double} from a collection of {@link Vector3}. A new array is allocated with a length
-     * equal to <code>vectors.size()*3</code> The given collection is not modified.
+     * Build an array of {@link double} from a collection of {@link Vector3}. A
+     * new array is allocated with a length equal to
+     * <code>vectors.size()*3</code> The given collection is not modified.
      * 
      * @param vectors
      *            a not null collection ov vector
@@ -698,9 +724,11 @@ public final class Vector3 implements Serializable {
     }
 
     /**
-     * Returns a string representation of this vector. The string representation consists of the three dimensions in the
-     * order x, y, z, enclosed in square brackets (<tt>"[]"</tt>). Adjacent elements are separated by the characters
-     * <tt>", "</tt> (comma and space). Elements are converted to strings as by {@link Double#toString(double)}.
+     * Returns a string representation of this vector. The string representation
+     * consists of the three dimensions in the order x, y, z, enclosed in square
+     * brackets (<tt>"[]"</tt>). Adjacent elements are separated by the
+     * characters <tt>", "</tt> (comma and space). Elements are converted to
+     * strings as by {@link Double#toString(double)}.
      * 
      * @return a string representation of this vector
      */
@@ -710,7 +738,8 @@ public final class Vector3 implements Serializable {
     }
 
     /**
-     * Return this vector as a formated string, that can be directly used in a MATLAB script.
+     * Return this vector as a formated string, that can be directly used in a
+     * MATLAB script.
      */
     public final String toMatlabString() {
         return "[" + x + "; " + y + "; " + z + "]";

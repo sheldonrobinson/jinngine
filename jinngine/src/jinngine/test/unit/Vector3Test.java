@@ -576,17 +576,17 @@ public class Vector3Test {
         assertEquals(3. / Math.sqrt(14), b.z);
     }
 
-    @Test
-    public void testNormalize02() {
-        final Vector3 a = new Vector3();
-        final Vector3 b = a.normalize();
-        assertEquals(0., a.x);
-        assertEquals(0., a.y);
-        assertEquals(0., a.z);
-        assertEquals(1., b.x);
-        assertEquals(0., b.y);
-        assertEquals(0., b.z);
-    }
+    //    @Test
+    //    public void testNormalize02() {
+    //        final Vector3 a = new Vector3();
+    //        final Vector3 b = a.normalize();
+    //        assertEquals(0., a.x);
+    //        assertEquals(0., a.y);
+    //        assertEquals(0., a.z);
+    //        assertEquals(1., b.x);
+    //        assertEquals(0., b.y);
+    //        assertEquals(0., b.z);
+    //    }
 
     @Test
     public void testCross01() {
