@@ -90,6 +90,9 @@ GLEventListener, MouseListener, MouseMotionListener, MouseWheelListener, KeyList
 	private double[] shadowProjMatrix;
 	private int shaderprogram;
 	
+//	private final double ratio = 1.7777777777777;
+	private final double ratio = 4.0/3.0;
+	
 	// text rendering size
 	private TextRenderer text = new TextRenderer( new Font("Ubuntu", Font.PLAIN, 45) );
 	
@@ -114,7 +117,7 @@ GLEventListener, MouseListener, MouseMotionListener, MouseWheelListener, KeyList
 	
 	public JoglRendering(Callback callback ) {
 		this.callback = callback;
-		canvas.setSize(1024,(int)(1024/(1.77777)));
+		canvas.setSize(1024,(int)(1024/(ratio)));
 		canvas.setIgnoreRepaint( true );
 		canvas.addGLEventListener(this);
 		canvas.setVisible(true);
@@ -128,7 +131,7 @@ GLEventListener, MouseListener, MouseMotionListener, MouseWheelListener, KeyList
 	public void createWindow() {
 		Frame frame = new Frame();
 		frame.setTitle("jinngine.example");
-		frame.setSize(1024,(int)(1024/(1.77777)));
+		frame.setSize(1024,(int)(1024/(ratio)));
 		//Setup exit function
 		frame.addWindowListener(new WindowAdapter() {public void windowClosing(java.awt.event.WindowEvent e) {			
 			System.exit(0);} 
@@ -813,9 +816,9 @@ GLEventListener, MouseListener, MouseMotionListener, MouseWheelListener, KeyList
 		GL gl = drawable.getGL();
 		gl.glMatrixMode(GL.GL_PROJECTION);
 		gl.glLoadIdentity();
-		gl.glFrustum (-1.77777*zoom, 1.777777*zoom, -1.0*zoom, 1.0*zoom, 4.0, 200.0); 	
+		gl.glFrustum (-ratio*zoom, ratio*zoom, -1.0*zoom, 1.0*zoom, 4.0, 200.0); 	
 		this.height = h; this.width = w;
-		this.drawHeight = (int)((double)width/1.77777);
+		this.drawHeight = (int)((double)width/ratio);
 		gl.glViewport (0, (int)((height-drawHeight)/2.0), (int)width, (int)drawHeight);
 		// copy projection matrix (needed for pick ray)
 		gl.glGetDoublev(GL.GL_PROJECTION_MATRIX, proj, 0);
