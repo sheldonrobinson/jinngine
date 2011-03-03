@@ -26,7 +26,7 @@ public interface ContactConstraintManager {
 
     public void cleanup(Scene scene);
 
-    public void addHandler(Handler handler);
-
-    public void removeHandler(Handler handler);
+//    public void addHandler(Handler handler);
+//
+//    public void removeHandler(Handler handler);
 }

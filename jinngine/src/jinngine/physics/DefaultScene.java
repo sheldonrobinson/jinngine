@@ -12,7 +12,6 @@ package jinngine.physics;
 
 import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
 
 import jinngine.collision.BroadphaseCollisionDetection;
@@ -42,8 +41,8 @@ import jinngine.util.Pair;
  */
 public final class DefaultScene implements Scene {
 
-    // triggers
-    public final List<Trigger> triggers = new LinkedList<Trigger>();
+    //    // triggers
+    //    public final List<Trigger> triggers = new LinkedList<Trigger>();
 
     // create a contact graph classifier, used by the contact graph for determining
     // fixed bodies, i.e. bodies considered to have infinite mass.
@@ -144,9 +143,9 @@ public final class DefaultScene implements Scene {
 
     // create the contact graph using the classifier above
     private final ComponentGraph<Body, Constraint, ConstraintGroup> constraintGraph = new HashMapComponentGraph<Body, Constraint, ConstraintGroup>(
-            classifier, data);
+            this.classifier, this.data);
 
-    // broadphase collision detection
+    // broad-phase collision detection
     private final BroadphaseCollisionDetection broadphase;
 
     // contact constraints
@@ -179,7 +178,7 @@ public final class DefaultScene implements Scene {
         this.policy = policy;
 
         // start the new contact constraint manager
-        contactmanager = new DefaultContactConstraintManager(broadphase, constraintGraph);
+        this.contactmanager = new DefaultContactConstraintManager(this);
     }
 
     /**
@@ -188,17 +187,17 @@ public final class DefaultScene implements Scene {
     public DefaultScene() {
 
         // some default choices
-        policy = new DefaultDeactivationPolicy();
+        this.policy = new DefaultDeactivationPolicy();
         // this.broadphase = new SweepAndPrune();
         // this.broadphase = new ExhaustiveSearch();
-        broadphase = new SAP2();
+        this.broadphase = new SAP2();
 
         // this.solver = new ProjectedGaussSeidel(55);
         // this.solver = new NonsmoothNonlinearConjugateGradient(55);
-        solver = new NonsmoothNonlinearConjugateGradient(45);
+        this.solver = new NonsmoothNonlinearConjugateGradient(45);
 
         // start the new contact constraint manager
-        contactmanager = new DefaultContactConstraintManager(broadphase, constraintGraph);
+        this.contactmanager = new DefaultContactConstraintManager(this);
     }
 
     // private final void clearExternal( ConstraintGroup g) {
@@ -250,7 +249,7 @@ public final class DefaultScene implements Scene {
 
             // update external constraints
             for (final Constraint ci : group.externalconstraints) {
-                ci.update(timestep);
+                ci.update(this.timestep);
 
                 // clear contribution
                 for (final NCPConstraint cj : ci) {
@@ -277,7 +276,7 @@ public final class DefaultScene implements Scene {
                 final double b1mask = body1.isFixed() ? 0 : 1;
                 final double b2mask = body2.isFixed() ? 0 : 1;
 
-                ci.update(timestep);
+                ci.update(this.timestep);
 
                 // calculate current contribution
                 for (final NCPConstraint cj : ci) {
@@ -293,7 +292,7 @@ public final class DefaultScene implements Scene {
             }
 
             // solve constraints
-            solver.solve(group.constraints, group.bodies, 1e-15);
+            this.solver.solve(group.constraints, group.bodies, 1e-15);
         } else {
             // clear the delta velocities in the group
             for (final Body bi : group.bodies) {
@@ -301,6 +300,17 @@ public final class DefaultScene implements Scene {
                 bi.deltaomega.assignZero();
             }
 
+        }
+
+        // update triggers in group
+        for (final Body body : group.bodies) {
+            // run trigger, and remove if requested 
+            if (body.trigger != null) {
+                if (!body.trigger.update(body, this.timestep)) {
+                    body.trigger.stop(body);
+                    body.trigger = null;
+                }
+            }
         }
 
         // advance positions
@@ -322,14 +332,14 @@ public final class DefaultScene implements Scene {
             body.state.omega.assignAdd(body.externaldeltaomega);
 
             // integrate forward on positions
-            body.advancePositions(timestep);
+            body.advancePositions(this.timestep);
         }
 
         // check for possible deactivation
         boolean deactivate = true;
         // update bodies after position updates
         for (final Body bi : group.bodies) {
-            if (!policy.shouldBeDeactivated(bi, timestep)) {
+            if (!this.policy.shouldBeDeactivated(bi, this.timestep)) {
                 deactivate = false;
             }
 
@@ -347,10 +357,10 @@ public final class DefaultScene implements Scene {
     public final void tick() {
         // run the broad-phase collision detection (this automatically updates the contactGraph,
         // through the BroadfaseCollisionDetection.Handler type)
-        broadphase.run();
+        this.broadphase.run();
 
         // iterate through groups/components in the constraint graph
-        final Iterator<ConstraintGroup> components = data.getComponents();
+        final Iterator<ConstraintGroup> components = this.data.getComponents();
         while (components.hasNext()) {
             // get the component
             final ConstraintGroup group = components.next();
@@ -365,7 +375,7 @@ public final class DefaultScene implements Scene {
 
                     // update the monitored constraints
                     for (final Constraint ci : group.monitoredconstraints) {
-                        ci.update(timestep);
+                        ci.update(this.timestep);
 
                         // get bodies
                         final Body body1 = ci.getBody1();
@@ -414,8 +424,8 @@ public final class DefaultScene implements Scene {
                     boolean activate = false;
                     // for (final Body bi: group.monitoredbodies) {
                     for (final Constraint ci : group.monitoredconstraints) {
-                        if (policy.shouldBeActivated(ci.getBody1(), timestep)
-                                || policy.shouldBeActivated(ci.getBody2(), timestep)) {
+                        if (this.policy.shouldBeActivated(ci.getBody1(), this.timestep)
+                                || this.policy.shouldBeActivated(ci.getBody2(), this.timestep)) {
                             activate = true;
                             break;
                         }
@@ -428,18 +438,6 @@ public final class DefaultScene implements Scene {
                 } // if monitored constraints
             } // if deactivated
         } // for each group
-
-        // update triggers
-        final Iterator<Trigger> iter = triggers.iterator();
-        while (iter.hasNext()) {
-            final Trigger trigger = iter.next();
-
-            // run trigger, and remove if requested 
-            if (!trigger.update(this, timestep)) {
-                iter.remove();
-                trigger.cleanup(this);
-            }
-        }
     } // time-step
 
     //    @Override
@@ -460,24 +458,38 @@ public final class DefaultScene implements Scene {
         final Iterator<Geometry> i = c.getGeometries();
         while (i.hasNext()) {
             final Geometry g = i.next();
-            broadphase.add(g);
+            this.broadphase.add(g);
         }
 
         // add node to graph
-        constraintGraph.addNode(c);
+        this.constraintGraph.addNode(c);
     }
 
     @Override
     public void addConstraint(final Constraint joint) {
-        constraintGraph.addEdge(new Pair<Body>(joint.getBody1(), joint.getBody2()), joint);
+        final Body b1 = joint.getBody1();
+        final Body b2 = joint.getBody2();
+
+        // remove from constraint graph
+        this.constraintGraph.addEdge(new Pair<Body>(b1, b2), joint);
+
+        // notify triggers
+        if (b1.trigger != null) {
+            b1.trigger.constraintAttached(b1, joint);
+        }
+
+        // notify triggers
+        if (b2.trigger != null) {
+            b2.trigger.constraintAttached(b2, joint);
+        }
     }
 
     @Override
     public Iterator<Constraint> getConstraints() {
         final List<Constraint> list = new ArrayList<Constraint>();
-        final Iterator<ConstraintGroup> ci = data.getComponents();
+        final Iterator<ConstraintGroup> ci = this.data.getComponents();
         while (ci.hasNext()) {
-            final Iterator<Constraint> ei = data.getEdgesInComponent(ci.next());
+            final Iterator<Constraint> ei = this.data.getEdgesInComponent(ci.next());
             while (ei.hasNext()) {
                 list.add(ei.next());
             }
@@ -489,7 +501,22 @@ public final class DefaultScene implements Scene {
     @Override
     public final void removeConstraint(final Constraint c) {
         if (c != null) {
-            constraintGraph.removeEdge(new Pair<Body>(c.getBody1(), c.getBody2()));
+            // get the bodies
+            final Body b1 = c.getBody1();
+            final Body b2 = c.getBody2();
+
+            this.constraintGraph.removeEdge(new Pair<Body>(b1, b2));
+
+            // notify triggers
+            if (b1.trigger != null) {
+                b1.trigger.constraintDetached(b1, c);
+            }
+
+            // notify triggers
+            if (b2.trigger != null) {
+                b2.trigger.constraintDetached(b2, c);
+            }
+
         } else {
             throw new IllegalArgumentException("DefaultScene: attempt to remove null constraint");
         }
@@ -500,11 +527,11 @@ public final class DefaultScene implements Scene {
         // remove associated geometries from collision detection
         final Iterator<Geometry> i = body.getGeometries();
         while (i.hasNext()) {
-            broadphase.remove(i.next());
+            this.broadphase.remove(i.next());
         }
 
         // remove node from graph
-        constraintGraph.removeNode(body);
+        this.constraintGraph.removeNode(body);
     }
 
     @Override
@@ -513,9 +540,9 @@ public final class DefaultScene implements Scene {
         final List<Body> bodies = new ArrayList<Body>();
 
         // go thru all components and add all bodies in them to the list
-        final Iterator<ConstraintGroup> i = data.getComponents();
+        final Iterator<ConstraintGroup> i = this.data.getComponents();
         while (i.hasNext()) {
-            final Iterator<Body> j = data.getNodesInComponent(i.next());
+            final Iterator<Body> j = this.data.getNodesInComponent(i.next());
             while (j.hasNext()) {
                 bodies.add(j.next());
             }
@@ -528,13 +555,13 @@ public final class DefaultScene implements Scene {
 
     @Override
     public void setTimestep(final double dt) {
-        timestep = dt;
+        this.timestep = dt;
     }
 
     @Override
     public void fixBody(final Body b, final boolean fixed) {
         // check if the body is in the animation
-        if (!data.containsNode(b)) {
+        if (!this.data.containsNode(b)) {
             throw new IllegalArgumentException("Attempt to fix a body that is not in the scene");
         }
         // check if body is already the at the correct
@@ -560,7 +587,7 @@ public final class DefaultScene implements Scene {
     @Override
     public void monitorConstraint(final Constraint constraint) {
         // check if the constraint is in the graph
-        if (!data.containsEdge(constraint.getBody1(), constraint.getBody2())) {
+        if (!this.data.containsEdge(constraint.getBody1(), constraint.getBody2())) {
             throw new IllegalArgumentException("Scene.monitorConstraint: given constraint is not in the scene");
         }
 
@@ -581,7 +608,7 @@ public final class DefaultScene implements Scene {
     @Override
     public void unmonitorConstraint(final Constraint constraint) {
         // check if the constraint is in the graph
-        if (!data.containsEdge(constraint.getBody1(), constraint.getBody2())) {
+        if (!this.data.containsEdge(constraint.getBody1(), constraint.getBody2())) {
             throw new IllegalArgumentException("Scene: given constraint is not in the scene");
         }
 
@@ -600,30 +627,44 @@ public final class DefaultScene implements Scene {
     }
 
     @Override
-    public void addTrigger(final Trigger t) {
-        t.setup(this);
-        triggers.add(t);
+    public void addTrigger(final Body body, final Trigger t) {
+        // initially add the connected constraints to the trigger
+        final Iterator<Constraint> iter = getConnectedConstraints(body);
+        while (iter.hasNext()) {
+            final Constraint constraint = iter.next();
+            t.constraintAttached(body, constraint);
+        }// while constraints
+
+        // start trigger
+        t.start(body);
+
+        // assign the trigger to the body
+        body.trigger = t;
     }
 
     @Override
-    public void removeTrigger(final Trigger t) {
-        triggers.remove(t);
-        t.cleanup(this);
+    public void removeTrigger(final Body body) {
+        // call the triggers stop handler
+        body.trigger.stop(body);
+
+        // remove from body
+        body.trigger = null;
+
     }
 
     @Override
     public double getTimestep() {
-        return timestep;
+        return this.timestep;
     }
 
     @Override
     public ContactConstraintManager getContactConstraintManager() {
-        return contactmanager;
+        return this.contactmanager;
     }
 
     @Override
     public BroadphaseCollisionDetection getBroadphase() {
-        return broadphase;
+        return this.broadphase;
     }
 
     @Override
@@ -633,16 +674,16 @@ public final class DefaultScene implements Scene {
         body.addGeometry(orientation, position, g);
 
         // add the geometry to broadphase
-        broadphase.add(g);
+        this.broadphase.add(g);
 
         // add the new body to the graph
-        constraintGraph.addNode(body);
+        this.constraintGraph.addNode(body);
     }
 
     @Override
     public void addGeometry(final Body body, final Matrix3 orientation, final Vector3 position, final Geometry g) {
         // check if the body is in the animation
-        if (!data.containsNode(body)) {
+        if (!this.data.containsNode(body)) {
             throw new IllegalArgumentException("The given body does not exist in this scene");
         }
 
@@ -650,7 +691,7 @@ public final class DefaultScene implements Scene {
         body.addGeometry(orientation, position, g);
 
         // add the geometry to broadphase
-        broadphase.add(g);
+        this.broadphase.add(g);
     }
 
     @Override
@@ -674,13 +715,23 @@ public final class DefaultScene implements Scene {
     @Override
     public Iterator<Constraint> getConnectedConstraints(final Body body) {
         final List<Constraint> returnList = new ArrayList<Constraint>();
-        final Iterator<Body> nodes = data.getConnectedNodes(body);
+        final Iterator<Body> nodes = this.data.getConnectedNodes(body);
         while (nodes.hasNext()) {
-            returnList.add(data.getEdge(body, nodes.next()));
+            returnList.add(this.data.getEdge(body, nodes.next()));
         }
 
         // return iterator with constraints
         return returnList.iterator();
+    }
+
+    @Override
+    public boolean containsConstraint(final Body b1, final Body b2) {
+        return this.data.containsEdge(b1, b2);
+    }
+
+    @Override
+    public Constraint getConstraint(final Body b1, final Body b2) {
+        return this.data.getEdge(b1, b2);
     }
 
 }

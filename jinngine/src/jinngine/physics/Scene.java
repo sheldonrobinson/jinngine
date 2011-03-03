@@ -78,13 +78,6 @@ public interface Scene {
      */
     public void addBody(Body b);
 
-    //    /**
-    //     * Add a force to the scene
-    //     * 
-    //     * @param f
-    //     */
-    //    public void addForce(Force f);
-
     /**
      * Add a constraint to the scene
      * 
@@ -104,19 +97,22 @@ public interface Scene {
      */
     public void removeBody(Body b);
 
-    //    /**
-    //     * Remove a force from the scene
-    //     * 
-    //     * @param f
-    //     */
-    //    public void removeForce(Force f);
-
     /**
      * Remove a constraint from the scene
      * 
      * @param c
      */
     public void removeConstraint(Constraint c);
+
+    /**
+     * Query the existence of a constraint acting between b1 and b2
+     */
+    public boolean containsConstraint(Body b1, Body b2);
+
+    /**
+     * Obtain the constraint acting between b1 and b2
+     */
+    public Constraint getConstraint(Body b1, Body b2);
 
     /**
      * Perform a time step on this model
@@ -170,12 +166,12 @@ public interface Scene {
     /**
      * Add an event trigger to this scene
      */
-    public void addTrigger(Trigger t);
+    public void addTrigger(Body body, Trigger t);
 
     /**
      * Remove an event trigger from this scene
      */
-    public void removeTrigger(Trigger t);
+    public void removeTrigger(Body body);
 
     /**
      * Get the {@link ContactConstraintManager} that is governing contact

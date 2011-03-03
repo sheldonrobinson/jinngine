@@ -24,6 +24,7 @@ import jinngine.physics.DefaultDeactivationPolicy;
 import jinngine.physics.DefaultScene;
 import jinngine.physics.Scene;
 import jinngine.physics.constraint.Constraint;
+import jinngine.physics.force.GeneralizedForce;
 import jinngine.physics.force.GravityForce;
 import jinngine.physics.solver.NonsmoothNonlinearConjugateGradient;
 import jinngine.physics.solver.Solver.NCPConstraint;
@@ -69,7 +70,7 @@ public class ControlExample implements Rendering.Callback {
         scene.addConstraint(new GravityForce(figure, ground));
 
         // remove restitution from feet
-        head.setFrictionCoefficient(0.5);
+        head.setFrictionCoefficient(0.0);
         head.setRestitution(0.0);
         head.setEnvelope(0); // force surroundings to determine the envelope size
 
@@ -97,6 +98,41 @@ public class ControlExample implements Rendering.Callback {
 
         // the target figure velocity
         final Vector3 targetVelocity = new Vector3();
+        final Vector3 jumpDuration = new Vector3();
+
+        // add a drag force in the XZ plane
+        final Body pseude = new Body("Majonet");
+        scene.addBody(pseude);
+        scene.fixBody(pseude, true);
+
+        scene.addConstraint(new GeneralizedForce(figure, pseude) {
+            final jinngine.math.Vector3 direction = new jinngine.math.Vector3();
+            double magnitude = 0;
+
+            /*
+             * I should change GeneralizedForce to just work directly with the
+             * force vectors, insted of a direction and a magnitude. Its a real
+             * pain having to keeping the direction normalized and figuring out
+             * what the magnitude should be afterward etc..
+             */
+            @Override
+            public void update(final double dt) {
+                direction.assign(figure.state.velocity);
+                direction.assignNegate();
+                direction.y = 0;
+                if (direction.norm() < 1e-7) {
+                    direction.assign(1, 0, 0);
+                    magnitude = 0;
+                } else {
+                    direction.assignNormalize();
+                    magnitude = Math.max(-figure.state.velocity.dot(direction) * 20, 0);
+                }
+
+                setForce(magnitude, direction, 0, new jinngine.math.Vector3(1, 0, 0));
+
+                super.update(dt);
+            }
+        });
 
         // create constraint controller for figure
         final Constraint control = new Constraint() {
@@ -108,8 +144,16 @@ public class ControlExample implements Rendering.Callback {
                 final Vector3 u = figure.state.velocity.sub(targetVelocity);
 
                 // if the target jump velocity is reached, set it back to zero
-                if (Math.abs(u.y) < 1e-1) {
+                //                if (Math.abs(u.y) < 1e-7) {
+                //                    System.out.println("" + u.y);
+                //
+                //                    targetVelocity.y = 0;
+                //                }
+
+                if (jumpDuration.x <= 0) {
                     targetVelocity.y = 0;
+                } else {
+                    jumpDuration.x = jumpDuration.x - 1;
                 }
 
                 // the next two constraints takes care of the movement in the XZ plane. They
@@ -129,7 +173,18 @@ public class ControlExample implements Rendering.Callback {
                 // force is the same as the velocity. The lower limit of the force is 0,
                 // so it can never "pull" the figure down
                 linear3.assign(new Vector3(0, 1, 0), new Vector3(), new Vector3(0, -1, 0), new Vector3(), 0,
-                        Math.max(targetVelocity.y * figure.getMass() * 1000, 0) * dt, null, u.y);
+                        Math.max(targetVelocity.y * figure.getMass() * 87627 /*
+                                                                              * something
+                                                                              * big
+                                                                              * so
+                                                                              * we
+                                                                              * are
+                                                                              * sure
+                                                                              * there
+                                                                              * is
+                                                                              * impulse
+                                                                              * enough
+                                                                              */, 0) * dt, null, u.y);
 
             }
 
@@ -196,19 +251,20 @@ public class ControlExample implements Rendering.Callback {
                 // System.out.println("got key="+key);
                 switch (key) {
                     case 'w':
-                        targetVelocity.z = -2;
+                        targetVelocity.z = -3;
                         break;
                     case 's':
-                        targetVelocity.z = 2;
+                        targetVelocity.z = 3;
                         break;
                     case 'a':
-                        targetVelocity.x = -2;
+                        targetVelocity.x = -3;
                         break;
                     case 'd':
-                        targetVelocity.x = 2;
+                        targetVelocity.x = 3;
                         break;
                     case ' ':
-                        targetVelocity.y = 9;
+                        jumpDuration.x = 5;
+                        targetVelocity.y = 4;
                         break;
                 }
             }

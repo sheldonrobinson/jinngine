@@ -10,15 +10,12 @@
 
 package jinngine.examples;
 
-import java.applet.Applet;
-import java.awt.BorderLayout;
 import java.util.ArrayList;
 import java.util.List;
 
 import jinngine.collision.SAP2;
 import jinngine.geometry.Box;
 import jinngine.geometry.ConvexHull;
-import jinngine.geometry.UniformCapsule;
 import jinngine.math.Matrix3;
 import jinngine.math.Vector3;
 import jinngine.physics.Body;
@@ -30,19 +27,14 @@ import jinngine.physics.solver.NonsmoothNonlinearConjugateGradient;
 import jinngine.rendering.Interaction;
 import jinngine.rendering.Rendering;
 
-public class AppletExample extends Applet implements Rendering.Callback {
-    private static final long serialVersionUID = 1L;
+public class PlatonicSolidsExample implements Rendering.Callback {
+    private final Scene scene;
 
-    private Scene scene;
-
-    @Override
-    public void init() {
-        super.init();
-
+    public PlatonicSolidsExample() {
         // start jinngine
         this.scene = new DefaultScene(new SAP2(), new NonsmoothNonlinearConjugateGradient(50),
                 new DisabledDeactivationPolicy());
-        this.scene.setTimestep(0.065);
+        this.scene.setTimestep(0.1);
 
         // add boxes to bound the world
         final Box floor = new Box("floor", 1500, 20, 1500);
@@ -64,21 +56,6 @@ public class AppletExample extends Applet implements Rendering.Callback {
         final Box right = new Box("right", 20, 200, 200);
         this.scene.addGeometry(Matrix3.identity(), new Vector3(10, 0, 0), right);
         this.scene.fixBody(right.getBody(), true);
-
-        // create capsules
-        final UniformCapsule capgeo = new UniformCapsule("capgoe", 2, 6);
-        this.scene.addGeometry(Matrix3.identity(), new Vector3(-10, -11, -25), capgeo);
-
-        final UniformCapsule capgeo2 = new UniformCapsule("capgoe2", 1.8, 5);
-        this.scene.addGeometry(Matrix3.identity(), new Vector3(-10, -11, -25), capgeo2);
-
-        final UniformCapsule capgeo3 = new UniformCapsule("capgoe3", 1.0, 4);
-        this.scene.addGeometry(Matrix3.identity(), new Vector3(-10, -11, -25), capgeo3);
-
-        final UniformCapsule capgeo4 = new UniformCapsule("capgoe4", 1.6, 1.0);
-        this.scene.addGeometry(Matrix3.identity(), new Vector3(-10, -11, -25), capgeo4);
-        //        final Sphere capgeo4 = new Sphere("capgoe4", 3);
-        //        this.scene.addGeometry(Matrix3.identity(), new Vector3(-10, -11, -25), capgeo4);
 
         // create a box
         final Box boxgeometry = new Box("box", 3, 3, 3, 0.25);
@@ -180,50 +157,27 @@ public class AppletExample extends Applet implements Rendering.Callback {
         this.scene.addBody(gravity);
         this.scene.fixBody(gravity, true);
 
-        //        final Body gravity2 = new Body("gravity");
-        //        scene.addBody(gravity2);
-        //        scene.fixBody(gravity2, true);
-        //
-        //        scene.addConstraint(new GeneralizedForce(dodeca.getBody(), gravity2) {
-        //            @Override
-        //            public void update(final double dt) {
-        //                setForce(1143, new Vector3(1, 0, 0), 0, new Vector3(1, 0, 0));
-        //                // TODO Auto-generated method stub
-        //                super.update(dt);
-        //            }
-        //        });
-
         // put gravity on stuff
         this.scene.addConstraint(new GravityForce(boxgeometry.getBody(), gravity));
         this.scene.addConstraint(new GravityForce(boxgeometry2.getBody(), gravity));
         this.scene.addConstraint(new GravityForce(boxgeometry3.getBody(), gravity));
-        this.scene.addConstraint(new GravityForce(capgeo.getBody(), gravity));
-        this.scene.addConstraint(new GravityForce(capgeo2.getBody(), gravity));
-        this.scene.addConstraint(new GravityForce(capgeo3.getBody(), gravity));
-        this.scene.addConstraint(new GravityForce(capgeo4.getBody(), gravity));
         this.scene.addConstraint(new GravityForce(ico.getBody(), gravity));
         this.scene.addConstraint(new GravityForce(dodeca.getBody(), gravity));
         this.scene.addConstraint(new GravityForce(octa.getBody(), gravity));
         this.scene.addConstraint(new GravityForce(tetra.getBody(), gravity));
 
         // handle drawing
-        final Rendering rendering = new jinngine.rendering.jogl.JoglRendering(this, getWidth(), getHeight());
+        final Rendering rendering = new jinngine.rendering.jogl.JoglRendering(this);
         rendering.addCallback(new Interaction(this.scene));
         rendering.drawMe(boxgeometry);
         rendering.drawMe(boxgeometry2);
         rendering.drawMe(boxgeometry3);
-        rendering.drawMe(capgeo);
-        rendering.drawMe(capgeo2);
-        rendering.drawMe(capgeo3);
-        rendering.drawMe(capgeo4);
         rendering.drawMe(ico);
         rendering.drawMe(dodeca);
         rendering.drawMe(tetra);
         rendering.drawMe(octa);
 
-        // add to applet
-        add(rendering.getCanvas(), BorderLayout.CENTER);
-
+        rendering.createWindow();
         rendering.start();
     }
 
@@ -231,6 +185,10 @@ public class AppletExample extends Applet implements Rendering.Callback {
     public void tick() {
         // each frame, to a time step on the Scene
         this.scene.tick();
+    }
+
+    public static void main(final String[] args) {
+        new PlatonicSolidsExample();
     }
 
 }

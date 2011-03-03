@@ -28,6 +28,8 @@ public interface Rendering {
     public interface DrawShape {
         public void init(GL gl);
 
+        public void preDisplay(GL gl);
+
         public int getDisplayList();
 
         public int getShadowDisplayList();

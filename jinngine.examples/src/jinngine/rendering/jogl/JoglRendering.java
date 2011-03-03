@@ -56,7 +56,7 @@ public class JoglRendering implements Rendering, GLEventListener, MouseListener,
     private final Callback callback;
     private final List<EventCallback> mouseCallbacks = new ArrayList<EventCallback>();
     private final GLCanvas canvas = new GLCanvas();
-    private final Animator animator = new Animator(canvas);
+    private final Animator animator = new Animator(this.canvas);
     private final GLU glu = new GLU();
     private double width;
     private double height;
@@ -71,7 +71,7 @@ public class JoglRendering implements Rendering, GLEventListener, MouseListener,
     public double[] camera = new double[16];
     public double zoom = 0.95;
     private final Vector3 cameraTo = new Vector3(-12, -3, 0).multiply(1);
-    private final Vector3 cameraFrom = cameraTo.add(new Vector3(0, 0.5, 1).multiply(5));
+    private final Vector3 cameraFrom = this.cameraTo.add(new Vector3(0, 0.5, 1).multiply(5));
     private int cameraClicks = 1;
 
     // global light0 position
@@ -90,15 +90,28 @@ public class JoglRendering implements Rendering, GLEventListener, MouseListener,
 
     public JoglRendering(final Callback callback) {
         this.callback = callback;
-        canvas.setSize(1024, (int) (1024 / 1.77777));
-        canvas.setIgnoreRepaint(true);
-        canvas.addGLEventListener(this);
-        canvas.setVisible(true);
-        canvas.addMouseListener(this);
-        canvas.addMouseMotionListener(this);
-        canvas.addMouseWheelListener(this);
-        canvas.addKeyListener(this);
-        canvas.setVisible(true);
+        this.canvas.setSize(1024, (int) (1024 / 1.77777));
+        this.canvas.setIgnoreRepaint(true);
+        this.canvas.addGLEventListener(this);
+        this.canvas.setVisible(true);
+        this.canvas.addMouseListener(this);
+        this.canvas.addMouseMotionListener(this);
+        this.canvas.addMouseWheelListener(this);
+        this.canvas.addKeyListener(this);
+        this.canvas.setVisible(true);
+    }
+
+    public JoglRendering(final Callback callback, final int w, final int h) {
+        this.callback = callback;
+        this.canvas.setSize(w, h);
+        this.canvas.setIgnoreRepaint(true);
+        this.canvas.addGLEventListener(this);
+        this.canvas.setVisible(true);
+        this.canvas.addMouseListener(this);
+        this.canvas.addMouseMotionListener(this);
+        this.canvas.addMouseWheelListener(this);
+        this.canvas.addKeyListener(this);
+        this.canvas.setVisible(true);
     }
 
     @Override
@@ -114,7 +127,7 @@ public class JoglRendering implements Rendering, GLEventListener, MouseListener,
             }
         });
 
-        frame.add(canvas, java.awt.BorderLayout.CENTER);
+        frame.add(this.canvas, java.awt.BorderLayout.CENTER);
         frame.setVisible(true);
     }
 
@@ -145,9 +158,15 @@ public class JoglRendering implements Rendering, GLEventListener, MouseListener,
             public int getShadowDisplayList() {
                 return shape.getShadowDisplayList();
             }
+
+            @Override
+            public void preDisplay(final GL gl) {
+                // TODO Auto-generated method stub
+
+            }
         };
 
-        toDraw.add(newshape);
+        this.toDraw.add(newshape);
     }
 
     public DrawShape doShape(final Geometry g, final List<Vector3> vertices, final double radius) {
@@ -159,7 +178,7 @@ public class JoglRendering implements Rendering, GLEventListener, MouseListener,
 
             // add ico-spheres for each vertex in hull
             for (final Vector3 vertex : vertices) {
-                final Iterator<Vector3> iter = icosphere.getVertices();
+                final Iterator<Vector3> iter = this.icosphere.getVertices();
                 while (iter.hasNext()) {
                     final Vector3 v = iter.next();
                     inputVertices.add(v.multiply(radius).add(vertex));
@@ -181,6 +200,7 @@ public class JoglRendering implements Rendering, GLEventListener, MouseListener,
             }
 
             return new DrawShape() {
+                private boolean initable = true;
                 private int list = 0;
                 private int shadowList = 0;
 
@@ -196,27 +216,36 @@ public class JoglRendering implements Rendering, GLEventListener, MouseListener,
 
                 @Override
                 public int getDisplayList() {
-                    return list;
+                    return this.list;
                 }
 
                 @Override
                 public void init(final GL gl) {
-                    list = startDisplayList(gl);
-                    drawSmoothShape(hullVertices, hullNormals, hull.getFaceIndices(), gl);
-                    endDisplayList(gl);
+                    if (this.initable) {
+                        this.list = startDisplayList(gl);
+                        drawSmoothShape(hullVertices, hullNormals, hull.getFaceIndices(), gl);
+                        endDisplayList(gl);
 
-                    shadowList = startDisplayList(gl);
-                    drawBackfaceShadowMesh(hullVertices, null, hull.getFaceIndices(), gl);
-                    endDisplayList(gl);
+                        this.shadowList = startDisplayList(gl);
+                        drawBackfaceShadowMesh(hullVertices, null, hull.getFaceIndices(), gl);
+                        endDisplayList(gl);
+
+                        this.initable = false;
+                    }
                 }
 
                 @Override
                 public int getShadowDisplayList() {
-                    return shadowList;
+                    return this.shadowList;
+                }
+
+                @Override
+                public void preDisplay(final GL gl) {
+                    gl.glUniform1f(JoglRendering.this.extrutionUniformLocation,
+                            -(float) (32f / JoglRendering.this.height));
                 }
             };
         } else {
-            final ConvexHull hull = new ConvexHull("hull", vertices, 0.0);
 
             return new DrawShape() {
                 private int list = 0;
@@ -234,23 +263,31 @@ public class JoglRendering implements Rendering, GLEventListener, MouseListener,
 
                 @Override
                 public int getDisplayList() {
-                    return list;
+                    return this.list;
                 }
 
                 @Override
                 public void init(final GL gl) {
-                    list = startDisplayList(gl);
+                    final ConvexHull hull = new ConvexHull("hull", vertices, 0.0);
+
+                    this.list = startDisplayList(gl);
                     drawPolygonShape(hull.getVerticesList(), null, hull.getFaceIndices(), gl);
                     endDisplayList(gl);
 
-                    shadowList = startDisplayList(gl);
+                    this.shadowList = startDisplayList(gl);
                     drawBackfaceShadowMesh(hull.getVerticesList(), null, hull.getFaceIndices(), gl);
                     endDisplayList(gl);
                 }
 
                 @Override
                 public int getShadowDisplayList() {
-                    return shadowList;
+                    return this.shadowList;
+                }
+
+                @Override
+                public void preDisplay(final GL gl) {
+                    // TODO Auto-generated method stub
+
                 }
             };
         }
@@ -267,7 +304,7 @@ public class JoglRendering implements Rendering, GLEventListener, MouseListener,
 
         if (g instanceof Box) {
             final List<Vector3> inputVertices = new ArrayList<Vector3>();
-            final List<Vector3> hullVertices = new ArrayList<Vector3>();
+            new ArrayList<Vector3>();
             inputVertices.add(new Vector3(0.5, 0.5, 0.5));
             inputVertices.add(new Vector3(-0.5, 0.5, 0.5));
             inputVertices.add(new Vector3(0.5, -0.5, 0.5));
@@ -307,7 +344,7 @@ public class JoglRendering implements Rendering, GLEventListener, MouseListener,
         }
 
         if (shape != null) {
-            toDraw.add(shape);
+            this.toDraw.add(shape);
             return shape;
         } else {
             throw new IllegalArgumentException("Unknown Geometry type");
@@ -359,7 +396,7 @@ public class JoglRendering implements Rendering, GLEventListener, MouseListener,
 
     @Override
     public void start() {
-        animator.start();
+        this.animator.start();
     }
 
     // transformation matrix
@@ -371,38 +408,39 @@ public class JoglRendering implements Rendering, GLEventListener, MouseListener,
         final GL gl = drawable.getGL();
 
         // init all drawing objects
-        if (!initialized) {
+        if (!this.initialized) {
             // calculate shadow matrix
-            shadowProjMatrix = shadowProjectionMatrix(new Vector3(0, 350, 0), new Vector3(0, -20 + 0.0, 0),
+            this.shadowProjMatrix = shadowProjectionMatrix(new Vector3(0, 350, 0), new Vector3(0, -20 + 0.0, 0),
                     new Vector3(0, -1, 0));
 
             // init all display lists
-            for (final DrawShape s : toDraw) {
+            for (final DrawShape s : this.toDraw) {
                 s.init(gl);
             }
-            initialized = true;
+            this.initialized = true;
         }
 
-        if (redoCamera) {
+        if (this.redoCamera) {
             // setup camera
             gl.glMatrixMode(GL.GL_MODELVIEW);
             gl.glLoadIdentity();
 
             // Set camera transform
-            glu.gluLookAt(cameraFrom.x, cameraFrom.y, cameraFrom.z, cameraTo.x, cameraTo.y, cameraTo.z, 0, 1, 0);
+            this.glu.gluLookAt(this.cameraFrom.x, this.cameraFrom.y, this.cameraFrom.z, this.cameraTo.x,
+                    this.cameraTo.y, this.cameraTo.z, 0, 1, 0);
 
             // copy camera transform (needed for picking)
-            gl.glGetDoublev(GL.GL_MODELVIEW_MATRIX, camera, 0);
+            gl.glGetDoublev(GL.GL_MODELVIEW_MATRIX, this.camera, 0);
 
             // set light position in world space
-            gl.glLightfv(GL.GL_LIGHT0, GL.GL_POSITION, position, 0);
+            gl.glLightfv(GL.GL_LIGHT0, GL.GL_POSITION, this.position, 0);
 
             // camera done
-            redoCamera = false;
+            this.redoCamera = false;
         }
 
         // Perform ratio time-steps on the model
-        callback.tick();
+        this.callback.tick();
         // callback.tick();
         // callback.tick();
         // callback.tick();
@@ -411,18 +449,19 @@ public class JoglRendering implements Rendering, GLEventListener, MouseListener,
         gl.glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
         gl.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT | GL.GL_STENCIL_BUFFER_BIT);
 
-        for (final DrawShape shape : toDraw) {
+        for (final DrawShape shape : this.toDraw) {
             gl.glPushMatrix();
-            shape.getTransform(jMatrix4);
-            jMatrix4.toArray(transform);
-            gl.glMultMatrixd(transform, 0);
+            shape.getTransform(this.jMatrix4);
+            this.jMatrix4.toArray(this.transform);
+            gl.glMultMatrixd(this.transform, 0);
+            shape.preDisplay(gl);
             gl.glCallList(shape.getDisplayList());
             gl.glPopMatrix();
 
             // draw projected shadow
             gl.glPushMatrix();
-            gl.glMultMatrixd(shadowProjMatrix, 0);
-            gl.glMultMatrixd(transform, 0);
+            gl.glMultMatrixd(this.shadowProjMatrix, 0);
+            gl.glMultMatrixd(this.transform, 0);
             gl.glCallList(shape.getShadowDisplayList());
             gl.glPopMatrix();
         }
@@ -431,12 +470,12 @@ public class JoglRendering implements Rendering, GLEventListener, MouseListener,
         gl.glFlush();
 
         // take screenshot
-        if (takeScreenShot) {
+        if (this.takeScreenShot) {
             gl.glFinish();
 
-            takeScreenShot = false;
+            this.takeScreenShot = false;
             try {
-                Screenshot.writeToTargaFile(new File(screenShotFilename), (int) width, (int) height);
+                Screenshot.writeToTargaFile(new File(this.screenShotFilename), (int) this.width, (int) this.height);
             } catch (final GLException e) {
                 // TODO Auto-generated catch block
                 e.printStackTrace();
@@ -540,24 +579,32 @@ public class JoglRendering implements Rendering, GLEventListener, MouseListener,
         gl.glEndList();
     }
 
+    int colorCount = 0;
+
     private void drawSmoothShape(final List<Vector3> vertices, final List<Vector3> normals, final int[][] faceIndices,
             final GL gl) {
         // draw shaded mesh
-        gl.glUniform1f(extrutionUniformLocation, -0.045f);
+        //        gl.glUniform1f(this.extrutionUniformLocation, -0.045f);
+        //        gl.glUniform1f(this.extrutionUniformLocation, -(float) (32f / this.height));
         //        gl.glUniform3f(colorUniformLocation, 1f, 0.95f, 1f);
-        final float shade = rand.nextFloat() * 0.25f;
-        //        final float shade2 = rand.nextFloat() * 0.2f;
-        //        final float shade3 = rand.nextFloat() * 0.2f;
-        gl.glUniform3f(colorUniformLocation, 1f - shade, 1f - shade, 1f - shade);
 
-        gl.glUniform1f(influenceUniformLocation, 0);
+        final float[][] color = { { 256 / 256f, 26 / 256f, 171 / 256f }, { 155 / 256f, 256 / 256f, 26 / 256f },
+                { 0, 0.5f, 1 }, { 66 / 256f, 229 / 256f, 227 / 256f }, { 169 / 256f, 55 / 256f, 222 / 256f },
+                { 63 / 256f, 189 / 256f, 225 / 256f }, { 255 / 256f, 123 / 256f, 131 / 256f } };
+        final float shade = 1 - rand.nextFloat() * 0.0f;
+        final int index = this.colorCount++ % color.length;
+        gl.glUniform3f(this.colorUniformLocation, shade * color[index][0], shade * color[index][1], shade
+                * color[index][2]);
+        //        gl.glUniform3f(this.colorUniformLocation, 1f - shade, 1f - shade2, 1f - shade3);
+
+        gl.glUniform1f(this.influenceUniformLocation, 0);
         gl.glCullFace(GL.GL_BACK);
         drawFaces(vertices, normals, faceIndices, gl);
 
         // draw silhouette
-        gl.glUniform1f(extrutionUniformLocation, -0.00f);
-        gl.glUniform1f(influenceUniformLocation, 01f);
-        gl.glUniform3f(colorUniformLocation, 0.30f, 0.30f, 0.30f);
+        gl.glUniform1f(this.extrutionUniformLocation, -0.00f);
+        gl.glUniform1f(this.influenceUniformLocation, 01f);
+        gl.glUniform3f(this.colorUniformLocation, 0.15f, 0.15f, 0.15f);
         gl.glCullFace(GL.GL_FRONT);
         drawFaces(vertices, normals, faceIndices, gl);
         // drawEdgeMesh( new ConvexHull(vertices), gl);
@@ -566,27 +613,27 @@ public class JoglRendering implements Rendering, GLEventListener, MouseListener,
     private void drawPolygonShape(final List<Vector3> vertices, final List<Vector3> normals, final int[][] faceIndices,
             final GL gl) {
         // draw shaded mesh
-        gl.glUniform1f(extrutionUniformLocation, 0);
-        gl.glUniform1f(influenceUniformLocation, 0);
+        gl.glUniform1f(this.extrutionUniformLocation, 0);
+        gl.glUniform1f(this.influenceUniformLocation, 0);
         final float shade = rand.nextFloat() * 0.2f;
-        gl.glUniform3f(colorUniformLocation, 1f - shade, 1f - shade, 1f - shade);
+        gl.glUniform3f(this.colorUniformLocation, 1f - shade, 1f - shade, 1f - shade);
         //        gl.glUniform3f(colorUniformLocation, 0.95f, 0.95f, 1f);
 
         gl.glCullFace(GL.GL_BACK);
         drawFaces(vertices, normals, faceIndices, gl);
 
         // draw solid coloured edge mesh
-        gl.glUniform1f(extrutionUniformLocation, 0.03f);
-        gl.glUniform3f(colorUniformLocation, 0.30f, 0.30f, 0.30f);
-        gl.glUniform1f(influenceUniformLocation, 1f);
+        gl.glUniform1f(this.extrutionUniformLocation, 0.03f);
+        gl.glUniform3f(this.colorUniformLocation, 0.30f, 0.30f, 0.30f);
+        gl.glUniform1f(this.influenceUniformLocation, 1f);
         drawEdgeMesh(new ConvexHull("edge hull", vertices, 0.0), gl);
     }
 
     private void drawBackfaceShadowMesh(final List<Vector3> vertices, final List<Vector3> normals,
             final int[][] faceIndices, final GL gl) {
-        gl.glUniform1f(extrutionUniformLocation, 0);
-        gl.glUniform1f(influenceUniformLocation, 1);
-        gl.glUniform3f(colorUniformLocation, 0.85f, 0.85f, 0.85f);
+        gl.glUniform1f(this.extrutionUniformLocation, 0);
+        gl.glUniform1f(this.influenceUniformLocation, 1);
+        gl.glUniform3f(this.colorUniformLocation, 0.85f, 0.85f, 0.85f);
         gl.glCullFace(GL.GL_FRONT);
         drawFaces(vertices, normals, faceIndices, gl);
     }
@@ -618,16 +665,17 @@ public class JoglRendering implements Rendering, GLEventListener, MouseListener,
         gl.glMatrixMode(GL.GL_MODELVIEW);
         gl.glLoadIdentity();
         // Set camera transform
-        glu.gluLookAt(cameraFrom.x, cameraFrom.y, cameraFrom.z, cameraTo.x, cameraTo.y, cameraTo.z, 0, 1, 0);
+        this.glu.gluLookAt(this.cameraFrom.x, this.cameraFrom.y, this.cameraFrom.z, this.cameraTo.x, this.cameraTo.y,
+                this.cameraTo.z, 0, 1, 0);
 
         // copy camera transform
-        gl.glGetDoublev(GL.GL_MODELVIEW_MATRIX, camera, 0);
+        gl.glGetDoublev(GL.GL_MODELVIEW_MATRIX, this.camera, 0);
 
         // Assign created components to GL_LIGHT0
         gl.glLightfv(GL.GL_LIGHT0, GL.GL_AMBIENT, ambientLight, 0);
         gl.glLightfv(GL.GL_LIGHT0, GL.GL_DIFFUSE, diffuseLight, 0);
         gl.glLightfv(GL.GL_LIGHT0, GL.GL_SPECULAR, specularLight, 0);
-        gl.glLightfv(GL.GL_LIGHT0, GL.GL_POSITION, position, 0);
+        gl.glLightfv(GL.GL_LIGHT0, GL.GL_POSITION, this.position, 0);
 
         final String[] vertexShader = { "uniform float extrution;\n ", "varying vec3 point;   \n",
                 "varying vec3 normal;  \n", "void main(void) {     \n",
@@ -670,9 +718,9 @@ public class JoglRendering implements Rendering, GLEventListener, MouseListener,
         gl.glValidateProgram(shaderprogram);
         gl.glUseProgram(shaderprogram);
 
-        extrutionUniformLocation = gl.glGetUniformLocation(shaderprogram, "extrution");
-        colorUniformLocation = gl.glGetUniformLocation(shaderprogram, "color");
-        influenceUniformLocation = gl.glGetUniformLocation(shaderprogram, "influence");
+        this.extrutionUniformLocation = gl.glGetUniformLocation(shaderprogram, "extrution");
+        this.colorUniformLocation = gl.glGetUniformLocation(shaderprogram, "color");
+        this.influenceUniformLocation = gl.glGetUniformLocation(shaderprogram, "influence");
 
     }
 
@@ -682,37 +730,45 @@ public class JoglRendering implements Rendering, GLEventListener, MouseListener,
         final GL gl = drawable.getGL();
         gl.glMatrixMode(GL.GL_PROJECTION);
         gl.glLoadIdentity();
-        gl.glFrustum(-1.77777 * zoom, 1.777777 * zoom, -1.0 * zoom, 1.0 * zoom, 4.0, 200.0);
-        height = h;
-        width = w;
-        drawHeight = (int) (width / 1.77777);
-        gl.glViewport(0, (int) ((height - drawHeight) / 2.0), (int) width, (int) drawHeight);
+
+        this.height = h;
+        this.width = w;
+        final double ratio = (double) w / (double) h;
+
+        gl.glFrustum(-ratio * this.zoom, ratio * this.zoom, -1.0 * this.zoom, 1.0 * this.zoom, 4.0, 200.0);
+        //        this.drawHeight = (int) (this.width / ratio);
+        //        System.out.println("drawHeight=" + this.drawHeight + " ratio=" + ratio);
+        this.drawHeight = (int) this.height;
+
+        gl.glViewport(0, (int) ((this.height - this.drawHeight) / 2.0), (int) this.width, (int) this.drawHeight);
         // copy projection matrix (needed for pick ray)
-        gl.glGetDoublev(GL.GL_PROJECTION_MATRIX, proj, 0);
+        gl.glGetDoublev(GL.GL_PROJECTION_MATRIX, this.proj, 0);
 
         // setup camera
         gl.glMatrixMode(GL.GL_MODELVIEW);
         gl.glLoadIdentity();
         // Set camera transform
-        glu.gluLookAt(cameraFrom.x, cameraFrom.y, cameraFrom.z, cameraTo.x, cameraTo.y, cameraTo.z, 0, 1, 0);
+        this.glu.gluLookAt(this.cameraFrom.x, this.cameraFrom.y, this.cameraFrom.z, this.cameraTo.x, this.cameraTo.y,
+                this.cameraTo.z, 0, 1, 0);
 
         // copy camera transform (needed for picking)
-        gl.glGetDoublev(GL.GL_MODELVIEW_MATRIX, camera, 0);
+        gl.glGetDoublev(GL.GL_MODELVIEW_MATRIX, this.camera, 0);
     }
 
     private Matrix4 getCameraMatrix() {
-        return new Matrix4(camera);
+        return new Matrix4(this.camera);
     }
 
     private Matrix4 getProjectionMatrix() {
-        return new Matrix4(proj);
+        return new Matrix4(this.proj);
     }
 
     public void getPointerRay(final Vector3 p, final Vector3 d, final double x, final double y) {
         // clipping planes
-        final Vector3 near = new Vector3(2 * x / width - 1, -2 * (y - (height - drawHeight) * 0.5) / drawHeight + 1,
-                0.7);
-        final Vector3 far = new Vector3(2 * x / width - 1, -2 * (y - (height - drawHeight) * 0.5) / drawHeight + 1, 0.9);
+        final Vector3 near = new Vector3(2 * x / this.width - 1, -2 * (y - (this.height - this.drawHeight) * 0.5)
+                / this.drawHeight + 1, 0.7);
+        final Vector3 far = new Vector3(2 * x / this.width - 1, -2 * (y - (this.height - this.drawHeight) * 0.5)
+                / this.drawHeight + 1, 0.9);
 
         // inverse transform
         final Matrix4 T = getProjectionMatrix().multiply(getCameraMatrix()).inverse();
@@ -774,8 +830,8 @@ public class JoglRendering implements Rendering, GLEventListener, MouseListener,
     }
 
     public void getCamera(final Vector3 from, final Vector3 to) {
-        from.assign(cameraFrom);
-        to.assign(cameraTo);
+        from.assign(this.cameraFrom);
+        to.assign(this.cameraTo);
     }
 
     @Override
@@ -793,14 +849,14 @@ public class JoglRendering implements Rendering, GLEventListener, MouseListener,
         final Vector3 d = new Vector3();
         getPointerRay(p, d, e.getX(), e.getY());
 
-        for (final EventCallback call : mouseCallbacks) {
+        for (final EventCallback call : this.mouseCallbacks) {
             call.mousePressed(e.getX(), e.getY(), p, d);
         }
     }
 
     @Override
     public void mouseReleased(final MouseEvent e) {
-        for (final EventCallback call : mouseCallbacks) {
+        for (final EventCallback call : this.mouseCallbacks) {
             call.mouseReleased();
         }
     }
@@ -811,7 +867,7 @@ public class JoglRendering implements Rendering, GLEventListener, MouseListener,
         final Vector3 d = new Vector3();
         getPointerRay(p, d, e.getX(), e.getY());
 
-        for (final EventCallback call : mouseCallbacks) {
+        for (final EventCallback call : this.mouseCallbacks) {
             call.mouseDragged(e.getX(), e.getY(), p, d);
         }
     }
@@ -822,18 +878,18 @@ public class JoglRendering implements Rendering, GLEventListener, MouseListener,
     @Override
     public void keyPressed(final KeyEvent arg0) {
         if (arg0.getKeyChar() == ' ') {
-            for (final EventCallback call : mouseCallbacks) {
+            for (final EventCallback call : this.mouseCallbacks) {
                 call.spacePressed();
             }
         }
 
         if (arg0.getKeyCode() == java.awt.event.KeyEvent.VK_ENTER) {
-            for (final EventCallback call : mouseCallbacks) {
+            for (final EventCallback call : this.mouseCallbacks) {
                 call.enterPressed();
             }
         }
 
-        for (final EventCallback call : mouseCallbacks) {
+        for (final EventCallback call : this.mouseCallbacks) {
             call.keyPressed(arg0.getKeyChar());
         }
 
@@ -842,12 +898,12 @@ public class JoglRendering implements Rendering, GLEventListener, MouseListener,
     @Override
     public void keyReleased(final KeyEvent arg0) {
         if (arg0.getKeyChar() == ' ') {
-            for (final EventCallback call : mouseCallbacks) {
+            for (final EventCallback call : this.mouseCallbacks) {
                 call.spaceReleased();
             }
         }
 
-        for (final EventCallback call : mouseCallbacks) {
+        for (final EventCallback call : this.mouseCallbacks) {
             call.keyReleased(arg0.getKeyChar());
         }
 
@@ -858,29 +914,29 @@ public class JoglRendering implements Rendering, GLEventListener, MouseListener,
 
     @Override
     public void addCallback(final EventCallback c) {
-        mouseCallbacks.add(c);
+        this.mouseCallbacks.add(c);
     }
 
     @Override
     public Canvas getCanvas() {
-        return canvas;
+        return this.canvas;
     }
 
     @Override
     public void takeScreenShot(final String filename) {
-        screenShotFilename = filename;
-        takeScreenShot = true;
+        this.screenShotFilename = filename;
+        this.takeScreenShot = true;
     }
 
     @Override
     public void mouseWheelMoved(final MouseWheelEvent e) {
-        cameraClicks += e.getWheelRotation();
+        this.cameraClicks += e.getWheelRotation();
 
         final Vector3 direction = new Vector3(0, 0.5, 1).normalize();
-        cameraTo.assign(new Vector3(-12, -3, 0).add(direction.multiply(cameraClicks * 5)));
-        cameraFrom.assign(cameraTo.add(direction));
+        this.cameraTo.assign(new Vector3(-12, -3, 0).add(direction.multiply(this.cameraClicks * 5)));
+        this.cameraFrom.assign(this.cameraTo.add(direction));
 
-        redoCamera = true;
+        this.redoCamera = true;
 
     }
 

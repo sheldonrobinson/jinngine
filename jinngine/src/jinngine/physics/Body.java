@@ -22,8 +22,9 @@ import jinngine.math.Transforms;
 import jinngine.math.Vector3;
 
 /**
- * A body is a rigid body entity, that is animated according to the laws of Newton. A body can have one or more geometry
- * instances attached, and these define its final mass and inertia properties.
+ * A body is a rigid body entity, that is animated according to the laws of
+ * Newton. A body can have one or more geometry instances attached, and these
+ * define its final mass and inertia properties.
  */
 public final class Body {
     // global public name
@@ -50,6 +51,9 @@ public final class Body {
     // list of attached geometries
     private final List<Geometry> geometries = new ArrayList<Geometry>();
 
+    // attached trigger
+    public Trigger trigger;
+
     // fixed setting
     private boolean fixed = false;
 
@@ -61,19 +65,21 @@ public final class Body {
      */
     public Body(final String identifier) {
         this.identifier = identifier;
-        state.transform.assignIdentity();
-        state.rotation.assignIdentity();
+        this.state.transform.assignIdentity();
+        this.state.rotation.assignIdentity();
         updateTransformations();
-        state.anisotropicmass.assignZero();
-        state.inverseanisotropicmass.assignZero();
-        state.inertia.assignZero();
-        state.inverseinertia.assignZero();
+        this.state.anisotropicmass.assignZero();
+        this.state.inverseanisotropicmass.assignZero();
+        this.state.inertia.assignZero();
+        this.state.inverseinertia.assignZero();
     }
 
     /**
-     * Add a geometry to this body. The mass properties of the body is updated, and the body space transformations for
-     * the new geometry, as well as existing ones, are updated. After the geometry is added, it will be in the world
-     * space transform specified, but the world position of the body may have changed.
+     * Add a geometry to this body. The mass properties of the body is updated,
+     * and the body space transformations for the new geometry, as well as
+     * existing ones, are updated. After the geometry is added, it will be in
+     * the world space transform specified, but the world position of the body
+     * may have changed.
      * 
      * @param rotation
      *            rotation of geometry in world space
@@ -84,16 +90,16 @@ public final class Body {
      */
     public void addGeometry(final Matrix3 rotation, final Vector3 translation, final Geometry g) {
         // get the previous mass
-        final double previousTotalMass = state.anisotropicmass.diag().infnorm(); // mass at (0,0,0)
+        final double previousTotalMass = this.state.anisotropicmass.diag().infnorm(); // mass at (0,0,0)
 
         // System.out.println("local centre of mass: "+g.getLocalCentreOfMass(new Vector3()));
 
         // the local centre of mass displacement in the geometry, transformed to body space
-        final Vector3 localCentreOfMassDisplacementBody = state.inverserotation.multiply(rotation).multiply(
+        final Vector3 localCentreOfMassDisplacementBody = this.state.inverserotation.multiply(rotation).multiply(
                 g.getLocalCentreOfMass(new Vector3()));
 
         // the centre of mass point for the new geometry in body space
-        final Vector3 localTranslationBody = state.inverserotation.multiply(translation.sub(state.position));
+        final Vector3 localTranslationBody = this.state.inverserotation.multiply(translation.sub(this.state.position));
         final Vector3 localCentreOfMassPositionBody = localTranslationBody.add(localCentreOfMassDisplacementBody);
 
         // find the new centre of mass displacement for the resulting body
@@ -103,14 +109,14 @@ public final class Body {
         final Vector3 totalCentreOfMassDisplacementBody = localCentreOfMassPositionBody.multiply(localMass / totalMass);
 
         // move body to the new centre of mass point in world space
-        Vector3.add(state.position, state.rotation.multiply(totalCentreOfMassDisplacementBody));
+        Vector3.add(this.state.position, this.state.rotation.multiply(totalCentreOfMassDisplacementBody));
 
         // System.out.println("new body position=" +state.position);
         // System.out.println("cm displacement=" +state.rotation.multiply(totalCentreOfMassDisplacementBody));
 
         // translate the current inertia tensor the reverse direction
         // of the new centre of mass displacement (inertia tensor is already scaled to the right mass)
-        InertiaMatrix.translate(state.inertia, previousTotalMass, totalCentreOfMassDisplacementBody.negate());
+        InertiaMatrix.translate(this.state.inertia, previousTotalMass, totalCentreOfMassDisplacementBody.negate());
 
         // add the new contribution from the new inertia tensor
         final InertiaMatrix Inew = g.getInertiaMatrix();
@@ -120,26 +126,26 @@ public final class Body {
         // scale inertia to mass
         Inew.assignMultiply(localMass);
         // rotate the new tensor into body frame
-        InertiaMatrix.rotate(Inew, state.inverserotation.multiply(rotation));
+        InertiaMatrix.rotate(Inew, this.state.inverserotation.multiply(rotation));
         // translate to new position relative to cm
         InertiaMatrix.translate(Inew, localMass, localCentreOfMassPositionBody.sub(totalCentreOfMassDisplacementBody));
 
         // System.out.println("amount of tensor translation= "+localCentreOfMassPositionBody.sub(totalCentreOfMassDisplacementBody)
         // );
         // add to body tensor
-        state.inertia.assignAdd(Inew);
+        this.state.inertia.assignAdd(Inew);
 
         // System.out.println(""+state.inertia);
 
         // add the new mass to the total mass
-        state.anisotropicmass.assignScale(previousTotalMass + localMass);
+        this.state.anisotropicmass.assignScale(previousTotalMass + localMass);
 
         // compute mass inverses
-        state.inverseanisotropicmass.assignScale(1 / (previousTotalMass + localMass));
-        Matrix3.inverse(state.inertia, state.inverseinertia);
+        this.state.inverseanisotropicmass.assignScale(1 / (previousTotalMass + localMass));
+        Matrix3.inverse(this.state.inertia, this.state.inverseinertia);
 
         // go through existing geometries and translate them
-        for (final Geometry gi : geometries) {
+        for (final Geometry gi : this.geometries) {
             final Matrix3 R = new Matrix3();
             final Vector3 b = new Vector3();
             gi.getLocalTransform(R, b);
@@ -148,7 +154,7 @@ public final class Body {
 
         // assign local transform to new geometry
         g.setLocalTransform(
-                state.inverserotation.multiply(rotation),
+                this.state.inverserotation.multiply(rotation),
                 localCentreOfMassPositionBody.sub(totalCentreOfMassDisplacementBody).sub(
                         localCentreOfMassDisplacementBody));
 
@@ -159,22 +165,22 @@ public final class Body {
         g.setBody(this);
 
         // attach the new geometry
-        geometries.add(g);
+        this.geometries.add(g);
     }
 
     public void removeGeometry(final Geometry g) {
         // make sure this geometry exist here
-        if (!geometries.remove(g)) {
+        if (!this.geometries.remove(g)) {
             throw new IllegalArgumentException("Attempt to delete geometry from Body that does not exist");
         }
 
         // trivial case if there are no more geometries left
-        if (geometries.isEmpty()) {
+        if (this.geometries.isEmpty()) {
             // reset physical properties
-            state.anisotropicmass.assignZero();
-            state.inverseanisotropicmass.assignZero();
-            state.inertia.assignZero();
-            state.inverseinertia.assignZero();
+            this.state.anisotropicmass.assignZero();
+            this.state.inverseanisotropicmass.assignZero();
+            this.state.inertia.assignZero();
+            this.state.inverseinertia.assignZero();
             return;
         }
 
@@ -194,7 +200,7 @@ public final class Body {
         final double geometryMass = g.getMass();
 
         // get the total current mass
-        final double currentTotalMass = state.anisotropicmass.diag().infnorm(); // mass at (0,0,0)
+        final double currentTotalMass = this.state.anisotropicmass.diag().infnorm(); // mass at (0,0,0)
 
         // calculate the old mass centre, which would have been
         // before this geometry was added
@@ -202,7 +208,7 @@ public final class Body {
         final Vector3 displ = geometryCmBody.multiply(-geometryMass / (currentTotalMass - geometryMass));
 
         // go through existing geometries and translate them
-        for (final Geometry gi : geometries) {
+        for (final Geometry gi : this.geometries) {
             final Matrix3 R = new Matrix3();
             final Vector3 b = new Vector3();
             gi.getLocalTransform(R, b);
@@ -210,11 +216,11 @@ public final class Body {
         }
 
         // translate body to compensate the change
-        Vector3.add(state.position, state.rotation.multiply(displ));
+        Vector3.add(this.state.position, this.state.rotation.multiply(displ));
 
         // update the mass
-        state.anisotropicmass.assign(Matrix3.identity().multiply(currentTotalMass - geometryMass));
-        state.inverseanisotropicmass.assignScale(1 / (currentTotalMass - geometryMass));
+        this.state.anisotropicmass.assign(Matrix3.identity().multiply(currentTotalMass - geometryMass));
+        this.state.inverseanisotropicmass.assignScale(1 / (currentTotalMass - geometryMass));
 
         // now, we need to update the inertia tensor.
         // first remove the contribution of the removed geometry
@@ -227,14 +233,14 @@ public final class Body {
         InertiaMatrix.translate(Ig, localMass, localTranslation);
 
         // remove the contribution of Ig
-        Matrix3.subtract(state.inertia, Ig, state.inertia);
+        Matrix3.subtract(this.state.inertia, Ig, this.state.inertia);
 
         // now, the contribution from moving the rest of the body back to
         // the new centre of mass must be removed
-        InertiaMatrix.inverseTranslate(state.inertia, (currentTotalMass - geometryMass), displ.negate());
+        InertiaMatrix.inverseTranslate(this.state.inertia, (currentTotalMass - geometryMass), displ.negate());
 
         // finally update the inverse inertia
-        Matrix3.inverse(state.inertia, state.inverseinertia);
+        Matrix3.inverse(this.state.inertia, this.state.inverseinertia);
 
     }
 
@@ -244,44 +250,44 @@ public final class Body {
      * @return iterator containing geometry instances attached to this body
      */
     public Iterator<Geometry> getGeometries() {
-        return geometries.iterator();
+        return this.geometries.iterator();
     }
 
     public final boolean isFixed() {
-        return fixed;
+        return this.fixed;
     }
 
     // package private
     void setFixed(final boolean value) {
-        fixed = value;
+        this.fixed = value;
     }
 
     /**
      * Set the linear velocity of this body
      */
     public final void setVelocity(final Vector3 v) {
-        state.velocity.assign(v);
+        this.state.velocity.assign(v);
     }
 
     /**
      * Set the linear velocity of this body
      */
     public final void setVelocity(final double x, final double y, final double z) {
-        state.velocity.assign(x, y, z);
+        this.state.velocity.assign(x, y, z);
     }
 
     /**
      * Get the linear velocity of this body
      */
     public final Vector3 getVelocity() {
-        return new Vector3(state.velocity);
+        return new Vector3(this.state.velocity);
     }
 
     /**
      * Set position of this body
      */
     public final void setPosition(final Vector3 r) {
-        state.position.assign(r);
+        this.state.position.assign(r);
         updateTransformations();
     }
 
@@ -289,9 +295,9 @@ public final class Body {
      * Set position of this body
      */
     public final void setPosition(final double x, final double y, final double z) {
-        state.position.x = x;
-        state.position.y = y;
-        state.position.z = z;
+        this.state.position.x = x;
+        this.state.position.y = y;
+        this.state.position.z = z;
         updateTransformations();
     }
 
@@ -299,7 +305,7 @@ public final class Body {
      * Set orientation matrix
      */
     public final void setOrientation(final Matrix3 orientation) {
-        state.orientation.assign(orientation);
+        this.state.orientation.assign(orientation);
         updateTransformations();
     }
 
@@ -307,64 +313,64 @@ public final class Body {
      * Return a copy of the rotation matrix
      */
     public final Matrix3 getOrientation() {
-        return new Matrix3(state.rotation);
+        return new Matrix3(this.state.rotation);
     }
 
     /**
-     * Get reference point of this body. This will be the centre of mass of the body, unless manual modifications has
-     * been made.
+     * Get reference point of this body. This will be the centre of mass of the
+     * body, unless manual modifications has been made.
      * 
      * @return reference position
      */
     public final Vector3 getPosition() {
-        return new Vector3(state.position);
+        return new Vector3(this.state.position);
     }
 
     /**
-     * Recalculate the transformation matrices rotation (3 by 3) and transform (4 by 4) from the position and
-     * orientation state
+     * Recalculate the transformation matrices rotation (3 by 3) and transform
+     * (4 by 4) from the position and orientation state
      */
     public final void updateTransformations() {
         // set identity transforms
-        state.transform.assignIdentity();
+        this.state.transform.assignIdentity();
 
         // quaternion to rotation matrix
-        state.orientation.toRotationMatrix3(state.rotation);
+        this.state.orientation.toRotationMatrix3(this.state.rotation);
 
         // inverse rotations (for normals)
-        Matrix3.inverse(state.rotation, state.inverserotation);
+        Matrix3.inverse(this.state.rotation, this.state.inverserotation);
 
         // affine transform
-        Matrix4.multiply(Transforms.rotateAndTranslate4(state.orientation, state.position), state.transform,
-                state.transform);
+        Matrix4.multiply(Transforms.rotateAndTranslate4(this.state.orientation, this.state.position),
+                this.state.transform, this.state.transform);
     }
 
     /**
      * Return the internal 4 by 4 transformation matrix of this body
      */
     public final Matrix4 getTransform() {
-        return state.transform;
+        return this.state.transform;
     }
 
     /**
      * Set the angular velocity of this body
      */
     public final void setAngularVelocity(final Vector3 omega) {
-        state.omega.assign(omega);
+        this.state.omega.assign(omega);
     }
 
     /**
      * Set the angular velocity of this body
      */
     public final void setAngularVelocity(final double x, final double y, final double z) {
-        state.omega.assign(x, y, z);
+        this.state.omega.assign(x, y, z);
     }
 
     /**
      * Get the angular velocity of this body
      */
     public final Vector3 getAngularVelocity() {
-        return new Vector3(state.omega);
+        return new Vector3(this.state.omega);
     }
 
     /**
@@ -374,21 +380,21 @@ public final class Body {
         // return the length of the unit axis vector scaled by the anisotropic mass matrix
         final double prjLength = 1. / Math.sqrt(3.);
         final Vector3 unit = new Vector3(prjLength, prjLength, prjLength);
-        return state.anisotropicmass.multiply(unit).norm();
+        return this.state.anisotropicmass.multiply(unit).norm();
     }
 
     /**
      * Get a copy of the anisotropic mass matrix of this body
      */
     public final Matrix3 getAnisotopicMass() {
-        return new Matrix3(state.anisotropicmass);
+        return new Matrix3(this.state.anisotropicmass);
     }
 
     /**
      * Get a copy of the inverse anisotropic mass matrix of this body
      */
     public final Matrix3 getInverseAnisotropicMass() {
-        return new Matrix3(state.inverseanisotropicmass);
+        return new Matrix3(this.state.inverseanisotropicmass);
     }
 
     /**
@@ -405,8 +411,8 @@ public final class Body {
         // fixed bodies are unaffected by external forces
         if (!isFixed()) {
             // apply directly to delta velocities
-            Vector3.add(externaldeltavelocity, state.inverseanisotropicmass.multiply(f.multiply(dt)));
-            Vector3.add(externaldeltaomega, state.inverseinertia.multiply(point.cross(f)).multiply(dt));
+            Vector3.add(this.externaldeltavelocity, this.state.inverseanisotropicmass.multiply(f.multiply(dt)));
+            Vector3.add(this.externaldeltaomega, this.state.inverseinertia.multiply(point.cross(f)).multiply(dt));
         }
     }
 
@@ -426,15 +432,15 @@ public final class Body {
             // apply directly to delta velocities
             // Vector3.add(this.externaldeltavelocity, state.inverseanisotropicmass.multiply(f.multiply(dt)));
             // Vector3.add(this.externaldeltaomega, state.inverseinertia.multiply(tau.multiply(dt)));
-            Vector3.multiplyAndAdd(state.inverseanisotropicmass, f, dt, externaldeltavelocity);
-            Vector3.multiplyAndAdd(state.inverseinertia, tau, dt, externaldeltaomega);
+            Vector3.multiplyAndAdd(this.state.inverseanisotropicmass, f, dt, this.externaldeltavelocity);
+            Vector3.multiplyAndAdd(this.state.inverseinertia, tau, dt, this.externaldeltaomega);
 
         }
     }
 
     /**
-     * Calculate the total kinetic energy of this body. This is the some of both translational and angular kinetic
-     * energy
+     * Calculate the total kinetic energy of this body. This is the some of both
+     * translational and angular kinetic energy
      */
     public final double totalKinetic() {
         double eKin;
@@ -442,11 +448,11 @@ public final class Body {
 
         // calculate the rotational kinetic energy
         // T = (1/2) omega * I * omega,
-        res = Matrix3.transposeVectorAndMultiply(state.omega, state.inertia, res);
-        eKin = res.dot(state.omega) * 0.5f;
+        res = Matrix3.transposeVectorAndMultiply(this.state.omega, this.state.inertia, res);
+        eKin = res.dot(this.state.omega) * 0.5f;
 
         // translational energy E = m*(1/2)*v^2
-        eKin += state.velocity.dot(state.anisotropicmass.multiply(state.velocity)) * 0.5f;
+        eKin += this.state.velocity.dot(this.state.anisotropicmass.multiply(this.state.velocity)) * 0.5f;
 
         return Math.abs(eKin);
     }
@@ -460,68 +466,69 @@ public final class Body {
         double eKin;
 
         // Calculate the rotational kinetic energy
-        eKin = state.omega.dot(state.omega) * 0.5f;
+        eKin = this.state.omega.dot(this.state.omega) * 0.5f;
 
         // Translational energy E = m*(1/2)*v^2
-        eKin += state.velocity.dot(state.velocity) * 0.5f;
+        eKin += this.state.velocity.dot(this.state.velocity) * 0.5f;
 
         return Math.abs(eKin);
     }
 
     /**
-     * Integrate forward on position using an explicit Euler step of time-step size
+     * Integrate forward on position using an explicit Euler step of time-step
+     * size
      * 
      * @param dt
      */
     public final void advancePositions(final double dt) {
         // explicit euler step on position
-        state.position.assignAddProduct(state.velocity, dt);
+        this.state.position.assignAddProduct(this.state.velocity, dt);
 
         // explicit euler step on orientation
-        state.orientationderivative.assign(0.0f, state.omega);
-        state.orientationderivative.assignMultiply(0.5);
-        state.orientationderivative.assignMultiply(state.orientation);
-        state.orientation.assignAddProduct(state.orientationderivative, dt);
+        this.state.orientationderivative.assign(0.0f, this.state.omega);
+        this.state.orientationderivative.assignMultiply(0.5);
+        this.state.orientationderivative.assignMultiply(this.state.orientation);
+        this.state.orientation.assignAddProduct(this.state.orientationderivative, dt);
 
         // keep orientation normalised
-        state.orientation.assignNormalize();
+        this.state.orientation.assignNormalize();
     }
 
     // go from world to model
     public final Vector3 toModel(final Vector3 v) {
         // apply inverse rotation and translate backwards
-        return state.rotation.transpose().multiply(v.sub(state.position));
+        return this.state.rotation.transpose().multiply(v.sub(this.state.position));
     }
 
     // go from world to model without translating
     public final Vector3 toModelNoTranslation(final Vector3 v) {
         // apply inverse rotation
-        return Matrix3.multiply(state.inverserotation, v, new Vector3());
+        return Matrix3.multiply(this.state.inverserotation, v, new Vector3());
     }
 
     // go to world coordinates from model coordinates
     public final Vector3 toWorld(final Vector3 v) {
         // apply complete transform
-        return state.rotation.multiply(v).add(state.position);
+        return this.state.rotation.multiply(v).add(this.state.position);
     }
 
     // go from model to rotated model
     public final Vector3 toWorldNoTranslation(final Vector3 v) {
-        return Matrix3.multiply(state.rotation, v, new Vector3());
+        return Matrix3.multiply(this.state.rotation, v, new Vector3());
     }
 
     // translate (no local rotation)
     public final Vector3 translate(final Vector3 v) {
-        return v.add(state.position);
+        return v.add(this.state.position);
     }
 
     @Override
     public String toString() {
-        return identifier;
+        return this.identifier;
     }
 
     public int getNumberOfGeometries() {
-        return geometries.size();
+        return this.geometries.size();
     }
 
     /**
@@ -530,7 +537,7 @@ public final class Body {
     public final void update() {
         updateTransformations();
         // update geometries
-        for (final Geometry gi : geometries) {
+        for (final Geometry gi : this.geometries) {
             gi.update();
         }
     }

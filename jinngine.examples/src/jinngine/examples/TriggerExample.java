@@ -29,44 +29,44 @@ public class TriggerExample implements Rendering.Callback {
     public TriggerExample() {
 
         // start jinngine
-        scene = new DefaultScene();
-        scene.setTimestep(0.1);
+        this.scene = new DefaultScene();
+        this.scene.setTimestep(0.1);
 
         // add boxes to bound the world
         final Box floor = new Box("Floor", 1500, 20, 1500);
-        scene.addGeometry(Matrix3.identity(), new Vector3(0, -30, 0), floor);
-        scene.fixBody(floor.getBody(), true);
+        this.scene.addGeometry(Matrix3.identity(), new Vector3(0, -30, 0), floor);
+        this.scene.fixBody(floor.getBody(), true);
 
         final Box back = new Box("Back wall", 200, 200, 20);
-        scene.addGeometry(Matrix3.identity(), new Vector3(0, 0, -55), back);
-        scene.fixBody(back.getBody(), true);
+        this.scene.addGeometry(Matrix3.identity(), new Vector3(0, 0, -55), back);
+        this.scene.fixBody(back.getBody(), true);
 
         final Box front = new Box("Front wall", 200, 200, 20);
-        scene.addGeometry(Matrix3.identity(), new Vector3(0, 0, -7), front);
-        scene.fixBody(front.getBody(), true);
+        this.scene.addGeometry(Matrix3.identity(), new Vector3(0, 0, -7), front);
+        this.scene.fixBody(front.getBody(), true);
 
         final Box left = new Box("Left wall", 20, 200, 200);
-        scene.addGeometry(Matrix3.identity(), new Vector3(-35, 0, 0), left);
-        scene.fixBody(left.getBody(), true);
+        this.scene.addGeometry(Matrix3.identity(), new Vector3(-35, 0, 0), left);
+        this.scene.fixBody(left.getBody(), true);
 
         final Box right = new Box("Right wall", 20, 200, 200);
-        scene.addGeometry(Matrix3.identity(), new Vector3(10, 0, 0), right);
-        scene.fixBody(right.getBody(), true);
+        this.scene.addGeometry(Matrix3.identity(), new Vector3(10, 0, 0), right);
+        this.scene.fixBody(right.getBody(), true);
 
         // body for attracting gravity
         final Body gravity = new Body("Gravity");
-        scene.addBody(gravity);
-        scene.fixBody(gravity, true);
+        this.scene.addBody(gravity);
+        this.scene.fixBody(gravity, true);
 
         // create a box
         final Box box = new Box("box", 2, 2, 2);
-        scene.addGeometry(Matrix3.identity(), new Vector3(-10, -11, -25), box);
+        this.scene.addGeometry(Matrix3.identity(), new Vector3(-10, -11, -25), box);
 
         // put gravity on box
-        scene.addConstraint(new GravityForce(box.getBody(), gravity));
+        this.scene.addConstraint(new GravityForce(box.getBody(), gravity));
 
         // create a trigger to detect contact forces with some threshold
-        scene.addTrigger(new ContactTrigger(box.getBody(), 2.0, new Callback() {
+        this.scene.addTrigger(box.getBody(), new ContactTrigger(2.0, new Callback() {
             @Override
             public void contactAboveThreshold(final Body interactingBody, final ContactConstraint constraint) {
                 System.out.println("In contact with " + interactingBody);
@@ -80,7 +80,7 @@ public class TriggerExample implements Rendering.Callback {
 
         // handle drawing
         final Rendering rendering = new jinngine.rendering.jogl.JoglRendering(this);
-        rendering.addCallback(new Interaction(scene));
+        rendering.addCallback(new Interaction(this.scene));
         rendering.drawMe(box);
         rendering.createWindow();
         rendering.start();
@@ -89,7 +89,7 @@ public class TriggerExample implements Rendering.Callback {
     @Override
     public void tick() {
         // each frame, to a time step on the Scene
-        scene.tick();
+        this.scene.tick();
     }
 
     public static void main(final String[] args) {

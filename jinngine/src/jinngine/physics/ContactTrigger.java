@@ -11,15 +11,12 @@
 package jinngine.physics;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
 
 import jinngine.physics.constraint.Constraint;
 import jinngine.physics.constraint.contact.ContactConstraint;
-import jinngine.physics.constraint.contact.ContactConstraintManager;
 import jinngine.physics.solver.Solver.NCPConstraint;
-import jinngine.util.Pair;
 
 /**
  * The contact trigger monitors a specific body for contact interactions. When
@@ -29,7 +26,7 @@ import jinngine.util.Pair;
  */
 public class ContactTrigger implements Trigger {
 
-    private final Body body;
+    //    private final Body body;
     private final double impulsethreshold;
     private final Callback callback;
 
@@ -37,16 +34,13 @@ public class ContactTrigger implements Trigger {
     private double totalforce = 0;
     private int numberOfNcpConstraints = 0;
 
-    // handler to install in the contact constraint manager
-    private ContactConstraintManager.Handler contactConstraintHandler;
-
     // constraints that have not triggered an event
     private final List<ContactConstraint> monitoredconstraints = new ArrayList<ContactConstraint>();
 
     // constraints that have triggered an event
     private final List<ContactConstraint> triggeredconstraints = new ArrayList<ContactConstraint>();
 
-    // interface for callback from this trigger type
+    // interface for call-back from this trigger type
     public interface Callback {
         public void contactAboveThreshold(Body interactingBody, ContactConstraint constraint);
 
@@ -62,76 +56,75 @@ public class ContactTrigger implements Trigger {
      *            the total normal impulse exerted by the contact in last
      *            time-step
      */
-    public ContactTrigger(final Body body, final double impulsethreshold, final ContactTrigger.Callback callback) {
-        this.body = body;
+    public ContactTrigger(final double impulsethreshold, final ContactTrigger.Callback callback) {
+        //        this.body = body;
         this.impulsethreshold = impulsethreshold;
         this.callback = callback;
     }
 
     @Override
-    public boolean update(final Scene s, final double dt) {
-        // timestep = s.getTimestep();
+    public boolean update(final Body body, final double dt) {
 
         // see if the monitored constraints can trigger an event
-        final ListIterator<ContactConstraint> monitored = monitoredconstraints.listIterator();
+        final ListIterator<ContactConstraint> monitored = this.monitoredconstraints.listIterator();
         while (monitored.hasNext()) {
             final ContactConstraint constraint = monitored.next();
-            totalforce = 0;
-            numberOfNcpConstraints = 0;
+            this.totalforce = 0;
+            this.numberOfNcpConstraints = 0;
 
             // sum up the applied contact force
             for (final NCPConstraint ncp : constraint) {
-                totalforce += ncp.lambda;
-                numberOfNcpConstraints += 1;
+                this.totalforce += ncp.lambda;
+                this.numberOfNcpConstraints += 1;
             }
 
             // check condition
-            if (totalforce > impulsethreshold) {
+            if (this.totalforce > this.impulsethreshold) {
 
                 // move constraint to triggered list
                 monitored.remove();
-                triggeredconstraints.add(constraint);
+                this.triggeredconstraints.add(constraint);
 
-                // perform trigger event callback
+                // perform trigger event call-back
                 // Pair<Body> bodies = constraint.getBodies();
                 // Body interacting = bodies.getFirst()==body? bodies.getSecond(): bodies.getFirst();
                 final Body interacting = constraint.getBody1() == body ? constraint.getBody2() : body;
-                callback.contactAboveThreshold(interacting, constraint);
+                this.callback.contactAboveThreshold(interacting, constraint);
 
-            } // if force > forcethreshold
+            } // if force > force threshold
         } // for monitored constraints
 
         // see if triggered constraints should be moved back to monitored
-        final ListIterator<ContactConstraint> triggered = triggeredconstraints.listIterator();
+        final ListIterator<ContactConstraint> triggered = this.triggeredconstraints.listIterator();
         while (triggered.hasNext()) {
 
             final ContactConstraint constraint = triggered.next();
-            totalforce = 0;
-            numberOfNcpConstraints = 0;
+            this.totalforce = 0;
+            this.numberOfNcpConstraints = 0;
 
             // sum up the applied contact force
             // Iterator<NCPConstraint> ncps = constraint.getNcpConstraints();
             // while(ncps.hasNext()) {
             // NCPConstraint ncp = ncps.next();
             for (final NCPConstraint ncp : constraint) {
-                totalforce += ncp.lambda;
-                numberOfNcpConstraints += 1;
+                this.totalforce += ncp.lambda;
+                this.numberOfNcpConstraints += 1;
             }
 
             // check condition
-            if (totalforce < impulsethreshold) {
+            if (this.totalforce < this.impulsethreshold) {
 
                 // move constraint to monitored list
                 triggered.remove();
-                monitoredconstraints.add(constraint);
+                this.monitoredconstraints.add(constraint);
 
                 // perform trigger event callback
                 // Pair<Body> bodies = constraint.getBodies();
                 // Body interacting = bodies.getFirst()==body? bodies.getSecond(): bodies.getFirst();
                 final Body interacting = constraint.getBody1() == body ? constraint.getBody2() : body;
-                callback.contactBelowThreshold(interacting, constraint);
+                this.callback.contactBelowThreshold(interacting, constraint);
 
-            } // if force > forcethreshold
+            } // if force > force threshold
         } // for monitored constraints 
 
         // keep constraint
@@ -139,66 +132,64 @@ public class ContactTrigger implements Trigger {
     }
 
     @Override
-    public void cleanup(final Scene scene) {
-        // remove the handler that we previously installed in the contact constraint manager
-        final ContactConstraintManager manager = scene.getContactConstraintManager();
-        manager.removeHandler(contactConstraintHandler);
+    public void stop(final Body body) {
+        // clear out the local lists
+        this.monitoredconstraints.clear();
+        this.triggeredconstraints.clear();
     }
 
     @Override
-    public void setup(final Scene scene) {
-        // first of, find contact constraints that involves the body we want to monitor
-        final Iterator<Constraint> iter = scene.getConnectedConstraints(body);
-        while (iter.hasNext()) {
-            final Constraint constraint = iter.next();
-            // if the constraint is a contact constraint, add it to the monitoring list
-            if (constraint instanceof ContactConstraint) {
-                monitoredconstraints.add((ContactConstraint) constraint);
-            }
-        }// while constraints
-
-        // setup a handler that tells us when contact constraints are created and deleted
-        contactConstraintHandler = new ContactConstraintManager.Handler() {
-            @Override
-            public void contactConstraintCreated(final Pair<Body> bodies, final ContactConstraint contact) {
-                // System.out.println("created");
-                // if the constraint involves the body that we are monitoring, add it to our
-                // internal list of contact constraints
-                if (bodies.contains(body)) {
-                    monitoredconstraints.add(contact);
-                }
-            }
-
-            @Override
-            public void contactConstraintRemoved(final Pair<Body> bodies, final ContactConstraint contact) {
-                // System.out.println("deleted");
-
-                if (bodies.contains(body)) {
-                    // if we had this constraint on our list of triggerd constraints, signal an event
-                    if (triggeredconstraints.contains(contact)) {
-
-                        // perform the call back
-                        final Body interacting = bodies.getFirst() == body ? bodies.getSecond() : bodies.getFirst();
-                        callback.contactBelowThreshold(interacting, contact);
-
-                        // remove from internal list
-                        triggeredconstraints.remove(contact);
-                    }
-
-                    // if the constraint is just on the monitor list, simply remove it
-                    if (monitoredconstraints.contains(contact)) {
-                        // remove from monitor list
-                        monitoredconstraints.remove(contact);
-                    }
-
-                } // if contains body
-            }
-        };
-
-        // install the handler
-        final ContactConstraintManager manager = scene.getContactConstraintManager();
-        manager.addHandler(contactConstraintHandler);
+    public void start(final Body body) {
 
     }
 
+    @Override
+    public void constraintAttached(final Body body, final Constraint c) {
+        // only react on contact constraints
+        if (c instanceof ContactConstraint) {
+            this.monitoredconstraints.add((ContactConstraint) c);
+        }
+    }
+
+    @Override
+    public void constraintDetached(final Body body, final Constraint c) {
+        // only react on contact constraints
+        final ContactConstraint contact;
+        if (c instanceof ContactConstraint) {
+            contact = (ContactConstraint) c;
+        } else {
+            return;
+        }
+
+        // if we had this constraint on our list of triggerd constraints, signal an event
+        if (ContactTrigger.this.triggeredconstraints.contains(contact)) {
+
+            // find the interacting body
+            final Body interacting = contact.getBody1() == body ? contact.getBody2() : contact.getBody1();
+
+            // perform the call back
+            ContactTrigger.this.callback.contactBelowThreshold(interacting, contact);
+
+            // remove from internal list
+            ContactTrigger.this.triggeredconstraints.remove(contact);
+        }
+
+        // if the constraint is just on the monitor list, simply remove it
+        if (ContactTrigger.this.monitoredconstraints.contains(contact)) {
+            // remove from monitor list
+            ContactTrigger.this.monitoredconstraints.remove(contact);
+        }
+    }
+
+    @Override
+    public void bodyAttached(final Body body) {
+        // TODO Auto-generated method stub
+
+    }
+
+    @Override
+    public void bodyDetached(final Body body) {
+        // TODO Auto-generated method stub
+
+    }
 }

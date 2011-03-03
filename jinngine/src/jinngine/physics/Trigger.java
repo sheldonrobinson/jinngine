@@ -10,16 +10,18 @@
 
 package jinngine.physics;
 
+import jinngine.physics.constraint.Constraint;
+
 /**
  * Triggers are inserted into {@link Scene} to monitor events in animation
  */
 public interface Trigger {
 
     /**
-     * Called by {@link Scene} when the triller is added to it. The trigger
-     * should setup event handlers etc during this call.
+     * Called by {@link Scene} when the trigger is added. The trigger should
+     * setup event handlers etc during this call.
      */
-    public void setup(Scene s);
+    public void start(Body body);
 
     /**
      * Update this trigger. Called by {@link Scene}, should not be called by the
@@ -29,12 +31,36 @@ public interface Trigger {
      *            the current time-step
      * @return false if this trigger wishes to remove it self. True otherwise.
      */
-    public boolean update(Scene s, double dt);
+    public boolean update(Body body, double dt);
 
     /**
      * Called by {@link Scene} just before the trigger is removed from the
      * scene. The trigger should remove all installed event handlers etc.
      */
-    public void cleanup(Scene s);
+    public void stop(Body body);
+
+    /**
+     * Called when a body is added to the trigger
+     * 
+     * @param body
+     */
+    public void bodyAttached(Body body);
+
+    /**
+     * A body was removed from this trigger
+     * 
+     * @param body
+     */
+    public void bodyDetached(Body body);
+
+    /**
+     * Called when a constraint is attached to the trigger
+     */
+    public void constraintAttached(Body body, Constraint c);
+
+    /**
+     * Called when a constraint is detached from the trigger
+     */
+    public void constraintDetached(Body body, Constraint c);
 
 }
