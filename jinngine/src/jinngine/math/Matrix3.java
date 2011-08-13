@@ -753,6 +753,10 @@ public class Matrix3 {
         return new double[] { a11, a21, a31, a12, a22, a32, a13, a23, a33 };
     }
 
+    public Matrix4 toMatrix4(Matrix4 m){
+        m.assign(a11, a12, a13, 0., a21, a22, a23, 0., a31, a32, a33, 0., 0.,0.,0.,1.);
+        return m;
+    }
     /**
      * Return the Frobenius norm of this Matrix3
      * 

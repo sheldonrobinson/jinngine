@@ -7,10 +7,10 @@
  * under the terms of its license which may be found in the accompanying
  * LICENSE file or at <http://code.google.com/p/jinngine/>.
  */
-
 package jinngine.math;
 
 public final class Quaternion {
+
     /**
      * variables
      */
@@ -19,7 +19,15 @@ public final class Quaternion {
     public double y = 0.0;
     public double z = 0.0;
 
-    public Quaternion() {}
+    public Quaternion() {
+    }
+
+    public Quaternion(final Quaternion q) {
+        this.w = q.w;
+        this.x = q.x;
+        this.y = q.y;
+        this.z = q.z;
+    }
 
     /**
      * Construct a new quaternion using the given scalar and vector parts
@@ -193,35 +201,39 @@ public final class Quaternion {
      * Convert the given quaternion q into the rotation matrix R. The result is placed in the given Matrix3 R, and the
      * reference for R is returned
      */
-    public static Matrix3 rotationMatrix3(final Quaternion v, final Matrix3 R) {
-        final double s = v.w;
-        R.assign(1 - 2 * (v.y * v.y + v.z * v.z), 2 * v.x * v.y - 2 * s * v.z, 2 * s * v.y + 2 * v.x * v.z, 2 * v.x
-                * v.y + 2 * s * v.z, 1 - 2 * (v.x * v.x + v.z * v.z), -2 * s * v.x + 2 * v.y * v.z, -2 * s * v.y + 2
-                * v.x * v.z, 2 * s * v.x + 2 * v.y * v.z, 1 - 2 * (v.x * v.x + v.y * v.y));
-
-        return R;
+    public final Matrix3 toRotationMatrix3(final Matrix3 m) {
+        final double a11 = 1. - 2. * (y * y + z * z);
+        final double a12 = 2. * x * y - 2. * w * z;
+        final double a13 = 2. * w * y + 2. * x * z;
+        final double a21 = 2. * x * y + 2. * w * z;
+        final double a22 = 1. - 2. * (x * x + z * z);
+        final double a23 = -2. * w * x + 2. * y * z;
+        final double a31 = -2. * w * y + 2. * x * z;
+        final double a32 = 2. * w * x + 2. * y * z;
+        final double a33 = 1. - 2. * (x * x + y * y);
+        return m.assign(a11, a12, a13, a21, a22, a23, a31, a32, a33);
     }
-
-    // /**
-    // * Convert this quaternion into a new rotation matrix
-    // * @return A new rotation matrix
-    // */
-    // public Matrix3 toRotationMatrix3() {
-    // return Quaternion.rotationMatrix3(this, new Matrix3() );
-    // }
 
     /**
      * Convert the given quaternion q into the rotation matrix R. The result is placed in the given Matrix3 R, and the
      * reference for R is returned
+     * The method overwrite the given Matrix4 to allow reusing a reference.
+     * @return not null reference to the given matrix
      */
-    public final Matrix3 toRotationMatrix3(final Matrix3 R) {
-        final Quaternion v = this;
-        final double s = w;
-        R.assign(1 - 2 * (v.y * v.y + v.z * v.z), 2 * v.x * v.y - 2 * s * v.z, 2 * s * v.y + 2 * v.x * v.z, 2 * v.x
-                * v.y + 2 * s * v.z, 1 - 2 * (v.x * v.x + v.z * v.z), -2 * s * v.x + 2 * v.y * v.z, -2 * s * v.y + 2
-                * v.x * v.z, 2 * s * v.x + 2 * v.y * v.z, 1 - 2 * (v.x * v.x + v.y * v.y));
-
-        return R;
+    public final Matrix4 toMatrix4(final Matrix4 m) {
+        final double a11 = 1. - 2. * (y * y + z * z);
+        final double a12 = 2. * x * y - 2. * w * z;
+        final double a13 = 2. * w * y + 2. * x * z;
+        final double a21 = 2. * x * y + 2. * w * z;
+        final double a22 = 1. - 2. * (x * x + z * z);
+        final double a23 = -2. * w * x + 2. * y * z;
+        final double a31 = -2. * w * y + 2. * x * z;
+        final double a32 = 2. * w * x + 2. * y * z;
+        final double a33 = 1. - 2. * (x * x + y * y);
+        return m.assign(a11, a12, a13, 0.,
+                a21, a22, a23, 0.,
+                a31, a32, a33, 0.,
+                0., 0., 0., 1.);
     }
 
     /**
@@ -253,9 +265,9 @@ public final class Quaternion {
         final Quaternion q = this;
         // partially calculate the rotation matrix
         final double m11 = 1 - 2 * (q.y * q.y + q.z * q.z); // final double m12 = 2*q1.v.x*q1.v.y-2*q1.s*q1.v.z; final
-                                                            // double m13 = 2*q1.s*q1.v.y+2*q1.v.x*q1.v.z;
+        // double m13 = 2*q1.s*q1.v.y+2*q1.v.x*q1.v.z;
         final double m21 = 2 * q.x * q.y + 2 * q.w * q.z; // final double m22 = 1-2*(q1.v.x*q1.v.x+q1.v.z*q1.v.z); final
-                                                          // double m23 = -2*q1.s*q1.v.x+2*q1.v.y*q1.v.z;
+        // double m23 = -2*q1.s*q1.v.x+2*q1.v.y*q1.v.z;
         final double m31 = -2 * q.w * q.y + 2 * q.x * q.z;
         final double m32 = 2 * q.w * q.x + 2 * q.y * q.z;
         final double m33 = 1 - 2 * (q.x * q.x + q.y * q.y);
@@ -276,5 +288,24 @@ public final class Quaternion {
     @Override
     public final String toString() {
         return "[ " + w + "," + x + "," + y + "," + z + "]";
+    }
+
+    /**
+     * <code>inverse</code> returns the inverse of this quaternion as a new
+     * quaternion. If this quaternion does not have an inverse (if its normal is
+     * 0 or less), then null is returned.
+     *
+     * @return the inverse of this quaternion or null if the inverse does not
+     *         exist.
+     */
+    public Quaternion inverse() {
+        double norm = x * x + y * y + z * z + w * w;
+        double invSqaredNorm = 1.0 / norm;
+        return new Quaternion(
+                w * invSqaredNorm,
+                - x * invSqaredNorm,
+                -y * invSqaredNorm,
+                -z * invSqaredNorm
+                );
     }
 }

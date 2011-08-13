@@ -7,7 +7,6 @@
  * under the terms of its license which may be found in the accompanying
  * LICENSE file or at <http://code.google.com/p/jinngine/>.
  */
-
 package jinngine.math;
 
 public class Matrix4 {
@@ -284,8 +283,36 @@ public class Matrix4 {
         return r;
     }
 
+    public float[] toFloatArray() {
+        return new float[]{
+                    (float) a11, (float) a21, (float) a31, (float) a41,
+                    (float) a12, (float) a22, (float) a32, (float) a42,
+                    (float) a13, (float) a23, (float) a33, (float) a43,
+                    (float) a14, (float) a24, (float) a34, (float) a44};
+    }
+
+    public float[] toFloatArray(float[] m, int offset) {
+        m[offset++] = (float) a11;
+        m[offset++] = (float) a21;
+        m[offset++] = (float) a31;
+        m[offset++] = (float) a41;
+        m[offset++] = (float) a12;
+        m[offset++] = (float) a22;
+        m[offset++] = (float) a32;
+        m[offset++] = (float) a42;
+        m[offset++] = (float) a13;
+        m[offset++] = (float) a23;
+        m[offset++] = (float) a33;
+        m[offset++] = (float) a43;
+        m[offset++] = (float) a14;
+        m[offset++] = (float) a24;
+        m[offset++] = (float) a34;
+        m[offset++] = (float) a44;
+        return m;
+    }
+
     public double[] toArray() {
-        return new double[] { a11, a21, a31, a41, a12, a22, a32, a42, a13, a23, a33, a43, a14, a24, a34, a44 };
+        return new double[]{a11, a21, a31, a41, a12, a22, a32, a42, a13, a23, a33, a43, a14, a24, a34, a44};
     }
 
     /**
@@ -403,6 +430,34 @@ public class Matrix4 {
         return this;
     }
 
+    public static Matrix4 translation(Vector3 center) {
+        return translation(center.x, center.y, center.z);
+    }
+
+    public static Matrix4 translation(double x, double y, double z) {
+        return new Matrix4().assignTranslation(x, y, z);
+    }
+
+    public Matrix4 assignTranslation(double x, double y, double z) {
+        a11 = 1;
+        a12 = 0;
+        a13 = 0;
+        a14 = x;
+        a21 = 0;
+        a22 = 1;
+        a23 = 0;
+        a24 = y;
+        a31 = 0;
+        a32 = 0;
+        a33 = 1;
+        a34 = z;
+        a41 = 0;
+        a42 = 0;
+        a43 = 0;
+        a44 = 1;
+        return this;
+    }
+
     public Matrix4 assignMultiply(final Matrix4 m) {
         return multiply(this, m, this);
     }
@@ -413,7 +468,6 @@ public class Matrix4 {
                 || Double.isNaN(a32) || Double.isNaN(a33) || Double.isNaN(a34) || Double.isNaN(a41)
                 || Double.isNaN(a42) || Double.isNaN(a43) || Double.isNaN(a44);
     }
-
     /** A "close to zero" double epsilon value for use */
     private static final double ZERO_TOLERANCE = 0.0001;
 
@@ -428,7 +482,7 @@ public class Matrix4 {
 
         final Matrix4 m = (Matrix4) o;
         if (//
-        a11 - m.a11 > ZERO_TOLERANCE || //
+                a11 - m.a11 > ZERO_TOLERANCE || //
                 a12 - m.a12 > ZERO_TOLERANCE || //
                 a13 - m.a13 > ZERO_TOLERANCE || //
                 a14 - m.a14 > ZERO_TOLERANCE || //
@@ -444,7 +498,7 @@ public class Matrix4 {
                 a42 - m.a42 > ZERO_TOLERANCE || //
                 a43 - m.a43 > ZERO_TOLERANCE || //
                 a44 - m.a44 > ZERO_TOLERANCE//
-        ) {
+                ) {
             return false;
         }
 
@@ -458,4 +512,33 @@ public class Matrix4 {
                 + ", " + a43 + ", " + a44 + "]";
     }
 
+    public Matrix3 toMatrix3() {
+        return new Matrix3(a11, a12, a13, a21, a22, a23, a31, a32, a33);
+    }
+
+     // A = A^T
+    public Matrix4 assignTranspose() {
+        double t;
+        t = a12;
+        a12 = a21;
+        a21 = t;
+        t = a13;
+        a13 = a31;
+        a31 = t;
+        t = a14;
+        a14 = a41;
+        a41 = t;
+        t = a23;
+        a23 = a32;
+        a32 = t;
+        t = a24;
+        a24 = a42;
+        a42 = t;
+        t = a34;
+        a34 = a43;
+        a43 = t;
+
+        return this;
+
+    }
 }

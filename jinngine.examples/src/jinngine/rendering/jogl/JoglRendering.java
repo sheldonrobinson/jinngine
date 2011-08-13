@@ -174,13 +174,11 @@ public class JoglRendering implements Rendering, GLEventListener, MouseListener,
             final List<Vector3> inputVertices = new ArrayList<Vector3>();
             final List<Vector3> inputNormals = new ArrayList<Vector3>();
             final List<Vector3> hullNormals = new ArrayList<Vector3>();
-            final List<Vector3> hullVertices = new ArrayList<Vector3>();
+            
 
             // add ico-spheres for each vertex in hull
-            for (final Vector3 vertex : vertices) {
-                final Iterator<Vector3> iter = this.icosphere.getVertices();
-                while (iter.hasNext()) {
-                    final Vector3 v = iter.next();
+            for (final Vector3 vertex : vertices) {                
+                for(Vector3 v:icosphere.getVertices()) {
                     inputVertices.add(v.multiply(radius).add(vertex));
                     inputNormals.add(v.normalize());
                 }
@@ -192,12 +190,7 @@ public class JoglRendering implements Rendering, GLEventListener, MouseListener,
             for (final int index : hull.getOriginalVertexIndices()) {
                 hullNormals.add(inputNormals.get(index));
             }
-
-            // get the vertices in the final hull
-            final Iterator<Vector3> i = hull.getVertices();
-            while (i.hasNext()) {
-                hullVertices.add(i.next());
-            }
+            
 
             return new DrawShape() {
                 private boolean initable = true;
@@ -223,11 +216,11 @@ public class JoglRendering implements Rendering, GLEventListener, MouseListener,
                 public void init(final GL gl) {
                     if (this.initable) {
                         this.list = startDisplayList(gl);
-                        drawSmoothShape(hullVertices, hullNormals, hull.getFaceIndices(), gl);
+                        drawSmoothShape(hull.getVertices(), hullNormals, hull.getFaceIndices(), gl);
                         endDisplayList(gl);
 
                         this.shadowList = startDisplayList(gl);
-                        drawBackfaceShadowMesh(hullVertices, null, hull.getFaceIndices(), gl);
+                        drawBackfaceShadowMesh(hull.getVertices(), null, hull.getFaceIndices(), gl);
                         endDisplayList(gl);
 
                         this.initable = false;
@@ -271,11 +264,11 @@ public class JoglRendering implements Rendering, GLEventListener, MouseListener,
                     final ConvexHull hull = new ConvexHull("hull", vertices, 0.0);
 
                     this.list = startDisplayList(gl);
-                    drawPolygonShape(hull.getVerticesList(), null, hull.getFaceIndices(), gl);
+                    drawPolygonShape(hull.getVertices(), null, hull.getFaceIndices(), gl);
                     endDisplayList(gl);
 
                     this.shadowList = startDisplayList(gl);
-                    drawBackfaceShadowMesh(hull.getVerticesList(), null, hull.getFaceIndices(), gl);
+                    drawBackfaceShadowMesh(hull.getVertices(), null, hull.getFaceIndices(), gl);
                     endDisplayList(gl);
                 }
 
@@ -299,7 +292,7 @@ public class JoglRendering implements Rendering, GLEventListener, MouseListener,
 
         if (g instanceof ConvexHull) {
             final ConvexHull orghull = (ConvexHull) g;
-            shape = doShape(orghull, orghull.getVerticesList(), orghull.sphereSweepRadius());
+            shape = doShape(orghull, orghull.getVertices(), orghull.sphereSweepRadius());
         }
 
         if (g instanceof Box) {
@@ -381,10 +374,8 @@ public class JoglRendering implements Rendering, GLEventListener, MouseListener,
             }
 
             // for each face, add a new sphere support
-            // point in direction of the face normal
-            final Iterator<Vector3[]> iter = hull.getFaces();
-            while (iter.hasNext()) {
-                final Vector3[] face = iter.next();
+            // point in direction of the face normal            
+            for (final Vector3[] face: hull.getFaces()) {
                 final Vector3 normal = face[1].sub(face[0]).cross(face[2].sub(face[1])).normalize();
                 vertices.add(new Vector3(normal));
             }
@@ -492,7 +483,7 @@ public class JoglRendering implements Rendering, GLEventListener, MouseListener,
         final ConvexHull icosphere = buildIcosphere(1, 0);
 
         // grap all edges in the hull
-        final List<Vector3> vertices = hull.getVerticesList();
+        final List<Vector3> vertices = hull.getVertices();
         final ArrayList<ArrayList<Integer>> adjacent = hull.getVertexAdjacencyMatrix();
         int i = 0;
         for (final ArrayList<Integer> indices : adjacent) {
@@ -503,7 +494,7 @@ public class JoglRendering implements Rendering, GLEventListener, MouseListener,
 
                 // System.out.println("edge " + vertices.get(i) +","+vertices.get(j));
 
-                for (final Vector3 p : icosphere.getVerticesList()) {
+                for (final Vector3 p : icosphere.getVertices()) {
                     // at i
                     final Vector3 normal = p.normalize();
                     inputEdgeVertices.add(normal.add(vertices.get(i)));
@@ -525,13 +516,13 @@ public class JoglRendering implements Rendering, GLEventListener, MouseListener,
 
                 // collapse edge mesh (extrudet later by vertex shader)
                 int k = 0;
-                for (final Vector3 v : edgehull.getVerticesList()) {
+                for (final Vector3 v : edgehull.getVertices()) {
                     v.assign(v.sub(hullNormals.get(k)));
                     k++;
                 }
 
                 // draw this edge
-                drawFaces(edgehull.getVerticesList(), hullNormals, edgehull.getFaceIndices(), gl);
+                drawFaces(edgehull.getVertices(), hullNormals, edgehull.getFaceIndices(), gl);
             }
             i = i + 1;
         }

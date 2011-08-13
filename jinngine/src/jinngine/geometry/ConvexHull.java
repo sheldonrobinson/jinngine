@@ -11,6 +11,7 @@
 package jinngine.geometry;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
@@ -29,16 +30,17 @@ import quickhull3d.QuickHull3D;
  */
 public class ConvexHull implements SupportMap3, Geometry, Material {
 
-    private final String name;
-    private final List<Vector3[]> faces = new ArrayList<Vector3[]>();
-    private final ArrayList<Vector3> vertices = new ArrayList<Vector3>();
+    private final String name;	
+	//Note to MO: Hi, here the intent is to 
+    private final List<Vector3[]> faces;
+    private final List<Vector3> vertices;
     private final ArrayList<ArrayList<Integer>> adjacent;
     private final ArrayList<Vector3> dualvertices = new ArrayList<Vector3>();
     private final ArrayList<ArrayList<Integer>> dualadjacent;
     private final Vector3 centreOfMass = new Vector3();
     private final double referenceMass;
-    private final int numberOfVertices;
-    private final double radius;
+
+    private final double sweepSphereRadius;
     // private int cachedVertex = 0;
 
     // bounding box
@@ -60,7 +62,7 @@ public class ConvexHull implements SupportMap3, Geometry, Material {
      * motivation for this approach is that the face index lists are the only
      * adjacency information available from the QuickHull3D implementation.
      */
-    private final ArrayList<ArrayList<Integer>> adjacencyList(final int[][] faceindices, final int numberOfVertices) {
+    private final static ArrayList<ArrayList<Integer>> adjacencyList(final int[][] faceindices, final int numberOfVertices) {
         final ArrayList<ArrayList<Integer>> adjacent = new ArrayList<ArrayList<Integer>>();
 
         // create array of arrays for adjacency lists
@@ -112,63 +114,67 @@ public class ConvexHull implements SupportMap3, Geometry, Material {
     /**
      * Create a convex hull geometry, based on the points given
      * 
-     * @param radius
-     *            TODO
+     * @param sweepSphereRadius positive radius of the sweepsphere. Use 0. for a normal hull.
+     *
      */
-    public ConvexHull(final String name, final List<Vector3> input, final double radius) {
-        this.name = new String(name);
-
+    public ConvexHull(final String name, final List<Vector3> input, double sweepSphereRadius) {
+        if(sweepSphereRadius<0.)
+            throw new IllegalArgumentException("sweepSphereRadius shoud be positive or 0.");
+        if(name==null)
+            throw new NullPointerException();
+        
+        this.name = name; //String is immutable and can be shared safely.
+        this.sweepSphereRadius = sweepSphereRadius;
         final QuickHull3D dualhull = new QuickHull3D();
         final QuickHull3D hull = new QuickHull3D();
-
-        // set sweep radius
-        this.radius = radius;
-
+        
         // build the hull
         hull.build(Vector3.toArray(input));
 
         // extract faces from the QuickHull3D implementation
-        final Point3d[] points = hull.getVertices();
         faceIndices = hull.getFaces();
         originalVertexIndices = hull.getVertexPointIndices();
-
-        // get hull vertices
-        for (final Point3d p : points) {
-            vertices.add(new Vector3(p.x, p.y, p.z));
-        }
-
-        // grab the number of vertices
-        numberOfVertices = vertices.size();
+        
+        {// Build the vertex list from hull vertices
+            final Point3d[] points = hull.getVertices();
+            final List<Vector3> result = new ArrayList<Vector3>(points.length);
+            for (final Point3d p : points) {
+                result.add(new Vector3(p.x, p.y, p.z));
+            }
+            vertices=Collections.unmodifiableList(result);
+        }    
 
         // adjacency lists for hull
-        adjacent = adjacencyList(faceIndices, numberOfVertices);
+        adjacent = adjacencyList(faceIndices, vertices.size());
 
-        // go thru all faces to make the dual hull points
-        for (int i = 0; i < faceIndices.length; i++) {
-            // convert to Vector3 array
-            final Vector3[] f = new Vector3[faceIndices[i].length];
-            for (int j = 0; j < faceIndices[i].length; j++) {
-                // Point3d p = points[faceIndices[i][j]];
-                // f[j] = new Vector3(p.x,p.y,p.z );
-                // use the vectors in vertices insted of new vectors
-                f[j] = vertices.get(faceIndices[i][j]);
+        {// go thru all faces to make the dual hull points
+            final List<Vector3[]> result = new ArrayList<Vector3[]>(faceIndices.length);
+            for (int i = 0; i < faceIndices.length; i++) {
+                // convert to Vector3 array
+                final Vector3[] f = new Vector3[faceIndices[i].length];
+                for (int j = 0; j < faceIndices[i].length; j++) {
+                    // Point3d p = points[faceIndices[i][j]];
+                    // f[j] = new Vector3(p.x,p.y,p.z );
+                    // use the vectors in vertices insted of new vectors
+                    f[j] = vertices.get(faceIndices[i][j]);
+                }
+
+                // append face to external representation
+                result.add(f);
+
+                // get face vertices
+                final Vector3 v1 = f[0];
+                final Vector3 v2 = f[1];
+                final Vector3 v3 = f[2];
+
+                // set normal
+                final Vector3 normal = v1.sub(v2).cross(v3.sub(v2)).normalize().multiply(-1);
+
+                // add to the dual polygon vertices (index corresponds to a face)
+                dualvertices.add(normal);
             }
-
-            // append face to external representation
-            faces.add(f);
-
-            // get face vertices
-            final Vector3 v1 = f[0];
-            final Vector3 v2 = f[1];
-            final Vector3 v3 = f[2];
-
-            // set normal
-            final Vector3 normal = v1.sub(v2).cross(v3.sub(v2)).normalize().multiply(-1);
-
-            // add to the dual polygon vertices (index corresponds to a face)
-            dualvertices.add(normal);
+            faces = Collections.unmodifiableList(result);
         }
-
         // build the dual hull
         dualhull.build(Vector3.toArray(dualvertices));
 
@@ -182,7 +188,7 @@ public class ConvexHull implements SupportMap3, Geometry, Material {
         mass = referenceMass = masscalculation.getMass();
 
         // get the inertia matrix
-        inertiamatrix.assign(masscalculation.getInertiaMatrix());
+        inertiamatrix=masscalculation.getInertiaMatrix();
 
         // translate inertia back into the centre of mass
         InertiaMatrix.inverseTranslate(inertiamatrix, mass, masscalculation.getCentreOfMass());
@@ -205,7 +211,7 @@ public class ConvexHull implements SupportMap3, Geometry, Material {
                 Math.abs(positiveBounds.y - negativeBounds.y), Math.abs(positiveBounds.z - negativeBounds.z));
 
         // set the initial bounding box
-        boundingBox = new Box("boundingBox", boundingBoxSideLengths, this.radius);
+        boundingBox = new Box("boundingBox", boundingBoxSideLengths, this.sweepSphereRadius);
 
         updateBoundingBoxTransform();
     }
@@ -214,35 +220,25 @@ public class ConvexHull implements SupportMap3, Geometry, Material {
         boundingBox.setLocalTransform(localrotation, localrotation.multiply(boundingBoxPosition).add(localtranslation));
     }
 
-    /**
-     * Get the number of vertices on the this convex hull
-     * 
-     * @return
-     */
-    public final int getNumberOfVertices() {
-        return vertices.size();
-    }
+   
 
     /**
      * Get the vertices of this convex hull in object space
      * 
-     * @return
+     * @return an not null, unmodifiable list of mutable vectors
      */
-    public final Iterator<Vector3> getVertices() {
-        return vertices.iterator();
+    public final List<Vector3> getVertices() {
+        return vertices;
     }
 
-    public final List<Vector3> getVerticesList() {
-        return new ArrayList<Vector3>(vertices);
-    }
 
     /**
      * Get the faces of the convex hull in object space
      * 
-     * @return
+     * @return an not null, unmodifiable list of mutable vector arrays
      */
-    public final Iterator<Vector3[]> getFaces() {
-        return faces.iterator();
+    public final List<Vector3[]> getFaces() {
+        return faces;
     }
 
     /**
@@ -284,7 +280,7 @@ public class ConvexHull implements SupportMap3, Geometry, Material {
 
     // Material
     private double mass = 1;
-    private final InertiaMatrix inertiamatrix = new InertiaMatrix();
+    private final InertiaMatrix inertiamatrix;
     private double correction = 2;
 
     @Override
@@ -489,7 +485,7 @@ public class ConvexHull implements SupportMap3, Geometry, Material {
 
     @Override
     public double sphereSweepRadius() {
-        return radius;
+        return sweepSphereRadius;
     }
 
     @Override
