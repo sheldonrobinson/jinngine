@@ -64,9 +64,9 @@ public class GeneralizedForce implements Constraint, Iterator<NCPConstraint> {
     public final void setForce(final double linearMagnitude, final Vector3 linear, final double angularMagnitude,
             final Vector3 angular) {
         linearDirection.assign(linear);
-        linearDirection.assignNormalize();
+        //linearDirection.assignNormalize();
         angularDirection.assign(angular);
-        angularDirection.assignNormalize();
+        //angularDirection.assignNormalize();
         this.linearMagnitude = linearMagnitude;
         this.angularMagnitude = angularMagnitude;
     }
